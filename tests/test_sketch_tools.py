@@ -327,3 +327,21 @@ def test_extruded_boss_on_overlapping_shapes_picks_regions(window):
     window._apply_operation("linear_extrude")
     assert not calls
     assert lone.parent.type == "linear_extrude"
+
+
+def test_region_edges_are_drawn_on_the_3d_view(window):
+    """While the regions are picked, every region's edges are drawn —
+    the circle's arc across the rectangle shows where they split."""
+    from khervecad import sketch_regions as sr
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate sketch")
+    m.add_node("rect", dict(x=-10, y=10, width=60, height=20), parent=obj)
+    m.add_node("circle", dict(x=40, y=20, radius=10), parent=obj)
+    QApplication.processEvents()
+    assert sr.start_3d(window, obj)
+    view = window.view3d
+    assert len(view.pick_lines) >= 4
+    view.resize(400, 300)
+    view.repaint()                      # draws them, no error
+    view.cancel_pick()
+    assert view.pick_lines == []

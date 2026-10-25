@@ -880,6 +880,7 @@ class View3D(QWidget):
         self._pick_cb = callback
         self._pick_groups = groups
         self._pick_banner = banner
+        self.pick_lines = getattr(self, "pick_lines", None) or []
         self._pick_labeler = labeler
         self._pick_hover = None
         self.lighting_bar.hide()             # nothing between you and the pick
@@ -917,6 +918,7 @@ class View3D(QWidget):
             b.hide()
 
     def _end_pick_mode(self):
+        self.pick_lines = []
         self._show_pick_done(False)
         self._pick_groups = None
         self._pick_banner = ""
@@ -1813,11 +1815,29 @@ class View3D(QWidget):
         painter.drawText(rect, Qt.AlignCenter, metrics.elidedText(
             self._flash_text, Qt.ElideRight, int(w - 16)))
 
+    def _draw_pick_lines(self, painter, eye, right, up, forward):
+        """Lines a pick wants seen while it is armed — the edges between
+        a sketch's regions for Selected Contours (sketch_regions)."""
+        from PyQt5.QtCore import QPointF
+        pen = QPen(QColor(20, 90, 200), 1.6)
+        pen.setCosmetic(True)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(pen)
+        for line in self.pick_lines:
+            pts = [self._project(eye, right, up, forward, v) for v in line]
+            for a, b in zip(pts, pts[1:]):
+                if a is not None and b is not None:
+                    painter.drawLine(QPointF(a[0], a[1]), QPointF(b[0], b[1]))
+        painter.restore()
+
     def _draw_pick_overlays(self, painter, eye, right, up, forward):
         """Pick mode's visual state: what the cursor is over, what the
         first snap click grabbed, and what to do next."""
         if self._pick_pinned is None and self._pick_cb is None:
             return
+        if getattr(self, "pick_lines", None):
+            self._draw_pick_lines(painter, eye, right, up, forward)
 
         def project(p):
             return self._project(eye, right, up, forward, p)

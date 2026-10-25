@@ -326,6 +326,13 @@ def start_3d(window, container=None):
             enumerate(face_list)}
     picked = set()
     view = window.view3d
+    from .fillet_pick import _apply
+    lift = 0.05                    # just above the sketch, never inside it
+    lines = []
+    for _cs, loops in face_list:
+        for loop in loops:
+            pts = [_apply(mat, (x, y, lift)) for x, y in loop]
+            lines.append(pts + pts[:1])
 
     def banner():
         return ("Extruded Boss/Base — Selected Contours: click the "
@@ -354,6 +361,7 @@ def start_3d(window, container=None):
         arm()
 
     def arm():
+        view.pick_lines = lines        # every region's edges, seen
         view.start_pick(on_pick, groups=groups, banner=banner(),
                         labeler=lambda _d, k: "Region — click to %s" % (
                             "drop" if k in picked else "keep"))
