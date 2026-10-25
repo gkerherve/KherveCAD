@@ -1089,3 +1089,22 @@ def test_a_mirrored_sketch_extrudes_both_halves():
     t = mesh.tessellate(m.root)
     xs = [v[0] for tr in t for v in tr]
     assert min(xs) == pytest.approx(-15) and max(xs) == pytest.approx(15)
+
+
+def test_a_fillet_where_an_ear_meets_the_plate_adds_material():
+    """The user's R2: a fillet on the line where an upright meets its
+    base. The parts are merged first, so that line is an INSIDE corner
+    and the fillet adds material there instead of rounding the
+    upright's own bottom edge away."""
+    from khervecad.model import DocumentModel
+    from khervecad import fillet
+    m = DocumentModel()
+    grp = m.add_node("union", {})
+    m.add_node("cube", dict(width=40, depth=20, height=5), parent=grp)
+    m.add_node("cube", dict(x=10, y=5, z=5, width=12, depth=10,
+                            height=20), parent=grp)
+    f = m.wrap_nodes([grp], "fillet")
+    f.params.update(radius=2.0, kind="round",
+                    edges=[[10.0, 5.0, 5.0, 10.0, 15.0, 5.0]])
+    res = fillet.baked(f, {})
+    assert res["adds"] and not res["cuts"]

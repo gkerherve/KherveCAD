@@ -32,9 +32,37 @@ ACTIONS = [("fillet", "round", "Round edges (fillet)…", "mdi.rounded-corner"),
             "mdi.arrow-expand-vertical")]
 
 
-def _wrap(window, node, op, kind):
+def _touching(parts, node, tol=1e-3):
+    """*node* and the parts whose box touches its box — one body, as a
+    boss fuses with its base in SolidWorks (the fillet between them)."""
+    def box(tris):
+        xs = [v[0] for t in tris for v in t]
+        ys = [v[1] for t in tris for v in t]
+        zs = [v[2] for t in tris for v in t]
+        return (min(xs), min(ys), min(zs)), (max(xs), max(ys), max(zs))
+    boxes = {id(n): box(t) for n, t in parts if t}
+    if id(node) not in boxes:
+        return [node]
+    group, grew = [node], True
+    while grew:                      # what touches what touches it…
+        grew = False
+        for n, t in parts:
+            if n in group or id(n) not in boxes:
+                continue
+            lo, hi = boxes[id(n)]
+            if any(all(lo[k] <= boxes[id(g)][1][k] + tol and
+                       boxes[id(g)][0][k] <= hi[k] + tol for k in range(3))
+                   for g in group):
+                group.append(n)
+                grew = True
+    parent = node.parent
+    return [n for n in group if n.parent is parent]
+
+
+def _wrap(window, node, op, kind, parts=None):
     model = window.model
-    wrapper = model.wrap_nodes([node], op)
+    nodes = _touching(parts, node) if (parts and op == "fillet") else [node]
+    wrapper = model.wrap_nodes(nodes, op)
     if wrapper is None:
         return None
     if op == "fillet" and kind:
@@ -104,7 +132,7 @@ def start(window, op="fillet", kind="round"):
         if desc is None or node is None:
             window.statusBar().showMessage(language.tr("Cancelled."), 3000)
             return
-        wrapper = _wrap(window, node, op, kind)
+        wrapper = _wrap(window, node, op, kind, parts)
         if wrapper is None:
             return
         if op == "fillet":

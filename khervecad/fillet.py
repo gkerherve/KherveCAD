@@ -742,6 +742,27 @@ def _num(value, env, default):
     return rv(value, env, default)
 
 
+def _merged(rows):
+    """The children as ONE solid: parts that touch or overlap (an ear
+    standing on a plate) are unioned (Manifold), so the inside corner
+    where they meet is an edge to round — and rounding it ADDS material
+    (the user's R2: each part alone has no such edge, and the click took
+    the ear's own bottom edge, rounding it away). As they were when
+    Manifold is missing or a piece is not a closed solid."""
+    tris = [tri for tri, _c, _s in rows]
+    try:
+        from . import csg
+        if not csg.available():
+            return tris
+        solid = csg.to_manifold(rows, {})
+        if solid is None:
+            return tris
+        merged = csg.to_triangles(solid)
+        return merged or tris
+    except Exception:
+        return tris
+
+
 def baked(node, env) -> dict:
     """compute() for a fillet node, cached by content: the children's
     local mesh and the node's parameters.
@@ -768,11 +789,11 @@ def baked(node, env) -> dict:
         mesh._set_fn(fn)
         mesh._DETAIL = None
         try:
-            src = [tri for tri, _c, _s in mesh._children_mesh(
-                node, env, None, frozenset(), False)]
+            rows = mesh._children_mesh(node, env, None, frozenset(), False)
         finally:
             mesh._set_fn(saved)
             mesh._DETAIL = saved_detail
+        src = _merged(rows)
         # where each picked edge / face sits in the part (box fractions),
         # kept beside the picks so they follow the part when it changes
         # (the user); never written into the program
