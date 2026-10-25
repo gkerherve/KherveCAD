@@ -26,6 +26,13 @@ _SELECTION = ("Select the object(s) in the tree (Ctrl-click to add "
               "more), or click one in the 2D view.")
 
 TIPS = {
+    "smart_dims_bar": (
+        "Show Smart Dimensions",
+        "Shows or hides the sketch's Smart Dimensions (the driving sizes "
+        "you added) in the 2D and the 3D view. They are kept either way.",
+        ["Click to hide them; click again to show them (View ▸ Show "
+         "Smart Dimensions is the same switch)."],
+        "Hidden dimensions still drive the sketch."),
     "dims_bar": (
         "Show dimensions",
         "Shows the sizes of every shape in the 2D view: a rectangle's "

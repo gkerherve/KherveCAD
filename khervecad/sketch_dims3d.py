@@ -186,6 +186,8 @@ def paint(window, painter, project):
     from PyQt5.QtCore import QPointF, QRectF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen, QPolygonF
     window._dims3d_hits = []                # (chip rect, sketch, row)
+    if not getattr(window.scene, "show_sketch_dims", True):
+        return
     try:
         placed = placements(window)
     except Exception:                       # never break the paint

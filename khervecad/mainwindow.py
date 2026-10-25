@@ -444,6 +444,17 @@ class MainWindow(QMainWindow):
             "Show the sizes of every shape in the 2D view"))
         self._dims_act.toggled.connect(self._set_show_dims)
         view_menu.addAction(self._dims_act)
+        smart = QSettings("Kherve", "KherveCAD").value(
+            "show_sketch_dims", True, type=bool)
+        self.scene.show_sketch_dims = smart
+        self._smart_dims_act = QAction(icons.icon("mdi.ruler"),
+                                       self.tr("Show Smart Dimensions"), self)
+        self._smart_dims_act.setCheckable(True)
+        self._smart_dims_act.setChecked(smart)
+        self._smart_dims_act.setToolTip(self.tr(
+            "Show the sketch's Smart Dimensions in the 2D and 3D views"))
+        self._smart_dims_act.toggled.connect(self._set_show_smart_dims)
+        view_menu.addAction(self._smart_dims_act)
         view_menu.addAction(self.tr("Clear &Dimensions"),
                             lambda: self._clear_said(
                                 self.model.dimensions,
@@ -1035,6 +1046,14 @@ class MainWindow(QMainWindow):
     def _set_show_grid(self, show):
         self.scene.show_grid = show
         self.view2d.viewport().update()
+
+    def _set_show_smart_dims(self, show):
+        self.scene.show_sketch_dims = bool(show)
+        self.view2d.viewport().update()
+        self.view3d.update()
+        from PyQt5.QtCore import QSettings
+        QSettings("Kherve", "KherveCAD").setValue("show_sketch_dims",
+                                                  bool(show))
 
     def _set_show_dims(self, show):
         self.scene.show_dims = show
@@ -1859,6 +1878,9 @@ class MainWindow(QMainWindow):
         cut.setChecked(self.view3d.cut_state() is not None)
         self.view3d.cut_changed.connect(
             lambda *_: cut.setChecked(self.view3d.cut_state() is not None))
+        viewnav.add_toggle_button(
+            bar, "smart_dims", "mdi.ruler", "↔", "smart_dims_bar",
+            self._smart_dims_act)
         viewnav.add_options_button(
             bar, "display", "mdi.eye-settings-outline", "☰",
             "nav3d_display",

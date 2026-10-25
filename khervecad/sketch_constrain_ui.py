@@ -565,8 +565,14 @@ def _paint_dimensions(view, painter):
     items = {it.node.id: it for it in _shape_items(scene)}
     ink, bg = QColor("#1565c0"), QColor(255, 255, 255, 235)
     drawn = set()
+    hidden = not getattr(scene, "show_sketch_dims", True)
     for cont in shown_containers(scene):
         for index, row in enumerate(sc.rows(cont)):
+            if hidden:
+                # View ▸ Show Smart Dimensions off: no line, no glyph
+                if "value" in row:
+                    drawn.add((cont.id, index))
+                continue
             if row["kind"] in ("radius", "diameter") and "value" in row:
                 try:
                     if _paint_radius(view, painter, items, cont, index,

@@ -422,8 +422,39 @@ def add_sketch_controls(win, bar):
         act.toggled.connect(dims.setChecked)
         layout.addWidget(dims)
         bar.buttons["dims"] = dims
+    smart = getattr(win, "_smart_dims_act", None)
+    if smart is not None:
+        btn = _toggle(bar, "mdi.ruler", "↔", "smart_dims_bar", smart)
+        layout.addWidget(btn)
+        bar.buttons["smart_dims"] = btn
     win._sync_grid_step()
     bar.place()
+
+
+def _toggle(bar, glyph, fallback, tip, act):
+    """A checkable bar button that is *act* (the View menu's action)."""
+    from . import icons
+    btn = QToolButton(bar)
+    art = icons.icon(glyph, "#e6e9ec")
+    if art.isNull():
+        btn.setText(fallback)
+    else:
+        btn.setIcon(art)
+    btn.setCheckable(True)
+    btn.setChecked(act.isChecked())
+    set_tip(btn, tip)
+    btn.clicked.connect(act.setChecked)
+    act.toggled.connect(btn.setChecked)
+    return btn
+
+
+def add_toggle_button(bar, key, glyph, fallback, tip, act):
+    """The same switch on the 3D view's bar."""
+    btn = _toggle(bar, glyph, fallback, tip, act)
+    bar.layout().addWidget(btn)
+    bar.buttons[key] = btn
+    bar.place()
+    return btn
 
 
 def _vline(parent):

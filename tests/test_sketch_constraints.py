@@ -663,3 +663,24 @@ def test_smart_dimension_to_the_face_edge(window, monkeypatch):
     sc.set_value(m, group, i, 5)
     assert rect.params["y"] == pytest.approx(-15, abs=1e-3)
     face_sketch.close(window)
+
+
+def test_smart_dimensions_hide_and_show_from_both_bars(window):
+    """View ▸ Show Smart Dimensions, and its buttons on the 2D and 3D
+    bars, are one switch; off, neither view paints a dimension."""
+    act = window._smart_dims_act
+    assert act.isChecked() and window.scene.show_sketch_dims
+    b2 = window.view2d.nav_bar.buttons["smart_dims"]
+    b3 = window.view3d.nav_bar.buttons["smart_dims"]
+    b3.click()
+    assert not act.isChecked() and not b2.isChecked()
+    assert window.scene.show_sketch_dims is False
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad import sketch_dims3d
+    img = QImage(10, 10, QImage.Format_ARGB32)
+    p = QPainter(img)
+    sketch_dims3d.paint(window, p, lambda pt: None)
+    p.end()
+    assert window._dims3d_hits == []
+    b2.click()
+    assert act.isChecked() and window.scene.show_sketch_dims
