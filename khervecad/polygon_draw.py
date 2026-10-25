@@ -161,7 +161,47 @@ class PolygonBar(QFrame):
         return False
 
 
+class LineBar(PolygonBar):
+    """The same bar for a chain of lines: Finish, Close shape (the last
+    line back to the first point), Undo line, Cancel."""
+
+    def __init__(self, view):
+        super().__init__(view)
+        view.scene().polygon_changed.disconnect(self.update_for)
+        from . import sketch_line
+        scene = view.scene()
+        for b in (self.finish, self.undo, self.cancel):
+            b.clicked.disconnect()
+        self.finish.clicked.connect(lambda: sketch_line.end_chain(scene))
+        self.undo.setText(language.tr("Undo line"))
+        self.undo.setToolTip(language.tr("Take the last line back"))
+        self.undo.clicked.connect(lambda: sketch_line.undo_line(scene))
+        self.cancel.clicked.connect(lambda: sketch_line.end_chain(scene))
+        self.cancel.setToolTip(language.tr("Stop drawing lines (Esc)"))
+        self.finish.setToolTip(language.tr(
+            "Stop here (also: Enter, Esc, double-click, right-click)"))
+        self.close_btn = self._button(
+            "close", "mdi.vector-polygon", "Close shape",
+            "A last line back to the first point: a closed shape for "
+            "Create Region", lambda: sketch_line.close_shape(scene))
+        self.layout().insertWidget(2, self.close_btn)
+
+    def update_for(self, count, active=True):
+        if not active:
+            self.hide()
+            return
+        self.label.setText(language.tr("Lines · {n}").format(n=count))
+        self.finish.setEnabled(True)
+        self.close_btn.setEnabled(count >= 2)
+        self.undo.setEnabled(count >= 1)
+        self.adjustSize()
+        self._place()
+        self.show()
+        self.raise_()
+
+
 def attach(view):
-    """Give the sketch *view* its polygon bar."""
+    """Give the sketch *view* its polygon bar (and the lines' one)."""
     view.polygon_bar = PolygonBar(view)
+    view.line_bar = LineBar(view)
     return view.polygon_bar

@@ -824,3 +824,25 @@ def test_snap_and_pin_to_the_hidden_centres_of_a_region(view):
     slot = m.add_node("line", dict(x1=37, y1=0, x2=13, y2=0, width=16))
     assert face_outline.pin(view.scene(), m, slot) == 1
     assert [r["kind"] for r in sc.rows(m.root)] == ["fix"]
+
+
+def test_line_chain_bar_closes_a_shape_for_a_region(view):
+    """The user could only end lines with the mouse: a bar offers
+    Finish / Close shape / Undo line / Cancel. Close shape draws the last
+    line back to the start: a closed triangle, one region."""
+    from khervecad import sketch_line, sketch_regions as sr
+    from khervecad.view2d import LINE
+    view.set_tool(LINE)
+    for x, y in ((0, 0), (40, 0), (20, 30)):
+        _click(view, x, y)
+    bar = view.line_bar
+    assert bar.isVisible() and bar.close_btn.isEnabled()
+    sketch_line.close_shape(view.scene())
+    lines = [n for n in _nodes(view) if n.type == "line"]
+    assert len(lines) == 3 and not bar.isVisible()
+    assert len(sr.faces(lines)) == 1
+    # Undo line takes the last one back mid-chain
+    for x, y in ((60, 0), (90, 0), (90, 20)):
+        _click(view, x, y)
+    sketch_line.undo_line(view.scene())
+    assert len([n for n in _nodes(view) if n.type == "line"]) == 4

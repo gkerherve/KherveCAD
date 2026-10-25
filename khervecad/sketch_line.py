@@ -277,7 +277,9 @@ def press(scene, event):
         st["start"], st["start_point"] = pt, info.get("point")
         st["start_origin"] = info.get("origin")
         st["chain"] = [pt]
+        st["made"] = []
         draw_overlay(scene, pt, pt, info)
+        _bar(scene)
         scene.status.emit("Line: click where it ends — it snaps to "
                           "points, H / V / 45° and lined-up points. "
                           "Double-click, right-click or Esc ends.")
@@ -295,8 +297,10 @@ def press(scene, event):
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
     st.setdefault("chain", []).append(pt)
+    st.setdefault("made", []).append(node)
     st["start_point"], st["start_origin"] = None, False
     draw_overlay(scene, pt, pt, info)
+    _bar(scene)
 
 
 def _relations(scene, node, info, st):
@@ -360,7 +364,67 @@ def end_chain(scene):
     st = _state(scene)
     st["start"], st["prev"], st["start_point"] = None, None, None
     st["chain"] = []
+    st["made"] = []
     _clear(scene)
+    _bar(scene)
+
+
+def _bar(scene):
+    """Show / update the Finish · Close shape · Undo line · Cancel bar
+    (the user: a chain of lines could only be ended with the mouse)."""
+    st = _state(scene)
+    for view in scene.views():
+        bar = getattr(view, "line_bar", None)
+        if bar is not None:
+            bar.update_for(len(st.get("made") or []),
+                           st.get("start") is not None)
+
+
+def close_shape(scene):
+    """The last line back to the chain's first point: a closed shape,
+    ready for Create Region."""
+    st = _state(scene)
+    chain, made = st.get("chain") or [], st.get("made") or []
+    if len(made) < 2 or st.get("start") is None:
+        return None
+    a, b = st["start"], chain[0]
+    node = scene._create("line", dict(x1=round(a.x(), 4), y1=round(a.y(), 4),
+                                      x2=round(b.x(), 4), y2=round(b.y(), 4),
+                                      width=LINE_WIDTH))
+    scene.node_created.emit(node)
+    from . import sketch_constraints as sc
+    parent = node.parent
+    for first, second in ((made[-1], "p2"), (made[0], "p1")):
+        try:
+            sc.add(scene.model, parent, "coincident",
+                   [sc.ref_of(parent, first, second),
+                    sc.ref_of(parent, node,
+                              "p1" if first is made[-1] else "p2")])
+        except (ValueError, KeyError):
+            pass
+    end_chain(scene)
+    scene.status.emit("Closed: select the lines and Create Region to "
+                      "make a shape of them.")
+    return node
+
+
+def undo_line(scene):
+    """Take the last line of the chain back."""
+    st = _state(scene)
+    made = st.get("made") or []
+    if not made:
+        end_chain(scene)
+        return
+    node = made.pop()
+    chain = st.get("chain") or []
+    if len(chain) > 1:
+        chain.pop()
+    if node.parent is not None:
+        scene.model.remove_node(node)
+    st["start"] = chain[-1] if chain else None
+    st["prev"] = made[-1] if made else None
+    _clear(scene)
+    _bar(scene)
 
 
 def double_click(scene, event):
