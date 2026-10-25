@@ -51,7 +51,18 @@ def faces(shapes, any_state=False):
     outlines cut the plane into."""
     from .mesh import collect_outlines, node_outlines, _oriented
     secs, owners = [], []
+    # plain lines are EDGES: where they join end to end into a closed
+    # loop, the loop is a shape (the user: lines like a polygon)
+    from . import slot2d
+    lines = [s for s in shapes if s.type == "line" and not slot2d.is_slot(s)]
+    for loop, first in line_loops(lines):
+        cs = _cross_section([loop])
+        if cs is not None and not cs.is_empty():
+            secs.append(cs)
+            owners.append(shapes.index(first))
     for s in shapes[:MAX_SHAPES]:
+        if s in lines:
+            continue
         if any_state or s.params.get("modifier") == "%" or not s.visible:
             # construction (a regions extrude's sketch): its own outline,
             # which collect_outlines leaves out like OpenSCAD does
@@ -85,6 +96,59 @@ def faces(shapes, any_state=False):
                                     for loop in piece.to_polygons()],
                             [owners[i] for i in range(n) if mask >> i & 1]))
     return out
+
+
+JOIN = 1e-3            # mm: line ends this close meet
+
+
+def line_loops(lines):
+    """[(points counter-clockwise, the loop's first line)] of the closed
+    loops the *lines* make end to end."""
+    def key(p):
+        return (round(p[0] / JOIN), round(p[1] / JOIN))
+    ends = {}
+    segs = []
+    for ln in lines:
+        p = ln.params
+        try:
+            a = (float(p["x1"]), float(p["y1"]))
+            b = (float(p["x2"]), float(p["y2"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        i = len(segs)
+        segs.append((a, b, ln))
+        ends.setdefault(key(a), []).append(i)
+        ends.setdefault(key(b), []).append(i)
+    used = set()
+    loops = []
+    for start in range(len(segs)):
+        if start in used:
+            continue
+        a, b, ln = segs[start]
+        pts, cur, at = [a], start, b
+        chain = {start}
+        closed = False
+        while True:
+            pts.append(at)
+            if key(at) == key(a) and len(chain) > 1:
+                closed = True
+                break
+            nxt = [j for j in ends.get(key(at), ()) if j not in chain]
+            if len(nxt) != 1:
+                break
+            cur = nxt[0]
+            chain.add(cur)
+            s0, s1, _l = segs[cur]
+            at = s1 if key(s0) == key(at) else s0
+        if closed and len(chain) >= 3:
+            used |= chain
+            pts = pts[:-1]
+            area = sum(pts[i][0] * pts[i - 1][1] - pts[i - 1][0] * pts[i][1]
+                       for i in range(len(pts)))
+            if area > 0:              # clockwise: turn it round
+                pts.reverse()
+            loops.append((pts, ln))
+    return loops
 
 
 def _pieces(cs, eps=1e-3):
@@ -548,4 +612,32 @@ def start_3d(window, container=None, make_only=False):
                         labeler=lambda _d, k: "Region — click to %s" % (
                             "drop" if k in picked else "keep"))
     arm()
+    return True
+
+
+def from_selection(window):
+    """Create Region on the shapes selected (in the sketch or the tree):
+    the area they enclose — closed lines, a polygon, shapes on shapes —
+    becomes one Regions node holding them. False when nothing usable is
+    selected (the tool then asks for clicks on the regions)."""
+    from .model import SHAPE_2D
+    nodes = window.builder.active_tree().selected_nodes()
+    shapes = [n for n in nodes if n.category == SHAPE_2D
+              and n.parent is not None]
+    if not shapes:
+        return False
+    container = shapes[0].parent
+    shapes = [s for s in shapes if s.parent is container]
+    face_list = faces(shapes)
+    if not face_list:
+        window.statusBar().showMessage(
+            "Create Region: the selected shapes enclose nothing — join "
+            "the lines end to end into a closed shape.", 7000)
+        return True
+    reg = make(window.model, container, face_list,
+               range(len(face_list)), hide=shapes)
+    if reg is not None:
+        window.builder.active_tree().select_nodes([reg])
+        window.statusBar().showMessage(
+            "Region made from %d shape(s)." % len(shapes), 6000)
     return True

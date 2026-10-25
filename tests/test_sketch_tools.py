@@ -774,3 +774,27 @@ def test_properties_shows_a_slots_sizes(window):
     keys = set(panel._editors)
     assert {"slot:length", "slot:radius", "slot:width"} <= keys
     assert "x1" not in keys
+
+
+def test_closed_lines_make_a_region_from_the_selection(window):
+    """The user: lines like a polygon. Four lines joined end to end,
+    selected, Create Region: a Regions node holding them, the square
+    they enclose its outline."""
+    from khervecad import sketch_modify, regions2d
+    m = window.model
+    obj = m.add_node("union", {}, name="Sketch")
+    pts = [(0, 0), (30, 0), (30, 20), (0, 20)]
+    lines = [m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                     width=0.4), parent=obj)
+             for a, b in zip(pts, pts[1:] + pts[:1])]
+    QApplication.processEvents()
+    window.builder.tree.rebuild()
+    window.builder.tree.select_nodes(lines)
+    sketch_modify._regions(window, "make_region")
+    regs = [n for n in obj.walk() if n.type == "regions"]
+    assert len(regs) == 1 and all(l.parent is regs[0] for l in lines)
+    loops = regions2d.outlines(regs[0])
+    xs = [p[0] for lp in loops for p in lp]
+    ys = [p[1] for lp in loops for p in lp]
+    assert min(xs) == pytest.approx(0) and max(xs) == pytest.approx(30)
+    assert min(ys) == pytest.approx(0) and max(ys) == pytest.approx(20)

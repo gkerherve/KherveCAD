@@ -547,6 +547,8 @@ def _regions(win, tool="regions"):
     the 2D tool; otherwise straight on the 3D view, where the user sees
     the part (2026-10-25)."""
     from . import sketch_mode, sketch_regions
+    if tool == "make_region" and sketch_regions.from_selection(win):
+        return                           # the selected shapes, at once
     if sketch_mode.sketching(win):
         win._set_tool(tool)
     elif not sketch_regions.start_3d(win,
