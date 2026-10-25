@@ -916,6 +916,25 @@ class MainWindow(QMainWindow):
             from . import round_ui
             round_ui.start(self, op, "round")
             return
+        if op in ("linear_extrude", "rotate_extrude") and nodes:
+            # never an extrude round what is already extruded or cut: a
+            # slot's Extruded Cut wrapped in a second extrude made the
+            # cut empty (the user's hole that did not appear)
+            def extruded(n):
+                while n is not None:
+                    if n.type in ("linear_extrude", "rotate_extrude",
+                                  "regions", "sweep", "section_loft"):
+                        return True
+                    n = n.parent
+                return False
+            done = [n for n in nodes if extruded(n)]
+            if done:
+                self.statusBar().showMessage(language.tr(
+                    "{name} is already extruded or cut — change its depth "
+                    "in Properties or with its arrow, or pick a face to "
+                    "sketch a new feature on.").format(name=done[0].name),
+                    8000)
+                return
         if op == "linear_extrude":
             # overlapping sketch shapes: pick the regions to extrude on
             # the 3D view, as SolidWorks' Selected Contours (the user)

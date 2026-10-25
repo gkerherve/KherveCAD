@@ -949,3 +949,37 @@ def test_extruded_boss_on_the_side_face_of_a_used_sketch(window):
     assert boss and boss[0].params["height"] == cut_feature.DEPTH
     assert not boss[0].params.get("reverse")
     assert group.name == "Boss sketch" and group.parent is obj
+
+
+def test_an_extruded_slot_is_not_extruded_again(window):
+    """The user's empty hole: the slot's Extruded Cut had been wrapped in
+    a second extrude. Extruded Boss on an already extruded or cut shape
+    now refuses and says why, the tree unchanged."""
+    from khervecad import cut_feature, face_sketch
+    m = window.model
+    block = m.add_node("cube", dict(width=60, depth=40, height=10))
+    g = m.add_node("union", dict(x=30, y=20, z=10))
+    g.params[face_sketch.KEY] = True
+    slot = m.add_node("line", dict(x1=-10, y1=0, x2=10, y2=0, width=8),
+                      parent=g)
+    g.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(g): block}
+    cut_feature.finish(window, g)
+    ext = slot.parent
+    window.builder.tree.rebuild()
+    for chosen in (slot, ext):
+        window.builder.tree.select_nodes([chosen])
+        window._apply_operation("linear_extrude")
+        assert slot.parent is ext and ext.parent is g      # unchanged
+        assert "already extruded" in window.statusBar().currentMessage()
+
+
+def test_a_2d_difference_still_extrudes(window):
+    m = window.model
+    d = m.add_node("difference", {})
+    m.add_node("rect", dict(x=0, y=0, width=30, height=20), parent=d)
+    m.add_node("circle", dict(x=15, y=10, radius=4), parent=d)
+    window.builder.tree.rebuild()
+    window.builder.tree.select_nodes([d])
+    window._apply_operation("linear_extrude")
+    assert d.parent.type == "linear_extrude"
