@@ -360,6 +360,19 @@ def finish(scene):
                         sc.ref_of(parent, b, "p1")])
         except (ValueError, KeyError):
             pass
+    pending = getattr(scene, "_pending_tangents", None)
+    if pending and node is not None and node.type == "circle":
+        # the perimeter circle clicked on lines: Tangent to each
+        from . import sketch_constraints as sc
+        parent = node.parent
+        for other, name in pending:
+            try:
+                sc.add(scene.model, parent, "tangent",
+                       [sc.ref_of(parent, other, name),
+                        sc.ref_of(parent, node, "o")])
+            except (ValueError, KeyError):
+                pass
+    scene._pending_tangents = []
     if tool == RECT_CENTER and node is not None and node.parent is not None \
             and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
         # drawn from the origin: its centre stays there, as SolidWorks

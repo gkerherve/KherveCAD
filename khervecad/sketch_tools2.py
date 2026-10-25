@@ -308,6 +308,70 @@ def build_tangent_circle(scene, c1, c2, c3):
     return [("circle", dict(x=_r(cx), y=_r(cy), radius=_r(r)), None)]
 
 
+def tangent_to_lines(lines, clicks):
+    """(centre, radius) of the circle touching three lines on the side
+    the clicks are on — the perimeter circle clicked on a rectangle's
+    top, bottom and end (two parallel lines are fine), or None."""
+    mx = sum(p[0] for p in clicks) / 3
+    my = sum(p[1] for p in clicks) / 3
+    rows = []
+    for (a, b), click in zip(lines, clicks):
+        L = math.dist(a, b)
+        if L < 1e-9:
+            return None
+        n = (-(b[1] - a[1]) / L, (b[0] - a[0]) / L)
+        d = n[0] * a[0] + n[1] * a[1]
+        # the centre lies on the side of the line the other clicks are on
+        side = n[0] * mx + n[1] * my - d
+        if abs(side) < 1e-9:
+            side = 1.0
+        s = 1.0 if side > 0 else -1.0
+        rows.append((s * n[0], s * n[1], -1.0, s * d))   # s(n.c - d) = r
+    (a1, b1, c1, d1), (a2, b2, c2, d2), (a3, b3, c3, d3) = rows
+
+    def det(m):
+        return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+    A = [[a1, b1, c1], [a2, b2, c2], [a3, b3, c3]]
+    D = det(A)
+    if abs(D) < 1e-12:
+        return None
+    rhs = [d1, d2, d3]
+    sol = []
+    for k in range(3):
+        m = [row[:] for row in A]
+        for i in range(3):
+            m[i][k] = rhs[i]
+        sol.append(det(m) / D)
+    cx, cy, r = sol
+    return ((cx, cy), r) if r > 1e-9 else None
+
+
+def build_perimeter(scene, a, b, c):
+    """SolidWorks' Perimeter Circle: three clicks on lines (a line, or a
+    rectangle's / polygon's side) make the circle TANGENT to them, with
+    Tangent relations; three clicks in the open, the circle through
+    them."""
+    from PyQt5.QtCore import QPointF
+    from . import sketch_constraints as sc
+    from . import sketch_constrain_ui as scu
+    hits = [scu.pick(scene, QPointF(*p), "line") for p in (a, b, c)]
+    scene._pending_tangents = []
+    if all(hits):
+        try:
+            segs = [sc._line(h[0], h[1], {}) for h in hits]
+        except (KeyError, ValueError, IndexError):
+            segs = None
+        got = tangent_to_lines(segs, (a, b, c)) if segs else None
+        if got is not None:
+            (cx, cy), r = got
+            scene._pending_tangents = [(h[0], h[1]) for h in hits]
+            return [("circle", dict(x=_r(cx), y=_r(cy), radius=_r(r)),
+                     None)]
+    return circle_3pt(a, b, c)
+
+
 def build_poly_reg(scene, c, corner):
     hook = getattr(scene, "ask_value", None)
     if hook is not None:
@@ -332,7 +396,7 @@ BUILD = {CONST_LINE: const_line, POINT: point, RECT_3PT: rect_3pt, CIRCLE_2PT: c
          CONIC: conic}
 #: builders that need the scene (lines to pick, a value to ask)
 BUILD_SCENE = {ARC_TAN: build_tangent_arc, CIRCLE_TAN: build_tangent_circle,
-               POLY_REG: build_poly_reg}
+               POLY_REG: build_poly_reg, CIRCLE_3PT: build_perimeter}
 
 
 def outline(tool, pts):

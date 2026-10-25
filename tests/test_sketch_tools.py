@@ -214,3 +214,20 @@ def test_centre_rectangle_on_the_origin_keeps_its_centre(view):
     assert _near(p["width"], 40)
     assert _near(p["x"] + p["width"] / 2, 0)
     assert _near(p["y"] + p["height"] / 2, 0)
+
+
+def test_perimeter_circle_clicked_on_rectangle_sides_is_tangent(view):
+    """SolidWorks' Perimeter Circle: clicks on a rectangle's top, bottom
+    and right side give the circle touching all three, with Tangent
+    relations (the user's video)."""
+    from khervecad import sketch_tools2 as st2, sketch_constraints as sc
+    _draw(view, st.RECT_CENTER, [(20, 20), (50, 30)])  # x -10..50, y 10..30
+    view.set_tool(st2.CIRCLE_3PT)
+    _click(view, 35, 30)     # top side
+    _click(view, 35, 10)     # bottom side
+    _click(view, 50, 22)     # right side
+    circle = [n for n in _nodes(view) if n.type == "circle"][0]
+    p = circle.params
+    assert _near(p["radius"], 10) and _near(p["y"], 20) and _near(p["x"], 40)
+    kinds = [r["kind"] for r in sc.rows(circle.parent)]
+    assert kinds.count("tangent") == 3
