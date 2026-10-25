@@ -424,7 +424,10 @@ class ObjectTree(QTreeWidget):
         # "(hidden)" tag on the explicitly-hidden node is painted by the
         # delegate from ROLE_TAG
         shown = item.data(0, ROLE_SHOWN)
-        item.setText(0, shown if shown is not None else node.name)
+        if shown is None:
+            from .interface_names import tree_text
+            shown = tree_text(node)
+        item.setText(0, shown)
         from .model import MODIFIERS
         mod = node.params.get("modifier")
         item.setData(0, ROLE_TAG, own_hidden)

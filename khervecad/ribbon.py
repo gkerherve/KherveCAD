@@ -429,6 +429,10 @@ def _panel_actions(win, key):
         # user); Select is the tab's first button already
         first = [sketch_mode.create_action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
+        if style_of(win) == "SolidWorks":
+            # Smart Dimension beside Sketch, as SolidWorks has it
+            first += [a for a in win._tool_group.actions()
+                      if a.data() == "con_dimension"][:1]
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() not in (MEASURE, SELECT)
                                and not str(a.data()).startswith(
@@ -683,15 +687,14 @@ class Ribbon(QWidget):
         row.setSpacing(4)
         # the first button of every tab: Select — stops any tool (the
         # user could not get out of a fillet pick)
+        # (SolidWorks: not on the tabs — the quick-access bar has it, as
+        # in SolidWorks, and Esc stops a tool; the user, 2026-10-25)
         from . import stop_tool
-        stop = _painted(self.win, [stop_tool.action(self.win)])
-        stop = _helped(stop)
         if self.fusion:
+            stop = _helped(_painted(self.win, [stop_tool.action(self.win)]))
             row.addWidget(self._fusion_panel(page, language.tr("Select"),
                                              stop, 1))
-        else:
-            row.addWidget(self._sw_panel(page, "select", stop))
-        row.addWidget(_separator(page))
+            row.addWidget(_separator(page))
         for i, key in enumerate(panels):
             if i:
                 row.addWidget(_separator(page))

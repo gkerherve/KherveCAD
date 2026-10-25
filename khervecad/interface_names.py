@@ -91,6 +91,32 @@ FUSION = {
 
 NAMES = {"SolidWorks": SOLIDWORKS, "Fusion": FUSION}
 
+#: the object tree's names: what the program's own feature tree calls
+#: the node (SolidWorks "Boss-Extrude1", Fusion "Extrude1")
+TREE = {
+    "SolidWorks": {
+        "linear_extrude": "Boss-Extrude", "rotate_extrude": "Revolve",
+        "sweep": "Sweep", "section_loft": "Loft", "loft": "Loft",
+        "difference": "Combine-Subtract", "union": "Combine-Add",
+        "intersection": "Combine-Common", "fillet": "Fillet",
+        "bevel": "Chamfer", "shell": "Shell", "mirror": "Mirror",
+        "pattern": "Pattern", "translate": "Body-Move/Copy",
+        "rotate": "Body-Rotate", "scale": "Scale", "hole": "Hole",
+        "push_pull": "Move Face", "bisect": "Split", "thread": "Thread",
+        "sheet_metal": "Base-Flange", "curve": "3DSketch",
+    },
+    "Fusion": {
+        "linear_extrude": "Extrude", "rotate_extrude": "Revolve",
+        "sweep": "Sweep", "section_loft": "Loft", "loft": "Loft",
+        "difference": "Combine (Cut)", "union": "Combine (Join)",
+        "intersection": "Combine (Intersect)", "fillet": "Fillet",
+        "bevel": "Chamfer", "shell": "Shell", "mirror": "Mirror",
+        "pattern": "Pattern", "translate": "Move", "rotate": "Rotate",
+        "scale": "Scale", "hole": "Hole", "push_pull": "Press Pull",
+        "bisect": "Split Body", "thread": "Thread",
+    },
+}
+
 #: the style whose names are in use (the help reads it)
 CURRENT = None
 
@@ -98,6 +124,27 @@ CURRENT = None
 def name_for(key):
     """*key*'s name in the style in use, or None in the classic style."""
     return NAMES.get(CURRENT, {}).get(key)
+
+
+def tree_base(type_):
+    """The style's tree name for a node type, or None."""
+    return TREE.get(CURRENT, {}).get(type_)
+
+
+def tree_text(node):
+    """*node*'s row text: a name the user left at its default ("Linear
+    extrude", "Linear extrude 2", "Linear extrude [Body]") reads as the
+    style's feature name; a name the user typed is kept."""
+    import re
+    styled = tree_base(node.type)
+    name = node.name or ""
+    if not styled:
+        return name
+    from .model import NODE_TYPES
+    label = NODE_TYPES.get(node.type, {}).get("label", "")
+    match = re.fullmatch(re.escape(label) + r"(?P<rest>( \d+)?( \[.*\])?)",
+                         name)
+    return styled + match.group("rest") if match else name
 
 
 def classic_text(act):
@@ -125,6 +172,13 @@ def apply(win, style):
         if old is None:
             act.setProperty("kc_classic_text", act.text())
         act.setText(name)
+    # the tree's rows follow
+    builder = getattr(win, "builder", None)
+    for tree in (getattr(builder, "tree", None),
+                 getattr(getattr(builder, "object_tab", None), "tree",
+                         None)):
+        if tree is not None and hasattr(tree, "rebuild"):
+            tree.rebuild()
     # the help follows: tooltip, status tip (tooltips.entry reads CURRENT)
     from . import tooltips
     keys = set().union(*NAMES.values())

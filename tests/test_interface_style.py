@@ -577,3 +577,28 @@ def test_large_names_wrap_and_help_follows_the_style(window):
     assert "Extruded Boss/Base" in act.toolTip()
     toolbar_style.apply(window, "KherveCAD", remember=False)
     assert "Click Linear extrude" in tooltips.rich("linear_extrude")
+
+
+def test_tree_rows_and_sketch_panel_follow_solidworks(window):
+    """A default-named node reads as SolidWorks' feature ("Boss-Extrude"),
+    a typed name is kept; the tabs have no Select button and Smart
+    Dimension sits beside Sketch."""
+    from khervecad import interface_names, ribbon
+    from khervecad.model import CadNode
+    toolbar_style.apply(window, "SolidWorks", remember=False)
+    node = CadNode("linear_extrude")
+    assert interface_names.tree_text(node) == "Boss-Extrude"
+    node.name = "Linear extrude 2 [Body]"
+    assert interface_names.tree_text(node) == "Boss-Extrude 2 [Body]"
+    node.name = "Plate"
+    assert interface_names.tree_text(node) == "Plate"
+    keys = [a.data() for a in ribbon.panel_actions(window, "sketch")[1]]
+    assert keys[:2] == ["create_sketch", "con_dimension"]
+    from khervecad import stop_tool
+    stop = stop_tool.action(window)
+    assert all(b.defaultAction() is not stop
+               for b in window.ribbon.findChildren(QToolButton))
+    toolbar_style.apply(window, "KherveCAD", remember=False)
+    node.name = ""
+    node.name = "Linear extrude"
+    assert interface_names.tree_text(node) == "Linear extrude"

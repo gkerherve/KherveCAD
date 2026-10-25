@@ -230,7 +230,8 @@ def _is_2d(node):
 
 def _label(node, counts):
     from .model import NODE_TYPES
-    base = FEATURE.get(node.type) or language.tr(
+    from .interface_names import tree_base
+    base = tree_base(node.type) or FEATURE.get(node.type) or language.tr(
         NODE_TYPES[node.type]["label"])
     counts[base] = counts.get(base, 0) + 1
     shown = "%s %d" % (language.tr(base), counts[base])
