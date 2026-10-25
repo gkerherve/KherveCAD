@@ -199,3 +199,18 @@ def test_ribbon_tool_sets_the_sketch_tool(window):
     act = next(a for a in create if a.data() == st.SLOT)
     act.trigger()
     assert window.view2d.scene().tool == st.SLOT
+
+
+def test_centre_rectangle_on_the_origin_keeps_its_centre(view):
+    """Drawn from the origin, a dimension on a side resizes it about the
+    origin (it used to move the corner and slide the centre away)."""
+    from khervecad import sketch_constraints as sc
+    _draw(view, st.RECT_CENTER, [(0, 0), (10, 6)])
+    (rect,) = _nodes(view)
+    model = view.scene().model
+    parent = rect.parent
+    sc.add(model, parent, "length", [sc.ref_of(parent, rect, "e0")], 40)
+    p = rect.params
+    assert _near(p["width"], 40)
+    assert _near(p["x"] + p["width"] / 2, 0)
+    assert _near(p["y"] + p["height"] / 2, 0)

@@ -360,6 +360,17 @@ def finish(scene):
                         sc.ref_of(parent, b, "p1")])
         except (ValueError, KeyError):
             pass
+    if tool == RECT_CENTER and node is not None and node.parent is not None \
+            and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
+        # drawn from the origin: its centre stays there, as SolidWorks
+        # makes it coincident with the origin — a Smart Dimension on a
+        # side used to move the corner and slide the centre away
+        from . import sketch_constraints as sc
+        try:
+            sc.add(scene.model, node.parent, "fix",
+                   [sc.ref_of(node.parent, node, "c")])
+        except (ValueError, KeyError):
+            pass
     scene.node_created.emit(node)
     return node
 
