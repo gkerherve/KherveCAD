@@ -165,6 +165,7 @@ def paint(window, painter, project):
     point to (x, y, depth) in view pixels or None."""
     from PyQt5.QtCore import QPointF, QRectF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen, QPolygonF
+    window._dims3d_hits = []                # (chip rect, sketch, row)
     try:
         placed = placements(window)
     except Exception:                       # never break the paint
@@ -188,10 +189,12 @@ def paint(window, painter, project):
         q = project(_apply(m, (p[0], p[1], 0.0)))
         return None if q is None else QPointF(q[0], q[1])
 
-    def chip(at, text):
+    def chip(at, text, cont=None, index=None):
         tw = fm.horizontalAdvance(text)
         rect = QRectF(at.x() - tw / 2 - 5, at.y() - fm.height() / 2 - 2,
                       tw + 10, fm.height() + 4)
+        if cont is not None:
+            window._dims3d_hits.append((QRectF(rect), cont, index))
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(255, 255, 255, 230)))
         painter.drawRoundedRect(rect, 4, 4)
@@ -200,7 +203,7 @@ def paint(window, painter, project):
         painter.drawText(rect, int(Qt.AlignCenter), text)
 
     for cont, m in placed:
-        for row in sc.rows(cont):
+        for index, row in enumerate(sc.rows(cont)):
             if "value" not in row:
                 continue
             try:
@@ -210,7 +213,8 @@ def paint(window, painter, project):
             if what == "label":
                 at = scr(m, pts[0])
                 if at is not None:
-                    chip(QPointF(at.x() + 6, at.y() - 6), _text(row))
+                    chip(QPointF(at.x() + 6, at.y() - 6), _text(row),
+                         cont, index)
                 continue
             if what != "linear":
                 continue
@@ -247,5 +251,50 @@ def paint(window, painter, project):
                     QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
             painter.setBrush(Qt.NoBrush)
             chip(QPointF((oa.x() + ob.x()) / 2, (oa.y() + ob.y()) / 2),
-                 str(row["value"]))
+                 str(row["value"]), cont, index)
     painter.restore()
+
+
+def press(window, pos):
+    """A click on a dimension's value in the 3D view: type a new one
+    (the user: change the Smart Dimensions there too). True when
+    taken."""
+    for rect, cont, index in getattr(window, "_dims3d_hits", []):
+        if rect.adjusted(-3, -3, 3, 3).contains(pos.x(), pos.y()):
+            edit(window, rect, cont, index)
+            return True
+    return False
+
+
+def edit(window, rect, cont, index):
+    from PyQt5.QtWidgets import QLineEdit
+    view = window.view3d
+    old = getattr(view, "_dim3d_editor", None)
+    if old is not None:
+        old.deleteLater()
+    row = sc.rows(cont)[index]
+    box = QLineEdit(str(row.get("value", "")), view)
+    box.setFixedWidth(max(70, int(rect.width()) + 20))
+    box.move(int(rect.x()) - 8, int(rect.y()) - 3)
+    box.selectAll()
+    box.show()
+    box.setFocus()
+    view._dim3d_editor = box
+
+    def done():
+        if getattr(view, "_dim3d_editor", None) is not box:
+            return
+        view._dim3d_editor = None
+        text = box.text().strip().replace(",", ".")
+        box.deleteLater()
+        try:
+            value = float(text)
+        except ValueError:
+            value = text                    # an expression of variables
+        try:
+            sc.set_value(window.model, cont, index, value)
+        except (ValueError, KeyError, IndexError) as exc:
+            window.statusBar().showMessage(str(exc), 5000)
+        view.update()
+    box.editingFinished.connect(done)
+    return box

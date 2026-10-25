@@ -85,6 +85,8 @@ class MainWindow(QMainWindow):
         self.view3d.overlay_painters = [
             lambda painter, project: sketch_dims3d.paint(self, painter,
                                                          project)]
+        self.view3d.click_hooks = [
+            lambda pos: sketch_dims3d.press(self, pos)]
 
         left = QSplitter(Qt.Vertical)
         left.addWidget(self.builder)

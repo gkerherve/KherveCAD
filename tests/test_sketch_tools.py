@@ -416,3 +416,21 @@ def test_create_region_makes_a_regions_node_without_extruding(view):
     QTest.keyClick(view.viewport(), Qt.Key_Return)
     types = [n.type for n in _nodes(view)]
     assert "regions" in types and "linear_extrude" not in types
+
+
+def test_a_dimension_typed_in_the_3d_view_drives_the_sketch(window):
+    from khervecad import sketch_constraints as sc, sketch_dims3d as d3
+    from PyQt5.QtCore import QRectF
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate")
+    rect = m.add_node("rect", dict(x=0, y=0, width=50, height=20),
+                      parent=obj)
+    sc.add(m, obj, "length", [sc.ref_of(obj, rect, "e0")], 50)
+    window._dims3d_hits = [(QRectF(10, 10, 40, 16), obj, 0)]
+    from PyQt5.QtCore import QPoint
+    assert d3.press(window, QPoint(20, 15))
+    box = window.view3d._dim3d_editor
+    box.setText("75")
+    box.editingFinished.emit()
+    assert rect.params["width"] == pytest.approx(75, abs=1e-3)
+    assert not d3.press(window, QPoint(300, 300))

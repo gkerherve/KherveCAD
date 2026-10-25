@@ -1935,6 +1935,16 @@ class View3D(QWidget):
         if self.edit_tool is not None and self._pick_cb is None \
                 and self.edit_tool.mouse_press(event):
             return
+        if event.button() == Qt.LeftButton and self._pick_cb is None:
+            # others' clickable drawings (a sketch dimension's value)
+            for hook in getattr(self, "click_hooks", ()):
+                try:
+                    if hook(event.pos()):
+                        event.accept()
+                        return
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
         if self._pick_cb is not None:
             # picking: a drag still turns (left) or pans (right / middle)
             # the view; only a CLICK — released where it was pressed —
