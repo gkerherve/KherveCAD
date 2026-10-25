@@ -60,10 +60,10 @@ def apply(model, group, part, kind):
         return None
     tool.name = label
     if op == "linear_extrude":
+        # through all (both ways, the far side is air): one node, no
+        # mirror to flip it into the part (the user: a simpler tree)
         tool.params["height"] = DEPTH
-        outer = model.wrap_nodes([tool], "mirror")     # into the part
-        outer.params.update(x=0.0, y=0.0, z=1.0)
-        outer.name = label + " (into the face)"
+        tool.params["extent"] = "through_all"
     elif op == "rotate_extrude":
         outer = model.wrap_nodes([tool], "rotate")     # about sketch Y
         outer.params.update(x=-90.0, y=0.0, z=0.0)
@@ -87,6 +87,10 @@ def apply(model, group, part, kind):
         model.move_node(group, frame)
     if diff is not None:
         diff.name = label
+        group.name = "Cut sketch"
+        if op == "linear_extrude":
+            from . import extent
+            extent.refresh(model)
         model.node_changed.emit(diff)
     return diff
 

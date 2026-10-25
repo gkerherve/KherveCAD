@@ -172,8 +172,16 @@ class ObjectTree(QTreeWidget):
         node = self.node_of(item)
         if node is not None and node.type == "component":
             self.open_component.emit(node)
-        else:
-            self.editItem(item, 0)
+            return
+        from . import face_sketch
+        win = self.window()
+        if node is not None and face_sketch.group_of(node) is not None \
+                and hasattr(win, "_set_tool"):
+            # a sketch drawn on a face (a cut's): open it again, square on
+            from . import normal_to
+            normal_to.edit(win, node)
+            return
+        self.editItem(item, 0)
 
     # ------------------------------------------------------------ sync
     def node_of(self, item: QTreeWidgetItem):

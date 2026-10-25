@@ -456,7 +456,7 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     from khervecad import cut_feature, face_sketch
     from khervecad import sketch_constraints as sc
     m = window.model
-    block = m.add_node("cube", dict(x=40, y=40, z=20))
+    block = m.add_node("cube", dict(width=40, depth=40, height=20))
     group = m.add_node("union", dict(x=20, y=20, z=20))
     group.params[face_sketch.KEY] = True
     circle = m.add_node("circle", dict(x=0, y=0, radius=5), parent=group)
@@ -467,7 +467,9 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     assert diff is not None and diff.type == "difference"
     assert diff.children[0] is block and diff.children[1] is group
     ext = [n for n in group.walk() if n.type == "linear_extrude"][0]
-    assert ext.parent.type == "mirror"
+    assert ext.parent is group and ext.params["extent"] == "through_all"
+    assert ext.params["height"] > 20          # right through the block
+    assert group.name == "Cut sketch"
     # the dimension went into the extrude with the circle, still driving
     sc.set_value(m, ext, 0, 16)
     assert circle.params["radius"] == pytest.approx(8, abs=1e-3)
@@ -481,7 +483,7 @@ def test_extruded_cut_reaches_a_part_nested_in_an_object(window):
     m = window.model
     obj = m.add_node("component", {}, name="Part")
     inner = m.add_node("union", dict(x=100, y=0, z=0), parent=obj)
-    block = m.add_node("cube", dict(x=40, y=40, z=20), parent=inner)
+    block = m.add_node("cube", dict(width=40, depth=40, height=20), parent=inner)
     group = m.add_node("union", dict(x=120, y=20, z=20), parent=obj)
     group.params[face_sketch.KEY] = True
     m.add_node("circle", dict(x=0, y=0, radius=5), parent=group)
@@ -530,3 +532,30 @@ def test_the_face_sketched_on_shows_with_its_arc_centre(window):
     window.view2d.viewport().repaint()          # draws, no error
     face_sketch.close(window)
     assert scene.face_outline is None
+
+
+def test_a_cut_sketch_opens_again_with_its_face(window):
+    """Double-click the slot of a cut in the tree: its face sketch opens
+    again, showing the face's outline, to change its dimensions."""
+    from khervecad import cut_feature, face_sketch
+    m = window.model
+    block = m.add_node("cube", dict(width=40, depth=40, height=20))
+    group = m.add_node("union", dict(x=20, y=20, z=20))
+    group.params[face_sketch.KEY] = True
+    line = m.add_node("line", dict(x1=-5, y1=0, x2=5, y2=0, width=4),
+                      parent=group)
+    group.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(group): block}
+    diff = cut_feature.finish(window, group)
+    assert diff is not None
+    QApplication.processEvents()
+    tree = window.builder.tree
+    tree.rebuild()
+    item = tree._item_of(line)
+    assert item is not None
+    tree._double_clicked(item, 0)
+    QApplication.processEvents()
+    assert window._face_sketch is group
+    info = window.view2d.scene().face_outline
+    assert info and len(info["segments"]) >= 4     # the block's top
+    face_sketch.close(window)

@@ -136,19 +136,40 @@ def make(window, part, point, normal):
         z=round(float(point[2]), 4), rx=rx, ry=ry, rz=rz), parent=scope)
     group.params[KEY] = True
     model.rename(group, "Sketch on " + getattr(part, "name", "face"))
-    from . import face_outline           # the face itself, in the sketch
-    try:
-        face_outline.show(window, group, part)
-    except Exception:                    # never stop the sketch opening
-        import traceback
-        traceback.print_exc()
+    group._outline_part = part
     open_sketch(window, group)
     return group
 
 
+def part_of(group):
+    """The part a face sketch was drawn on: the one its cut cuts (the
+    Difference's first child), else the sibling before it."""
+    part = getattr(group, "_outline_part", None)
+    if part is not None and part.parent is not None:
+        return part
+    probe = group.parent
+    child = group
+    while probe is not None:
+        if probe.type == "difference" and probe.children and \
+                probe.children[0] is not child:
+            return probe.children[0]
+        child, probe = probe, probe.parent
+    parent = group.parent
+    if parent is None:
+        return None
+    i = parent.children.index(group)
+    return next((n for n in reversed(parent.children[:i]) if n.visible),
+                None)
+
+
 def open_sketch(window, group):
     """Turn to the face and sketch inside *group*."""
-    from . import normal_to
+    from . import face_outline, normal_to
+    try:                                 # the face itself, in the sketch
+        face_outline.show(window, group, part_of(group))
+    except Exception:                    # never stop the sketch opening
+        import traceback
+        traceback.print_exc()
     window._face_sketch = group
     normal = _normal_of(group)
     window._face_sketch_info = dict(group=group)
