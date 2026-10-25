@@ -354,26 +354,22 @@ def _under(node, scope):
 
 def shown_containers(scene):
     """The sketches whose dimensions and relations are drawn: each
-    Object keeps its own (the user, 2026-10-25 — they were drawn round
-    every part at once). In the Object tab, the active Object's; in Main,
-    those of the part(s) selected, else of the part last dimensioned."""
+    sketch's own, wherever its shapes are on the view — they belong to
+    their Object and move with it (the user, 2026-10-25). In the Object
+    tab only the active Object's; hidden sketches show none."""
     model = scene.model
-    conts = [c for c in sc.containers(model) if c.visible]
     resolver = getattr(scene, "isolation_resolver", None)
     scope = resolver() if resolver else None
-    if scope is not None and scope is not model.root:
-        return [c for c in conts if _under(c, scope)]
-    tops = set()
-    for item in scene.selectedItems():
-        node = getattr(item, "node", None)
-        if node is not None:
-            tops.add(id(_top(node, model.root)))
-    last = getattr(model, "_last_sketch", None)
-    if not tops and last is not None:
-        tops.add(id(_top(last, model.root)))
-    # loose shapes of the document itself always show theirs
-    return [c for c in conts if c is model.root
-            or id(_top(c, model.root)) in tops]
+    drawn = {id(it.node.parent) for it in _shape_items(scene)}
+    out = []
+    for c in sc.containers(model):
+        if not c.visible or id(c) not in drawn:
+            continue
+        if scope is not None and scope is not model.root and \
+                not _under(c, scope):
+            continue
+        out.append(c)
+    return out
 
 
 #: px between marks sharing a spot, and the size a mark answers clicks
