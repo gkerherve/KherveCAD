@@ -324,19 +324,27 @@ def _stop_select(d):
 
 
 # ------------------------------------------------ the Cut features
-# SolidWorks-like (the user's ribbon picture): a solid with the cut
-# really taken out of it, the cut's faces in the cut colour
+# SolidWorks-like (the user's ribbon picture): a pale grey-blue solid
+# with the cut really taken out of it, the cut's faces a darker
+# grey-blue — never red (the user: "still red and not like SolidWorks")
+from PyQt5.QtGui import QColor as _QC
+_BODY = _QC("#cdd6e0")
+_CUT = _QC("#8297ad")
+
+
+def _block(d, x=0.0, y=0.0, z=0.0, dx=1.6, dy=1.6, dz=0.8):
+    d.box(x, y, z, dx, dy, dz, _BODY)
 
 
 @draws("extruded_cut")
 def _extruded_cut(d):
     """A block with a step cut out of its right half: the floor and the
     wall of the cut in the cut colour (SolidWorks' Extruded Cut)."""
-    cut = d.pal.cut
-    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.5)
+    cut = _CUT
+    _block(d, dz=0.5)
     d.poly([d.P(0.9, 0.0, 0.5), d.P(1.6, 0.0, 0.5), d.P(1.6, 1.6, 0.5),
             d.P(0.9, 1.6, 0.5)], cut, color=d.pal.edge, width=0.035)
-    d.box(0.0, 0.0, 0.5, 0.9, 1.6, 0.6)
+    _block(d, 0.0, 0.0, 0.5, 0.9, 1.6, 0.6)
     d.poly([d.P(0.9, 0.0, 0.5), d.P(0.9, 1.6, 0.5), d.P(0.9, 1.6, 1.1),
             d.P(0.9, 0.0, 1.1)], cut, color=d.pal.edge, width=0.035)
 
@@ -344,23 +352,23 @@ def _extruded_cut(d):
 @draws("revolved_cut")
 def _revolved_cut(d):
     """A round bar with a deep groove turned into it."""
-    d.cyl(0.0, 0.0, 0.0, 0.75, 0.5)
-    d.cyl(0.0, 0.0, 0.5, 0.42, 0.4, d.pal.cut)            # the groove
-    d.cyl(0.0, 0.0, 0.9, 0.75, 0.5)
+    d.cyl(0.0, 0.0, 0.0, 0.75, 0.5, _BODY)
+    d.cyl(0.0, 0.0, 0.5, 0.42, 0.4, _CUT)            # the groove
+    d.cyl(0.0, 0.0, 0.9, 0.75, 0.5, _BODY)
 
 
 @draws("swept_cut")
 def _swept_cut(d):
     """A block with a curving channel cut along its top."""
     from PyQt5.QtGui import QPainterPath
-    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.7)
+    _block(d, dz=0.7)
     path = QPainterPath(d.P(0.0, 0.4, 0.7))
     path.cubicTo(d.P(0.7, 0.3, 0.7), d.P(0.8, 1.3, 0.7),
                  d.P(1.6, 1.2, 0.7))
     d.p.setBrush(Qt.NoBrush)
     d.p.setPen(d.pen(d.pal.edge, 0.17))
     d.p.drawPath(path)
-    d.p.setPen(d.pen(d.pal.cut, 0.11))
+    d.p.setPen(d.pen(_CUT, 0.11))
     d.p.drawPath(path)
 
 
@@ -368,8 +376,8 @@ def _swept_cut(d):
 def _lofted_cut(d):
     """A block with a pocket narrowing from a wide mouth to a small
     floor: its sloping far walls show."""
-    cut = d.pal.cut
-    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.8)
+    cut = _CUT
+    _block(d)
     top = [d.P(x, y, 0.8) for x, y in ((0.25, 0.25), (1.35, 0.25),
                                       (1.35, 1.35), (0.25, 1.35))]
     low = [d.P(x, y, 0.2) for x, y in ((0.6, 0.6), (1.0, 0.6),
@@ -386,16 +394,33 @@ def _lofted_cut(d):
 def _boundary_cut(d):
     """A block with its front corner scooped out by a curved surface."""
     from PyQt5.QtGui import QPainterPath
-    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.8)
+    _block(d)
     scoop = QPainterPath(d.P(1.6, 0.0, 0.8))
     scoop.lineTo(d.P(1.6, 0.9, 0.8))
     scoop.quadTo(d.P(1.0, 0.8, 0.5), d.P(0.7, 0.0, 0.8))
     scoop.closeSubpath()
     d.p.setPen(d.pen(d.pal.edge, 0.04))
-    d.p.setBrush(d.pal.cut)
+    d.p.setBrush(_CUT)
     d.p.drawPath(scoop)
     side = QPainterPath(d.P(1.6, 0.0, 0.8))
     side.lineTo(d.P(0.7, 0.0, 0.8))
     side.quadTo(d.P(1.1, 0.0, 0.25), d.P(1.6, 0.0, 0.25))
     side.closeSubpath()
     d.p.drawPath(side)
+
+
+@draws("hole_wizard")
+def _hole_wizard(d):
+    """The cut family's look: a grey-blue block with a counterbored hole
+    and a small wand star over it (SolidWorks' Hole Wizard)."""
+    _block(d, -0.8, -0.8, 0.0, 1.6, 1.6, 0.7)
+    d.poly([d.P(*q) for q in d.ring(0, 0, 0.7, 0.55)], _CUT, width=0.03)
+    d.poly([d.P(*q) for q in d.ring(0, 0, 0.7, 0.3)], _QC("#55687d"),
+           width=0.03)
+    star = d.P(0.55, -0.55, 1.45)
+    for k in range(4):
+        a = math.radians(45 * k)
+        dx, dy = 0.22 * d.k * math.cos(a), 0.22 * d.k * math.sin(a)
+        d.p.setPen(d.pen(_QC("#e0a100"), 0.05))
+        d.p.drawLine(QPointF(star.x() - dx, star.y() - dy),
+                     QPointF(star.x() + dx, star.y() + dy))

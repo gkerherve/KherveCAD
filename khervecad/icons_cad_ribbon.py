@@ -169,7 +169,7 @@ def _polyhedron(d):
                                                  (a[1] + b[1])))])
 
 
-@draws("hole", "hole_wizard")
+@draws("hole")
 def _hole(d):
     d.box(-1, -1, 0, 2, 2, 0.8)
     ring = d.ring(0, 0, 0.8, 0.55)
