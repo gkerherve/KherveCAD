@@ -607,3 +607,36 @@ def test_drawing_snaps_to_the_centre_of_a_shape_already_there(view):
     view.set_tool(st.SLOT)                      # a drawing tool
     hit = view.scene().snap(QPointF(30.4, 10.3))
     assert abs(hit.x() - 30) < 1e-6 and abs(hit.y() - 10) < 1e-6
+
+
+def test_undo_in_a_face_sketch_removes_it_from_the_2d_view(window,
+                                                           monkeypatch):
+    """The user: undo while sketching removed things in 3D only. The
+    face sketch is found again in the restored tree, so the 2D view
+    drops the undone shape too."""
+    from khervecad import face_sketch, model as model_mod
+    from khervecad.view2d import ShapeItem
+    monkeypatch.setattr(window.model, "UNDO_MERGE_S", 0.0)  # step each
+    m = window.model
+    block = m.add_node("cube", dict(width=40, depth=40, height=20))
+    for _ in range(3):
+        QApplication.processEvents()
+    group = face_sketch.make(window, block, (20.0, 20.0, 20.0),
+                             (0.0, 0.0, 1.0))
+    for _ in range(3):
+        QApplication.processEvents()
+    m.add_node("circle", dict(x=0, y=0, radius=5), parent=group)
+    for _ in range(3):
+        QApplication.processEvents()
+    scene = window.view2d.scene()
+
+    def circles():
+        return [it for it in scene.items() if isinstance(it, ShapeItem)
+                and it.node.type == "circle"]
+    assert circles()
+    m.undo_stack.undo()
+    for _ in range(5):
+        QApplication.processEvents()
+    assert not circles()
+    assert face_sketch.current(window) is not group      # the new copy
+    face_sketch.close(window)

@@ -1293,6 +1293,7 @@ class DocumentModel(QObject):
         self._restoring = True
         try:
             data = json.loads(state)
+            self._previous_root = self.root    # a view may still hold it
             self.root = node_from_dict(data["tree"])
             retire_masters(self.root)
             self.dimensions = [dict(d) for d in data.get("dimensions", [])]

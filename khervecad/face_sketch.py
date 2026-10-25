@@ -141,6 +141,38 @@ def make(window, part, point, normal):
     return group
 
 
+def current(window):
+    """The face sketch open now — found again in the restored tree after
+    an undo (the tree is rebuilt from a snapshot: the old Group object
+    is gone, and the 2D view kept drawing what the undo removed)."""
+    group = getattr(window, "_face_sketch", None)
+    if group is None:
+        return None
+    root = window.model.root
+    probe = group
+    while probe.parent is not None:
+        probe = probe.parent
+    if probe is root:
+        return group
+    old = getattr(window.model, "_previous_root", None)
+    path, node = [], group
+    while node.parent is not None:
+        path.append(node.parent.children.index(node))
+        node = node.parent
+    if node is not old:
+        return group
+    found = root
+    for i in reversed(path):
+        if i >= len(found.children):
+            found = None
+            break
+        found = found.children[i]
+    if found is not None and found.params.get(KEY):
+        window._face_sketch = found
+        return found
+    return group
+
+
 def part_of(group):
     """The part a face sketch was drawn on: the one its cut cuts (the
     Difference's first child), else the sibling before it."""
