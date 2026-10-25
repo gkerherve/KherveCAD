@@ -136,6 +136,12 @@ def make(window, part, point, normal):
         z=round(float(point[2]), 4), rx=rx, ry=ry, rz=rz), parent=scope)
     group.params[KEY] = True
     model.rename(group, "Sketch on " + getattr(part, "name", "face"))
+    from . import face_outline           # the face itself, in the sketch
+    try:
+        face_outline.show(window, group, part)
+    except Exception:                    # never stop the sketch opening
+        import traceback
+        traceback.print_exc()
     open_sketch(window, group)
     return group
 
@@ -197,6 +203,8 @@ def close(window):
     goes."""
     group = getattr(window, "_face_sketch", None)
     window._face_sketch = None
+    from . import face_outline
+    face_outline.clear(window)
     if group is not None and group.parent is not None and \
             not group.children:
         window.model.remove_node(group)

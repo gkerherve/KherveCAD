@@ -439,13 +439,15 @@ def _panel_actions(win, key):
                                    ("con_", "sk_"))]
     if key == "cuts":
         # SolidWorks' Extruded / Revolved / Swept / Lofted / Boundary Cut
-        from . import cut_feature
-        return title, list(cut_feature.actions(win))
+        from . import cut_feature, hole_wizard
+        acts = list(cut_feature.actions(win))
+        # the Hole Wizard sits with the cuts, after Extruded Cut, as on
+        # SolidWorks' ribbon (the user)
+        return title, acts[:1] + [hole_wizard.action(win)] + acts[1:]
     if key == "mechanical":
-        # SolidWorks' Hole Wizard leads the features (hole_wizard.py)
-        from . import hole_wizard
-        rest = _panel_actions(win, "_mechanical_menu")[1]
-        return title, [hole_wizard.action(win)] + rest
+        # the mechanical parts (gears, threads, knurls…); the Hole Wizard
+        # is in the Cut panel now
+        return title, _panel_actions(win, "_mechanical_menu")[1]
     if key == "_mechanical_menu":
         key = "mechanical"
     if key in MENU_PANELS:

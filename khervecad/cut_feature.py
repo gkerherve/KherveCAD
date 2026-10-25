@@ -51,7 +51,8 @@ def _shapes(group):
 def apply(model, group, part, kind):
     """Cut the sketch *group* into *part*. Returns the Difference."""
     shapes = _shapes(group)
-    if not shapes or part is None or group.parent is not part.parent:
+    if not shapes or part is None or group.parent is None or \
+            not _inside(part, group.parent):
         return None
     label, op, _g = KINDS[kind]
     tool = model.wrap_nodes(shapes, op)
@@ -72,11 +73,40 @@ def apply(model, group, part, kind):
         outer = model.wrap_nodes([tool], "mirror")
         outer.params.update(x=0.0, y=0.0, z=1.0)
     group.params.pop(KEY, None)
-    diff = model.wrap_nodes([part, group], "difference")
+    if group.parent is part.parent:
+        diff = model.wrap_nodes([part, group], "difference")
+    else:
+        # a part nested deeper (inside an Object's groups): the cut goes
+        # round the part, the sketch carried into the part's own frame
+        diff = model.wrap_nodes([part], "difference")
+        if diff is None:
+            return None
+        frame = model.add_node("multmatrix", {
+            "matrix": _to_frame(part, group.parent)}, parent=diff,
+            name=label + " (to the part's frame)")
+        model.move_node(group, frame)
     if diff is not None:
         diff.name = label
         model.node_changed.emit(diff)
     return diff
+
+
+def _inside(node, scope):
+    while node is not None:
+        if node is scope:
+            return True
+        node = node.parent
+    return False
+
+
+def _to_frame(part, scope):
+    """The 4x4 matrix taking *scope*'s coordinates (where the face
+    sketch sits) into the frame *part* lives in."""
+    import numpy as np
+    from . import mesh
+    m = np.array(mesh.ancestor_matrix(part, {}, stop=scope), dtype=float)
+    inv = np.linalg.inv(m)
+    return [[round(float(v), 9) for v in row] for row in inv]
 
 
 # =================================================================== Qt

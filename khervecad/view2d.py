@@ -905,6 +905,11 @@ class SketchScene(QGraphicsScene):
         return rot
 
     def snap(self, pos: QPointF) -> QPointF:
+        # the face sketched on: its corners and arc centres first
+        from . import face_outline
+        hit = face_outline.snap(self, pos)
+        if hit is not None:
+            return hit
         if not self.snap_enabled:
             return pos
         g = self.grid_size
@@ -2280,6 +2285,11 @@ class SketchView(QGraphicsView):
         painter.setBrush(Qt.NoBrush)
 
     def drawForeground(self, painter, rect):
+        from . import face_outline       # the face sketched on, grey
+        try:
+            face_outline.paint(self.scene(), painter)
+        except Exception:               # never raise out of a paint
+            pass
         super().drawForeground(painter, rect)
         self._dim_hits = []           # every clickable value, this paint
         from . import sketch_constrain_ui

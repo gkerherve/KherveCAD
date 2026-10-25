@@ -324,65 +324,78 @@ def _stop_select(d):
 
 
 # ------------------------------------------------ the Cut features
-def _block(d):
-    d.box(-0.75, -0.75, 0.0, 1.5, 1.5, 0.6)
+# SolidWorks-like (the user's ribbon picture): a solid with the cut
+# really taken out of it, the cut's faces in the cut colour
 
 
 @draws("extruded_cut")
 def _extruded_cut(d):
-    """A block with a round pocket pushed down into its top."""
-    _block(d)
-    d.poly([d.P(-0.1 + 0.35 * math.cos(a), 0.1 + 0.35 * math.sin(a), 0.6)
-            for a in [i * math.pi / 8 for i in range(16)]],
-           d.pal.cut, color=d.pal.edge, width=0.04)
-    d.arrow(d.P(0.6, -0.6, 1.4), d.P(0.6, -0.6, 0.7), d.pal.cut)
+    """A block with a step cut out of its right half: the floor and the
+    wall of the cut in the cut colour (SolidWorks' Extruded Cut)."""
+    cut = d.pal.cut
+    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.5)
+    d.poly([d.P(0.9, 0.0, 0.5), d.P(1.6, 0.0, 0.5), d.P(1.6, 1.6, 0.5),
+            d.P(0.9, 1.6, 0.5)], cut, color=d.pal.edge, width=0.035)
+    d.box(0.0, 0.0, 0.5, 0.9, 1.6, 0.6)
+    d.poly([d.P(0.9, 0.0, 0.5), d.P(0.9, 1.6, 0.5), d.P(0.9, 1.6, 1.1),
+            d.P(0.9, 0.0, 1.1)], cut, color=d.pal.edge, width=0.035)
 
 
 @draws("revolved_cut")
 def _revolved_cut(d):
-    """A block with a groove turned round its top."""
-    _block(d)
-    d.poly([d.P(0.55 * math.cos(a), 0.55 * math.sin(a), 0.6)
-            for a in [i * math.pi / 10 for i in range(20)]],
-           None, color=d.pal.cut, width=0.09)
-    d.arrow(d.P(0.7, -0.5, 0.95), d.P(0.2, 0.6, 0.95), d.pal.cut, 0.05)
+    """A round bar with a deep groove turned into it."""
+    d.cyl(0.0, 0.0, 0.0, 0.75, 0.5)
+    d.cyl(0.0, 0.0, 0.5, 0.42, 0.4, d.pal.cut)            # the groove
+    d.cyl(0.0, 0.0, 0.9, 0.75, 0.5)
 
 
 @draws("swept_cut")
 def _swept_cut(d):
-    """A block with a curving channel along its top."""
+    """A block with a curving channel cut along its top."""
     from PyQt5.QtGui import QPainterPath
-    _block(d)
-    path = QPainterPath(d.P(-0.7, -0.4, 0.6))
-    path.cubicTo(d.P(-0.2, 0.4, 0.6), d.P(0.2, -0.5, 0.6),
-                 d.P(0.7, 0.3, 0.6))
-    pen = d.pen(d.pal.cut, 0.14)
-    d.p.setPen(pen)
+    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.7)
+    path = QPainterPath(d.P(0.0, 0.4, 0.7))
+    path.cubicTo(d.P(0.7, 0.3, 0.7), d.P(0.8, 1.3, 0.7),
+                 d.P(1.6, 1.2, 0.7))
     d.p.setBrush(Qt.NoBrush)
+    d.p.setPen(d.pen(d.pal.edge, 0.17))
+    d.p.drawPath(path)
+    d.p.setPen(d.pen(d.pal.cut, 0.11))
     d.p.drawPath(path)
 
 
 @draws("lofted_cut")
 def _lofted_cut(d):
-    """A block cut by a pocket narrowing from a square to a small one."""
-    _block(d)
-    big = [d.P(x, y, 0.6) for x, y in ((-0.45, -0.45), (0.45, -0.45),
-                                      (0.45, 0.45), (-0.45, 0.45))]
-    d.poly(big, d.pal.cut, color=d.pal.edge, width=0.04)
-    small = [d.P(x, y, 0.6) for x, y in ((-0.15, -0.15), (0.15, -0.15),
-                                        (0.15, 0.15), (-0.15, 0.15))]
-    d.poly(small, d.pal.paper, color=d.pal.edge, width=0.03)
+    """A block with a pocket narrowing from a wide mouth to a small
+    floor: its sloping far walls show."""
+    cut = d.pal.cut
+    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.8)
+    top = [d.P(x, y, 0.8) for x, y in ((0.25, 0.25), (1.35, 0.25),
+                                      (1.35, 1.35), (0.25, 1.35))]
+    low = [d.P(x, y, 0.2) for x, y in ((0.6, 0.6), (1.0, 0.6),
+                                      (1.0, 1.0), (0.6, 1.0))]
+    d.poly([top[3], top[2], low[2], low[3]], cut, color=d.pal.edge,
+           width=0.03)                                    # far slope
+    d.poly([top[0], top[3], low[3], low[0]], cut, color=d.pal.edge,
+           width=0.03)                                    # left slope
+    d.poly(low, cut, color=d.pal.edge, width=0.03)        # floor
+    d.poly(top, None, color=d.pal.edge, width=0.04)       # the mouth
 
 
 @draws("boundary_cut")
 def _boundary_cut(d):
-    """A block whose top corner is carved by a curved boundary."""
+    """A block with its front corner scooped out by a curved surface."""
     from PyQt5.QtGui import QPainterPath
-    _block(d)
-    path = QPainterPath(d.P(0.75, -0.75, 0.6))
-    path.lineTo(d.P(0.75, 0.2, 0.6))
-    path.quadTo(d.P(0.1, 0.1, 0.6), d.P(-0.2, -0.75, 0.6))
-    path.closeSubpath()
+    d.box(0.0, 0.0, 0.0, 1.6, 1.6, 0.8)
+    scoop = QPainterPath(d.P(1.6, 0.0, 0.8))
+    scoop.lineTo(d.P(1.6, 0.9, 0.8))
+    scoop.quadTo(d.P(1.0, 0.8, 0.5), d.P(0.7, 0.0, 0.8))
+    scoop.closeSubpath()
     d.p.setPen(d.pen(d.pal.edge, 0.04))
     d.p.setBrush(d.pal.cut)
-    d.p.drawPath(path)
+    d.p.drawPath(scoop)
+    side = QPainterPath(d.P(1.6, 0.0, 0.8))
+    side.lineTo(d.P(0.7, 0.0, 0.8))
+    side.quadTo(d.P(1.1, 0.0, 0.25), d.P(1.6, 0.0, 0.25))
+    side.closeSubpath()
+    d.p.drawPath(side)

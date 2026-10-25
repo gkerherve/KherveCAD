@@ -471,3 +471,62 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     # the dimension went into the extrude with the circle, still driving
     sc.set_value(m, ext, 0, 16)
     assert circle.params["radius"] == pytest.approx(8, abs=1e-3)
+
+
+def test_extruded_cut_reaches_a_part_nested_in_an_object(window):
+    """The face sketch sits in the Object; the block is two levels down
+    under a moved group: the cut wraps the block, the sketch carried
+    into its frame, and lands where it was drawn."""
+    from khervecad import cut_feature, face_sketch, mesh
+    m = window.model
+    obj = m.add_node("component", {}, name="Part")
+    inner = m.add_node("union", dict(x=100, y=0, z=0), parent=obj)
+    block = m.add_node("cube", dict(x=40, y=40, z=20), parent=inner)
+    group = m.add_node("union", dict(x=120, y=20, z=20), parent=obj)
+    group.params[face_sketch.KEY] = True
+    m.add_node("circle", dict(x=0, y=0, radius=5), parent=group)
+    group.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(group): block}
+    diff = cut_feature.finish(window, group)
+    assert diff is not None and diff.parent is inner
+    assert diff.children[0] is block
+    frame = diff.children[1]
+    assert frame.type == "multmatrix" and group.parent is frame
+    # the circle's centre, in the block's frame, is (20, 20): the middle
+    # of its top, where it was drawn on the face
+    M = frame.params["matrix"]
+    g = mesh.node_matrix(group, {})
+    at = [sum(M[r][k] * g[k][3] for k in range(4)) for r in range(3)]
+    assert at[0] == pytest.approx(20) and at[1] == pytest.approx(20)
+
+
+def test_the_face_sketched_on_shows_with_its_arc_centre(window):
+    """The user's plate (a rectangle with a round end): sketching on its
+    top face shows the face's outline in the sketch, and the cursor
+    snaps to the round end's centre — where the slot starts."""
+    from khervecad import sketch_regions as sr, face_sketch
+    from PyQt5.QtCore import QPointF
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate")
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44),
+                      parent=obj)
+    circle = m.add_node("circle", dict(x=37, y=0, radius=22), parent=obj)
+    faces = sr.faces(sr.shapes_of(obj))
+    sr.extrude(m, obj, faces, [sr.face_at(faces, (0, 0)),
+                               sr.face_at(faces, (45, 0))],
+               hide=[rect, circle])
+    QApplication.processEvents()
+    face_sketch.make(window, obj, (0.0, 0.0, 10.0), (0.0, 0.0, 1.0))
+    scene = window.view2d.scene()
+    info = scene.face_outline
+    assert info and info["segments"]
+    xs = [p[0] for s in info["segments"] for p in s]
+    assert max(xs) == pytest.approx(59, abs=0.5)
+    assert min(xs) == pytest.approx(-59, abs=0.5)
+    centres = [(x, y) for x, y, k in info["points"] if k == "centre"]
+    assert any(abs(x - 37) < 0.5 and abs(y) < 0.5 for x, y in centres)
+    hit = scene.snap(QPointF(37.3, 0.4))
+    assert abs(hit.x() - 37) < 0.5 and abs(hit.y()) < 0.5
+    window.view2d.viewport().repaint()          # draws, no error
+    face_sketch.close(window)
+    assert scene.face_outline is None
