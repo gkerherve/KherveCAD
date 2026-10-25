@@ -352,9 +352,11 @@ def _extruded_cut(d):
 @draws("revolved_cut")
 def _revolved_cut(d):
     """A round bar with a deep groove turned into it."""
-    d.cyl(0.0, 0.0, 0.0, 0.75, 0.5, _BODY)
-    d.cyl(0.0, 0.0, 0.5, 0.42, 0.4, _CUT)            # the groove
-    d.cyl(0.0, 0.0, 0.9, 0.75, 0.5, _BODY)
+    # a deep, dark groove between two collars, its floor and the lower
+    # collar's top showing, so it reads at 18 px (the user)
+    d.cyl(0.0, 0.0, 0.0, 0.8, 0.45, _BODY)
+    d.cyl(0.0, 0.0, 0.45, 0.4, 0.55, _QC("#4f6378"))     # the groove
+    d.cyl(0.0, 0.0, 1.0, 0.8, 0.45, _BODY)
 
 
 @draws("swept_cut")

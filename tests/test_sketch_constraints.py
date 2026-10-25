@@ -546,3 +546,27 @@ def test_dimensions_follow_their_shapes_into_an_extrude():
     assert sc.rows(obj)[0]["refs"] == ["0.l"]
     sc.set_value(m, ext, 0, 70)
     assert rect.params["width"] == pytest.approx(70, abs=1e-3)
+
+
+def test_smart_dimension_gives_a_slots_end_radius(view, monkeypatch):
+    """The user's SolidWorks slot: Smart Dimension on a slot's round end
+    is its radius from that end's centre (R8 makes it 16 wide), and its
+    straight length is centre to centre."""
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    slot = m.add_node("line", dict(x1=0, y1=0, x2=24, y2=0, width=10))
+    answers = iter(["8", "30"])
+    view.scene().ask_value = lambda kind, measured: next(answers)
+    view.set_tool(ui.DIMENSION)
+    QApplication.processEvents()
+    _click(view, 29, 0)                   # on the right round end
+    rows = sc.rows(m.root)
+    assert [r["kind"] for r in rows] == ["radius"]
+    assert rows[0]["refs"] == ["0.a2"]
+    assert slot.params["width"] == pytest.approx(16, abs=1e-3)
+    _click(view, 12, 0)                   # the centre line…
+    _click(view, 60, -40)                 # …then empty paper: its length
+    assert math.hypot(slot.params["x2"] - slot.params["x1"],
+                      slot.params["y2"] - slot.params["y1"]) == \
+        pytest.approx(30, abs=1e-3)
+    assert slot.params["width"] == pytest.approx(16, abs=1e-3)

@@ -97,11 +97,14 @@ def _num(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
-def _vars(node):
+def _vars(node, slot=False):
     """(param path, value) of a shape's free numbers. A path is a key,
-    or (key, row, col) for polygon points."""
+    or (key, row, col) for polygon points. A line's width is free only
+    when a row sizes its round end (*slot*): every plain line would
+    otherwise count one more freedom."""
     p = node.params
-    keys = {"line": ("x1", "y1", "x2", "y2"),
+    keys = {"line": ("x1", "y1", "x2", "y2") + (("width",) if slot
+                                                 else ()),
             "rect": ("x", "y", "width", "height"),
             "circle": ("x", "y", "radius")}.get(node.type)
     out = []
@@ -155,7 +158,7 @@ def kind_of(node, name):
         return "point"
     if name in ("l",) or name.startswith("e"):
         return "line"
-    if name == "o":
+    if name in ("o", "a1", "a2"):
         return "circle"
     raise KeyError(name)
 
@@ -200,6 +203,11 @@ def _line(node, name, vals):
 def _circle(node, name, vals):
     if node.type == "circle":
         return _point(node, "c", vals), _f(node, "radius", vals, 1.0)
+    if node.type == "line" and name in ("a1", "a2"):
+        # a slot's round end: centred on that end, half its width
+        # (SolidWorks' slot R from the end's centre, 2026-10-25)
+        return (_point(node, "p" + name[1], vals),
+                _f(node, "width", vals, 1.0) / 2.0)
     raise KeyError(name)
 
 
@@ -388,9 +396,19 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
         return dict(ok=False, error="numpy is needed for constraints")
     rs = rows(container) if rs is None else rs
     nodes = _nodes_of(container, rs)
+    slots = set()
+    for row in rs:
+        for ref in row.get("refs", ()):
+            idx, _, name = ref.partition(".")
+            if name in ("a1", "a2"):
+                slots.add(idx)
     keys, x0, w = [], [], []
     for node in nodes:
-        for path, v in _vars(node):
+        try:
+            slot = str(container.children.index(node)) in slots
+        except ValueError:
+            slot = False
+        for path, v in _vars(node, slot):
             keys.append((node.id, path))
             x0.append(v)
             # what the user just typed or dragged is HELD (it barely

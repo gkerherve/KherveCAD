@@ -158,7 +158,10 @@ def _entities(node):
     """(name, kind) of every entity of a shape."""
     t = node.type
     if t == "line":
-        return [("p1", "point"), ("p2", "point"), ("l", "line")]
+        # a wide line is a slot: its round ends are circles to dimension
+        ends = [("a1", "circle"), ("a2", "circle")] \
+            if float(node.params.get("width", 0) or 0) > 1e-6 else []
+        return [("p1", "point"), ("p2", "point"), ("l", "line")] + ends
     if t == "rect":
         return [("v%d" % i, "point") for i in range(4)] + [("c", "point")] \
             + [("e%d" % i, "line") for i in range(4)]
@@ -588,7 +591,9 @@ def _smart(first, second):
     picks — None when it needs another click."""
     k1 = first[2]
     if k1 == "circle":
-        return "diameter", [first]
+        # a slot's end gives its radius, a circle its diameter
+        return ("radius" if str(first[1]).startswith("a") else
+                "diameter"), [first]
     if second is None:
         return None
     k2 = second[2]
@@ -603,7 +608,8 @@ def _smart(first, second):
     if k1 == "line" and k2 == "point":
         return "point_line", [second, first]
     if k2 == "circle":
-        return "diameter", [second]
+        return ("radius" if str(second[1]).startswith("a") else
+                "diameter"), [second]
     return None
 
 
