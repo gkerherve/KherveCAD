@@ -76,8 +76,11 @@ def apply(model, group, part, kind):
         # blind, DEPTH into the face (Reverse Direction: down -Z); one
         # node, no mirror (a simpler tree). Its depth is the user's to
         # set — Through All is a choice in Properties (End condition)
+        # Through All by default (the user) — a depth typed or dragged
+        # turns it blind (model.set_param), into the face either way
         tool.params["height"] = DEPTH
         tool.params["reverse"] = True
+        tool.params["extent"] = "through_all"
     elif op == "rotate_extrude":
         outer = model.wrap_nodes([tool], "rotate")     # about sketch Y
         outer.params.update(x=-90.0, y=0.0, z=0.0)

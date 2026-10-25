@@ -116,7 +116,16 @@ def _edges(tris, angle=30.0):
         L = math.sqrt(sum(x * x for x in n)) or 1.0
         return tuple(x / L for x in n)
     seen = {}
+    unique, keys = [], set()
     for t in tris:
+        # the same triangle twice (either way round) is ONE face: the
+        # copies made fold "edges" across flat caps (the user's fan of
+        # red lines)
+        k = frozenset(key(v) for v in t)
+        if len(k) == 3 and k not in keys:
+            keys.add(k)
+            unique.append(t)
+    for t in unique:
         n = normal(t)
         for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
             ka, kb = key(a), key(b)

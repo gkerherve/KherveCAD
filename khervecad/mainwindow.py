@@ -1588,10 +1588,9 @@ class MainWindow(QMainWindow):
         if cut:
             inside = {n.id for r in cut_ghost.tool_roots(self.model, ids)
                       for n in r.walk()}
+            # (the Difference itself stays: selecting the cut lights the
+            # whole part it made, the tool shows red)
             ids = {i for i in ids if i not in inside and i not in cut}
-            ids = {i for i in ids
-                   if (self.model.find(i) is None or
-                       self.model.find(i).type != "difference")}
             if not ids:
                 return []
         root = self._render_scope()[0]

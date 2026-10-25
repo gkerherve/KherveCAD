@@ -469,7 +469,7 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     assert diff.children[0] is block and diff.children[1] is group
     ext = [n for n in group.walk() if n.type == "linear_extrude"][0]
     assert ext.parent is group and ext.params.get("reverse")
-    assert not ext.params.get("extent")       # blind: its depth is yours
+    assert ext.params.get("extent") == "through_all"   # the default
     assert group.name == "Cut sketch"
     # a depth typed stays; one typed under Through All switches it off
     m.set_param(ext, "height", 6.0)
@@ -871,8 +871,8 @@ def test_a_selected_cut_shows_in_red(window):
         xs = [v[0] for t in tris for v in t]
         zs = [v[2] for t in tris for v in t]
         assert min(xs) == pytest.approx(16, abs=0.5)   # the slot's end
-        assert max(zs) == pytest.approx(10, abs=0.01)  # from the face…
-        assert min(zs) == pytest.approx(0, abs=0.01)   # …10 mm down
+        assert max(zs) >= 10 - 0.01         # Through All: past the face…
+        assert min(zs) <= 0 + 0.01          # …and out of the bottom
     window.builder.tree.select_nodes([block])
     QApplication.processEvents()
     assert not window._cut_ghost
