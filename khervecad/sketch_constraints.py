@@ -525,6 +525,7 @@ def add(model, container, kind, refs, value=None):
     report = solve(container, rs, env=env)
     container.params[KEY] = rs
     _remember(_nodes_of(container, rs))
+    model._last_sketch = container          # its marks show (the 2D view)
     for nid in report["moved"]:
         model.node_changed.emit(report["nodes"][nid])
     model.node_changed.emit(container)
@@ -578,6 +579,7 @@ def set_value(model, container, index, value):
     container.params[KEY] = rs
     report = solve(container, rs, env=_env(model))
     _remember(_nodes_of(container, rs))
+    model._last_sketch = container
     for nid in report["moved"]:
         model.node_changed.emit(report["nodes"][nid])
     model.node_changed.emit(container)

@@ -338,6 +338,44 @@ def _anchor(view, items, node, name):
     return view.mapFromScene(q)
 
 
+def _top(node, root):
+    while node.parent is not None and node.parent is not root:
+        node = node.parent
+    return node
+
+
+def _under(node, scope):
+    while node is not None:
+        if node is scope:
+            return True
+        node = node.parent
+    return False
+
+
+def shown_containers(scene):
+    """The sketches whose dimensions and relations are drawn: each
+    Object keeps its own (the user, 2026-10-25 — they were drawn round
+    every part at once). In the Object tab, the active Object's; in Main,
+    those of the part(s) selected, else of the part last dimensioned."""
+    model = scene.model
+    conts = [c for c in sc.containers(model) if c.visible]
+    resolver = getattr(scene, "isolation_resolver", None)
+    scope = resolver() if resolver else None
+    if scope is not None and scope is not model.root:
+        return [c for c in conts if _under(c, scope)]
+    tops = set()
+    for item in scene.selectedItems():
+        node = getattr(item, "node", None)
+        if node is not None:
+            tops.add(id(_top(node, model.root)))
+    last = getattr(model, "_last_sketch", None)
+    if not tops and last is not None:
+        tops.add(id(_top(last, model.root)))
+    # loose shapes of the document itself always show theirs
+    return [c for c in conts if c is model.root
+            or id(_top(c, model.root)) in tops]
+
+
 #: px between marks sharing a spot, and the size a mark answers clicks
 MARK_GAP = 4
 MARK_PICK = 9
@@ -369,7 +407,7 @@ def glyphs(view):
         x, y = spot.x() + 5 + dx, spot.y() - 5 - fm.ascent()
         out.append((QRectF(x, y, w, fm.height()), text, cont, index))
 
-    for cont in sc.containers(model):
+    for cont in shown_containers(scene):
         for index, row in enumerate(sc.rows(cont)):
             spots = []
             try:
@@ -459,7 +497,7 @@ def _paint_dimensions(view, painter):
     items = {it.node.id: it for it in _shape_items(scene)}
     ink, bg = QColor("#1565c0"), QColor(255, 255, 255, 235)
     drawn = set()
-    for cont in sc.containers(model):
+    for cont in shown_containers(scene):
         for index, row in enumerate(sc.rows(cont)):
             if row["kind"] not in LINEAR or "value" not in row:
                 continue
@@ -787,6 +825,17 @@ def open_window(win):
     return dlg
 
 
+def _keep(win, act, tool):
+    """Unticked: once the click has done its work, tick it again if the
+    tool is still this one (another tool picked changes it first)."""
+    from PyQt5.QtCore import QTimer
+
+    def check():
+        if win.view2d.scene().tool == tool and not act.isChecked():
+            act.setChecked(True)
+    QTimer.singleShot(0, check)
+
+
 def panel_actions(win):
     """The CONSTRAIN panel: Auto constrain, the Constraints window, then
     one checkable tool per kind (in the window's tool group)."""
@@ -818,6 +867,9 @@ def panel_actions(win):
         toolbars.remember_glyph(act, glyph, "draw")
         tooltips.apply(act, tool)
         act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
+        # a second click on the button keeps the tool (the user: it
+        # switched itself off)
+        act.toggled.connect(lambda on, a=act, t=tool: on or _keep(win, a, t))
         win._tool_group.addAction(act)
         acts.append(act)
     # Delete first, then the constraints (what the panel shows), Auto /
@@ -838,6 +890,7 @@ def panel_actions(win):
     toolbars.remember_glyph(dim, "mdi.ruler", "draw")
     tooltips.apply(dim, DIMENSION)
     dim.triggered.connect(lambda _=False: win._set_tool(DIMENSION))
+    dim.toggled.connect(lambda on: on or _keep(win, dim, DIMENSION))
     win._tool_group.addAction(dim)
     acts = [dim, act] + acts[2:] + acts[:2]
     win._constrain_actions = acts

@@ -493,3 +493,22 @@ def test_diameter_value_drags_out_of_the_way(view, monkeypatch):
     QApplication.processEvents()
     rect2, _ = next(h for h in view._dim_hits if h[1][1] == "constraint")
     assert abs(rect2.center().x() - end.x()) < 3
+
+
+def test_each_object_shows_only_its_own_dimensions(view):
+    """Dimensions belong to their Object: two parts, each dimensioned,
+    show one set at a time (the user: they were drawn round every
+    part)."""
+    m = view.scene().model
+    parts = []
+    for i in range(2):
+        obj = m.add_node("component", {}, name="Part %d" % i)
+        line = m.add_node("line", dict(x1=0, y1=i * 50, x2=30,
+                                       y2=i * 50), parent=obj)
+        sc.add(m, obj, "length", [sc.ref_of(obj, line, "l")], 30 + i)
+        parts.append(obj)
+    QApplication.processEvents()
+    shown = ui.shown_containers(view.scene())
+    assert shown == [parts[1]]                 # the last one dimensioned
+    view.scene().isolation_resolver = lambda: parts[0]
+    assert ui.shown_containers(view.scene()) == [parts[0]]
