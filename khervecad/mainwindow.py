@@ -82,7 +82,10 @@ class MainWindow(QMainWindow):
         self.view2d = SketchView(self.scene)
         self.view3d = View3D()
         from . import sketch_dims3d       # sketch dimensions in 3D too
+        from . import cut_ghost
         self.view3d.overlay_painters = [
+            lambda painter, project: cut_ghost.paint(self, painter,
+                                                     project),
             lambda painter, project: sketch_dims3d.paint(self, painter,
                                                          project)]
         self.view3d.click_hooks = [
@@ -1086,6 +1089,8 @@ class MainWindow(QMainWindow):
             self.view2d.frame_rect(rect)
         tris = self._highlight_tris()
         self.view3d.set_highlight_mesh(tris)
+        from . import cut_ghost           # a selected cut, in red
+        cut_ghost.update(self)
         self._refresh_anchor_markers()
         self._show_dimensions(tris)
         from . import sketch_mode         # the corner views follow it
@@ -1549,6 +1554,19 @@ class MainWindow(QMainWindow):
             return self._highlight_tris_now(ids)
 
     def _highlight_tris_now(self, ids):
+        # a cut's tool is empty space: the red ghost (cut_ghost) shows
+        # it, the solid selection tint would paint a block standing up
+        from . import cut_ghost
+        cut = {r.id for r in cut_ghost.tool_roots(self.model, ids)}
+        if cut:
+            inside = {n.id for r in cut_ghost.tool_roots(self.model, ids)
+                      for n in r.walk()}
+            ids = {i for i in ids if i not in inside and i not in cut}
+            ids = {i for i in ids
+                   if (self.model.find(i) is None or
+                       self.model.find(i).type != "difference")}
+            if not ids:
+                return []
         root = self._render_scope()[0]
         iso = root if root is not self.model.root else None
         plan = getattr(self, "_explode_plan", None)
@@ -1658,6 +1676,8 @@ class MainWindow(QMainWindow):
                              colors if has_colors else None)
         if getattr(self, "_selected_ids", set()):
             self.view3d.set_highlight_mesh(self._highlight_tris())
+            from . import cut_ghost      # the cut follows its edits
+            cut_ghost.update(self)
         if tris and not self._fitted and not self.view3d.user_moved:
             self.view3d.fit()
             self._fitted = True

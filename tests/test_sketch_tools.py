@@ -846,3 +846,33 @@ def test_line_chain_bar_closes_a_shape_for_a_region(view):
         _click(view, x, y)
     sketch_line.undo_line(view.scene())
     assert len([n for n in _nodes(view) if n.type == "line"]) == 4
+
+
+def test_a_selected_cut_shows_in_red(window):
+    """The user: selecting a cut (its Cut sketch, its slot or the
+    Difference) shows the removed volume see-through red."""
+    from khervecad import cut_feature, face_sketch, cut_ghost
+    m = window.model
+    block = m.add_node("cube", dict(width=60, depth=40, height=10))
+    g = m.add_node("union", dict(x=30, y=20, z=10))
+    g.params[face_sketch.KEY] = True
+    slot = m.add_node("line", dict(x1=-10, y1=0, x2=10, y2=0, width=8),
+                      parent=g)
+    g.params[cut_feature.KEY] = "extruded_cut"
+    window._cut_parts = {id(g): block}
+    diff = cut_feature.finish(window, g)
+    QApplication.processEvents()
+    for chosen in (g, slot, diff):
+        window.builder.tree.rebuild()
+        window.builder.tree.select_nodes([chosen])
+        QApplication.processEvents()
+        tris = getattr(window, "_cut_ghost", [])
+        assert tris, chosen.name
+        xs = [v[0] for t in tris for v in t]
+        zs = [v[2] for t in tris for v in t]
+        assert min(xs) == pytest.approx(16, abs=0.5)   # the slot's end
+        assert max(zs) == pytest.approx(10, abs=0.01)  # from the face…
+        assert min(zs) == pytest.approx(0, abs=0.01)   # …10 mm down
+    window.builder.tree.select_nodes([block])
+    QApplication.processEvents()
+    assert not window._cut_ghost
