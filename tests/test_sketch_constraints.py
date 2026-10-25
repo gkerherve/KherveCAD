@@ -525,3 +525,22 @@ def test_an_objects_hidden_definition_keeps_its_dimensions(view):
     view.scene().rebuild()
     QApplication.processEvents()
     assert ui.shown_containers(view.scene()) == [obj]
+
+
+def test_dimensions_follow_their_shapes_into_an_extrude():
+    """Extruded Boss on a dimensioned sketch keeps the dimensions: they
+    move onto the extrude with the shapes."""
+    m = DocumentModel()
+    obj = m.add_node("union", {}, name="Plate")
+    other = m.add_node("line", dict(x1=0, y1=50, x2=10, y2=50), parent=obj)
+    rect = m.add_node("rect", dict(x=0, y=0, width=50, height=20),
+                      parent=obj)
+    sc.add(m, obj, "length", [sc.ref_of(obj, rect, "e0")], 50)
+    sc.add(m, obj, "horizontal", [sc.ref_of(obj, other, "l")])
+    ext = m.wrap_nodes([rect], "linear_extrude")
+    assert [r["kind"] for r in sc.rows(ext)] == ["length"]
+    assert sc.rows(ext)[0]["refs"] == ["0.e0"]
+    assert [r["kind"] for r in sc.rows(obj)] == ["horizontal"]
+    assert sc.rows(obj)[0]["refs"] == ["0.l"]
+    sc.set_value(m, ext, 0, 70)
+    assert rect.params["width"] == pytest.approx(70, abs=1e-3)

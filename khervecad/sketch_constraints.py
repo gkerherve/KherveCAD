@@ -802,6 +802,47 @@ def points_replaced(node, index, count):
     _rewrite(parent, fn)
 
 
+def plan_wrap(parent, nodes, index):
+    """Before *nodes* of *parent* are wrapped into one new child at
+    *index*: (rows going into the wrapper, rows staying), re-indexed."""
+    rs = rows(parent)
+    if not rs:
+        return None
+    old = [parent.children.index(n) for n in nodes]
+    inner = {o: k for k, o in enumerate(old)}
+    gone = sorted(old)
+
+    def outer(i):
+        # children before *index* keep theirs, the wrapper takes *index*,
+        # later ones move down by the wrapped ones before them, then +1
+        if i < index:
+            return i
+        return i - sum(1 for g in gone if g < i) + 1
+    moved, kept = [], []
+    for row in rs:
+        idxs = [int(r.partition(".")[0]) for r in row["refs"]]
+        names = [r.partition(".")[2] for r in row["refs"]]
+        if all(i in inner for i in idxs):
+            moved.append(dict(row, refs=["%d.%s" % (inner[i], n)
+                                         for i, n in zip(idxs, names)]))
+        elif not any(i in inner for i in idxs):
+            kept.append(dict(row, refs=["%d.%s" % (outer(i), n)
+                                        for i, n in zip(idxs, names)]))
+    return moved, kept
+
+
+def apply_wrap(parent, wrapper, plan):
+    if not plan:
+        return
+    moved, kept = plan
+    if moved:
+        wrapper.params[KEY] = moved
+    if kept:
+        parent.params[KEY] = kept
+    else:
+        parent.params.pop(KEY, None)
+
+
 def child_inserted(parent, at):
     """A node was inserted at *at* among *parent*'s children."""
     def fn(ref):

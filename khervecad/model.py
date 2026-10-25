@@ -1660,12 +1660,17 @@ class DocumentModel(QObject):
         nodes = [n for n in nodes if n.parent is parent]
         index = min(n.index() for n in nodes)
         wrapper = CadNode(op_type, self.unique_name(op_type))
+        from . import sketch_constraints
+        carry = sketch_constraints.plan_wrap(parent, nodes, index)
         for n in nodes:
             parent.remove(n)
             wrapper.add(n)
         if op_type == "if_else":
             wrapper.add(CadNode("union", "Else"))
         parent.add(wrapper, index)
+        # Smart Dimensions follow their shapes into the wrapper (an
+        # Extruded Boss of a dimensioned sketch lost them)
+        sketch_constraints.apply_wrap(parent, wrapper, carry)
         self.structure_changed.emit()
         return wrapper
 
