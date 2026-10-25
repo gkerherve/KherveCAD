@@ -902,6 +902,14 @@ class MainWindow(QMainWindow):
             from . import round_ui
             round_ui.start(self, op, "round")
             return
+        if op == "linear_extrude":
+            # overlapping sketch shapes: pick the regions to extrude on
+            # the 3D view, as SolidWorks' Selected Contours (the user)
+            from . import sketch_regions
+            container = sketch_regions.overlap_container(self, nodes)
+            if container is not None and \
+                    sketch_regions.start_3d(self, container):
+                return
         if not nodes and op in ("linear_extrude", "rotate_extrude"):
             # nothing selected: click the 2D shape in the 3D view, as
             # Fillet and the Hole Wizard ask for a face (the user)

@@ -239,11 +239,12 @@ def key(scene, event):
 
 
 # ------------------------------------------------------- in the 3D view
-def _slab_tris(cs, matrix):
-    """A face as thin triangles placed in the world (pick + highlight)."""
+def _slab_tris(cs, matrix, height=0.02):
+    """A face as a slab placed in the world: thin for picking, the
+    extrude's height for the preview."""
     import manifold3d as m
     from .fillet_pick import _apply
-    mesh_ = m.Manifold.extrude(cs, 0.02).to_mesh()
+    mesh_ = m.Manifold.extrude(cs, height).to_mesh()
     verts = [tuple(float(c) for c in v[:3]) for v in mesh_.vert_properties]
     return [tuple(_apply(matrix, verts[i]) for i in tri)
             for tri in mesh_.tri_verts]
@@ -264,6 +265,36 @@ def sketch_container(window):
     for n in scope.walk():
         if len(shapes_of(n)) >= 2:
             return n
+    return None
+
+
+def overlapping(container):
+    """True when the container's shapes cut each other into more
+    regions than there are shapes (a circle ON a rectangle)."""
+    shapes = shapes_of(container)
+    return len(shapes) >= 2 and len(faces(shapes)) > len(shapes)
+
+
+def overlap_container(window, nodes):
+    """The sketch an Extruded Boss on *nodes* (or nothing selected)
+    should split into regions, or None."""
+    from .model import SHAPE_2D
+    if nodes:
+        seen = []
+        for n in nodes:
+            c = n.parent if n.category == SHAPE_2D else n
+            if c is not None and c not in seen:
+                seen.append(c)
+        cands = seen
+    else:
+        c = sketch_container(window)
+        cands = [c] if c is not None else []
+    for c in cands:
+        try:
+            if overlapping(c):
+                return c
+        except Exception:                     # no Manifold, odd shapes
+            return None
     return None
 
 
@@ -289,13 +320,17 @@ def start_3d(window, container=None):
         mat = mesh.mat_mul(mat, mesh.node_matrix(container, {}))
     groups = [(i, _slab_tris(cs, mat)) for i, (cs, _l) in
               enumerate(face_list)]
-    tris = dict(groups)
+    # what is picked shows as the solid it will make (SolidWorks' yellow
+    # preview), the default height
+    tris = {i: _slab_tris(cs, mat, HEIGHT) for i, (cs, _l) in
+            enumerate(face_list)}
     picked = set()
     view = window.view3d
 
     def banner():
-        return ("Extrude regions: click the regions to keep (%d picked) "
-                "· Esc or right-click extrudes them" % len(picked))
+        return ("Extruded Boss/Base — Selected Contours: click the "
+                "regions to extrude (%d picked) · Esc or right-click "
+                "makes it" % len(picked))
 
     def on_pick(desc, key):
         if desc is None:                       # done
@@ -304,8 +339,14 @@ def start_3d(window, container=None):
                           hide=shapes) if picked else None
             if ext is not None:
                 window.statusBar().showMessage(
-                    "Extruded %d region(s) — set the height in "
-                    "Properties." % len(picked), 6000)
+                    "Extruded %d region(s) — drag the arrow or set the "
+                    "height in Properties." % len(picked), 6000)
+                try:
+                    from . import drag_feature
+                    drag_feature.start(window, ext, quiet=True,
+                                       created=True)
+                except Exception:              # pragma: no cover
+                    pass
             return
         picked.symmetric_difference_update({key})
         view.set_highlight_mesh([t for i in sorted(picked)

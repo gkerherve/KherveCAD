@@ -304,3 +304,26 @@ def test_extrude_regions_picked_on_the_3d_view(window):
     assert len(ext) == 1
     assert not any(n.visible for n in obj.children
                    if n.type in ("rect", "circle"))
+
+
+def test_extruded_boss_on_overlapping_shapes_picks_regions(window):
+    """SolidWorks' Selected Contours: Extruded Boss on a rectangle with a
+    circle on it asks for the regions; a lone shape extrudes at once."""
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate sketch")
+    rect = m.add_node("rect", dict(x=-10, y=10, width=60, height=20),
+                      parent=obj)
+    m.add_node("circle", dict(x=40, y=20, radius=10), parent=obj)
+    lone = m.add_node("rect", dict(x=0, y=0, width=5, height=5))
+    QApplication.processEvents()
+    calls = []
+    window.view3d.start_pick = lambda cb, **k: calls.append(k)
+    window.builder.active_tree().select_nodes([rect])
+    window._apply_operation("linear_extrude")
+    assert calls and "Selected Contours" in calls[-1]["banner"]
+    assert not any(n.type == "linear_extrude" for n in m.root.walk())
+    calls.clear()
+    window.builder.active_tree().select_nodes([lone])
+    window._apply_operation("linear_extrude")
+    assert not calls
+    assert lone.parent.type == "linear_extrude"
