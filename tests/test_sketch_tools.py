@@ -260,3 +260,16 @@ def test_extrude_regions_of_a_rectangle_and_perimeter_circle(view):
     assert not any(_near(p[0], 50) and _near(p[1], 30)
                    for p in poly.params["points"])
     assert not rect.visible
+
+
+def test_perimeter_circle_lights_the_sides_it_picks(view):
+    """Each side clicked stays lit until the circle is made."""
+    from khervecad import sketch_tools2 as st2
+    _draw(view, st.RECT_CENTER, [(20, 20), (50, 30)])
+    view.set_tool(st2.CIRCLE_3PT)
+    scene = view.scene()
+    _click(view, 35, 30)
+    _click(view, 35, 10)
+    assert len(scene._line_marks) == 2
+    _click(view, 50, 22)
+    assert scene._line_marks == []

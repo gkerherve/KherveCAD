@@ -263,6 +263,8 @@ def drop(scene):
     """Throw the half-placed shape away (tool change, Esc)."""
     _state(scene).clear()
     _clear_items(scene)
+    from . import sketch_tools2
+    sketch_tools2.clear_marks(scene)
 
 
 def _clear_items(scene):
@@ -397,11 +399,15 @@ def press(scene, event):
         else:
             drop(scene)
     elif event.button() == Qt.LeftButton:
+        from . import sketch_tools2
+        sketch_tools2.mark(scene, event.scenePos())
         _add(scene, scene.snap(event.scenePos()))
     event.accept()
 
 
 def move(scene, event):
+    from . import sketch_tools2
+    sketch_tools2.hover(scene, event.scenePos())
     if _state(scene):
         _redraw(scene, _xy(scene.snap(event.scenePos())))
     event.accept()

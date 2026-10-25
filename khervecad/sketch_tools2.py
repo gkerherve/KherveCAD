@@ -495,3 +495,66 @@ def construction_action(win):
     act.triggered.connect(lambda _=False: run())
     win._construction_act = act
     return act
+
+
+# ------------------------------------------- picking lines, seen
+#: tools whose clicks land on lines: the line under the mouse lights up,
+#: a clicked one stays lit until the shape is made (the user: "I should
+#: be able to select the line itself")
+LINE_PICKERS = (CIRCLE_3PT, CIRCLE_TAN, ARC_TAN)
+
+
+def _line_item(scene, pos, width):
+    from PyQt5.QtCore import QLineF, QPointF
+    from PyQt5.QtGui import QColor, QPen
+    from PyQt5.QtWidgets import QGraphicsLineItem
+    from . import sketch_constraints as sc
+    from . import sketch_constrain_ui as scu
+    hit = scu.pick(scene, pos, "line")
+    if hit is None:
+        return None
+    node, name, _kind = hit
+    try:
+        a, b = sc._line(node, name, {})
+    except (KeyError, ValueError, IndexError):
+        return None
+    frame = next((it.parentItem() for it in scu._shape_items(scene)
+                  if it.node is node), None)
+    item = QGraphicsLineItem(QLineF(QPointF(*a), QPointF(*b)), frame)
+    if frame is None:
+        scene.addItem(item)
+    pen = QPen(QColor(255, 140, 0))
+    pen.setCosmetic(True)
+    pen.setWidthF(width)
+    item.setPen(pen)
+    item.setZValue(60)
+    return item
+
+
+def _remove(item):
+    if item is not None and item.scene() is not None:
+        item.scene().removeItem(item)
+
+
+def hover(scene, pos):
+    """Light the line under the mouse."""
+    _remove(getattr(scene, "_line_hover", None))
+    scene._line_hover = _line_item(scene, pos, 3.0) \
+        if scene.tool in LINE_PICKERS else None
+
+
+def mark(scene, pos):
+    """Keep a clicked line lit."""
+    if scene.tool not in LINE_PICKERS:
+        return
+    item = _line_item(scene, pos, 4.0)
+    if item is not None:
+        scene.__dict__.setdefault("_line_marks", []).append(item)
+
+
+def clear_marks(scene):
+    _remove(getattr(scene, "_line_hover", None))
+    scene._line_hover = None
+    for item in getattr(scene, "_line_marks", []):
+        _remove(item)
+    scene._line_marks = []
