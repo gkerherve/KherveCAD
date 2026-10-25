@@ -973,6 +973,16 @@ class SketchScene(QGraphicsScene):
                 d = ((p.x() - pos.x()) ** 2 + (p.y() - pos.y()) ** 2) ** 0.5
                 if d < best_d:
                     best, best_d = p, d
+        # and the shapes hidden inside a Regions (its rectangle's centre,
+        # its circle's): the user could not snap to them
+        from . import face_outline
+        try:
+            for x, y, _kind, _owner in face_outline.scope_points(self):
+                d = ((x - pos.x()) ** 2 + (y - pos.y()) ** 2) ** 0.5
+                if d < best_d:
+                    best, best_d = QPointF(x, y), d
+        except Exception:
+            pass
         return QPointF(best) if best is not None else None
 
     def feature_points(self):

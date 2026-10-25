@@ -798,3 +798,29 @@ def test_closed_lines_make_a_region_from_the_selection(window):
     ys = [p[1] for lp in loops for p in lp]
     assert min(xs) == pytest.approx(0) and max(xs) == pytest.approx(30)
     assert min(ys) == pytest.approx(0) and max(ys) == pytest.approx(20)
+
+
+def test_snap_and_pin_to_the_hidden_centres_of_a_region(view):
+    """The user's plate: its rectangle and circle are hidden inside the
+    Regions, yet a new shape snaps to their centres and is fixed there."""
+    from khervecad import sketch_regions as sr, face_outline
+    from khervecad import sketch_constraints as sc
+    m = view.scene().model
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44))
+    circle = m.add_node("circle", dict(x=37, y=0, radius=22))
+    faces = sr.faces(sr.shapes_of(m.root))
+    reg = sr.make(m, m.root, faces, [sr.face_at(faces, (0, 0)),
+                                     sr.face_at(faces, (45, 0))],
+                  hide=[rect, circle])
+    for s in (rect, circle):
+        s.visible = False
+    view.scene().rebuild()
+    QApplication.processEvents()
+    view.set_tool(st.SLOT)
+    hit = view.scene().snap(QPointF(37.3, 0.4))
+    assert _near(hit.x(), 37, 1e-6) and _near(hit.y(), 0, 1e-6)
+    hit = view.scene().snap(QPointF(0.3, -0.2))
+    assert _near(hit.x(), 0, 1e-6) and _near(hit.y(), 0, 1e-6)
+    slot = m.add_node("line", dict(x1=37, y1=0, x2=13, y2=0, width=16))
+    assert face_outline.pin(view.scene(), m, slot) == 1
+    assert [r["kind"] for r in sc.rows(m.root)] == ["fix"]

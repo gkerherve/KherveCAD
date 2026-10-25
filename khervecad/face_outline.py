@@ -165,6 +165,66 @@ def show(window, group, part):
     return segs
 
 
+def _shape_local_points(node):
+    """(x, y, kind) of a 2D shape in its own frame, or []."""
+    p = node.params
+    try:
+        if node.type == "rect":
+            x, y = float(p.get("x", 0)), float(p.get("y", 0))
+            w, h = float(p.get("width", 0)), float(p.get("height", 0))
+            return [(x + w / 2, y + h / 2, "centre"), (x, y, "corner"),
+                    (x + w, y, "corner"), (x + w, y + h, "corner"),
+                    (x, y + h, "corner")]
+        if node.type == "circle":
+            return [(float(p.get("x", 0)), float(p.get("y", 0)), "centre")]
+        if node.type == "line":
+            a = (float(p["x1"]), float(p["y1"]))
+            b = (float(p["x2"]), float(p["y2"]))
+            return [(a[0], a[1], "corner"), (b[0], b[1], "corner"),
+                    ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, "middle")]
+        if node.type == "polygon":
+            ox, oy = float(p.get("x", 0)), float(p.get("y", 0))
+            pts = [(ox + float(q[0]), oy + float(q[1]))
+                   for q in p.get("points") or []]
+            out = [(x, y, "corner") for x, y in pts]
+            if pts:
+                out.append((sum(q[0] for q in pts) / len(pts),
+                            sum(q[1] for q in pts) / len(pts), "centre"))
+            return out
+    except (TypeError, ValueError, KeyError):
+        pass
+    return []
+
+
+def scope_points(scene):
+    """Every sketch shape's centre / corners / ends in the scope the 2D
+    view shows — HIDDEN ones too (a Regions' rectangle and circle), in
+    the view's frame: what a new shape snaps and is pinned to."""
+    from . import mesh
+    from .model import SHAPE_2D
+    if getattr(scene, "plane", "Top (XY)") not in ("Top (XY)", None):
+        return []
+    resolver = getattr(scene, "isolation_resolver", None)
+    scope = (resolver() if resolver else None) or scene.model.root
+    out = []
+    for node in scope.walk():
+        if node.category != SHAPE_2D:
+            continue
+        local = _shape_local_points(node)
+        if not local:
+            continue
+        stop = None if scope is scene.model.root else scope
+        try:
+            m = mesh.mat_mul(mesh.ancestor_matrix(node, {}, stop=stop),
+                             mesh.node_matrix(node, {}))
+        except Exception:
+            continue
+        for x, y, kind in local:
+            out.append((m[0][0] * x + m[0][1] * y + m[0][3],
+                        m[1][0] * x + m[1][1] * y + m[1][3], kind, node))
+    return out
+
+
 def sketch_points(group, part):
     """The part's own sketch, seen on the face: the centres, corners
     and ends of the 2D shapes it was made from (a Regions' rectangle and
@@ -209,11 +269,21 @@ def pin(scene, model, node):
     snap point of the face is fixed there (SolidWorks makes it
     coincident: the slot stays on the arc's centre)."""
     info = getattr(scene, "face_outline", None)
-    if not info or node is None or node.parent is None:
+    if node is None or node.parent is None:
         return 0
     from . import sketch_constraints as sc
     from .sketch_constrain_ui import _entities
-    targets = [(x, y) for x, y, _k in info["points"]]
+    targets = [(x, y) for x, y, _k in info["points"]] if info else []
+    mine = set(id(n) for n in node.walk())
+    try:
+        # the sketch's own centres and corners too, hidden or not (not
+        # the shape just drawn: it would pin to itself)
+        targets += [(x, y) for x, y, kind, owner in scope_points(scene)
+                    if id(owner) not in mine and kind == "centre"]
+    except Exception:
+        pass
+    if not targets:
+        return 0
     n = 0
     for shape in [node] + list(node.children):
         if shape.parent is None:
