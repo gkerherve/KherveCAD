@@ -155,8 +155,89 @@ def show(window, group, part):
         scene.face_outline = None
         return []
     segs = for_group(group, tris)
-    scene.face_outline = {"segments": segs, "points": snap_points(segs)}
+    points = snap_points(segs)
+    try:
+        points += sketch_points(group, part)
+    except Exception:                        # never stop the sketch
+        import traceback
+        traceback.print_exc()
+    scene.face_outline = {"segments": segs, "points": points}
     return segs
+
+
+def sketch_points(group, part):
+    """The part's own sketch, seen on the face: the centres, corners
+    and ends of the 2D shapes it was made from (a Regions' rectangle and
+    circle, hidden or not) — "the centre of that rectangle"."""
+    from . import face_sketch, mesh
+    from .model import SHAPE_2D
+    out = []
+    for node in part.walk() if part is not None else ():
+        if node.category != SHAPE_2D:
+            continue
+        p = node.params
+        try:
+            if node.type == "rect":
+                x, y = float(p.get("x", 0)), float(p.get("y", 0))
+                w, h = float(p.get("width", 0)), float(p.get("height", 0))
+                local = [(x + w / 2, y + h / 2, "centre"),
+                         (x, y, "corner"), (x + w, y, "corner"),
+                         (x + w, y + h, "corner"), (x, y + h, "corner")]
+            elif node.type == "circle":
+                local = [(float(p.get("x", 0)), float(p.get("y", 0)),
+                          "centre")]
+            elif node.type == "line":
+                a = (float(p["x1"]), float(p["y1"]))
+                b = (float(p["x2"]), float(p["y2"]))
+                local = [(a[0], a[1], "corner"), (b[0], b[1], "corner"),
+                         ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, "middle")]
+            else:
+                continue
+        except (TypeError, ValueError, KeyError):
+            continue                          # expressions: skip
+        m = mesh.mat_mul(mesh.ancestor_matrix(node, {}, stop=group.parent),
+                         mesh.node_matrix(node, {}))
+        for x, y, kind in local:
+            w = [m[r][0] * x + m[r][1] * y + m[r][3] for r in range(3)]
+            lx, ly = face_sketch.to_local(group, w)
+            out.append((lx, ly, kind))
+    return out
+
+
+def pin(scene, model, node):
+    """A shape just drawn on the face: each of its points sitting on a
+    snap point of the face is fixed there (SolidWorks makes it
+    coincident: the slot stays on the arc's centre)."""
+    info = getattr(scene, "face_outline", None)
+    if not info or node is None or node.parent is None:
+        return 0
+    from . import sketch_constraints as sc
+    from .sketch_constrain_ui import _entities
+    targets = [(x, y) for x, y, _k in info["points"]]
+    n = 0
+    for shape in [node] + list(node.children):
+        if shape.parent is None:
+            continue
+        try:
+            ents = _entities(shape)
+        except Exception:
+            continue
+        for name, kind in ents:
+            if kind != "point":
+                continue
+            try:
+                pt = sc._point(shape, name, {})
+            except (KeyError, ValueError, IndexError):
+                continue
+            if any(abs(pt[0] - x) < 1e-6 and abs(pt[1] - y) < 1e-6
+                   for x, y in targets):
+                try:
+                    sc.add(model, shape.parent, "fix",
+                           [sc.ref_of(shape.parent, shape, name)])
+                    n += 1
+                except (ValueError, KeyError):
+                    pass
+    return n
 
 
 def _inside(node, outer):

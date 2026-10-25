@@ -910,6 +910,11 @@ class SketchScene(QGraphicsScene):
         hit = face_outline.snap(self, pos)
         if hit is not None:
             return hit
+        # then the sketch's own shapes: centres, ends, corners, middles
+        # (the user: "if there is a centre, a line… I should snap to it")
+        hit = self._shape_snap(pos)
+        if hit is not None:
+            return hit
         if not self.snap_enabled:
             return pos
         g = self.grid_size
@@ -944,6 +949,31 @@ class SketchScene(QGraphicsScene):
                 pts += list(poly)
             pts.append(item.boundingRect().center())
         return [item.mapToScene(p) for p in pts]
+
+    def _shape_snap(self, pos):
+        # drawing only: a drag in Select moves shapes, and would stick to
+        # the very points it is moving
+        if getattr(self, "tool", SELECT) == SELECT:
+            return None
+        views = self.views()
+        if not views:
+            return None
+        ppm = views[0].px_per_mm()
+        tol = FEATURE_SNAP_PX / max(ppm, 1e-6)
+        best, best_d = None, tol
+        for item in self.items():
+            # (not a selected shape: dragging it, it would stick to itself)
+            if not isinstance(item, ShapeItem) or item.isSelected():
+                continue
+            try:
+                pts = self._item_feature_points(item)
+            except Exception:
+                continue
+            for p in pts:
+                d = ((p.x() - pos.x()) ** 2 + (p.y() - pos.y()) ** 2) ** 0.5
+                if d < best_d:
+                    best, best_d = p, d
+        return QPointF(best) if best is not None else None
 
     def feature_points(self):
         """Every snap target on every visible shape/part."""

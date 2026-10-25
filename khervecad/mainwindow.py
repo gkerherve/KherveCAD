@@ -1101,6 +1101,12 @@ class MainWindow(QMainWindow):
             f"Size  X {dx:.1f} · Y {dy:.1f} · Z {dz:.1f} {self._unit()}")
 
     def _node_created(self, node):
+        from . import face_outline           # placed on the face: pinned
+        try:
+            face_outline.pin(self.view2d.scene(), self.model, node)
+        except Exception:
+            import traceback
+            traceback.print_exc()
         if self.builder.isolated_component() is None \
                 and node.parent is self.model.root:
             self._geometry_created_in_main(node)   # drawn in Main

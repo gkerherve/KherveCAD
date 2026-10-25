@@ -567,3 +567,43 @@ def test_create_region_leads_the_drawing_tools(window):
     first_tool = next(d for d in data
                       if d not in ("create_sketch", "con_dimension"))
     assert first_tool == "make_region"
+
+
+def test_face_snaps_include_the_sketch_and_pin_what_lands_there(window):
+    """On the plate's face: the rectangle's centre is a snap point too,
+    and a slot drawn from the round end's centre is fixed there."""
+    from khervecad import sketch_regions as sr, face_sketch
+    from khervecad import sketch_constraints as sc
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate")
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44),
+                      parent=obj)
+    circle = m.add_node("circle", dict(x=37, y=0, radius=22), parent=obj)
+    faces = sr.faces(sr.shapes_of(obj))
+    sr.extrude(m, obj, faces, [sr.face_at(faces, (0, 0)),
+                               sr.face_at(faces, (45, 0))],
+               hide=[rect, circle])
+    QApplication.processEvents()
+    group = face_sketch.make(window, obj, (0.0, 0.0, 10.0),
+                             (0.0, 0.0, 1.0))
+    scene = window.view2d.scene()
+    pts = scene.face_outline["points"]
+    assert any(abs(x) < 1e-3 and abs(y) < 1e-3 and k == "centre"
+               for x, y, k in pts)                   # the rectangle's
+    slot = m.add_node("line", dict(x1=37, y1=0, x2=13, y2=0, width=16),
+                      parent=group)
+    scene.node_created.emit(slot)
+    rows = sc.rows(group)
+    assert [r["kind"] for r in rows] == ["fix"]
+    assert rows[0]["refs"] == [sc.ref_of(group, slot, "p1")]
+    face_sketch.close(window)
+
+
+def test_drawing_snaps_to_the_centre_of_a_shape_already_there(view):
+    m = view.scene().model
+    m.add_node("circle", dict(x=30, y=10, radius=6))
+    view.scene().rebuild()
+    QApplication.processEvents()
+    view.set_tool(st.SLOT)                      # a drawing tool
+    hit = view.scene().snap(QPointF(30.4, 10.3))
+    assert abs(hit.x() - 30) < 1e-6 and abs(hit.y() - 10) < 1e-6
