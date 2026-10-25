@@ -259,7 +259,7 @@ def test_extrude_regions_of_a_rectangle_and_perimeter_circle(view):
     # the far corners are left out: no point at the rectangle's corner
     assert not any(_near(p[0], 50) and _near(p[1], 30)
                    for p in poly.params["points"])
-    assert not rect.visible
+    assert rect.params.get("modifier") == "%"
 
 
 def test_perimeter_circle_lights_the_sides_it_picks(view):
@@ -302,8 +302,8 @@ def test_extrude_regions_picked_on_the_3d_view(window):
     cb(None, None)
     ext = [n for n in obj.children if n.type == "linear_extrude"]
     assert len(ext) == 1
-    assert not any(n.visible for n in obj.children
-                   if n.type in ("rect", "circle"))
+    assert all(n.params.get("modifier") == "%" for n in obj.children
+               if n.type in ("rect", "circle"))
 
 
 def test_extruded_boss_on_overlapping_shapes_picks_regions(window):
@@ -345,3 +345,30 @@ def test_region_edges_are_drawn_on_the_3d_view(window):
     view.repaint()                      # draws them, no error
     view.cancel_pick()
     assert view.pick_lines == []
+
+
+def test_regions_extrude_follows_its_sketch(window):
+    """The sketch stays as construction with its dimensions, and the
+    extruded outline follows it: a longer rectangle, a longer plate."""
+    from khervecad import sketch_regions as sr
+    m = window.model
+    obj = m.add_node("union", {}, name="Plate sketch")
+    rect = m.add_node("rect", dict(x=-10, y=10, width=60, height=20),
+                      parent=obj)
+    circle = m.add_node("circle", dict(x=40, y=20, radius=10), parent=obj)
+    faces = sr.faces(sr.shapes_of(obj))
+    picked = [sr.face_at(faces, (0, 20)), sr.face_at(faces, (42, 20))]
+    ext = sr.extrude(m, obj, faces, picked, hide=[rect, circle])
+    poly = ext.children[0]
+    assert max(p[0] for p in poly.params["points"]) == pytest.approx(50, abs=0.1)
+    # the sketch grows by 30 mm, its circle moves with the end
+    rect.params["width"] = 90
+    circle.params["x"] = 70
+    sr.refresh(m)
+    xs = [p[0] for p in poly.params["points"]]
+    assert max(xs) == pytest.approx(80, abs=0.1)
+    assert min(xs) == pytest.approx(-10, abs=0.1)
+    # round trip through the file keeps the link
+    from khervecad.document import node_to_dict
+    import json
+    json.dumps(node_to_dict(m.root))

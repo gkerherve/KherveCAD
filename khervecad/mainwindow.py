@@ -1113,6 +1113,8 @@ class MainWindow(QMainWindow):
         from . import extent, hole_wizard
         extent.refresh(self.model)
         hole_wizard.refresh(self.model)     # holes follow their faces
+        from . import sketch_regions
+        sketch_regions.refresh(self.model)  # region extrudes follow sketches
         self._dirty = True
         self._update_title()
         self.view3d.set_reference_images(self.model.reference_images)

@@ -35,22 +35,32 @@ def _cross_section(outlines):
     return m.CrossSection(loops, m.FillRule.Positive) if loops else None
 
 
-def shapes_of(container):
+def shapes_of(container, construction=False):
+    """The sketch shapes of *container*; *construction* also takes the
+    ones a regions extrude turned into construction (they keep the
+    dimensions that drive it)."""
     from .model import SHAPE_2D
     return [n for n in container.children
             if n.visible and n.category == SHAPE_2D
-            and n.params.get("modifier") != "%"]
+            and (construction or n.params.get("modifier") != "%")]
 
 
 def faces(shapes):
-    """[(CrossSection, [loops])] — every connected region the shapes'
+    """[(CrossSection, [loops], [shapes it lies in])] — every connected region the shapes'
     outlines cut the plane into."""
-    from .mesh import collect_outlines
-    secs = []
+    from .mesh import collect_outlines, node_outlines, _oriented
+    secs, owners = [], []
     for s in shapes[:MAX_SHAPES]:
-        cs = _cross_section(collect_outlines(s))
+        if s.params.get("modifier") == "%":
+            # construction (a regions extrude's sketch): its own outline,
+            # which collect_outlines leaves out like OpenSCAD does
+            outlines = _oriented(s, node_outlines(s, {}))
+        else:
+            outlines = collect_outlines(s)
+        cs = _cross_section(outlines)
         if cs is not None and not cs.is_empty():
             secs.append(cs)
+            owners.append(shapes.index(s))
     out = []
     n = len(secs)
     for mask in range(1, 1 << n):
@@ -71,7 +81,8 @@ def faces(shapes):
             if piece.area() > 1e-6:
                 out.append((piece, [[(float(p[0]), float(p[1]))
                                      for p in loop]
-                                    for loop in piece.to_polygons()]))
+                                    for loop in piece.to_polygons()],
+                            [owners[i] for i in range(n) if mask >> i & 1]))
     return out
 
 
@@ -101,22 +112,14 @@ def _inside(pt, loop):
 
 def face_at(face_list, pt):
     """Index of the face holding *pt* (even-odd over its loops)."""
-    for i, (_cs, loops) in enumerate(face_list):
+    for i, (_cs, loops, *_m) in enumerate(face_list):
         if sum(_inside(pt, lp) for lp in loops) % 2:
             return i
     return None
 
 
-def extrude(model, container, face_list, picked, height=HEIGHT,
-            hide=None):
-    """One polygon of the picked faces under a Linear extrude in
-    *container*; *hide* (the sketch shapes) are hidden. The extrude."""
-    picked = sorted(set(picked))
-    if not picked:
-        return None
-    cs = face_list[picked[0]][0]
-    for i in picked[1:]:
-        cs = cs + face_list[i][0]
+def _outline(cs):
+    """polygon params (points, + paths for several loops) of *cs*."""
     loops = [[[round(float(p[0]), 4), round(float(p[1]), 4)]
               for p in loop] for loop in cs.to_polygons() if len(loop) >= 3]
     if not loops:
@@ -128,12 +131,124 @@ def extrude(model, container, face_list, picked, height=HEIGHT,
     params = {"points": points}
     if len(loops) > 1:
         params["paths"] = paths
+    return params
+
+
+def seed(cs):
+    """A point surely inside *cs*: the centre of one of its triangles."""
+    import manifold3d as m
+    mesh_ = m.Manifold.extrude(cs, 1.0).to_mesh()
+    v = mesh_.vert_properties
+    best = None
+    for tri in mesh_.tri_verts:
+        if all(abs(v[i][2] - 1.0) < 1e-9 for i in tri):
+            a, b, c = (v[i] for i in tri)
+            area = abs((b[0] - a[0]) * (c[1] - a[1])
+                       - (c[0] - a[0]) * (b[1] - a[1]))
+            if best is None or area > best[0]:
+                best = (area, [round(float(a[0] + b[0] + c[0]) / 3, 4),
+                               round(float(a[1] + b[1] + c[1]) / 3, 4)])
+    return best[1] if best else None
+
+
+def union_of(face_list, picked):
+    picked = sorted(set(picked))
+    if not picked:
+        return None
+    cs = face_list[picked[0]][0]
+    for i in picked[1:]:
+        cs = cs + face_list[i][0]
+    return cs
+
+
+def extrude(model, container, face_list, picked, height=HEIGHT,
+            hide=None):
+    """One polygon of the picked faces under a Linear extrude in
+    *container*. The polygon remembers a point inside each picked region
+    (`params["regions"]`), and the sketch shapes (*hide*) stay as
+    CONSTRUCTION (OpenSCAD's %): their dimensions still drive the shape,
+    which `refresh` rebuilds whenever the sketch changes. The extrude."""
+    cs = union_of(face_list, picked)
+    params = _outline(cs) if cs is not None else None
+    if not params:
+        return None
+    params["regions"] = {
+        "seeds": [seed(face_list[i][0]) for i in sorted(set(picked))],
+        # which sketch shapes each region lies in: it keeps the region
+        # when a shape moves past the seed point (the circle sliding)
+        "inside": [face_list[i][2] for i in sorted(set(picked))]}
     ext = model.add_node("linear_extrude", {"height": height},
                          parent=container, name="Extrude regions")
     model.add_node("polygon", params, parent=ext, name="Regions")
     for s in hide or []:
-        model.set_visible(s, False)
+        model.set_param(s, "modifier", "%")
     return ext
+
+
+_BUSY = False
+
+
+def _match(face_list, point, inside):
+    """The face standing for a remembered region: the one holding its
+    seed when that face lies in the same shapes, else the nearest face
+    that does, else the one under the seed."""
+    under = face_at(face_list, tuple(point))
+    if inside is None:
+        return under
+    if under is not None and face_list[under][2] == inside:
+        return under
+    same = [i for i, f in enumerate(face_list) if f[2] == inside]
+    if not same:
+        return under
+    import math
+
+    def dist(i):
+        p = seed(face_list[i][0]) or point
+        return math.hypot(p[0] - point[0], p[1] - point[1])
+    return min(same, key=dist)
+
+
+def refresh(model):
+    """Every regions extrude follows its sketch: the faces holding its
+    seed points, of the construction shapes beside it, re-unioned."""
+    global _BUSY
+    if _BUSY:
+        return
+    _BUSY = True
+    try:
+        for poly in list(model.root.walk()):
+            info = poly.params.get("regions") if poly.type == "polygon" \
+                else None
+            if not isinstance(info, dict) or poly.parent is None or \
+                    poly.parent.parent is None:
+                continue
+            try:
+                faces_ = faces(shapes_of(poly.parent.parent, True))
+                picked = set()
+                insides = info.get("inside") or []
+                for k, p in enumerate(info.get("seeds") or []):
+                    want = insides[k] if k < len(insides) else None
+                    picked.add(_match(faces_, p, want))
+                picked.discard(None)
+                cs = union_of(faces_, picked)
+                params = _outline(cs) if cs is not None else None
+            except Exception:                 # no Manifold, odd shapes
+                continue
+            if not params:
+                continue
+            if params["points"] != poly.params.get("points") or \
+                    params.get("paths") != poly.params.get("paths"):
+                poly.params["points"] = params["points"]
+                if "paths" in params:
+                    poly.params["paths"] = params["paths"]
+                else:
+                    poly.params.pop("paths", None)
+                # the seeds follow the regions they stand for
+                info["seeds"] = [seed(faces_[i][0]) for i in sorted(picked)]
+                info["inside"] = [faces_[i][2] for i in sorted(picked)]
+                model.node_changed.emit(poly)
+    finally:
+        _BUSY = False
 
 
 # ------------------------------------------------------- the scene tool
@@ -318,18 +433,18 @@ def start_3d(window, container=None):
     with window._isolated_frame(iso):
         mat = mesh.ancestor_matrix(container, {}, stop=iso)
         mat = mesh.mat_mul(mat, mesh.node_matrix(container, {}))
-    groups = [(i, _slab_tris(cs, mat)) for i, (cs, _l) in
+    groups = [(i, _slab_tris(cs, mat)) for i, (cs, *_l) in
               enumerate(face_list)]
     # what is picked shows as the solid it will make (SolidWorks' yellow
     # preview), the default height
-    tris = {i: _slab_tris(cs, mat, HEIGHT) for i, (cs, _l) in
+    tris = {i: _slab_tris(cs, mat, HEIGHT) for i, (cs, *_l) in
             enumerate(face_list)}
     picked = set()
     view = window.view3d
     from .fillet_pick import _apply
     lift = 0.05                    # just above the sketch, never inside it
     lines = []
-    for _cs, loops in face_list:
+    for _cs, loops, *_m in face_list:
         for loop in loops:
             pts = [_apply(mat, (x, y, lift)) for x, y in loop]
             lines.append(pts + pts[:1])
