@@ -103,7 +103,9 @@ def press(view, pos):
     """A click on a dimension label: type its value. True when taken."""
     from .view2d import SELECT
     scene = view.scene()
-    if getattr(scene, "tool", SELECT) != SELECT:
+    # with Select, and with Smart Dimension too (SolidWorks: a dimension
+    # is dragged or retyped while the tool is still on)
+    if getattr(scene, "tool", SELECT) not in (SELECT, "con_dimension"):
         return False
     got = hit(view, pos)
     if got is None:
@@ -211,8 +213,10 @@ def open_editor(view, rect, node, kind, index):
     del scene_model
 
     def done():
-        if getattr(view, "_dim_editor", None) is not box:
-            return
+        from PyQt5 import sip
+        if sip.isdeleted(view) or sip.isdeleted(box) or \
+                getattr(view, "_dim_editor", None) is not box:
+            return              # the view went (closed while typing)
         view._dim_editor = None
         text = box.text().strip().replace(",", ".")
         box.deleteLater()

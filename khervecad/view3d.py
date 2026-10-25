@@ -1958,6 +1958,16 @@ class View3D(QWidget):
         self._begin_fast()
 
     def mouseReleaseEvent(self, event):
+        for hook in getattr(self, "release_hooks", ()):
+            try:
+                if hook(event.pos()):
+                    event.accept()
+                    self._last = None
+                    self._mode = None
+                    return
+            except Exception:
+                import traceback
+                traceback.print_exc()
         if self.edit_tool is not None and self._pick_cb is None \
                 and self.edit_tool.mouse_release(event):
             self._last = None
@@ -1982,6 +1992,14 @@ class View3D(QWidget):
         if self.edit_tool is not None and self._pick_cb is None \
                 and self.edit_tool.mouse_move(event):
             return
+        for hook in getattr(self, "move_hooks", ()):
+            try:
+                if hook(event.pos()):
+                    event.accept()
+                    return
+            except Exception:
+                import traceback
+                traceback.print_exc()
         if self._pick_cb is not None and self._last is None:
             self._queue_hover(event.pos())    # pre-highlight the target
             return

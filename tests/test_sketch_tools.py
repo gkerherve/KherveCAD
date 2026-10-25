@@ -430,6 +430,7 @@ def test_a_dimension_typed_in_the_3d_view_drives_the_sketch(window):
     window._dims3d_hits = [(QRectF(10, 10, 40, 16), obj, 0)]
     from PyQt5.QtCore import QPoint
     assert d3.press(window, QPoint(20, 15))
+    assert d3.release(window, QPoint(20, 15))     # a click: type
     box = window.view3d._dim3d_editor
     box.setText("75")
     box.editingFinished.emit()
@@ -656,3 +657,38 @@ def test_undo_in_a_face_sketch_removes_it_from_the_2d_view(window,
     assert not circles()
     assert face_sketch.current(window) is not group      # the new copy
     face_sketch.close(window)
+
+
+def test_3d_dimensions_drag_out_of_the_sketch(window):
+    """SolidWorks: drag a length away from the slot, swing the R8 leader
+    — in the 3D view, values kept."""
+    from khervecad import cut_feature, face_sketch, sketch_dims3d as d3
+    from khervecad import sketch_constraints as sc
+    from PyQt5.QtCore import QPoint
+    m = window.model
+    window.resize(1000, 700)
+    window.show()
+    block = m.add_node("cube", dict(width=80, depth=40, height=10))
+    g = m.add_node("union", dict(x=40, y=20, z=10))
+    g.params[face_sketch.KEY] = True
+    slot = m.add_node("line", dict(x1=-12, y1=0, x2=12, y2=0, width=16),
+                      parent=g)
+    sc.add(m, g, "radius", [sc.ref_of(g, slot, "a2")], 8)
+    sc.add(m, g, "length", [sc.ref_of(g, slot, "l")], 24)
+    for _ in range(10):
+        QApplication.processEvents()
+    v = window.view3d
+    v.fit()
+    v.repaint()
+    QApplication.processEvents()
+    hits = {sc.rows(h[1])[h[2]]["kind"]: h for h in window._dims3d_hits}
+    assert set(hits) == {"radius", "length"}
+    for kind, key in (("length", "offset"), ("radius", "leader_at")):
+        rect = hits[kind][0]
+        start = rect.center().toPoint()
+        assert d3.press(window, start)
+        end = start + QPoint(0, -40)
+        d3.move(window, end)
+        assert d3.release(window, end)
+        assert key in sc.rows(g)[hits[kind][2]]
+    assert slot.params["width"] == pytest.approx(16)       # values kept

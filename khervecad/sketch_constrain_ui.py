@@ -437,7 +437,9 @@ def glyphs(view):
                     c = QPointF(c.x() + moved[0] * k, c.y() + moved[1] * k)
                     place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
                           index)
-                    view._dim_leaders.append((home, out[-1][0]))
+                    if row["kind"] not in ("radius", "diameter"):
+                        # (R and Ø draw their own leader: _paint_radius)
+                        view._dim_leaders.append((home, out[-1][0]))
                     continue
                 place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
                       index)
@@ -492,6 +494,59 @@ def linear_ends(view, items, cont, row):
     return pa, pb
 
 
+def _paint_radius(view, painter, items, cont, index, row, ink, bg):
+    """A radius / diameter as SolidWorks draws it: a leader from the
+    centre through the edge (an arrow there) to the value, which the
+    Select or Smart Dimension tool drags anywhere (`label_offset`) —
+    the leader swings to follow it."""
+    import math
+    from PyQt5.QtCore import QPointF, QRectF, Qt
+    from PyQt5.QtGui import QBrush, QPen, QPolygonF
+    from .dim_edit import scale
+    node, name = sc.entity(cont, row["refs"][0])
+    c, r = sc._circle(node, name, {})
+    pc = _view_point(view, items, node, c)
+    pr = _view_point(view, items, node, (c[0] + r, c[1]))
+    rpx = math.hypot(pr.x() - pc.x(), pr.y() - pc.y())
+    k = scale(view)
+    moved = row.get("label_offset") or (0, 0)
+    label = QPointF(pc.x() + (rpx + 30) * 0.707 + moved[0] * k,
+                    pc.y() - (rpx + 30) * 0.707 + moved[1] * k)
+    dx, dy = label.x() - pc.x(), label.y() - pc.y()
+    dl = math.hypot(dx, dy) or 1.0
+    ux, uy = dx / dl, dy / dl
+    edge = QPointF(pc.x() + ux * rpx, pc.y() + uy * rpx)
+    pen = QPen(ink, 1.4)
+    pen.setCosmetic(True)
+    painter.setPen(pen)
+    start = pc if row["kind"] == "radius" else \
+        QPointF(pc.x() - ux * rpx, pc.y() - uy * rpx)
+    painter.drawLine(start, label)
+    painter.setBrush(QBrush(ink))
+    base = QPointF(edge.x() - ux * 9, edge.y() - uy * 9)
+    painter.drawPolygon(QPolygonF([
+        edge, QPointF(base.x() - uy * 4, base.y() + ux * 4),
+        QPointF(base.x() + uy * 4, base.y() - ux * 4)]))
+    painter.drawEllipse(pc, 2.2, 2.2)
+    text = ("R%s" if row["kind"] == "radius" else "Ø%s") % row["value"]
+    font = painter.font()
+    font.setBold(True)
+    painter.setFont(font)
+    fm = painter.fontMetrics()
+    tw = fm.horizontalAdvance(text)
+    chip = QRectF(label.x() - tw / 2 - 5, label.y() - fm.height() / 2 - 2,
+                  tw + 10, fm.height() + 4)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QBrush(bg))
+    painter.drawRoundedRect(chip, 4, 4)
+    painter.setPen(QPen(ink, 1.0))
+    painter.setBrush(Qt.NoBrush)
+    painter.drawText(chip, int(Qt.AlignCenter), text)
+    if hasattr(view, "_dim_hits"):
+        view._dim_hits.append((QRectF(chip), (cont, "constraint", index)))
+    return True
+
+
 def _paint_dimensions(view, painter):
     """Driving dimensions as SolidWorks draws them: a dimension line
     with arrows between the points / line they belong to, its value a
@@ -506,6 +561,15 @@ def _paint_dimensions(view, painter):
     drawn = set()
     for cont in shown_containers(scene):
         for index, row in enumerate(sc.rows(cont)):
+            if row["kind"] in ("radius", "diameter") and "value" in row:
+                try:
+                    if _paint_radius(view, painter, items, cont, index,
+                                     row, ink, bg):
+                        drawn.add((cont.id, index))
+                except Exception:            # never leave the painter open
+                    import traceback
+                    traceback.print_exc()
+                continue
             if row["kind"] not in LINEAR or "value" not in row:
                 continue
             try:

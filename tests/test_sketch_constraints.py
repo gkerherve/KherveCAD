@@ -493,8 +493,9 @@ def test_diameter_value_drags_out_of_the_way(view, monkeypatch):
     QApplication.processEvents()
     rect2, _ = next(h for h in view._dim_hits if h[1][1] == "constraint")
     assert abs(rect2.center().x() - end.x()) < 3
-    # and a leader line runs back to the circle it sizes
-    assert len(view._dim_leaders) == 1
+    # drawn as a radius-style leader from the circle's centre (its own
+    # painter), not a loose mark
+    assert not view._dim_leaders
 
 
 def test_each_object_shows_only_its_own_dimensions(view):
@@ -570,3 +571,37 @@ def test_smart_dimension_gives_a_slots_end_radius(view, monkeypatch):
                       slot.params["y2"] - slot.params["y1"]) == \
         pytest.approx(30, abs=1e-3)
     assert slot.params["width"] == pytest.approx(16, abs=1e-3)
+
+
+def test_a_slot_radius_drags_and_retypes_under_smart_dimension(view,
+                                                             monkeypatch):
+    """SolidWorks: with Smart Dimension still on, an R value is dragged
+    out of the sketch (its leader follows) or clicked to retype."""
+    from khervecad import dim_edit
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    slot = m.add_node("line", dict(x1=0, y1=0, x2=24, y2=0, width=10))
+    view.scene().ask_value = lambda kind, measured: "8"
+    view.set_tool(ui.DIMENSION)
+    QApplication.processEvents()
+    _click(view, 29, 0)
+    view.viewport().repaint()
+    QApplication.processEvents()
+    rect, _ctx = next(h for h in view._dim_hits if h[1][1] == "constraint")
+    start = rect.center().toPoint()
+    assert dim_edit.press(view, start)          # tool still Smart Dim
+    end = start + QPoint(40, 30)
+    dim_edit.move(view, end)
+    dim_edit.release(view, end)
+    assert sc.rows(m.root)[0].get("label_offset")
+    view.viewport().repaint()
+    QApplication.processEvents()
+    rect2, _ = next(h for h in view._dim_hits if h[1][1] == "constraint")
+    assert abs(rect2.center().x() - end.x()) < 3
+    # a click without moving opens the value box
+    p2 = rect2.center().toPoint()
+    assert dim_edit.press(view, p2) and dim_edit.release(view, p2)
+    box = view._dim_editor
+    box.setText("6")
+    box.editingFinished.emit()
+    assert slot.params["width"] == pytest.approx(12, abs=1e-3)

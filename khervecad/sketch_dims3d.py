@@ -209,12 +209,22 @@ def paint(window, painter, project):
         q = project(_apply(m, (p[0], p[1], 0.0)))
         return None if q is None else QPointF(q[0], q[1])
 
-    def chip(at, text, cont=None, index=None):
+    def jac(m, p):
+        """Screen pixels per sketch mm along x and y at *p*: how a mouse
+        drag maps back onto the sketch plane."""
+        o, ex, ey = scr(m, p), scr(m, (p[0] + 1, p[1])), \
+            scr(m, (p[0], p[1] + 1))
+        if None in (o, ex, ey):
+            return None
+        return ((ex.x() - o.x(), ex.y() - o.y()),
+                (ey.x() - o.x(), ey.y() - o.y()))
+
+    def chip(at, text, cont=None, index=None, drag=None):
         tw = fm.horizontalAdvance(text)
         rect = QRectF(at.x() - tw / 2 - 5, at.y() - fm.height() / 2 - 2,
                       tw + 10, fm.height() + 4)
         if cont is not None:
-            window._dims3d_hits.append((QRectF(rect), cont, index))
+            window._dims3d_hits.append((QRectF(rect), cont, index, drag))
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(255, 255, 255, 230)))
         painter.drawRoundedRect(rect, 4, 4)
@@ -231,6 +241,16 @@ def paint(window, painter, project):
             except (KeyError, ValueError, IndexError, TypeError):
                 continue
             if what == "leader":
+                at = row.get("leader_at")
+                if isinstance(at, (list, tuple)) and len(at) == 2:
+                    # dragged: the value sits there, the leader swings to
+                    # it through the edge
+                    c, e = pts[0], pts[1]
+                    r = math.hypot(e[0] - c[0], e[1] - c[1])
+                    dx, dy = at[0] - c[0], at[1] - c[1]
+                    dl = math.hypot(dx, dy) or 1.0
+                    pts = [c, (c[0] + r * dx / dl, c[1] + r * dy / dl),
+                           (float(at[0]), float(at[1]))]
                 pc, pe, po = (scr(m, p) for p in pts)
                 if None not in (pc, pe, po):
                     painter.setPen(pen)
@@ -245,7 +265,9 @@ def paint(window, painter, project):
                         QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
                     painter.setBrush(Qt.NoBrush)
                     painter.drawEllipse(pc, 2.0, 2.0)
-                    chip(po, _text(row), cont, index)
+                    chip(po, _text(row), cont, index,
+                         dict(kind="leader", jac=jac(m, pts[2]),
+                              at=list(pts[2])))
                 continue
             if what == "label":
                 at = scr(m, pts[0])
@@ -296,19 +318,76 @@ def paint(window, painter, project):
                     QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
             painter.setBrush(Qt.NoBrush)
             chip(QPointF((oa.x() + ob.x()) / 2, (oa.y() + ob.y()) / 2),
-                 str(row["value"]), cont, index)
+                 str(row["value"]), cont, index,
+                 dict(kind="linear", jac=jac(m, (ax, ay)), n=(nx, ny),
+                      offset=off))
     painter.restore()
 
 
+DRAG_PX = 4
+
+
 def press(window, pos):
-    """A click on a dimension's value in the 3D view: type a new one
-    (the user: change the Smart Dimensions there too). True when
-    taken."""
-    for rect, cont, index in getattr(window, "_dims3d_hits", []):
+    """A press on a dimension's value in the 3D view: a drag moves it out
+    of the way (SolidWorks), a click without moving types a new value.
+    True when taken."""
+    for hit in getattr(window, "_dims3d_hits", []):
+        rect, cont, index = hit[:3]
+        drag = hit[3] if len(hit) > 3 else None
         if rect.adjusted(-3, -3, 3, 3).contains(pos.x(), pos.y()):
-            edit(window, rect, cont, index)
+            window._dim3d_drag = dict(rect=rect, cont=cont, index=index,
+                                      info=drag, start=pos, moved=False)
             return True
     return False
+
+
+def _to_local(jac, dx, dy):
+    """A screen move (px) as a move in the sketch (mm)."""
+    (ax, ay), (bx, by) = jac
+    det = ax * by - bx * ay
+    if abs(det) < 1e-9:
+        return None
+    return ((dx * by - bx * dy) / det, (ax * dy - dx * ay) / det)
+
+
+def move(window, pos):
+    d = getattr(window, "_dim3d_drag", None)
+    if d is None:
+        return False
+    dx, dy = pos.x() - d["start"].x(), pos.y() - d["start"].y()
+    if not d["moved"] and math.hypot(dx, dy) < DRAG_PX:
+        return True
+    info = d["info"]
+    if not info or not info.get("jac"):
+        return True
+    local = _to_local(info["jac"], dx, dy)
+    if local is None:
+        return True
+    d["moved"] = True
+    row = sc.rows(d["cont"])[d["index"]]
+    if info["kind"] == "linear":
+        n = info["n"]
+        row["offset"] = round(info["offset"] + local[0] * n[0]
+                              + local[1] * n[1], 3)
+    else:
+        row["leader_at"] = [round(info["at"][0] + local[0], 3),
+                            round(info["at"][1] + local[1], 3)]
+    window.view3d.update()
+    return True
+
+
+def release(window, pos):
+    d = getattr(window, "_dim3d_drag", None)
+    if d is None:
+        return False
+    window._dim3d_drag = None
+    if d["moved"]:
+        cont = d["cont"]
+        cont.params[sc.KEY] = sc.rows(cont)
+        window.model.node_changed.emit(cont)     # one undo step
+    else:
+        edit(window, d["rect"], d["cont"], d["index"])
+    return True
 
 
 def edit(window, rect, cont, index):

@@ -2540,9 +2540,24 @@ class SketchView(QGraphicsView):
         accent = QColor(t.get("accent", "#2176c7"))
         if not hasattr(self, "_dim_hits"):
             self._dim_hits = []              # (chip rect, what it sizes)
+        # a shape with Smart Dimensions shows those, not its automatic
+        # sizes on top of them (SolidWorks; the two hid each other)
+        from . import sketch_constraints as sc
+        sized = set()
+        for cont in sc.containers(scene.model):
+            for row in sc.rows(cont):
+                if "value" not in row:
+                    continue
+                for ref in row.get("refs", ()):
+                    try:
+                        sized.add(id(sc.entity(cont, ref)[0]))
+                    except (KeyError, ValueError, IndexError):
+                        pass
         for item in list(scene.items()):
             if not isinstance(item, (ShapeItem, PartItem)) or \
                     not item.isVisible() or item.scene() is not scene:
+                continue
+            if id(getattr(item, "node", None)) in sized:
                 continue
             try:
                 self._auto_dim_item(painter, item,

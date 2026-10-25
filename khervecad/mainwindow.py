@@ -87,6 +87,10 @@ class MainWindow(QMainWindow):
                                                          project)]
         self.view3d.click_hooks = [
             lambda pos: sketch_dims3d.press(self, pos)]
+        self.view3d.move_hooks = [
+            lambda pos: sketch_dims3d.move(self, pos)]
+        self.view3d.release_hooks = [
+            lambda pos: sketch_dims3d.release(self, pos)]
 
         left = QSplitter(Qt.Vertical)
         left.addWidget(self.builder)
