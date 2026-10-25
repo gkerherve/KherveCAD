@@ -109,7 +109,76 @@ def press(view, pos):
     if got is None:
         return False
     rect, (node, kind, index) = got
+    if kind == "constraint" and _linear(node, index):
+        # a sketch dimension: a drag moves it out of the way, a click
+        # without moving types its value (release)
+        view._dim_drag = {"rect": rect, "ctx": (node, kind, index),
+                          "start": pos, "moved": False}
+        return True
     open_editor(view, rect, node, kind, index)
+    return True
+
+
+DRAG_PX = 4
+
+
+def _linear(cont, index):
+    from . import sketch_constraints as sc
+    from .sketch_constrain_ui import LINEAR
+    try:
+        return sc.rows(cont)[index]["kind"] in LINEAR
+    except (IndexError, KeyError):
+        return False
+
+
+def scale(view):
+    """Pixels per model unit in the sketch view."""
+    return abs(view.transform().m11()) or 1.0
+
+
+def move(view, pos):
+    """Drag a sketch dimension: its line follows the mouse, square to
+    what it measures (`row["offset"]`, model units). True when taken."""
+    drag = getattr(view, "_dim_drag", None)
+    if drag is None:
+        return False
+    if not drag["moved"] and math.hypot(
+            pos.x() - drag["start"].x(),
+            pos.y() - drag["start"].y()) < DRAG_PX:
+        return True
+    drag["moved"] = True
+    from . import sketch_constraints as sc
+    from .sketch_constrain_ui import _shape_items, linear_ends
+    cont, _kind, index = drag["ctx"]
+    row = sc.rows(cont)[index]
+    items = {it.node.id: it for it in _shape_items(view.scene())}
+    try:
+        pa, pb = linear_ends(view, items, cont, row)
+    except (KeyError, ValueError, IndexError, TypeError):
+        return True
+    vx, vy = pb.x() - pa.x(), pb.y() - pa.y()
+    plen = math.hypot(vx, vy) or 1.0
+    nx, ny = -vy / plen, vx / plen
+    off = (pos.x() - pa.x()) * nx + (pos.y() - pa.y()) * ny - 12
+    row["offset"] = round(off / scale(view), 3)
+    view.viewport().update()
+    return True
+
+
+def release(view, pos):
+    """End a drag (one undo step), or a click: type the value."""
+    drag = getattr(view, "_dim_drag", None)
+    if drag is None:
+        return False
+    view._dim_drag = None
+    node, kind, index = drag["ctx"]
+    if drag["moved"]:
+        from . import sketch_constraints as sc
+        rs = sc.rows(node)
+        node.params[sc.KEY] = rs
+        view.scene().model.node_changed.emit(node)
+    else:
+        open_editor(view, drag["rect"], node, kind, index)
     return True
 
 

@@ -464,10 +464,14 @@ def _paint_dimensions(view, painter):
             if ends is None:
                 continue
             view._dim_ctx = (cont, "constraint", index)
+            off = row.get("offset")
+            from .dim_edit import scale
+            px = off * scale(view) if isinstance(off, (int, float)) \
+                else 26
             try:
                 view._dim_screen(painter, ends[0], ends[1], color=ink,
                                  bg=bg, text=str(row["value"]),
-                                 offset=26, dots=True)
+                                 offset=px, dots=True)
             finally:
                 view._dim_ctx = None
             drawn.add((cont.id, index))
@@ -593,6 +597,20 @@ def dimension_press(scene, event):
     refs = [sc.ref_of(container, n, name) for n, name, _k in chosen]
     text = _ask_value(scene, kind, sc.measure(container, kind, refs))
     if text is None:
+        return
+    same = [i for i, r in enumerate(sc.rows(container))
+            if r["kind"] == kind and sorted(r["refs"]) == sorted(refs)]
+    if same:
+        # already dimensioned: change that one, never stack a second on
+        # top of it (the two then hid each other)
+        try:
+            report = sc.set_value(scene.model, container, same[0],
+                                  _value(text))
+        except ValueError as exc:
+            scene.status.emit(str(exc))
+            return
+        scene.status.emit("%s changed to %s — %s" % (
+            sc.KINDS[kind][0], text, sc.status_text(report)))
         return
     try:
         report, scaled = sc.add_dimension(scene.model, container, kind,

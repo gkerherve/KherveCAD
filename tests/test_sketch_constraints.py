@@ -12,7 +12,7 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 import pytest
-from PyQt5.QtCore import QPointF, Qt
+from PyQt5.QtCore import QPoint, QPointF, Qt
 from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication
 
@@ -436,3 +436,34 @@ def test_first_dimension_scales_the_whole_sketch(app, monkeypatch):
 def test_add_dimension_is_the_sketch_dimension(view):
     view.set_tool("dimension")
     assert view.scene().tool == ui.DIMENSION
+
+
+def test_dimension_twice_edits_and_drags_out_of_the_way(view, monkeypatch):
+    """The same line dimensioned again changes its dimension (two on top
+    of each other hid both), and the select tool drags a dimension."""
+    from khervecad import dim_edit
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    a, _b = _lines(m)
+    answers = iter(["33", "25"])
+    view.scene().ask_value = lambda kind, measured: next(answers)
+    view.set_tool(ui.DIMENSION)
+    _click(view, 20, 1.5)
+    _click(view, 60, -30)
+    _click(view, 20, 1.5)
+    _click(view, 60, -30)
+    rows = sc.rows(m.root)
+    assert [r["kind"] for r in rows] == ["length"]
+    assert abs(_len(a) - 25) < 1e-3
+    view.set_tool("select")
+    view.viewport().repaint()
+    QApplication.processEvents()
+    rect, _ctx = next(h for h in view._dim_hits
+                      if h[1][1] == "constraint")
+    start = rect.center().toPoint()
+    assert dim_edit.press(view, start)
+    end = start + QPoint(0, 60)
+    dim_edit.move(view, end)
+    assert dim_edit.release(view, end)
+    assert abs(sc.rows(m.root)[0]["offset"]) > 0
+    assert getattr(view, "_dim_editor", None) is None   # dragged, not typed

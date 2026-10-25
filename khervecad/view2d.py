@@ -2143,10 +2143,19 @@ class SketchView(QGraphicsView):
             v.setValue(v.value() - delta.y())
             event.accept()
             return
+        from . import dim_edit
+        if dim_edit.move(self, event.pos()):
+            event.accept()
+            return
         self.cursor_moved.emit(self.mapToScene(event.pos()))
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            from . import dim_edit
+            if dim_edit.release(self, event.pos()):
+                event.accept()
+                return
         if event.button() == Qt.MiddleButton and \
                 getattr(self, "_pan_last", None) is not None:
             self._pan_last = None
