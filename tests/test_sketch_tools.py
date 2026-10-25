@@ -876,3 +876,38 @@ def test_a_selected_cut_shows_in_red(window):
     window.builder.tree.select_nodes([block])
     QApplication.processEvents()
     assert not window._cut_ghost
+
+
+def test_extruded_cut_sketch_snaps_to_centres_origin_and_edges(window):
+    """The user's own document: Object 1 > Extrude regions > Regions
+    (rectangle + circle), a cut sketched on its top. Hovering with the
+    Slot tool snaps — and says so — to the round end's centre, the
+    rectangle's centre, the sketch origin and onto an edge."""
+    from khervecad import sketch_regions as sr, face_sketch
+    from khervecad.sketch_tools import SLOT
+    m = window.model
+    obj = m.add_node("component", {}, name="Object 1")
+    obj.visible = False
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44),
+                      parent=obj)
+    c = m.add_node("circle", dict(x=37, y=0, radius=22), parent=obj)
+    f = sr.faces(sr.shapes_of(obj))
+    ext = sr.extrude(m, obj, f, [sr.face_at(f, (0, 0)),
+                                 sr.face_at(f, (45, 0))], hide=[rect, c])
+    ext.params["height"] = 16
+    window.builder.open_component(obj)
+    for _ in range(5):
+        QApplication.processEvents()
+    face_sketch.make(window, ext, (-2.2672, 0.0, 16.0), (0.0, 0.0, 1.0))
+    window._set_tool(SLOT)
+    scene = window.view2d.scene()
+    for at, want, kind in (((39.4, 0.3), (39.2672, 0.0), "centre"),
+                           ((2.4, 0.2), (2.2672, 0.0), "centre"),
+                           ((0.15, -0.1), (0.0, 0.0), "origin"),
+                           ((10.0, 22.15), (10.0, 22.0), "edge")):
+        hit = scene.snap(QPointF(*at))
+        assert _near(hit.x(), want[0], 1e-3) and _near(hit.y(), want[1],
+                                                       1e-3), (at, hit)
+        assert scene._snap_hint[1] == kind
+    window.view2d.viewport().repaint()          # the marker draws
+    face_sketch.close(window)

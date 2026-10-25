@@ -905,16 +905,23 @@ class SketchScene(QGraphicsScene):
         return rot
 
     def snap(self, pos: QPointF) -> QPointF:
-        # the face sketched on: its corners and arc centres first
-        from . import face_outline
-        hit = face_outline.snap(self, pos)
-        if hit is not None:
-            return hit
-        # then the sketch's own shapes: centres, ends, corners, middles
-        # (the user: "if there is a centre, a line… I should snap to it")
-        hit = self._shape_snap(pos)
-        if hit is not None:
-            return hit
+        hint = None
+        try:
+            # the face sketched on: its centres, corners, origin, edges
+            from . import face_outline
+            got = face_outline.snap(self, pos)
+            if got is not None:
+                hint = got
+                return got[0]
+            # then the sketch's own shapes: centres, ends, corners,
+            # middles, the origin (the user: "if there is a centre, a
+            # line… I should snap to it")
+            got = self._shape_snap(pos)
+            if got is not None:
+                hint = got
+                return got[0]
+        finally:
+            self._set_snap_hint(hint)
         if not self.snap_enabled:
             return pos
         g = self.grid_size
@@ -950,6 +957,17 @@ class SketchScene(QGraphicsScene):
             pts.append(item.boundingRect().center())
         return [item.mapToScene(p) for p in pts]
 
+    def _set_snap_hint(self, hint):
+        """What the cursor snaps to now, drawn by the view (a marker and
+        its name: the user could not see that it snapped)."""
+        old = getattr(self, "_snap_hint", None)
+        self._snap_hint = hint
+        if (old is None) != (hint is None) or (
+                old is not None and hint is not None and
+                (old[0] != hint[0] or old[1] != hint[1])):
+            for v in self.views():
+                v.viewport().update()
+
     def _shape_snap(self, pos):
         # drawing only: a drag in Select moves shapes, and would stick to
         # the very points it is moving
@@ -960,7 +978,7 @@ class SketchScene(QGraphicsScene):
             return None
         ppm = views[0].px_per_mm()
         tol = FEATURE_SNAP_PX / max(ppm, 1e-6)
-        best, best_d = None, tol
+        best, best_d, kind_best = None, tol, "point"
         for item in self.items():
             # (not a selected shape: dragging it, it would stick to itself)
             if not isinstance(item, ShapeItem) or item.isSelected():
@@ -972,18 +990,21 @@ class SketchScene(QGraphicsScene):
             for p in pts:
                 d = ((p.x() - pos.x()) ** 2 + (p.y() - pos.y()) ** 2) ** 0.5
                 if d < best_d:
-                    best, best_d = p, d
+                    best, best_d, kind_best = p, d, "point"
         # and the shapes hidden inside a Regions (its rectangle's centre,
         # its circle's): the user could not snap to them
         from . import face_outline
         try:
-            for x, y, _kind, _owner in face_outline.scope_points(self):
+            for x, y, kind, _owner in face_outline.scope_points(self) + \
+                    [(0.0, 0.0, "origin", None)]:
                 d = ((x - pos.x()) ** 2 + (y - pos.y()) ** 2) ** 0.5
                 if d < best_d:
-                    best, best_d = QPointF(x, y), d
+                    best, best_d, kind_best = QPointF(x, y), d, kind
         except Exception:
             pass
-        return QPointF(best) if best is not None else None
+        if best is None:
+            return None
+        return QPointF(best), kind_best
 
     def feature_points(self):
         """Every snap target on every visible shape/part."""
@@ -1872,6 +1893,14 @@ class SketchScene(QGraphicsScene):
         event.accept()
 
     def mouseMoveEvent(self, event):
+        if getattr(self, "tool", SELECT) not in (SELECT, MEASURE) and \
+                not event.buttons():
+            # hovering with a drawing tool: show what it would snap to
+            # (the marker; the user saw no sign of snapping)
+            try:
+                self.snap(event.scenePos())
+            except Exception:
+                pass
         if self.tool in (MEASURE, DIMENSION):
             if self._measure_a is not None and self._measure_b is None:
                 pt, _ = self.snap_feature(event.scenePos())
@@ -2328,6 +2357,7 @@ class SketchView(QGraphicsView):
         from . import face_outline       # the face sketched on, grey
         try:
             face_outline.paint(self.scene(), painter)
+            face_outline.paint_hint(self, painter)
         except Exception:               # never raise out of a paint
             pass
         super().drawForeground(painter, rect)

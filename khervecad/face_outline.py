@@ -351,19 +351,76 @@ def paint(scene, painter):
     painter.restore()
 
 
+def _on_segment(px, py, a, b):
+    ax, ay = a
+    dx, dy = b[0] - ax, b[1] - ay
+    L2 = dx * dx + dy * dy
+    t = 0.0 if L2 < 1e-12 else max(0.0, min(1.0, ((px - ax) * dx +
+                                                  (py - ay) * dy) / L2))
+    return ax + dx * t, ay + dy * t
+
+
 def snap(scene, pos):
-    """The outline point nearest *pos* within SNAP_PX, or None."""
+    """(point, kind) of the face's snap point nearest *pos* within
+    SNAP_PX — a centre, corner, middle or the sketch's origin — else the
+    nearest point ON one of its edges; or None."""
     info = getattr(scene, "face_outline", None)
     if not info:
         return None
     views = scene.views()
     k = abs(views[0].transform().m11()) if views else 1.0
     best = None
-    for x, y, _kind in info["points"]:
+    for x, y, kind in info["points"] + [(0.0, 0.0, "origin")]:
         d = math.hypot(pos.x() - x, pos.y() - y) * k
         if d <= SNAP_PX and (best is None or d < best[0]):
-            best = (d, x, y)
-    if best is None:
-        return None
+            best = (d, x, y, kind)
     from PyQt5.QtCore import QPointF
-    return QPointF(best[1], best[2])
+    if best is not None:
+        return QPointF(best[1], best[2]), best[3]
+    for a, b in info["segments"]:
+        x, y = _on_segment(pos.x(), pos.y(), a, b)
+        d = math.hypot(pos.x() - x, pos.y() - y) * k
+        if d <= SNAP_PX / 2 and (best is None or d < best[0]):
+            best = (d, x, y, "edge")
+    if best is not None:
+        return QPointF(best[1], best[2]), best[3]
+    return None
+
+
+#: what a snap marker says
+LABELS = {"centre": "Centre", "corner": "Corner", "middle": "Midpoint",
+          "origin": "Origin", "edge": "On edge", "point": "Point"}
+
+
+def paint_hint(view, painter):
+    """The point the cursor snaps to: an orange ring with its name, as
+    SolidWorks shows it (the user did not see the snapping)."""
+    from PyQt5.QtCore import QPointF, QRectF, Qt
+    from PyQt5.QtGui import QColor, QPen
+    scene = view.scene()
+    hint = getattr(scene, "_snap_hint", None)
+    if not hint or getattr(scene, "tool", "select") == "select":
+        return
+    p, kind = hint
+    k = abs(view.transform().m11()) or 1.0
+    r = 6.0 / k
+    painter.save()
+    pen = QPen(QColor("#ff8c00"), 2.0)
+    pen.setCosmetic(True)
+    painter.setPen(pen)
+    painter.setBrush(Qt.NoBrush)
+    painter.drawEllipse(QPointF(p), r, r)
+    if kind == "centre":
+        painter.drawLine(QPointF(p.x() - r, p.y()), QPointF(p.x() + r, p.y()))
+        painter.drawLine(QPointF(p.x(), p.y() - r), QPointF(p.x(), p.y() + r))
+    # the name, upright on screen
+    painter.resetTransform()
+    sp = view.mapFromScene(p)
+    painter.setPen(QColor("#c26a00"))
+    font = painter.font()
+    font.setBold(True)
+    painter.setFont(font)
+    painter.drawText(QRectF(sp.x() + 9, sp.y() - 22, 120, 16),
+                     int(Qt.AlignLeft | Qt.AlignVCenter),
+                     LABELS.get(kind, "Point"))
+    painter.restore()
