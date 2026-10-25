@@ -372,3 +372,23 @@ def test_regions_extrude_follows_its_sketch(window):
     from khervecad.document import node_to_dict
     import json
     json.dumps(node_to_dict(m.root))
+
+
+def test_sketch_dimensions_are_drawn_on_the_3d_view(window):
+    """An Object's sketch dimensions show on its instances in 3D."""
+    from khervecad import sketch_constraints as sc, sketch_dims3d as d3
+    m = window.model
+    obj = m.add_node("component", {}, name="Plate")
+    obj.visible = False                     # a definition
+    rect = m.add_node("rect", dict(x=-59, y=-22, width=118, height=44),
+                      parent=obj)
+    sc.add(m, obj, "length", [sc.ref_of(obj, rect, "e0")], 118)
+    m.add_instance(obj)
+    placed = d3.placements(window)
+    assert placed and placed[0][0] is obj
+    from PyQt5.QtGui import QImage, QPainter
+    img = QImage(400, 300, QImage.Format_ARGB32)
+    p = QPainter(img)
+    d3.paint(window, p, lambda v: (200 + v[0], 150 - v[1], 1.0))
+    p.end()
+    assert d3._local(obj, sc.rows(obj)[0])[0] == "linear"

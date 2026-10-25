@@ -1500,6 +1500,15 @@ class View3D(QWidget):
                                                      forward, v))
         self._draw_anchors(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
+        if not self._clean:
+            # others' drawings over the model (sketch dimensions)
+            for draw in getattr(self, "overlay_painters", ()):
+                try:
+                    draw(painter, lambda v: self._project(
+                        eye, right, up, forward, v))
+                except Exception:          # never leave the painter open
+                    import traceback
+                    traceback.print_exc()
         if self.edit_tool is not None and not self._clean:
             try:
                 self.edit_tool.paint(painter, lambda v: self._project(

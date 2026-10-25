@@ -81,6 +81,10 @@ class MainWindow(QMainWindow):
         self.scene = SketchScene(self.model)
         self.view2d = SketchView(self.scene)
         self.view3d = View3D()
+        from . import sketch_dims3d       # sketch dimensions in 3D too
+        self.view3d.overlay_painters = [
+            lambda painter, project: sketch_dims3d.paint(self, painter,
+                                                         project)]
 
         left = QSplitter(Qt.Vertical)
         left.addWidget(self.builder)
