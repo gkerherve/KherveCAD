@@ -430,9 +430,9 @@ def _panel_actions(win, key):
         first = [sketch_mode.create_action(win)] \
             if style_of(win) in ("Fusion", "SolidWorks") else []
         if style_of(win) == "SolidWorks":
-            # Smart Dimension beside Sketch, as SolidWorks has it
-            first += [a for a in win._tool_group.actions()
-                      if a.data() == "con_dimension"][:1]
+            # Smart Dimension, a large button left of Sketch (the user)
+            first = [a for a in win._tool_group.actions()
+                     if a.data() == "con_dimension"][:1] + first
         return title, first + [a for a in win._tool_group.actions()
                                if a.data() not in (MEASURE, SELECT)
                                and not str(a.data()).startswith(
@@ -749,6 +749,9 @@ class Ribbon(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(1)
         large = actions if key in ALL_LARGE else actions[:1]
+        if key == "sketch" and len(actions) > 1 and \
+                actions[0].data() == "con_dimension":
+            large = actions[:2]          # Smart Dimension and Sketch
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
             b.setObjectName("large")

@@ -593,7 +593,11 @@ def test_tree_rows_and_sketch_panel_follow_solidworks(window):
     node.name = "Plate"
     assert interface_names.tree_text(node) == "Plate"
     keys = [a.data() for a in ribbon.panel_actions(window, "sketch")[1]]
-    assert keys[:2] == ["create_sketch", "con_dimension"]
+    assert keys[:2] == ["con_dimension", "create_sketch"]
+    large = [b.defaultAction().data()
+             for b in window.ribbon.findChildren(QToolButton)
+             if b.objectName() == "large" and b.defaultAction()]
+    assert "con_dimension" in large and "create_sketch" in large
     from khervecad import stop_tool
     stop = stop_tool.action(window)
     assert all(b.defaultAction() is not stop
