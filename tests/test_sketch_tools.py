@@ -559,3 +559,11 @@ def test_a_cut_sketch_opens_again_with_its_face(window):
     info = window.view2d.scene().face_outline
     assert info and len(info["segments"]) >= 4     # the block's top
     face_sketch.close(window)
+
+
+def test_create_region_leads_the_drawing_tools(window):
+    from khervecad import ribbon
+    data = [a.data() for a in ribbon.panel_actions(window, "sketch")[1]]
+    first_tool = next(d for d in data
+                      if d not in ("create_sketch", "con_dimension"))
+    assert first_tool == "make_region"

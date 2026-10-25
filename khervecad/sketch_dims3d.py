@@ -121,9 +121,23 @@ def _local(cont, row):
             pb = (pa[0], pb[1])
         return "linear", [pa, pb]
     if kind in ("diameter", "radius"):
+        # a leader from the centre out through the edge (SolidWorks' R8):
+        # [centre, the point on the edge, where the value sits]; a slot's
+        # end leans away from the slot
         node, name = ents[0]
         c, r = sc._circle(node, name, {})
-        return "label", [(c[0] + r * 0.72, c[1] + r * 0.72)]
+        ux, uy = 0.707, 0.707
+        if node.type == "line" and name in ("a1", "a2"):
+            a = sc._point(node, "p1", {})
+            b = sc._point(node, "p2", {})
+            dx, dy = (b[0] - a[0], b[1] - a[1]) if name == "a2" else \
+                (a[0] - b[0], a[1] - b[1])
+            L = math.hypot(dx, dy) or 1.0
+            ux, uy = dx / L * 0.707 + dy / L * 0.707, \
+                dy / L * 0.707 - dx / L * 0.707
+        edge = (c[0] + r * ux, c[1] + r * uy)
+        out = (c[0] + (r + max(r, 6.0)) * ux, c[1] + (r + max(r, 6.0)) * uy)
+        return "leader", [c, edge, out]
     spots = []
     for node, name in ents:
         k = sc.kind_of(node, name)
@@ -144,6 +158,12 @@ def _centre(cont, row):
         node, _name = sc.entity(cont, row["refs"][0])
         if node.type in ("rect", "circle"):
             return sc._point(node, "c", {})
+        if node.type == "line" and float(node.params.get("width", 0) or 0):
+            # a slot's centre line: the dimension goes OUTSIDE the slot,
+            # half its width plus a gap (SolidWorks' 24 above it)
+            a = sc._point(node, "p1", {})
+            b = sc._point(node, "p2", {})
+            return ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
         if node.type == "polygon":
             pts = [sc._point(node, "v%d" % i, {})
                    for i in range(len(node.params["points"]))]
@@ -210,6 +230,23 @@ def paint(window, painter, project):
                 what, pts = _local(cont, row)
             except (KeyError, ValueError, IndexError, TypeError):
                 continue
+            if what == "leader":
+                pc, pe, po = (scr(m, p) for p in pts)
+                if None not in (pc, pe, po):
+                    painter.setPen(pen)
+                    painter.drawLine(pc, po)
+                    painter.setBrush(QBrush(ink))
+                    ex, ey = pe.x() - pc.x(), pe.y() - pc.y()
+                    el = math.hypot(ex, ey) or 1.0
+                    ux, uy = ex / el, ey / el
+                    base = QPointF(pe.x() - ux * 8, pe.y() - uy * 8)
+                    painter.drawPolygon(QPolygonF([
+                        pe, QPointF(base.x() - uy * 3.5, base.y() + ux * 3.5),
+                        QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
+                    painter.setBrush(Qt.NoBrush)
+                    painter.drawEllipse(pc, 2.0, 2.0)
+                    chip(po, _text(row), cont, index)
+                continue
             if what == "label":
                 at = scr(m, pts[0])
                 if at is not None:
@@ -227,6 +264,14 @@ def paint(window, painter, project):
             if not isinstance(off, (int, float)):
                 # by default OUTSIDE the shape it measures
                 off = OFFSET_MM
+                try:
+                    node0, _n0 = sc.entity(cont, row["refs"][0])
+                    w = float(node0.params.get("width", 0) or 0) \
+                        if node0.type == "line" else 0.0
+                except (KeyError, ValueError, IndexError, TypeError):
+                    w = 0.0
+                if w:
+                    off = w / 2.0 + OFFSET_MM
                 c = _centre(cont, row)
                 if c is not None and (c[0] - ax) * nx + (c[1] - ay) * ny > 0:
                     off = -off

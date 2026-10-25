@@ -433,10 +433,12 @@ def _panel_actions(win, key):
             # Smart Dimension, a large button RIGHT of Sketch (the user)
             first = first + [a for a in win._tool_group.actions()
                              if a.data() == "con_dimension"][:1]
-        return title, first + [a for a in win._tool_group.actions()
-                               if a.data() not in (MEASURE, SELECT)
-                               and not str(a.data()).startswith(
-                                   ("con_", "sk_"))]
+        tools = [a for a in win._tool_group.actions()
+                 if a.data() not in (MEASURE, SELECT)
+                 and not str(a.data()).startswith(("con_", "sk_"))]
+        # Create Region first, before Line (the user)
+        tools.sort(key=lambda a: a.data() != "make_region")
+        return title, first + tools
     if key == "cuts":
         # SolidWorks' Extruded / Revolved / Swept / Lofted / Boundary Cut
         from . import cut_feature, hole_wizard
