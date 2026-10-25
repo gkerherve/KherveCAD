@@ -1004,3 +1004,26 @@ def test_a_cut_starts_clean_of_an_old_selection(window):
     assert calls                                    # asks for a face
     assert not window.builder.tree.selected_nodes()
     assert r.parent is ext                          # untouched
+
+
+def test_a_cut_outline_has_no_seam_line():
+    """A hole's round wall closes on a seam the mesh may not weld: that
+    lone edge is not drawn (the user's stray red line); the rims are."""
+    from khervecad import cut_ghost
+    import math
+    n, r, h = 32, 10.0, 12.0
+    tris = []
+    for i in range(n):
+        a0, a1 = 2 * math.pi * i / n, 2 * math.pi * (i + 1) / n
+        if i == n - 1:
+            a1 = 2 * math.pi + 1e-3         # a seam that does not meet
+        p0 = (r * math.cos(a0), r * math.sin(a0))
+        p1 = (r * math.cos(a1), r * math.sin(a1))
+        tris.append(((*p0, 0.0), (*p1, 0.0), (*p1, h)))
+        tris.append(((*p0, 0.0), (*p1, h), (*p0, h)))
+        tris.append(((0.0, 0.0, 0.0), (*p1, 0.0), (*p0, 0.0)))
+        tris.append(((0.0, 0.0, h), (*p0, h), (*p1, h)))
+    edges = cut_ghost._edges(tris)
+    vertical = [e for e in edges if abs(e[0][2] - e[1][2]) > 1e-6]
+    assert not vertical                      # no seam line
+    assert len(edges) >= 2 * (n - 1)          # both rims

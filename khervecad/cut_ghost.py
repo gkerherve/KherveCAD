@@ -101,8 +101,8 @@ def paint(window, painter, project):
 
 
 def _edges(tris, angle=30.0):
-    """The fold edges of a mesh (faces meeting past *angle*) and its
-    open borders — a cylinder's facets are not edges."""
+    """The fold edges of a mesh (faces meeting past *angle*) — a
+    cylinder's facets and an unwelded seam are not edges."""
     import math
     def key(v):
         return (round(v[0], 4), round(v[1], 4), round(v[2], 4))
@@ -138,7 +138,10 @@ def _edges(tris, angle=30.0):
         # other way round: any two faces on the edge folding past the
         # angle — either way up — make it an edge)
         ns = [f[0] for f in faces]
-        fold = len(ns) == 1 or any(
+        # one face only = a seam the mesh did not weld (a hole's round
+        # wall where it closes): a cut tool is a closed solid, so a lone
+        # edge is never a real edge (the user's red seam line)
+        fold = len(ns) >= 2 and any(
             abs(sum(x * y for x, y in zip(ns[i], ns[j]))) < cos
             for i in range(len(ns)) for j in range(i + 1, len(ns)))
         if fold:
