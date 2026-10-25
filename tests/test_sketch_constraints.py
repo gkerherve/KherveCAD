@@ -467,3 +467,29 @@ def test_dimension_twice_edits_and_drags_out_of_the_way(view, monkeypatch):
     assert dim_edit.release(view, end)
     assert abs(sc.rows(m.root)[0]["offset"]) > 0
     assert getattr(view, "_dim_editor", None) is None   # dragged, not typed
+
+
+def test_diameter_value_drags_out_of_the_way(view, monkeypatch):
+    from khervecad import dim_edit
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    m.add_node("circle", dict(x=20, y=-15, radius=4))
+    view.scene().ask_value = lambda kind, measured: "10"
+    view.set_tool(ui.DIMENSION)
+    _click(view, 24, -15)
+    view.set_tool("select")
+    view.viewport().repaint()
+    QApplication.processEvents()
+    rect, _ctx = next(h for h in view._dim_hits
+                      if h[1][1] == "constraint")
+    start = rect.center().toPoint()
+    assert dim_edit.press(view, start)
+    end = start + QPoint(50, -30)
+    dim_edit.move(view, end)
+    dim_edit.release(view, end)
+    moved = sc.rows(m.root)[0]["label_offset"]
+    assert moved[0] > 0 and moved[1] < 0
+    view.viewport().repaint()
+    QApplication.processEvents()
+    rect2, _ = next(h for h in view._dim_hits if h[1][1] == "constraint")
+    assert abs(rect2.center().x() - end.x()) < 3

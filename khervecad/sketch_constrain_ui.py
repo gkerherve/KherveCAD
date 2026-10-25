@@ -388,6 +388,12 @@ def glyphs(view):
                 unit = "°" if row["kind"] == "angle" else ""
                 prefix = {"radius": "R", "diameter": "Ø"}.get(
                     row["kind"], "")
+                moved = row.get("label_offset")
+                if moved and row["kind"] not in LINEAR:
+                    # dragged out of the way (dim_edit), in model units
+                    from .dim_edit import scale
+                    k = scale(view)
+                    c = QPointF(c.x() + moved[0] * k, c.y() + moved[1] * k)
                 place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
                       index)
             else:

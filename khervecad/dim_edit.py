@@ -109,11 +109,18 @@ def press(view, pos):
     if got is None:
         return False
     rect, (node, kind, index) = got
-    if kind == "constraint" and _linear(node, index):
+    if kind == "constraint":
         # a sketch dimension: a drag moves it out of the way, a click
-        # without moving types its value (release)
+        # without moving types its value (release). Lengths slide their
+        # dimension line; Ø, R and angles move their value
+        from . import sketch_constraints as sc
+        try:
+            was = list(sc.rows(node)[index].get("label_offset") or (0, 0))
+        except IndexError:
+            was = [0, 0]
         view._dim_drag = {"rect": rect, "ctx": (node, kind, index),
-                          "start": pos, "moved": False}
+                          "start": pos, "moved": False, "was": was,
+                          "linear": _linear(node, index)}
         return True
     open_editor(view, rect, node, kind, index)
     return True
@@ -151,6 +158,13 @@ def move(view, pos):
     from .sketch_constrain_ui import _shape_items, linear_ends
     cont, _kind, index = drag["ctx"]
     row = sc.rows(cont)[index]
+    if not drag["linear"]:
+        k = scale(view)
+        row["label_offset"] = [
+            round(drag["was"][0] + (pos.x() - drag["start"].x()) / k, 3),
+            round(drag["was"][1] + (pos.y() - drag["start"].y()) / k, 3)]
+        view.viewport().update()
+        return True
     items = {it.node.id: it for it in _shape_items(view.scene())}
     try:
         pa, pb = linear_ends(view, items, cont, row)
