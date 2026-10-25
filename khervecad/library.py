@@ -1505,22 +1505,23 @@ class PartLibraryDialog(QDialog):
         self.setModal(False)
         self.resize(560, 420)
 
-        # category filter above the part list (keeps 30+ parts navigable)
-        self._category = QComboBox()
-        cats = []
-        for spec in PARTS.values():
-            cat = spec.get("category", "Other")
-            if cat not in cats:
-                cats.append(cat)
-        from .library_groups import category_order
-        cats = category_order(cats)             # the Library menu's order
-        self._category.addItem("All")
-        self._category.addItems(cats)
-        self._category.currentTextChanged.connect(self._populate_parts)
-
-        self._parts = QListWidget()
-        self._visible_ids = []
-        self._parts.currentRowChanged.connect(self._part_changed)
+        # the parts as the Library menu lays them out: sections, menus,
+        # submenus (library_tree), with a search box over them
+        from PyQt5.QtWidgets import QLineEdit, QTreeWidget
+        from . import library_tree
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("Search parts…")
+        self._search.setClearButtonEnabled(True)
+        self._tree = QTreeWidget()
+        self._tree.setHeaderHidden(True)
+        library_tree.fill(self._tree, parent, PARTS)
+        self._tree.currentItemChanged.connect(
+            lambda *_a: self._part_changed(None))
+        self._tree.itemDoubleClicked.connect(
+            lambda item, _c: item.data(0, library_tree.PART)
+            and self._insert())
+        self._search.textChanged.connect(
+            lambda text: library_tree.filter_tree(self._tree, text))
 
         self._size = QComboBox()
         self._size.currentTextChanged.connect(self._size_changed)
@@ -1532,9 +1533,8 @@ class PartLibraryDialog(QDialog):
         self._fields = {}
 
         left = QVBoxLayout()
-        left.addWidget(QLabel("Category:"))
-        left.addWidget(self._category)
-        left.addWidget(self._parts, 1)
+        left.addWidget(self._search)
+        left.addWidget(self._tree, 1)
 
         right = QVBoxLayout()
         right.addWidget(QLabel("Standard size:"))
@@ -1556,28 +1556,16 @@ class PartLibraryDialog(QDialog):
         layout = QHBoxLayout(self)
         layout.addLayout(left, 1)
         layout.addLayout(right, 1)
-        self._populate_parts()
+        self.resize(720, 520)
+        first = library_tree.leaves(self._tree)
+        if first:
+            self._tree.setCurrentItem(first[0])
 
     # ------------------------------------------------------------ state
-    def _populate_parts(self, _cat=None):
-        """Fill the part list with the entries in the chosen category."""
-        want = self._category.currentText()
-        self._visible_ids = [pid for pid, spec in PARTS.items()
-                             if want == "All"
-                             or spec.get("category", "Other") == want]
-        self._parts.blockSignals(True)
-        self._parts.clear()
-        for pid in self._visible_ids:
-            self._parts.addItem(PARTS[pid]["label"])
-        self._parts.blockSignals(False)
-        if self._visible_ids:
-            self._parts.setCurrentRow(0)      # fires _part_changed
-
     def _part_id(self):
-        row = self._parts.currentRow()
-        if 0 <= row < len(self._visible_ids):
-            return self._visible_ids[row]
-        return self._visible_ids[0] if self._visible_ids else None
+        from .library_tree import PART
+        item = self._tree.currentItem()
+        return item.data(0, PART) if item is not None else None
 
     def _part_changed(self, _row):
         part_id = self._part_id()

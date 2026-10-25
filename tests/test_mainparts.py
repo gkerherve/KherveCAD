@@ -94,3 +94,24 @@ def test_scad_import_lands_as_one_part(window, tmp_path):
     assert comps[0].name == "plate"
     types = {n.type for n in comps[0].walk()}
     assert {"cube", "cylinder"} <= types
+
+
+def test_part_library_window_is_organised_like_the_menu(window, app):
+    """Sections, then the menus and submenus of the Library menu, with
+    the parts as leaves; the search box finds a part anywhere."""
+    from khervecad.library import PartLibraryDialog
+    from khervecad import library_tree
+    dlg = PartLibraryDialog(window.model, window)
+    tops = [dlg._tree.topLevelItem(i).text(0)
+            for i in range(dlg._tree.topLevelItemCount())]
+    assert "ENGINEERING" in tops and "SCIENCE" in tops
+    eng = dlg._tree.topLevelItem(tops.index("ENGINEERING"))
+    assert eng.childCount() > 3           # its subject menus
+    assert len(library_tree.leaves(dlg._tree)) > 200
+    dlg._search.setText("gate valve")
+    shown = [it for it in library_tree.leaves(dlg._tree)
+             if not it.isHidden()]
+    assert shown and all("gate valve" in it.text(0).lower()
+                         for it in shown)
+    dlg._tree.setCurrentItem(shown[0])
+    assert dlg._part_id() == shown[0].data(0, library_tree.PART)

@@ -404,7 +404,7 @@ class MainWindow(QMainWindow):
         from .toolbars import build_tools_menu
         build_tools_menu(self, tools_menu)
 
-        self._build_library_menu(m)
+        self._library_menu = self._build_library_menu(m)
 
         view_menu = m.addMenu(self.tr("&View"))
         customizer_act = self._customizer_dock.toggleViewAction()
