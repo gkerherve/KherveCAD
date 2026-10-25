@@ -421,7 +421,9 @@ class ObjectTree(QTreeWidget):
     def _decorate(self, item, node):
         from .style import tokens
         dark = tokens().get("dark")
-        item.setIcon(0, icons.icon(NODE_TYPES[node.type]["icon"]))
+        from . import slot2d
+        item.setIcon(0, icons.icon(slot2d.ICON if slot2d.is_slot(node)
+                                   else NODE_TYPES[node.type]["icon"]))
         own_hidden = not node.visible                 # explicitly hidden
         eff_hidden = not self._model_visible(node)    # or a parent is
         from . import part_collections

@@ -314,7 +314,10 @@ class PropertiesPanel(QScrollArea):
             return
 
         spec = NODE_TYPES[node.type]
-        title = QLabel(f"<b>{language.tr(spec['label'])}</b>")
+        from . import slot2d
+        slot = slot2d.is_slot(node)
+        title = QLabel("<b>%s</b>" % language.tr("Slot" if slot
+                                                  else spec["label"]))
         self._layout.addWidget(title)
 
         form = QFormLayout()
@@ -326,7 +329,16 @@ class PropertiesPanel(QScrollArea):
             lambda: self._rename(name_edit.text()))
         form.addRow(language.tr("Name"), name_edit)
 
-        for key, label, kind, minimum, maximum in spec["schema"]:
+        if slot:
+            # a slot's own sizes, not the line's two ends (the user)
+            for key, label in slot2d.FIELDS:
+                editor = VarOrValueEdit(
+                    lambda v, k=key: self._set_slot(k, v),
+                    self._variable_names)
+                self._editors["slot:" + key] = editor
+                form.addRow(language.tr(label), editor)
+        for key, label, kind, minimum, maximum in (
+                [] if slot else spec["schema"]):
             editor = self._make_editor(key, kind, minimum, maximum)
             if editor is not None:
                 self._editors[key] = editor
@@ -434,7 +446,13 @@ class PropertiesPanel(QScrollArea):
     def _load_values(self):
         self._updating = True
         defaults = NODE_TYPES.get(self.node.type, {}).get("params", {})
+        from . import slot2d
+        sizes = slot2d.read(self.node) if slot2d.is_slot(self.node) \
+            else {}
         for key, editor in self._editors.items():
+            if key.startswith("slot:"):
+                editor.set_value(sizes.get(key[5:], 0.0))
+                continue
             # fall back to the type's default: a node saved before a
             # param existed has no value for it, and feeding None to a
             # spin box raises straight through a Qt slot (which PyQt
@@ -466,6 +484,11 @@ class PropertiesPanel(QScrollArea):
     def _set_param(self, key, value):
         if not self._updating and self.node is not None:
             self.model.set_param(self.node, key, value)
+
+    def _set_slot(self, key, value):
+        if not self._updating and self.node is not None:
+            from . import slot2d
+            slot2d.write(self.model, self.node, key, value)
 
     def _rename(self, name):
         if not self._updating and self.node is not None and name:

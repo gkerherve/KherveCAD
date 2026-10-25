@@ -740,3 +740,37 @@ def test_a_cuts_drag_arrow_points_into_the_part(window):
     tool.mouse_move(Ev(tip[0] + (b[0] - a[0]), tip[1] + (b[1] - a[1])))
     tool.mouse_release(Ev(tip[0] + (b[0] - a[0]), tip[1] + (b[1] - a[1])))
     assert ext.params["height"] > before          # deeper
+
+
+def test_a_slot_is_a_slot_with_its_own_sizes(view):
+    """The user: a slot is not a "Line". The Slot tool names it Slot 1;
+    its Length, Radius, Width, Angle and centre are what you edit, and
+    a size a Smart Dimension drives is changed through that dimension."""
+    from khervecad import slot2d, sketch_constraints as sc
+    _draw(view, st.SLOT, [(0, 0), (24, 0), (12, 8)])
+    (slot,) = [n for n in _nodes(view) if n.type == "line"]
+    assert slot2d.is_slot(slot) and slot.name == "Slot 1"
+    s = slot2d.read(slot)
+    assert _near(s["length"], 24) and _near(s["radius"], 8)
+    m = view.scene().model
+    slot2d.write(m, slot, "length", 30)
+    assert _near(slot2d.read(slot)["length"], 30)
+    assert _near(slot2d.read(slot)["cx"], 12)          # centre kept
+    sc.add(m, slot.parent, "radius",
+           [sc.ref_of(slot.parent, slot, "a2")], 8)
+    slot2d.write(m, slot, "width", 20)                 # via the R
+    assert _near(slot2d.read(slot)["radius"], 10)
+    assert sc.rows(slot.parent)[0]["value"] == pytest.approx(10)
+
+
+def test_properties_shows_a_slots_sizes(window):
+    from khervecad import slot2d
+    m = window.model
+    slot = m.add_node("line", dict(x1=0, y1=0, x2=24, y2=0, width=16))
+    slot2d.mark(m, slot)
+    from khervecad.properties import PropertiesPanel
+    panel = window.findChild(PropertiesPanel)
+    panel.set_node(slot)
+    keys = set(panel._editors)
+    assert {"slot:length", "slot:radius", "slot:width"} <= keys
+    assert "x1" not in keys

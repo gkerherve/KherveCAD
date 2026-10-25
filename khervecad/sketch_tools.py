@@ -375,6 +375,9 @@ def finish(scene):
             except (ValueError, KeyError):
                 pass
     scene._pending_tangents = []
+    if tool == SLOT and node is not None and node.type == "line":
+        from . import slot2d             # a slot, not "Line n"
+        slot2d.mark(scene.model, node)
     if tool == RECT_CENTER and node is not None and node.parent is not None \
             and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
         # drawn from the origin: its centre stays there, as SolidWorks
