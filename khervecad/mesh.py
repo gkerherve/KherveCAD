@@ -1658,7 +1658,12 @@ def _tess(node, env, color, sel, selected):
     if t == "assign":
         return []
     if t == "linear_extrude":
-        return _emit(linear_extrude_mesh(node, env), color, selected)
+        tris = linear_extrude_mesh(node, env)
+        if node.params.get("reverse"):
+            # down -Z: mirror in z, winding turned so it stays outward
+            tris = [((a[0], a[1], -a[2]), (c[0], c[1], -c[2]),
+                     (b[0], b[1], -b[2])) for a, b, c in tris]
+        return _emit(tris, color, selected)
     if t == "rotate_extrude":
         return _emit(rotate_extrude_mesh(node, env), color, selected)
     if t in _TRANSFORM_MATS:

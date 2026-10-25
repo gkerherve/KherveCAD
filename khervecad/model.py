@@ -172,6 +172,9 @@ NODE_TYPES = {
                 ("scale", "Scale", "float", 0.0, 1e4),
                 ("center", "Center", "bool", None, None),
                 ("segments", "Slices (0=auto)", "int", 0, 512),
+                # schema-only: extrude down the -Z side (a cut INTO the
+                # face it is sketched on — SolidWorks' Reverse Direction)
+                ("reverse", "Reverse direction", "bool", None, None),
                 # end conditions (extent.py), schema-only
                 ("extent", "End condition", "choice",
                  ("", "through_all", "up_to"), None),
@@ -1091,6 +1094,10 @@ class CadNode:
                 args.append("center=true")
             if p["segments"]:
                 args.append(f"slices={fmt(p['segments'])}")
+            if p.get("reverse"):
+                # down -Z: OpenSCAD's mirror in a helper, so it re-imports
+                # as this one node (organic HELPERS "extrude_reverse")
+                return f"kcad_extrude_reverse({', '.join(args)})"
             return f"linear_extrude({', '.join(args)})"
         if t == "rotate_extrude":
             args = []
@@ -1591,6 +1598,13 @@ class DocumentModel(QObject):
             if mate_of(node) is not None:
                 node.params.pop("mate", None)
                 self.mate_released.emit(node)
+        if key == "height" and node.type == "linear_extrude" and \
+                node.params.get("extent"):
+            # a depth typed or dragged is a BLIND extrude: Through All /
+            # Up To would put its own back at once (the user's cut kept
+            # returning to straight through)
+            node.params.pop("extent", None)
+            node.params["center"] = False
         node.params[key] = value
         self.node_changed.emit(node)
 

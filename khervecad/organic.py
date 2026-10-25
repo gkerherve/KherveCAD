@@ -184,6 +184,14 @@ module kcad_symmetry(n = [1, 0, 0], c = [0, 0, 0]) {
     children();
     translate(c) mirror(n) translate(-c) children();
 }""",
+    # a linear extrude turned to go down -Z (its `reverse` param)
+    "extrude_reverse": """\
+module kcad_extrude_reverse(height = 10, twist = 0, scale = 1,
+                            center = false, slices = undef) {
+    mirror([0, 0, 1]) linear_extrude(height = height, twist = twist,
+                                     scale = scale, center = center,
+                                     slices = slices) children();
+}""",
     # a rotate about a pivot (the rotate node's px / py / pz)
     "rotate_pivot": """\
 module kcad_rotate(a = [0, 0, 0], pivot = [0, 0, 0]) {
@@ -238,6 +246,9 @@ def preamble(root) -> list:
     if any(n.type == "rotate" and has_pivot(n.params)
            for n in root.walk()):
         lines.extend(HELPERS["rotate_pivot"].split("\n"))
+    if any(n.type == "linear_extrude" and n.params.get("reverse")
+           for n in root.walk()):
+        lines.extend(HELPERS["extrude_reverse"].split("\n"))
     if any(n.type == "color" and
            str(n.params.get("material") or "Default") != "Default"
            for n in root.walk()):
@@ -401,6 +412,19 @@ def _b_joint(parser, positional, named):
         min_angle=_num(lo, -180.0), max_angle=_num(hi, 180.0)))
 
 
+def _b_extrude_reverse(parser, positional, named):
+    from .model import CadNode, NODE_TYPES
+    from .scadparse import _num
+    d = NODE_TYPES["linear_extrude"]["params"]
+    centre = named.get("center", False)
+    return CadNode("linear_extrude", "Linear extrude", dict(
+        height=_num(named.get("height", d["height"]), d["height"]),
+        twist=_num(named.get("twist", 0.0), 0.0),
+        scale=_num(named.get("scale", 1.0), 1.0),
+        center=bool(centre) and centre != "false",
+        segments=_num(named.get("slices", 0), 0), reverse=True))
+
+
 def _b_rotate_pivot(parser, positional, named):
     from .model import CadNode
     a = _vec3(named.get("a", positional[0] if positional else None),
@@ -446,6 +470,7 @@ BUILDERS = {
     "kcad_rounded_box": _b_rounded_box, "kcad_symmetry": _b_symmetry,
     "kcad_joint": _b_joint,
     "kcad_rotate": _b_rotate_pivot,
+    "kcad_extrude_reverse": _b_extrude_reverse,
 }
 BUILDERS.update(bake.BUILDERS)
 BUILDERS.update(pattern.BUILDERS)

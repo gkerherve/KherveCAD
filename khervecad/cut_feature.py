@@ -60,10 +60,11 @@ def apply(model, group, part, kind):
         return None
     tool.name = label
     if op == "linear_extrude":
-        # through all (both ways, the far side is air): one node, no
-        # mirror to flip it into the part (the user: a simpler tree)
+        # blind, DEPTH into the face (Reverse Direction: down -Z); one
+        # node, no mirror (a simpler tree). Its depth is the user's to
+        # set — Through All is a choice in Properties (End condition)
         tool.params["height"] = DEPTH
-        tool.params["extent"] = "through_all"
+        tool.params["reverse"] = True
     elif op == "rotate_extrude":
         outer = model.wrap_nodes([tool], "rotate")     # about sketch Y
         outer.params.update(x=-90.0, y=0.0, z=0.0)

@@ -467,9 +467,25 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     assert diff is not None and diff.type == "difference"
     assert diff.children[0] is block and diff.children[1] is group
     ext = [n for n in group.walk() if n.type == "linear_extrude"][0]
-    assert ext.parent is group and ext.params["extent"] == "through_all"
-    assert ext.params["height"] > 20          # right through the block
+    assert ext.parent is group and ext.params.get("reverse")
+    assert not ext.params.get("extent")       # blind: its depth is yours
     assert group.name == "Cut sketch"
+    # a depth typed stays; one typed under Through All switches it off
+    m.set_param(ext, "height", 6.0)
+    window._model_edited()
+    assert ext.params["height"] == 6.0
+    ext.params["extent"] = "through_all"
+    m.set_param(ext, "height", 7.0)
+    window._model_edited()
+    assert ext.params["height"] == 7.0 and not ext.params.get("extent")
+    # the code writes the reversed extrude, and reads it back as one node
+    from khervecad import scadparse
+    code = m.to_scad()
+    assert "kcad_extrude_reverse(" in code
+    root, _w = scadparse.parse_scad(code)
+    back = [n for n in root.walk() if n.type == "linear_extrude"]
+    assert back and back[0].params.get("reverse")
+    assert back[0].params["height"] == 7.0
     # the dimension went into the extrude with the circle, still driving
     sc.set_value(m, ext, 0, 16)
     assert circle.params["radius"] == pytest.approx(8, abs=1e-3)
