@@ -262,6 +262,15 @@ def _regions(d):
     _ln(d, (0.92, 0.32), (0.92, 0.68))
 
 
+@draws("make_region")
+def _make_region(d):
+    """The rectangle-and-circle regions, outlined, the kept ones filled
+    with a plus: a region made, not extruded."""
+    _regions(d)
+    d.line(P(0.72, 0.08), P(0.72, 0.26), d.pal.make, 0.07)
+    d.line(P(0.63, 0.17), P(0.81, 0.17), d.pal.make, 0.07)
+
+
 @draws("sk_extend")
 def _sk_extend(d):
     _ln(d, (0.82, 0.1), (0.82, 0.9))

@@ -24,6 +24,7 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 REGIONS = "regions"
+MAKE = "make_region"     # Create Region: the Regions node, no extrude
 MAX_SHAPES = 10        # 2^n combinations
 HEIGHT = 10.0
 
@@ -163,22 +164,34 @@ def union_of(face_list, picked):
 
 def extrude(model, container, face_list, picked, height=HEIGHT,
             hide=None):
-    """A Linear extrude in *container* holding a **Regions** node, which
-    holds the sketch shapes (*hide*, moved in with their Smart
-    Dimensions) and draws the picked regions' union (regions2d). The
-    extrude."""
+    """A Linear extrude in *container* holding a **Regions** node (see
+    `make`). The extrude."""
+    reg = make(model, container, face_list, picked, hide)
+    if reg is None:
+        return None
+    ext = model.wrap_nodes([reg], "linear_extrude")
+    if ext is None:
+        return None
+    ext.params["height"] = height
+    ext.name = "Extrude regions"
+    model.node_changed.emit(ext)
+    return ext
+
+
+def make(model, container, face_list, picked, hide=None):
+    """A **Regions** node in *container* where the sketch was, holding
+    the sketch shapes (*hide*, moved in with their Smart Dimensions) and
+    drawing the picked regions' union (regions2d). The Regions node."""
     picked = sorted(set(picked))
     shapes = [s for s in (hide or []) if s.parent is container]
     if not picked or not shapes:
         return None
     from . import sketch_constraints as sc
     at = min(container.children.index(s) for s in shapes)
-    ext = model.add_node("linear_extrude", {"height": height},
-                         parent=container, name="Extrude regions")
     reg = model.add_node("regions", {
         "seeds": [seed(face_list[i][0]) for i in picked],
         "inside": [face_list[i][2] for i in picked]},
-        parent=ext, name="Regions")
+        parent=container, name="Regions")
     # the dimensions go with the shapes: rows naming only them, re-indexed
     old = [sc.ref_of(container, s, "").rstrip(".") for s in shapes]
     new_index = {o: str(i) for i, o in enumerate(old)}
@@ -203,10 +216,10 @@ def extrude(model, container, face_list, picked, height=HEIGHT,
         container.params.pop(sc.KEY, None)
     else:
         _reindex(container, old)
-    # the extrude goes where the sketch was
-    model.move_node(ext, container, at)
+    # Regions goes where the sketch was
+    model.move_node(reg, container, at)
     model.node_changed.emit(reg)
-    return ext
+    return reg
 
 
 def _reindex(container, removed):
@@ -376,8 +389,9 @@ def finish(scene):
     st = _state(scene)
     ext = None
     if st["container"] is not None and st["picked"]:
-        ext = extrude(scene.model, st["container"], st["faces"],
-                      st["picked"], hide=st.get("shapes"))
+        build = make if scene.tool == MAKE else extrude
+        ext = build(scene.model, st["container"], st["faces"],
+                    st["picked"], hide=st.get("shapes"))
     drop(scene)
     if ext is not None:
         scene.node_created.emit(ext)
@@ -455,7 +469,7 @@ def overlap_container(window, nodes):
     return None
 
 
-def start_3d(window, container=None):
+def start_3d(window, container=None, make_only=False):
     """Pick regions on the 3D view: the region under the mouse lights
     up, a click keeps it (again drops it), Esc or right-click extrudes
     what was picked. False when no sketch has regions."""
@@ -492,6 +506,9 @@ def start_3d(window, container=None):
             lines.append(pts + pts[:1])
 
     def banner():
+        if make_only:
+            return ("Create Region: click the regions to keep (%d picked) "
+                    "· Esc or right-click makes it" % len(picked))
         return ("Extruded Boss/Base — Selected Contours: click the "
                 "regions to extrude (%d picked) · Esc or right-click "
                 "makes it" % len(picked))
@@ -499,6 +516,14 @@ def start_3d(window, container=None):
     def on_pick(desc, key):
         if desc is None:                       # done
             view.set_highlight_mesh([])
+            if make_only:
+                reg = make(window.model, container, face_list, picked,
+                           hide=shapes) if picked else None
+                if reg is not None:
+                    window.statusBar().showMessage(
+                        "Regions made from %d region(s) — extrude or "
+                        "revolve it when you like." % len(picked), 6000)
+                return
             ext = extrude(window.model, container, face_list, picked,
                           hide=shapes) if picked else None
             if ext is not None:

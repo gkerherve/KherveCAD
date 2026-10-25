@@ -35,7 +35,8 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (EXTEND, "mdi.arrow-expand-right", "Extend"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
-         ("regions", "mdi.texture-box", "Extrude regions")]
+         ("regions", "mdi.texture-box", "Extrude regions"),
+         ("make_region", "mdi.vector-union", "Create region")]
 EPS = 1e-6
 ARC_STEPS = 12
 
@@ -357,7 +358,7 @@ def _band(pts, width):
 
 # ------------------------------------------------------- the 2D view
 def handles(tool):
-    return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions")
+    return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -367,14 +368,17 @@ PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
            CHAMFER: "Sketch chamfer: click a polygon / rectangle corner, "
                     "or two lines that meet.",
     "regions": "Extrude regions: click inside the regions to keep, then "
-               "Enter or right-click."}
+               "Enter or right-click.",
+    "make_region": "Create region: click inside the regions to keep, then "
+                   "Enter or right-click."}
 
 
 def press(scene, event):
     from PyQt5.QtCore import Qt
     from . import sketch_constrain_ui as scu
     event.accept()
-    if scene.tool == "regions" and event.button() == Qt.RightButton:
+    if scene.tool in ("regions", "make_region") and \
+            event.button() == Qt.RightButton:
         from . import sketch_regions
         sketch_regions.finish(scene)
         return
@@ -383,7 +387,7 @@ def press(scene, event):
         return
     pos = event.scenePos()
     tool = scene.tool
-    if tool == "regions":
+    if tool in ("regions", "make_region"):
         from . import sketch_regions
         sketch_regions.press(scene, event)
         return
@@ -495,6 +499,15 @@ TIPS = {
                  "those regions is made and the sketch shapes are "
                  "hidden."],
                 "Set the height in Properties, or drag the arrow in 3D."),
+    "make_region": ("Create region",
+                    "Makes a Regions node from overlapping sketch shapes: "
+                    "the regions you click, the shapes inside it with "
+                    "their Smart Dimensions — extrude or revolve it later.",
+                    ["Draw overlapping shapes (a rectangle and a circle "
+                     "on it).",
+                     "Click inside each region to keep; they turn blue.",
+                     "Enter or right-click makes the Regions node."],
+                    "Change a Smart Dimension and the region follows."),
 }
 
 
@@ -513,8 +526,8 @@ def panel_actions(win):
         act.setCheckable(True)
         toolbars.remember_glyph(act, glyph, "draw")
         tooltips.apply(act, tool)
-        if tool == "regions":
-            act.triggered.connect(lambda _=False: _regions(win))
+        if tool in ("regions", "make_region"):
+            act.triggered.connect(lambda _=False, t=tool: _regions(win, t))
         else:
             act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)
@@ -523,15 +536,16 @@ def panel_actions(win):
     return acts
 
 
-def _regions(win):
+def _regions(win, tool="regions"):
     """Extrude regions: in the sketch (Fusion / SolidWorks sketch mode)
     the 2D tool; otherwise straight on the 3D view, where the user sees
     the part (2026-10-25)."""
     from . import sketch_mode, sketch_regions
     if sketch_mode.sketching(win):
-        win._set_tool("regions")
-    elif not sketch_regions.start_3d(win):
-        win._set_tool("regions")
+        win._set_tool(tool)
+    elif not sketch_regions.start_3d(win,
+                                     make_only=tool == "make_region"):
+        win._set_tool(tool)
 
 
 # ---------------------------------------- the OpenSCAD program, both ways

@@ -185,9 +185,10 @@ def test_sketch_tab_has_create_modify_insert(window):
     for tool, *_ in st.TOOLS:
         assert tool in data
     _t, modify = ribbon.panel_actions(window, "sketch_modify")
-    assert [a.data() for a in modify][:7] == [
+    assert [a.data() for a in modify][:8] == [
         "construction", "sk_trim", "sk_extend", "sk_fillet", "sk_chamfer",
-        "regions", "offset"]
+        "regions", "make_region", "offset"]
+    assert "make_region" in data            # among the drawing tools too
     assert {"mirror", "pattern"} <= {a.data() for a in modify}
     _t, insert = ribbon.panel_actions(window, "sketch_insert")
     assert [a.data() for a in insert] == ["import_2d"]
@@ -400,3 +401,18 @@ def test_sketch_dimensions_are_drawn_on_the_3d_view(window):
     d3.paint(window, p, lambda v: (200 + v[0], 150 - v[1], 1.0))
     p.end()
     assert d3._local(obj, sc.rows(obj)[0])[0] == "linear"
+
+
+def test_create_region_makes_a_regions_node_without_extruding(view):
+    from khervecad import sketch_tools2 as st2, sketch_regions as sr
+    _draw(view, st.RECT_CENTER, [(20, 20), (50, 30)])
+    view.set_tool(st2.CIRCLE_3PT)
+    _click(view, 35, 30)
+    _click(view, 35, 10)
+    _click(view, 50, 22)
+    view.set_tool(sr.MAKE)
+    _click(view, 10, 20)
+    _click(view, 42, 20)
+    QTest.keyClick(view.viewport(), Qt.Key_Return)
+    types = [n.type for n in _nodes(view)]
+    assert "regions" in types and "linear_extrude" not in types

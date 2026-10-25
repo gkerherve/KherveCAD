@@ -2466,7 +2466,7 @@ class SketchView(QGraphicsView):
                 sketch_constrain_ui.handles(self.scene().tool) or \
                 self.scene().tool in ("sk_trim", "sk_extend",
                                       "sk_fillet", "sk_chamfer",
-                                      "regions"):
+                                      "regions", "make_region"):
             event.accept()                     # right-click finished it
             return
         model = self.scene().model
@@ -2721,7 +2721,7 @@ class SketchView(QGraphicsView):
         elif sketch_tools.handles(scene.tool) and \
                 sketch_tools.key(scene, event):
             pass
-        elif scene.tool == "regions" and \
+        elif scene.tool in ("regions", "make_region") and \
                 sketch_regions.key(scene, event):
             pass
         elif sketch_constrain_ui.handles(scene.tool) and \
