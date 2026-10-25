@@ -253,13 +253,14 @@ def test_extrude_regions_of_a_rectangle_and_perimeter_circle(view):
     QTest.keyClick(view.viewport(), Qt.Key_Return)
     ext = [n for n in _nodes(view) if n.type == "linear_extrude"]
     assert len(ext) == 1
-    poly = ext[0].children[0]
-    xs = [p[0] for p in poly.params["points"]]
+    reg = ext[0].children[0]
+    assert reg.type == "regions" and rect.parent is reg
+    from khervecad import regions2d
+    pts = [p for loop in regions2d.outlines(reg) for p in loop]
+    xs = [p[0] for p in pts]
     assert _near(max(xs), 50) and _near(min(xs), -10)
     # the far corners are left out: no point at the rectangle's corner
-    assert not any(_near(p[0], 50) and _near(p[1], 30)
-                   for p in poly.params["points"])
-    assert rect.params.get("modifier") == "%"
+    assert not any(_near(p[0], 50) and _near(p[1], 30) for p in pts)
 
 
 def test_perimeter_circle_lights_the_sides_it_picks(view):
@@ -302,8 +303,8 @@ def test_extrude_regions_picked_on_the_3d_view(window):
     cb(None, None)
     ext = [n for n in obj.children if n.type == "linear_extrude"]
     assert len(ext) == 1
-    assert all(n.params.get("modifier") == "%" for n in obj.children
-               if n.type in ("rect", "circle"))
+    reg = ext[0].children[0]
+    assert {n.type for n in reg.children} == {"rect", "circle"}
 
 
 def test_extruded_boss_on_overlapping_shapes_picks_regions(window):
@@ -348,30 +349,37 @@ def test_region_edges_are_drawn_on_the_3d_view(window):
 
 
 def test_regions_extrude_follows_its_sketch(window):
-    """The sketch stays as construction with its dimensions, and the
-    extruded outline follows it: a longer rectangle, a longer plate."""
-    from khervecad import sketch_regions as sr
+    """Extrude → Regions → the rectangle and circle, the Smart Dimension
+    on Regions: changing it reshapes the extruded outline, and the whole
+    thing round-trips through OpenSCAD code."""
+    from khervecad import sketch_regions as sr, regions2d
+    from khervecad import sketch_constraints as sc, scadparse
     m = window.model
     obj = m.add_node("union", {}, name="Plate sketch")
     rect = m.add_node("rect", dict(x=-10, y=10, width=60, height=20),
                       parent=obj)
     circle = m.add_node("circle", dict(x=40, y=20, radius=10), parent=obj)
+    sc.add(m, obj, "length", [sc.ref_of(obj, rect, "e0")], 60)
     faces = sr.faces(sr.shapes_of(obj))
     picked = [sr.face_at(faces, (0, 20)), sr.face_at(faces, (42, 20))]
     ext = sr.extrude(m, obj, faces, picked, hide=[rect, circle])
-    poly = ext.children[0]
-    assert max(p[0] for p in poly.params["points"]) == pytest.approx(50, abs=0.1)
-    # the sketch grows by 30 mm, its circle moves with the end
-    rect.params["width"] = 90
+    reg = ext.children[0]
+    assert rect.parent is reg and circle.parent is reg
+    assert [r["kind"] for r in sc.rows(reg)] == ["length"]
+    assert not sc.rows(obj)
+
+    def max_x():
+        return max(p[0] for loop in regions2d.outlines(reg) for p in loop)
+    assert max_x() == pytest.approx(50, abs=0.1)
+    # the dimension grows the rectangle; the circle rides on its end
+    sc.set_value(m, reg, 0, 90)
     circle.params["x"] = 70
-    sr.refresh(m)
-    xs = [p[0] for p in poly.params["points"]]
-    assert max(xs) == pytest.approx(80, abs=0.1)
-    assert min(xs) == pytest.approx(-10, abs=0.1)
-    # round trip through the file keeps the link
-    from khervecad.document import node_to_dict
-    import json
-    json.dumps(node_to_dict(m.root))
+    assert max_x() == pytest.approx(80, abs=0.1)
+    code = m.to_scad()
+    assert "kcad_regions(" in code
+    root, _w = scadparse.parse_scad(code)
+    back = [n for n in root.walk() if n.type == "regions"]
+    assert back and {c.type for c in back[0].children} >= {"rect", "circle"}
 
 
 def test_sketch_dimensions_are_drawn_on_the_3d_view(window):

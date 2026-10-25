@@ -554,6 +554,9 @@ def collect_outlines(node: CadNode, env=None):
         return outlines
     if node.category == SHAPE_2D:
         outlines.extend(_oriented(node, node_outlines(node, env)))
+    if node.type == "regions":
+        from . import regions2d          # the picked regions of its sketch
+        return regions2d.outlines(node, env)
     if node.type == "offset":
         child_outlines = _children_outlines(node, env)
         r = rv(node.params["radius"], env)

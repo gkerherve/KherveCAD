@@ -45,13 +45,13 @@ def shapes_of(container, construction=False):
             and (construction or n.params.get("modifier") != "%")]
 
 
-def faces(shapes):
+def faces(shapes, any_state=False):
     """[(CrossSection, [loops], [shapes it lies in])] — every connected region the shapes'
     outlines cut the plane into."""
     from .mesh import collect_outlines, node_outlines, _oriented
     secs, owners = [], []
     for s in shapes[:MAX_SHAPES]:
-        if s.params.get("modifier") == "%":
+        if any_state or s.params.get("modifier") == "%" or not s.visible:
             # construction (a regions extrude's sketch): its own outline,
             # which collect_outlines leaves out like OpenSCAD does
             outlines = _oriented(s, node_outlines(s, {}))
@@ -163,26 +163,64 @@ def union_of(face_list, picked):
 
 def extrude(model, container, face_list, picked, height=HEIGHT,
             hide=None):
-    """One polygon of the picked faces under a Linear extrude in
-    *container*. The polygon remembers a point inside each picked region
-    (`params["regions"]`), and the sketch shapes (*hide*) stay as
-    CONSTRUCTION (OpenSCAD's %): their dimensions still drive the shape,
-    which `refresh` rebuilds whenever the sketch changes. The extrude."""
-    cs = union_of(face_list, picked)
-    params = _outline(cs) if cs is not None else None
-    if not params:
+    """A Linear extrude in *container* holding a **Regions** node, which
+    holds the sketch shapes (*hide*, moved in with their Smart
+    Dimensions) and draws the picked regions' union (regions2d). The
+    extrude."""
+    picked = sorted(set(picked))
+    shapes = [s for s in (hide or []) if s.parent is container]
+    if not picked or not shapes:
         return None
-    params["regions"] = {
-        "seeds": [seed(face_list[i][0]) for i in sorted(set(picked))],
-        # which sketch shapes each region lies in: it keeps the region
-        # when a shape moves past the seed point (the circle sliding)
-        "inside": [face_list[i][2] for i in sorted(set(picked))]}
+    from . import sketch_constraints as sc
+    at = min(container.children.index(s) for s in shapes)
     ext = model.add_node("linear_extrude", {"height": height},
                          parent=container, name="Extrude regions")
-    model.add_node("polygon", params, parent=ext, name="Regions")
-    for s in hide or []:
-        model.set_param(s, "modifier", "%")
+    reg = model.add_node("regions", {
+        "seeds": [seed(face_list[i][0]) for i in picked],
+        "inside": [face_list[i][2] for i in picked]},
+        parent=ext, name="Regions")
+    # the dimensions go with the shapes: rows naming only them, re-indexed
+    old = [sc.ref_of(container, s, "").rstrip(".") for s in shapes]
+    new_index = {o: str(i) for i, o in enumerate(old)}
+    moved, kept = [], []
+    for row in sc.rows(container):
+        idxs = [r.partition(".")[0] for r in row["refs"]]
+        if all(i in new_index for i in idxs):
+            row = dict(row, refs=["%s.%s" % (new_index[i],
+                                             r.partition(".")[2])
+                                  for i, r in zip(idxs, row["refs"])])
+            moved.append(row)
+        elif not any(i in new_index for i in idxs):
+            kept.append(row)
+    for s in shapes:
+        model.move_node(s, reg)
+        s.params.pop("modifier", None)
+    if moved:
+        reg.params[sc.KEY] = moved
+    # the container's own rows: re-indexed for the shapes taken out
+    container.params[sc.KEY] = kept
+    if not kept:
+        container.params.pop(sc.KEY, None)
+    else:
+        _reindex(container, old)
+    # the extrude goes where the sketch was
+    model.move_node(ext, container, at)
+    model.node_changed.emit(reg)
     return ext
+
+
+def _reindex(container, removed):
+    """Rows left on *container* after shapes at *removed* (old child
+    indices, as text) were taken out: later indices move down."""
+    from . import sketch_constraints as sc
+    gone = sorted(int(i) for i in removed)
+
+    def fn(ref):
+        idx, _, name = ref.partition(".")
+        i = int(idx)
+        return "%d.%s" % (i - sum(1 for g in gone if g < i), name)
+    for row in sc.rows(container):
+        row["refs"] = [fn(r) for r in row["refs"]]
 
 
 _BUSY = False
@@ -216,6 +254,10 @@ def refresh(model):
         return
     _BUSY = True
     try:
+        from . import regions2d
+        for node in list(model.root.walk()):
+            if node.type == "regions":
+                regions2d.track(node)        # its picks follow the shapes
         for poly in list(model.root.walk()):
             info = poly.params.get("regions") if poly.type == "polygon" \
                 else None

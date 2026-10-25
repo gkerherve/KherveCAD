@@ -3188,6 +3188,20 @@ into a new module and import.
                        faces by click, Enter / right-click makes one polygon
                        (paths) under a Linear extrude and hides the shapes.
                        Baked: editing the sketch later does not regrow it.
+                       Since 2026-10-25 the result is a **Regions** node
+                       (`regions2d.py`, a 2D wrapper in features.MODULES):
+                       Extrude → Regions → the sketch shapes, MOVED in with
+                       their Smart Dimensions (rows re-indexed); it draws
+                       the union of the picks, each remembered as a seed
+                       point + the shapes it lies in (`_match`), so a
+                       dimension change reshapes the part. Codegen
+                       `kcad_regions(seeds, inside, points, paths) {shapes}`
+                       (helper draws the computed outline); `track` re-seeds
+                       only when every pick is still found. Extruded Boss on
+                       overlapping shapes starts the 3D pick (Selected
+                       Contours, region edges drawn via `View3D.pick_lines`).
+                       `sketch_dims3d.py` draws sketch dimensions on the 3D
+                       view (`View3D.overlay_painters`), on every instance.
                        Perimeter circle (`sketch_tools2.build_perimeter`):
                        three clicks on lines / sides -> tangent circle +
                        Tangent relations (`tangent_to_lines`).
