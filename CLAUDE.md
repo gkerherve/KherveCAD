@@ -3214,6 +3214,13 @@ into a new module and import.
                        revolve about the sketch's Y, sweep, section loft)
                        and part + sketch in a Difference. A selected face
                        sketch is cut at once. SOLID tab panel "cuts".
+  - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
+                       selection or parts clicked in 3D, then a plane (Right
+                       YZ / Front XZ / Top XY, or a picked face carried into
+                       the parts' frame); wraps them in a `symmetry` node
+                       ("Mirror": original kept + its reflection). The
+                       Mirror button (op "mirror") goes here; 2D outlines of
+                       a symmetry reflect too (`mesh.collect_outlines`).
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

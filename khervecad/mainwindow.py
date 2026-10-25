@@ -901,6 +901,12 @@ class MainWindow(QMainWindow):
     def _apply_operation(self, op: str):
         tree = self.builder.active_tree()
         nodes = tree.selected_nodes()
+        if op == "mirror":
+            # SolidWorks' Mirror: the parts (selected, or clicked in 3D)
+            # KEPT and mirrored about a chosen plane or face (the user)
+            from . import mirror_feature
+            mirror_feature.start(self)
+            return
         if op in ("fillet", "push_pull") and nodes and \
                 not getattr(self, "_rounding", False):
             # a 2D shape or a piece inside a part: round the part

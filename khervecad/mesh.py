@@ -557,6 +557,26 @@ def collect_outlines(node: CadNode, env=None):
     if node.type == "regions":
         from . import regions2d          # the picked regions of its sketch
         return regions2d.outlines(node, env)
+    if node.type == "symmetry":
+        # a Mirror of sketch shapes: them and their reflection about the
+        # plane's trace in XY (a mirror across XY leaves 2D as it is)
+        kids = _children_outlines(node, env)
+        nx, ny = rv(node.params.get("x", 1.0), env), \
+            rv(node.params.get("y", 0.0), env)
+        cx, cy = rv(node.params.get("cx", 0.0), env), \
+            rv(node.params.get("cy", 0.0), env)
+        ln = (nx * nx + ny * ny) ** 0.5
+        if ln < 1e-12:
+            return kids
+        nx, ny = nx / ln, ny / ln
+        out = list(kids)
+        for loop in kids:
+            ref = []
+            for x, y in loop:
+                d = (x - cx) * nx + (y - cy) * ny
+                ref.append((x - 2 * d * nx, y - 2 * d * ny))
+            out.append(ref[::-1])           # turned round: still solid
+        return out
     if node.type == "offset":
         child_outlines = _children_outlines(node, env)
         r = rv(node.params["radius"], env)
