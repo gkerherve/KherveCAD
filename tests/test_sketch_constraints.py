@@ -656,5 +656,10 @@ def test_smart_dimension_to_the_face_edge(window, monkeypatch):
     assert "point_line" in kinds
     ref = [n for n in group.children if n.name == "Reference edge"]
     assert ref and ref[0].params.get("modifier") == "%"
+    assert not ref[0].visible            # hidden once dimensioned
     assert rect.params["y"] == pytest.approx(-12, abs=1e-3)   # 8 above
+    # it still drives: a new value moves the rectangle again
+    i = [r["kind"] for r in sc.rows(group)].index("point_line")
+    sc.set_value(m, group, i, 5)
+    assert rect.params["y"] == pytest.approx(-15, abs=1e-3)
     face_sketch.close(window)

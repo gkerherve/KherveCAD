@@ -158,12 +158,16 @@ def finish(window, group):
 def start(window, kind):
     """Extruded Cut and the others: a selected face sketch is cut at
     once; else click a face, sketch, leave the sketch."""
-    from . import face_sketch
-    nodes = window.builder.active_tree().selected_nodes()
+    from . import face_sketch, sketch_regions
+    tree = window.builder.active_tree()
+    nodes = tree.selected_nodes()
     for n in nodes:
         group = face_sketch.group_of(n)
         part = _part_below(window, group) if group is not None else None
-        if group is not None and part is not None and _shapes(group):
+        # (a sketch already made into a feature — the Boss sketch — is
+        # not one to cut with now)
+        if group is not None and part is not None and _shapes(group) \
+                and not any(sketch_regions.used(s) for s in _shapes(group)):
             group.params[KEY] = kind
             return apply(window.model, group, part, kind)
     from . import meshedit_ui
@@ -171,6 +175,14 @@ def start(window, kind):
     if not parts:
         window.statusBar().showMessage("Nothing to cut yet.", 5000)
         return None
+    # a fresh sketch: nothing left selected from before (the Boss
+    # sketch's rectangle, still selected, was drawn in the new sketch at
+    # its own place — the user's confusing picture)
+    try:
+        tree.clearSelection()
+        window.view2d.scene().clearSelection()
+    except Exception:
+        pass
     label = ALL[kind][0]
     verb = "extrude from" if kind in BOSS else "cut into"
     end = "to extrude it" if kind in BOSS else "to cut"

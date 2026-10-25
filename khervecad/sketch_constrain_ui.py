@@ -711,6 +711,16 @@ def _smart(first, second):
     return None
 
 
+def _hide_references(scene, chosen):
+    """A face's edge / point copied in to dimension to (face_outline.
+    reference) is hidden once the dimension holds it (the user): the
+    dimension still measures from it."""
+    for node, _name, _kind in chosen:
+        if node.name in ("Reference edge", "Reference point") and \
+                node.visible:
+            scene.model.set_visible(node, False)
+
+
 def dimension_press(scene, event):
     """The sketch Dimension tool: a circle gives its diameter at once; a
     line then a click off the geometry (or on the same line) its length;
@@ -786,6 +796,7 @@ def dimension_press(scene, event):
     except ValueError as exc:
         scene.status.emit(str(exc))
         return
+    _hide_references(scene, chosen)
     scene.status.emit("%s %s — %s%s" % (
         sc.KINDS[kind][0], text, sc.status_text(report),
         " The whole sketch was scaled to it (first dimension)."

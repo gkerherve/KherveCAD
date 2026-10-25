@@ -983,3 +983,24 @@ def test_a_2d_difference_still_extrudes(window):
     window.builder.tree.select_nodes([d])
     window._apply_operation("linear_extrude")
     assert d.parent.type == "linear_extrude"
+
+
+def test_a_cut_starts_clean_of_an_old_selection(window):
+    """The user's confusing hole sketch: the Boss sketch's rectangle,
+    still selected, was drawn in the new cut sketch. Starting a cut now
+    clears the selection, and a used sketch is never cut at once."""
+    from khervecad import cut_feature
+    m = window.model
+    block = m.add_node("cube", dict(width=40, depth=40, height=10))
+    boss = m.add_node("union", dict(x=0, y=0, z=10), name="Boss sketch")
+    boss.params["face_sketch"] = True
+    ext = m.add_node("linear_extrude", dict(height=5), parent=boss)
+    r = m.add_node("rect", dict(x=0, y=0, width=10, height=10), parent=ext)
+    window.builder.tree.rebuild()
+    window.builder.tree.select_nodes([r])
+    calls = []
+    window.view3d.start_pick = lambda cb, **k: calls.append(k)
+    assert cut_feature.start(window, "extruded_cut") is None
+    assert calls                                    # asks for a face
+    assert not window.builder.tree.selected_nodes()
+    assert r.parent is ext                          # untouched
