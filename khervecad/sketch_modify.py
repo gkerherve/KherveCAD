@@ -358,7 +358,8 @@ def _band(pts, width):
 
 # ------------------------------------------------------- the 2D view
 def handles(tool):
-    return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region")
+    return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
+                    "sk_construction")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -387,6 +388,10 @@ def press(scene, event):
         return
     pos = event.scenePos()
     tool = scene.tool
+    if tool == "sk_construction":
+        from . import sketch_tools2
+        sketch_tools2.construction_press(scene, event)
+        return
     if tool in ("regions", "make_region"):
         from . import sketch_regions
         sketch_regions.press(scene, event)

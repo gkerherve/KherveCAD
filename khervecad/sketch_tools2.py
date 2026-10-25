@@ -469,6 +469,28 @@ TIPS = {
 }
 
 
+PICK_CONSTRUCTION = "sk_construction"
+
+
+def construction_press(scene, event):
+    """The click tool: the shape under the click switches construction
+    on / off."""
+    from PyQt5.QtCore import Qt
+    from . import sketch_constrain_ui as scu
+    event.accept()
+    if event.button() != Qt.LeftButton:
+        return
+    hit = scu.pick(scene, event.scenePos())
+    if hit is None:
+        scene.status.emit("Construction: click a sketch shape.")
+        return
+    node = hit[0]
+    toggle_construction(scene.model, [node])
+    scene.status.emit("%s is %s." % (node.name, "construction now"
+                                     if is_construction(node)
+                                     else "solid again"))
+
+
 def construction_action(win):
     act = getattr(win, "_construction_act", None)
     if act is not None:
@@ -485,10 +507,24 @@ def construction_action(win):
     def run():
         n = toggle_construction(
             win.model, win.builder.active_tree().selected_nodes())
-        win.statusBar().showMessage(language.tr(
-            "Construction switched on {n} shape(s).").format(n=n) if n
-            else language.tr("Construction: select sketch shapes first."),
-            5000)
+        if n:
+            win.statusBar().showMessage(language.tr(
+                "Construction switched on {n} shape(s).").format(n=n), 5000)
+            return
+        # nothing selected: a click tool — each shape clicked switches
+        # (the user: "when I click on it, nothing happened")
+        win._set_tool(PICK_CONSTRUCTION)
+        msg = language.tr("Construction: click the sketch shapes to "
+                          "switch (dashed = construction, left out of the "
+                          "solid). Esc when done.")
+        win.statusBar().showMessage(msg, 8000)
+        flash = getattr(win.view2d, "flash", None) or \
+            getattr(win.view3d, "flash", None)
+        if flash is not None:
+            try:
+                flash(msg)
+            except Exception:
+                pass
     act.triggered.connect(lambda _=False: run())
     win._construction_act = act
     return act

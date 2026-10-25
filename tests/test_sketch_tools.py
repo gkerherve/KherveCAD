@@ -434,3 +434,16 @@ def test_a_dimension_typed_in_the_3d_view_drives_the_sketch(window):
     box.editingFinished.emit()
     assert rect.params["width"] == pytest.approx(75, abs=1e-3)
     assert not d3.press(window, QPoint(300, 300))
+
+
+def test_construction_with_nothing_selected_is_a_click_tool(view):
+    """The user: Construction did nothing. Clicked on a shape it now
+    switches it to construction and back."""
+    from khervecad import sketch_tools2 as st2
+    _draw(view, st.RECT_CENTER, [(20, 20), (50, 30)])
+    rect = [n for n in _nodes(view) if n.type == "rect"][0]
+    view.set_tool(st2.PICK_CONSTRUCTION)
+    _click(view, 20, 30)                    # on its top side
+    assert rect.params.get("modifier") == "%"
+    _click(view, 20, 30)
+    assert rect.params.get("modifier", "") == ""
