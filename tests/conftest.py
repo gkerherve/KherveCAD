@@ -112,6 +112,8 @@ def _fresh_blueprint_settings():
         settings.remove(key)
     # every tab shown in tests (users start with Variables / Code hidden)
     settings.setValue("browser/hidden", "none")
+    # the Origin / planes rows over the tree: older tests read row 0
+    settings.setValue("tree/planes", False)
     yield
 
 

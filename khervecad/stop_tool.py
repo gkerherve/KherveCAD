@@ -26,6 +26,10 @@ def stop(window):
     """End every active tool / mode. Returns True if anything stopped."""
     stopped = False
     view = window.view3d
+    from . import plane_pick
+    if plane_pick.active(window):
+        plane_pick.stop(window)
+        stopped = True
     if getattr(view, "_pick_cb", None) is not None:
         view.cancel_pick()
         stopped = True

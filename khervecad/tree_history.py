@@ -66,6 +66,17 @@ def enabled():
         return False
 
 
+def planes_shown():
+    """Origin / planes / Material over the Structure tree too (on by
+    default; the test setup turns it off — older tests read row 0)."""
+    try:
+        from PyQt5.QtCore import QSettings
+        return QSettings("Kherve", "KherveCAD").value(
+            "tree/planes", True, type=bool)
+    except Exception:                          # pragma: no cover
+        return True
+
+
 def set_enabled(on):
     from PyQt5.QtCore import QSettings
     QSettings("Kherve", "KherveCAD").setValue(SETTING, bool(on))
@@ -93,7 +104,8 @@ def build_fixed(tree):
                  "The origin and the three main planes")
     for label, plane in PLANES:
         row(origin, label, "mdi.square-outline", "plane:" + plane,
-            "Double-click to sketch on this plane in the 2D view")
+            "Select it and click Sketch, or double-click, to sketch on "
+            "this plane")
     origin.setExpanded(tree._expand_state.get("__origin__", False))
     text = language.tr("Material <{m}>").format(m=material_text(tree))
     mat = row(root, "Material", "mdi.texture-box", "material",
@@ -210,7 +222,8 @@ def clicked(tree, item):
         fixed_menu(tree, item, tree.visualItemRect(item).bottomLeft())
     elif role.startswith("plane:") and hasattr(win, "statusBar"):
         win.statusBar().showMessage(language.tr(
-            "Double-click (or right-click) to sketch on this plane"), 4000)
+            "Click Sketch (or double-click) to sketch on this plane"),
+            4000)
     return True
 
 

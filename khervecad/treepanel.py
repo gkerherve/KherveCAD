@@ -228,7 +228,9 @@ class ObjectTree(QTreeWidget):
         self.clear()
         from . import tree_history
         self.history = tree_history.enabled()
-        if self.history:          # SolidWorks' Origin / planes / Material
+        # SolidWorks' Origin (Front / Top / Right Plane) and Material,
+        # in both views: the planes are what a sketch starts on
+        if self.history or tree_history.planes_shown():
             tree_history.build_fixed(self)
         # History is another drawing of the same nodes: no drag there
         self.setDragDropMode(QAbstractItemView.NoDragDrop if self.history

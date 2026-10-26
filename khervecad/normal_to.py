@@ -132,12 +132,27 @@ def create(window):
     node = sketch_node(window)
     if node is not None:
         return edit(window, node)
-    picked = window.builder.active_tree().selected_nodes()
+    tree = window.builder.active_tree()
+    chosen = _plane_row(tree)
+    if chosen is not None:            # Front / Top / Right Plane row
+        return turn_to(window, chosen)
+    picked = tree.selected_nodes()
     if picked:
         from . import face_sketch
         return face_sketch.start(window, only=picked)
-    plane = getattr(window.view2d.scene(), "plane", "Top (XY)")
-    return turn_to(window, plane if plane in CAMERA else "Top (XY)")
+    # nothing selected: SolidWorks asks for a plane — show the three
+    from . import plane_pick
+    return plane_pick.start(window)
+
+
+def _plane_row(tree):
+    """The main plane whose tree row is selected, else None."""
+    from .tree_history import ROLE_FIXED
+    for item in tree.selectedItems():
+        role = item.data(0, ROLE_FIXED) or ""
+        if role.startswith("plane:"):
+            return role[6:]
+    return None
 
 
 def turn_to(window, plane, node=None, camera=None, face=None):

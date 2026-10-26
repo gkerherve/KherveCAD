@@ -82,15 +82,19 @@ class MainWindow(QMainWindow):
         self.view2d = SketchView(self.scene)
         self.view3d = View3D()
         from . import sketch_dims3d       # sketch dimensions in 3D too
-        from . import cut_ghost
+        from . import cut_ghost, plane_pick
         self.view3d.overlay_painters = [
             lambda painter, project: cut_ghost.paint(self, painter,
                                                      project),
             lambda painter, project: sketch_dims3d.paint(self, painter,
-                                                         project)]
+                                                         project),
+            lambda painter, project: plane_pick.paint(self, painter,
+                                                      project)]
         self.view3d.click_hooks = [
+            lambda pos: plane_pick.press(self, pos),
             lambda pos: sketch_dims3d.press(self, pos)]
         self.view3d.move_hooks = [
+            lambda pos: plane_pick.move(self, pos),
             lambda pos: sketch_dims3d.move(self, pos)]
         self.view3d.release_hooks = [
             lambda pos: sketch_dims3d.release(self, pos)]

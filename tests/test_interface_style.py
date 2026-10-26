@@ -240,6 +240,17 @@ def test_fusion_shows_one_canvas_and_sketches_in_place(window, app):
     assert window.view3d.isVisible() and not window.view2d.isVisible()
     sketch_mode.create_action(window).trigger()
     app.processEvents()
+    # nothing selected: the planes show in 3D, a click on one sketches
+    from khervecad import normal_to, plane_pick
+    assert plane_pick.active(window)
+    plane_pick.stop(window)
+    normal_to.turn_to(window, "Top (XY)")
+    for _ in range(60):                        # the camera's turn
+        app.processEvents()
+        if window.view2d.isVisible():
+            break
+        import time
+        time.sleep(0.02)
     assert window.view2d.isVisible() and not window.view3d.isVisible()
     # no FINISH SKETCH button (the user): another tab leaves the sketch
     assert not window._finish_sketch.isVisible()
