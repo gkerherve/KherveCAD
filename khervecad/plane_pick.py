@@ -195,19 +195,62 @@ def start(window):
                 distance=view.distance))
         except Exception:
             pass
-    msg = language.tr("Select a plane to sketch on: Front, Top or Right "
-                      "Plane · Esc cancels")
+    msg = language.tr("Select a plane (Front, Top or Right Plane) or a "
+                      "face of a part to sketch on · Esc cancels")
     window.statusBar().showMessage(msg, 10000)
-    flash = getattr(window.view3d, "flash", None)
-    if flash is not None:
-        try:
-            flash(msg)
-        except Exception:
-            pass
+    _arm(window, msg)
     window.view3d.update()
+
+
+def _arm(window, msg):
+    """The view's pick mode over every part: a face clicked is a face
+    sketch (as Sketch on Face); a click elsewhere is tried against the
+    planes — the release hook noted where it landed."""
+    from . import face_sketch, language, meshedit_ui
+    parts = meshedit_ui._parts(window) or []
+
+    def picked(desc, node=None):
+        state = getattr(window, "_plane_pick", None)
+        if not state:
+            return
+        pos = state.pop("pos", None)
+        if desc is not None and node is not None:
+            if desc.get("kind") == "face":
+                stop(window)
+                face_sketch.make(window, node, desc["pos"], desc["dir"])
+                return
+            if pos is None or hit(window, pos) is None:
+                window.statusBar().showMessage(language.tr(
+                    "Click a flat FACE (not an edge), or a plane."), 5000)
+                _arm(window, msg)
+                return
+        if pos is None:                  # Esc / Select: cancelled
+            stop(window)
+            return
+        plane = hit(window, pos)
+        if plane is None:                # empty space: keep asking
+            _arm(window, msg)
+            return
+        stop(window)
+        from . import normal_to
+        normal_to.turn_to(window, plane)
+    window.view3d.start_pick(
+        picked, groups=parts, banner=msg,
+        labeler=lambda desc, node: getattr(node, "name", ""))
+
+
+def release(window, pos):
+    """Note where a click lands (the pick callback has no position)."""
+    state = getattr(window, "_plane_pick", None)
+    if state:
+        state["pos"] = pos
+    return False
 
 
 def stop(window):
     if getattr(window, "_plane_pick", None):
         window._plane_pick = None
-        window.view3d.update()
+        view = window.view3d
+        if getattr(view, "_pick_cb", None) is not None:
+            view.cancel_pick()
+        view.update()

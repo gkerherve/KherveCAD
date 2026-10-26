@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
             lambda pos: plane_pick.move(self, pos),
             lambda pos: sketch_dims3d.move(self, pos)]
         self.view3d.release_hooks = [
+            lambda pos: plane_pick.release(self, pos),
             lambda pos: sketch_dims3d.release(self, pos)]
 
         left = QSplitter(Qt.Vertical)

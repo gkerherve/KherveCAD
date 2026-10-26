@@ -70,8 +70,37 @@ def test_with_nothing_selected_the_planes_are_clicked_in_3d(window,
     centre = poly.boundingRect().center()
     # a point inside it, nearer one corner than the shared middle
     pt = (centre + poly.at(2)) / 2
-    assert plane_pick.press(window, pt.toPoint())
+    _click(window, pt.toPoint())
     assert got and not plane_pick.active(window)
+
+
+def _click(window, pos):
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtTest import QTest
+    QTest.mouseClick(window.view3d, Qt.LeftButton, Qt.NoModifier, pos)
+    QApplication.processEvents()
+
+
+def test_a_face_of_a_part_is_picked_too(window, monkeypatch):
+    """The same pick takes a face of another part (Sketch on Face)."""
+    from khervecad import face_sketch
+    made = []
+    monkeypatch.setattr(face_sketch, "make",
+                        lambda w, node, pos, normal: made.append(normal))
+    window.model.add_node("cube", dict(width=200, depth=200, height=200,
+                                       center=True))
+    window._refresh_preview()
+    QApplication.processEvents()
+    window.builder.tree.clearSelection()
+    plane_pick.start(window)
+    view = window.view3d
+    view.yaw, view.pitch = view.VIEWS["Isometric"]
+    view.repaint()
+    # the middle of the view is on the cube, in front of the planes
+    from PyQt5.QtCore import QPoint
+    _click(window, QPoint(view.width() // 2, view.height() // 2))
+    assert made, "the cube's face was not picked"
+    assert not plane_pick.active(window)
 
 
 def test_esc_or_select_cancels_the_plane_pick(window):
