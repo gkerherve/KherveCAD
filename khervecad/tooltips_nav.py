@@ -75,23 +75,23 @@ NAV_TIPS = {
         ["Click Fit all (Ctrl+Shift+F)."],
         None),
     "plane_top": (
-        "Top view (XY)",
+        "Top Plane (XY)",
         "Shows the model from above. Shapes you draw land on the X–Y "
         "plane, and 3D parts appear as outlines you can drag.",
         ["Click Top.",
          "Draw, or drag a part's outline to move it along X and Y."],
         "The X axis is red, Y green, Z blue — in the corner gizmo too."),
     "plane_front": (
-        "Front view (XZ)",
+        "Front Plane (XZ)",
         "Shows the model from the front. Shapes land on the X–Z plane "
         "— the plane for elevations and profiles.",
         ["Click Front.",
          "Draw, or drag a part's outline to move it along X and Z."],
         "Selecting a bore or a revolve profile jumps here by itself."),
     "plane_side": (
-        "Side view (YZ)",
-        "Shows the model from the side. Shapes land on the Y–Z plane.",
-        ["Click Side.",
+        "Right Plane (YZ)",
+        "Shows the model from the right. Shapes land on the Y–Z plane.",
+        ["Click Right.",
          "Draw, or drag a part's outline to move it along Y and Z."],
         None),
     "grid_bar": (

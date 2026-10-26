@@ -435,8 +435,12 @@ def _panel_actions(win, key):
             # Smart Dimension, a large button RIGHT of Sketch (the user)
             first = first + [a for a in win._tool_group.actions()
                              if a.data() == "con_dimension"][:1]
+        # the older Add dimension tool is named Smart Dimension too in
+        # SolidWorks' names: one Smart Dimension on the panel (the user)
+        skip = (MEASURE, SELECT, "dimension") if len(first) > 1 \
+            else (MEASURE, SELECT)
         tools = [a for a in win._tool_group.actions()
-                 if a.data() not in (MEASURE, SELECT)
+                 if a.data() not in skip
                  and not str(a.data()).startswith(("con_", "sk_"))]
         # Create Region first, before Line (the user)
         tools.sort(key=lambda a: a.data() != "make_region")

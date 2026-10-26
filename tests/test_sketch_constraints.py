@@ -670,10 +670,10 @@ def test_smart_dimensions_hide_and_show_from_both_bars(window):
     bars, are one switch; off, neither view paints a dimension."""
     act = window._smart_dims_act
     assert act.isChecked() and window.scene.show_sketch_dims
-    b2 = window.view2d.nav_bar.buttons["smart_dims"]
+    b2 = window.view2d.nav_bar.buttons["dims"]
     b3 = window.view3d.nav_bar.buttons["smart_dims"]
     b3.click()
-    assert not act.isChecked() and not b2.isChecked()
+    assert not act.isChecked()
     assert window.scene.show_sketch_dims is False
     from PyQt5.QtGui import QImage, QPainter
     from khervecad import sketch_dims3d
@@ -682,5 +682,48 @@ def test_smart_dimensions_hide_and_show_from_both_bars(window):
     sketch_dims3d.paint(window, p, lambda pt: None)
     p.end()
     assert window._dims3d_hits == []
-    b2.click()
+    b2.click()                       # the 2D button: hidden one shows
     assert act.isChecked() and window.scene.show_sketch_dims
+
+
+def test_the_2d_dimensions_button_hides_and_shows_both_kinds(window):
+    """The user hid with one ruler and showed with the other: the 2D bar
+    has one button for automatic sizes and Smart Dimensions together."""
+    btn = window.view2d.nav_bar.buttons["dims"]
+    assert "smart_dims" not in window.view2d.nav_bar.buttons
+    btn.click()
+    assert not window.scene.show_dims
+    assert not window.scene.show_sketch_dims
+    window._smart_dims_act.setChecked(True)     # from the View menu
+    assert btn.isChecked()
+    btn.click()                      # one of them on: all come back
+    assert window.scene.show_dims and window.scene.show_sketch_dims
+
+
+def test_the_2d_plane_buttons_are_named_like_solidworks(window):
+    texts = [window._plane_buttons[p].text()
+             for p in ("Front (XZ)", "Top (XY)", "Side (YZ)")]
+    assert texts == ["Front", "Top", "Right"]
+
+
+def test_a_dimension_made_while_hidden_shows_when_shown_again(view,
+                                                               monkeypatch):
+    """The user: hide dimensions, add a Smart Dimension, show them again
+    — it must be drawn."""
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    a, _b = _lines(m)
+    view.scene().ask_value = lambda kind, measured: "33"
+    view.scene().show_sketch_dims = False
+    view.set_tool(ui.DIMENSION)
+    _click(view, 20, 1.5)
+    _click(view, 60, -30)
+    assert [r["kind"] for r in sc.rows(m.root)] == ["length"]
+    view.scene().show_sketch_dims = True
+    from PyQt5.QtGui import QImage, QPainter
+    img = QImage(600, 500, QImage.Format_ARGB32)
+    p = QPainter(img)
+    view._dim_hits = []
+    drawn = ui._paint_dimensions(view, p)
+    p.end()
+    assert drawn, "the dimension is not drawn once shown again"

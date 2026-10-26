@@ -339,21 +339,25 @@ def add_sketch_controls(win, bar):
     from PyQt5.QtWidgets import QActionGroup, QInputDialog
     from . import icons
     from .view2d import PLANES
-    names = {"Top (XY)": ("Top", "Top view (XY plane)"),
-             "Front (XZ)": ("Front", "Front view (XZ plane)"),
-             "Side (YZ)": ("Side", "Side view (YZ plane)")}
+    # SolidWorks' names and order: Front, Top, Right Plane (the user)
+    names = {"Top (XY)": ("Top", "Top Plane (XY)"),
+             "Front (XZ)": ("Front", "Front Plane (XZ)"),
+             "Side (YZ)": ("Right", "Right Plane (YZ)")}
+    order = ["Front (XZ)", "Top (XY)", "Side (YZ)"]
     key_of = {"Top (XY)": "plane_top", "Front (XZ)": "plane_front",
               "Side (YZ)": "plane_side"}
     win._plane_buttons = {}
     line = QFrame(bar)
     line.setFrameShape(QFrame.VLine)
     bar.layout().insertWidget(0, line)
-    for plane in reversed(list(PLANES)):
+    for plane in reversed([p for p in order if p in PLANES]):
         label, tip = names[plane]
         button = QToolButton(bar)
         button.setIcon(cube_icon({"Top": "top", "Front": "front",
-                                  "Side": "side"}[label]))
+                                  "Right": "side"}[label]))
         set_tip(button, key_of[plane])
+        button.setText(label)                  # named, not icons alone
+        button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         button.setCheckable(True)
         button.setAutoExclusive(True)
         button.setChecked(plane == win.scene.plane)
@@ -416,17 +420,28 @@ def add_sketch_controls(win, bar):
         else:
             dims.setIcon(art)
         dims.setCheckable(True)
-        dims.setChecked(act.isChecked())
         set_tip(dims, "dims_bar")
-        dims.clicked.connect(act.setChecked)
-        act.toggled.connect(dims.setChecked)
+        # ONE switch on the 2D bar for every dimension: automatic sizes
+        # AND Smart Dimensions (the user hid with one ruler, showed with
+        # its look-alike, and saw nothing)
+        acts = [act] + [a for a in [getattr(win, "_smart_dims_act", None)]
+                        if a is not None]
+
+        def sync(*_):
+            dims.setChecked(any(a.isChecked() for a in acts))
+
+        def clicked(_on):
+            # any of them hidden: show them all; all shown: hide all
+            on = not all(a.isChecked() for a in acts)
+            for a in acts:
+                a.setChecked(on)
+            sync()
+        dims.clicked.connect(clicked)
+        for a in acts:
+            a.toggled.connect(sync)
+        sync()
         layout.addWidget(dims)
         bar.buttons["dims"] = dims
-    smart = getattr(win, "_smart_dims_act", None)
-    if smart is not None:
-        btn = _toggle(bar, "mdi.ruler", "↔", "smart_dims_bar", smart)
-        layout.addWidget(btn)
-        bar.buttons["smart_dims"] = btn
     win._sync_grid_step()
     bar.place()
 

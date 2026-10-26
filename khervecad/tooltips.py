@@ -38,8 +38,9 @@ TIPS = {
         "Shows the sizes of every shape in the 2D view: a rectangle's "
         "width and height, a circle's diameter, a line's length, each "
         "side of a polygon, a part's overall sizes (and a cylinder's Ø).",
-        ["Click to show or hide them (View ▸ Show Dimensions is the "
-         "same switch)."],
+        ["Click to show or hide them — the automatic sizes and the "
+         "Smart Dimensions together (View ▸ Show Dimensions and View ▸ "
+         "Show Smart Dimensions are the two halves)."],
         "The selected shapes' sizes are drawn in the accent colour."),
     "configurations": (
         "Configurations",
