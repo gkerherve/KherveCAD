@@ -24,9 +24,9 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 #: the standard planes: (name, normal)
-PLANES = [("Right plane (YZ)", (1.0, 0.0, 0.0)),
-          ("Front plane (XZ)", (0.0, 1.0, 0.0)),
-          ("Top plane (XY)", (0.0, 0.0, 1.0))]
+PLANES = [("Front Plane (XZ)", (0.0, 1.0, 0.0)),
+          ("Top Plane (XY)", (0.0, 0.0, 1.0)),
+          ("Right Plane (YZ)", (1.0, 0.0, 0.0))]
 FACE = "Pick a face in the 3D view…"
 
 

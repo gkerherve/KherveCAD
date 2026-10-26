@@ -44,7 +44,9 @@ def _half(window):
                 reach = max(reach, abs(p[0]), abs(p[1]), abs(p[2]))
             except (TypeError, IndexError):
                 break
-    return max(MIN_HALF, reach * 0.75)
+    # big enough to read on an empty document: a share of the view
+    seen = getattr(window.view3d, "distance", 0.0) * 0.22
+    return max(MIN_HALF, reach * 0.75, seen)
 
 
 def _polygons(window, project):
@@ -85,29 +87,70 @@ def hit(window, pos):
 
 
 def paint(window, painter, project):
+    """SolidWorks' look: light blue see-through squares with a thin
+    edge, each name in italics along its top edge, and the lines where
+    they cross dashed."""
     state = getattr(window, "_plane_pick", None)
     if not state:
         return
-    from PyQt5.QtCore import Qt
+    import math
+    from PyQt5.QtCore import QLineF, QPointF, Qt
     from PyQt5.QtGui import QColor, QFont, QPen
     from . import language
     polys = _polygons(window, project)
     state["polys"] = polys
+    h = state["half"]
     painter.save()
     painter.setRenderHint(painter.Antialiasing, True)
-    font = QFont(painter.font())
-    font.setBold(True)
-    painter.setFont(font)
+    edge = QColor(70, 120, 210)
     for plane, name, poly in polys:
         hot = plane == state.get("hover")
-        painter.setPen(QPen(QColor("#1565c0"), 2.5 if hot else 1.2))
-        painter.setBrush(QColor(66, 133, 244, 110 if hot else 38))
+        painter.setPen(QPen(edge, 2.2 if hot else 1.1))
+        painter.setBrush(QColor(110, 160, 235, 95 if hot else 34))
         painter.drawPolygon(poly)
-        corner = poly.at(3)
-        painter.setPen(QColor("#0d47a1"))
-        painter.drawText(corner.x() + 4, corner.y() + 14,
+    # where the planes cross: the three axes, dashed
+    dash = QPen(QColor(40, 40, 40), 1.0, Qt.DashLine)
+    painter.setPen(dash)
+    for axis in range(3):
+        a, b = [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]
+        a[axis], b[axis] = -h, h
+        pa, pb = project(a), project(b)
+        if pa is not None and pb is not None:
+            painter.drawLine(QLineF(pa[0], pa[1], pb[0], pb[1]))
+    # the names, along each plane's upper edge (corners 3 -> 2)
+    font = QFont(painter.font())
+    font.setItalic(True)
+    font.setBold(True)
+    font.setPointSizeF(max(9.0, font.pointSizeF() * 1.25))
+    painter.setFont(font)
+    painter.setPen(QColor(70, 120, 210))
+    for plane, name, poly in polys:
+        p0, p1 = poly.at(3), poly.at(2)
+        if p1.x() < p0.x():                 # read left to right
+            p0, p1 = poly.at(0), poly.at(1)
+            if p1.x() < p0.x():
+                p0, p1 = p1, p0
+        ang = math.degrees(math.atan2(p1.y() - p0.y(), p1.x() - p0.x()))
+        if abs(ang) > 80:                    # edge-on: nothing to read
+            continue
+        painter.save()
+        painter.translate(QPointF(p0.x(), p0.y()))
+        painter.rotate(ang)
+        painter.drawText(QPointF(8, painter.fontMetrics().ascent() + 3),
                          language.tr(name))
+        painter.restore()
     painter.restore()
+
+
+def _all_seen(window):
+    """True when every plane is seen at a slant (none edge-on)."""
+    view = window.view3d
+    import math
+    yaw, pitch = math.radians(view.yaw), math.radians(view.pitch)
+    # the view direction's components: none near zero = all three seen
+    d = (abs(math.cos(pitch) * math.cos(yaw)),
+         abs(math.cos(pitch) * math.sin(yaw)), abs(math.sin(pitch)))
+    return min(d) > 0.25
 
 
 def move(window, pos):
@@ -138,6 +181,20 @@ def start(window):
     """Show the three planes; the next click on one sketches there."""
     from . import language
     window._plane_pick = {"half": _half(window), "hover": None}
+    if not _all_seen(window):
+        # square on to one plane the other two are edge-on: turn to the
+        # isometric so all three show, as SolidWorks shows them
+        try:
+            from . import view_anim
+            view = window.view3d
+            yaw, pitch = view.VIEWS["Isometric"]
+            if getattr(view, "projection", "") == "Orthographic":
+                view.projection = "Perspective"
+            view_anim.glide_3d(view, dict(
+                yaw=yaw, pitch=pitch, target=[0.0, 0.0, 0.0],
+                distance=view.distance))
+        except Exception:
+            pass
     msg = language.tr("Select a plane to sketch on: Front, Top or Right "
                       "Plane · Esc cancels")
     window.statusBar().showMessage(msg, 10000)

@@ -1038,7 +1038,7 @@ def test_mirror_keeps_the_part_and_copies_it_about_a_plane(window):
                                   height=5))
     window.builder.tree.rebuild()
     window.builder.tree.select_nodes([ear])
-    window.mirror_plane_hook = lambda: "Right plane (YZ)"
+    window.mirror_plane_hook = lambda: "Right Plane (YZ)"
     window._apply_operation("mirror")
     mir = ear.parent
     assert mir.type == "symmetry" and mir.name == "Mirror"
@@ -1067,7 +1067,7 @@ def test_mirror_with_nothing_selected_picks_parts_in_3d(window):
     a = m.add_node("cube", dict(width=5, depth=5, height=5))
     window.builder.tree.rebuild()
     window.builder.tree.clearSelection()
-    window.mirror_plane_hook = lambda: "Top plane (XY)"
+    window.mirror_plane_hook = lambda: "Top Plane (XY)"
     calls = []
     window.view3d.start_pick = lambda cb, **k: calls.append((cb, k))
     window._apply_operation("mirror")
