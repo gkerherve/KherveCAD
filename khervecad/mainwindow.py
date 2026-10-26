@@ -923,6 +923,19 @@ class MainWindow(QMainWindow):
             from . import mirror_feature
             mirror_feature.start(self)
             return
+        from . import toolbar_style
+        if op == "bevel" and \
+                toolbar_style.current(self) != toolbar_style.CLASSIC:
+            # Fusion / SolidWorks call this button Chamfer: like their
+            # Chamfer it must pick edges as Fillet does, not bevel every
+            # edge at once (the user could not pick a line with it)
+            from . import round_ui
+            self._rounding = True
+            try:
+                round_ui.start(self, "fillet", "chamfer")
+            finally:
+                self._rounding = False
+            return
         if op in ("fillet", "push_pull") and nodes and \
                 not getattr(self, "_rounding", False):
             # a 2D shape or a piece inside a part: round the part
