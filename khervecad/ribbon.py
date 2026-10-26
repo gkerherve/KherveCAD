@@ -181,6 +181,7 @@ MENU_PANELS = {
                  ("edit/configurations", "kc:configurations")],
     "dimension": [("tools/measure & annotate/add dimension", None),
                   ("view/show dimensions", "mdi.ruler"),
+                  ("view/show smart dimensions", "mdi.ruler-square"),
                   ("view/clear dimensions", "mdi.eraser")],
 }
 #: panels whose tools all show, names under the icons (few, big tools)
