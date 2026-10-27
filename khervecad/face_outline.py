@@ -155,7 +155,7 @@ def show(window, group, part):
         scene.face_outline = None
         return []
     segs = for_group(group, tris)
-    points = snap_points(segs)
+    points = snap_points(segs) + anchor_points(group, segs)
     try:
         points += sketch_points(group, part)
     except Exception:                        # never stop the sketch
@@ -163,6 +163,27 @@ def show(window, group, part):
         traceback.print_exc()
     scene.face_outline = {"segments": segs, "points": points}
     return segs
+
+
+def anchor_points(group, segs):
+    """The part's ORIGIN seen on the face (where the scope's 0, 0, 0
+    lands in the sketch's frame, square to it) and the middle of the
+    face — what "the centre of the part" means to a dimension (the
+    user: dimension the hole's centre to the part's centre, 50 mm). The
+    sketch's own (0, 0) is only where the face was clicked."""
+    from . import face_sketch
+    out = []
+    try:
+        ox, oy = face_sketch.to_local(group, (0.0, 0.0, 0.0))
+        out.append((round(ox, 6) + 0.0, round(oy, 6) + 0.0, "part origin"))
+    except Exception:
+        pass
+    if segs:
+        xs = [p[0] for s in segs for p in s]
+        ys = [p[1] for s in segs for p in s]
+        out.append((round((min(xs) + max(xs)) / 2, 6) + 0.0,
+                    round((min(ys) + max(ys)) / 2, 6) + 0.0, "face centre"))
+    return out
 
 
 def _shape_local_points(node):
@@ -399,7 +420,12 @@ def paint(scene, painter):
     views = scene.views()
     k = 1.0 / (abs(views[0].transform().m11()) or 1.0) if views else 1.0
     for x, y, kind in info["points"]:
-        if kind == "centre":
+        if kind in ("part origin", "face centre"):
+            s = 7 * k                       # a target: ⊕
+            painter.drawEllipse(QPointF(x, y), s * 0.6, s * 0.6)
+            painter.drawLine(QLineF(x - s, y, x + s, y))
+            painter.drawLine(QLineF(x, y - s, x, y + s))
+        elif kind == "centre":
             s = 5 * k
             painter.drawLine(QLineF(x - s, y, x + s, y))
             painter.drawLine(QLineF(x, y - s, x, y + s))
@@ -427,8 +453,10 @@ def snap(scene, pos):
     best = None
     for x, y, kind in info["points"] + [(0.0, 0.0, "origin")]:
         d = math.hypot(pos.x() - x, pos.y() - y) * k
-        if d <= SNAP_PX and (best is None or d < best[0]):
-            best = (d, x, y, kind)
+        # the part origin / face centre give way to a real point there
+        rank = d + (0.5 if kind in ("part origin", "face centre") else 0)
+        if d <= SNAP_PX and (best is None or rank < best[0]):
+            best = (rank, x, y, kind)
     from PyQt5.QtCore import QPointF
     if best is not None:
         return QPointF(best[1], best[2]), best[3]
@@ -443,7 +471,8 @@ def snap(scene, pos):
 
 
 #: what a snap marker says
-LABELS = {"centre": "Centre", "corner": "Corner", "middle": "Midpoint",
+LABELS = {"part origin": "Part origin", "face centre": "Face centre",
+          "centre": "Centre", "corner": "Corner", "middle": "Midpoint",
           "origin": "Origin", "edge": "On edge", "point": "Point"}
 
 

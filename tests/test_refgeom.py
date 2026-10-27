@@ -253,3 +253,33 @@ def test_a_shape_drawn_up_to_the_part_edge_stays_on_it(app):
     p = rect.params
     assert abs(p["width"] - 14) < 1e-6
     assert abs(p["y"] + p["height"] - 40) < 1e-6     # still on the edge
+
+
+def test_dimension_a_face_sketch_to_the_part_origin(window, app):
+    """The user's plate: a hole sketched on the top face, dimensioned
+    from the part's centre (its origin) — 50 mm."""
+    from PyQt5.QtCore import QPointF
+    from khervecad import face_outline, face_sketch
+    from khervecad import sketch_constraints as sc
+    ex = McpToolExecutor(window)
+    ex.execute("apply_code", {"code":
+                              "translate([-49, -21, 0]) cube([98, 42, 20]);"})
+    app.processEvents()
+    part = window.model.root.children[-1]
+    group = face_sketch.make(window, part, (30.0, 5.0, 20.0), (0, 0, 1))
+    app.processEvents()
+    scene = window.view2d.scene()
+    pts = {k: (x, y) for x, y, k in scene.face_outline["points"]}
+    ox, oy = pts["part origin"]
+    hole = window.model.add_node("circle", dict(x=5.0, y=-5.0, radius=5),
+                                 parent=group)
+    app.processEvents()
+    ref = face_outline.reference(scene, QPointF(ox, oy), "point")
+    assert ref is not None and ref[0].parent is hole.parent
+    cont = hole.parent
+    sc.add_dimension(window.model, cont, "distance",
+                     [sc.ref_of(cont, hole, "c"),
+                      sc.ref_of(cont, ref[0], "c")], 50)
+    c = face_sketch.to_world(group, hole.params["x"], hole.params["y"])
+    assert abs(math.hypot(c[0], c[1]) - 50) < 1e-3
+    window.model.remove_node(group)
