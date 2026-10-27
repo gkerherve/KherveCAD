@@ -2584,10 +2584,15 @@ class SketchView(QGraphicsView):
         # sizes on top of them (SolidWorks; the two hid each other)
         from . import sketch_constraints as sc
         sized = set()
+        values = []                      # the numbers they already show
         for cont in sc.containers(scene.model):
             for row in sc.rows(cont):
                 if "value" not in row:
                     continue
+                try:
+                    values.append(float(row["value"]))
+                except (TypeError, ValueError):
+                    pass
                 for ref in row.get("refs", ()):
                     try:
                         sized.add(id(sc.entity(cont, ref)[0]))
@@ -2599,6 +2604,13 @@ class SketchView(QGraphicsView):
                 continue
             if id(getattr(item, "node", None)) in sized:
                 continue
+            if isinstance(item, PartItem) and values:
+                # the part's own box size, when a Smart Dimension already
+                # says it (98 mm under 98.0), is only a second label
+                r = item.sceneBoundingRect()
+                if any(abs(v - w) < 0.05 for v in values
+                       for w in (r.width(), r.height())):
+                    continue
             try:
                 self._auto_dim_item(painter, item,
                                     accent if item.isSelected() else color,

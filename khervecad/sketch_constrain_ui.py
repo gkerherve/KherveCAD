@@ -330,7 +330,7 @@ def key(scene, event):
 def _anchor(view, items, node, name):
     """Where an entity's marks start, in VIEW pixels."""
     from PyQt5.QtCore import QPointF
-    item = items.get(node.id)
+    item = _item_or_sibling(items, node)
     if item is None:
         return None
     k = sc.kind_of(node, name)
@@ -461,9 +461,23 @@ def glyphs(view):
 LINEAR = ("distance", "hdistance", "vdistance", "length", "point_line")
 
 
+def _item_or_sibling(items, node):
+    """The 2D item drawing *node*, else one drawing a shape of the same
+    sketch: a hidden construction point (a "Reference point") has no
+    item, and without its sketch's frame its dimension end was drawn in
+    the wrong place (on the other hole)."""
+    item = items.get(node.id)
+    if item is None and node.parent is not None:
+        for sib in node.parent.children:
+            item = items.get(sib.id)
+            if item is not None:
+                break
+    return item
+
+
 def _view_point(view, items, node, xy):
     from PyQt5.QtCore import QPointF
-    item = items.get(node.id)
+    item = _item_or_sibling(items, node)
     q = QPointF(*xy)
     frame = item.parentItem() if item is not None else None
     if frame is not None:
