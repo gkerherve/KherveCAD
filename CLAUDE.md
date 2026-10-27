@@ -3281,6 +3281,12 @@ into a new module and import.
                        the sketch opens INSIDE the Group in its own frame
                        (`window._face_sketch` drives the scene's
                        `isolation_resolver`, which `scope_frame` zeroes).
+                       Its 0, 0 is the PART ORIGIN projected onto the
+                       face (`origin_on_plane`), not the click (2026-10-27,
+                       the user: a hole dimensioned 25 from the centre showed
+                       Position 28); older sketches are moved there on load
+                       and on open (`rebase`: shapes, fixed points, regions
+                       shifted, nothing moves in the part).
                        Exit turns back from the face; an empty one is
                        removed; Edit Sketch on a shape in it reopens it;
                        the classic layout ends it with Select / Esc.

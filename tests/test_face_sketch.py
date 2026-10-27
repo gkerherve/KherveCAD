@@ -62,7 +62,10 @@ def test_sketch_on_a_slanted_face_and_extrude_out_of_it(win):
     assert win._face_sketch is group
     scene = win.view2d.scene()
     assert scene.scope_root() is group        # drawing inside it
-    rect = scene._create("rect", dict(x=-5, y=-5, width=10, height=10))
+    # the sketch's 0, 0 is the part origin on the face, not the click
+    cx, cy = face_sketch.to_local(group, [30, 20, 15])
+    rect = scene._create("rect", dict(x=cx - 5, y=cy - 5, width=10,
+                                      height=10))
     assert rect.parent is group
     # the rectangle lies on the face, round the clicked point
     pts = [p for t in mesh.tessellate(group) for p in t]
@@ -121,3 +124,37 @@ def test_sketch_mode_with_a_part_selected_asks_for_its_face(win):
     assert not sketch_mode.sketching(win)
     assert act.text() == "Sketch Mode"
     del other, normal_to
+
+
+def test_a_face_sketch_starts_at_the_part_origin(win):
+    """A sketch on a face takes the part's origin (seen on the face) as
+    its 0, 0, wherever the face was clicked, so its Position is real."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    ex.execute("apply_code", {"code":
+                              "translate([-49, -21, 0]) cube([98, 42, 20]);"})
+    _APP.processEvents()
+    part = win.model.root.children[-1]
+    group = face_sketch.make(win, part, (28.0, 3.0, 20.0), (0, 0, 1))
+    assert [group.params[k] for k in ("x", "y", "z")] == [0, 0, 20]
+    win.model.remove_node(group)
+
+
+def test_an_old_face_sketch_is_rebased_without_moving(win):
+    """A sketch made at the click point moves onto the origin; its
+    shapes and fixed points keep their place in the part."""
+    m = win.model
+    g = m.add_node("union", dict(x=28.0, y=0.0, z=20.0))
+    g.params[face_sketch.KEY] = True
+    ext = m.add_node("linear_extrude", dict(height=5), parent=g)
+    c = m.add_node("circle", dict(x=-3.0, y=1.0, radius=6), parent=ext)
+    ext.params["constraints"] = [{"kind": "fix", "refs": ["0.c"],
+                                  "at": [-3.0, 1.0]}]
+    before = face_sketch.to_world(g, -3.0, 1.0)
+    assert face_sketch.rebase(g)
+    assert [g.params[k] for k in ("x", "y", "z")] == [0, 0, 20]
+    assert (c.params["x"], c.params["y"]) == (25.0, 1.0)
+    assert ext.params["constraints"][0]["at"] == [25.0, 1.0]
+    assert face_sketch.to_world(g, 25.0, 1.0) == before
+    assert not face_sketch.rebase(g)
+    m.remove_node(g)

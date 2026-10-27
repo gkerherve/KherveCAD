@@ -131,6 +131,10 @@ def make(window, part, point, normal):
     model = window.model
     scope = window.builder.isolated_component() or model.root
     rx, ry, rz = euler_for(normal)
+    # the sketch's 0, 0 is the part's origin seen on the face (SolidWorks),
+    # not where the face was clicked: its Position then says where things
+    # really are, and dimensions to the origin read as the numbers shown
+    point = origin_on_plane(point, normal)
     group = model.add_node("union", dict(
         x=round(float(point[0]), 4), y=round(float(point[1]), 4),
         z=round(float(point[2]), 4), rx=rx, ry=ry, rz=rz), parent=scope)
@@ -139,6 +143,91 @@ def make(window, part, point, normal):
     group._outline_part = part
     open_sketch(window, group)
     return group
+
+
+def origin_on_plane(point, normal):
+    """The scope's 0, 0, 0 projected onto the plane through *point*."""
+    n = _unit(normal)
+    d = sum(float(point[i]) * n[i] for i in range(3))
+    return [round(n[i] * d, 4) + 0.0 for i in range(3)]
+
+
+#: the shapes whose own coordinates are in the sketch's frame
+_XY = ("circle", "rect", "text", "polygon", "star", "rounded_polygon",
+       "bezier_shape", "svg_path", "import_2d", "honeycomb")
+#: what lies between the sketch and its shapes without moving them
+_THROUGH = ("union", "linear_extrude", "rotate_extrude", "regions",
+            "color", "difference", "intersection", "hull", "offset")
+
+
+def rebase(group):
+    """Move an existing face sketch's 0, 0 onto the part's origin, its
+    shapes and constraint points shifted so nothing moves in the part.
+    Returns True when it changed. Refused (False) when a shape holds an
+    expression or something in between would turn with it."""
+    n = _normal_of(group)
+    o = [float(group.params.get(k, 0.0)) for k in ("x", "y", "z")]
+    target = origin_on_plane(o, n)
+    dx, dy = to_local(group, target)
+    if abs(dx) < 1e-6 and abs(dy) < 1e-6:
+        return False
+    shapes, conts = [], []
+
+    def walk(node):
+        for c in node.children:
+            if c.type in _XY or c.type == "line":
+                shapes.append(c)
+            elif c.type in _THROUGH:
+                conts.append(c)
+                walk(c)
+            elif c.children:
+                raise ValueError(c.type)
+    try:
+        walk(group)
+        for c in shapes:
+            keys = ("x1", "y1", "x2", "y2") if c.type == "line" else \
+                ("x", "y")
+            for k in keys:
+                if k in c.params:
+                    float(c.params[k])       # an expression: leave it be
+    except (ValueError, TypeError):
+        return False
+    conts.append(group)
+
+    def sh(v, i):
+        return round(float(v) - (dx if i % 2 == 0 else dy), 6) + 0.0
+    for c in shapes:
+        keys = ("x1", "y1", "x2", "y2") if c.type == "line" else ("x", "y")
+        for i, k in enumerate(keys):
+            if k in c.params:
+                c.params[k] = sh(c.params[k], i)
+    for c in conts:
+        for row in c.params.get("constraints") or ():
+            for k in ("at", "edge", "leader_at"):
+                if isinstance(row.get(k), list):
+                    row[k] = [sh(v, i) for i, v in enumerate(row[k])]
+        if c.type == "regions":
+            for k in ("seeds", "points"):
+                if isinstance(c.params.get(k), list):
+                    c.params[k] = [[sh(v, i) for i, v in enumerate(pt)]
+                                   for pt in c.params[k]]
+    for i, k in enumerate(("x", "y", "z")):
+        group.params[k] = target[i]
+    return True
+
+
+def rebase_all(root):
+    """Every face sketch under *root* onto its part's origin."""
+    done = 0
+
+    def walk(node):
+        nonlocal done
+        for c in node.children:
+            if c.type == "union" and c.params.get(KEY):
+                done += bool(rebase(c))
+            walk(c)
+    walk(root)
+    return done
 
 
 def current(window):
@@ -197,6 +286,8 @@ def part_of(group):
 def open_sketch(window, group):
     """Turn to the face and sketch inside *group*."""
     from . import face_outline, normal_to
+    if rebase(group):
+        window.model.node_changed.emit(group)
     try:                                 # the face itself, in the sketch
         if not face_outline.show(window, group, part_of(group)):
             # no face there (a reference plane): the part CUT by it

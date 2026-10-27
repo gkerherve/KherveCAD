@@ -630,7 +630,9 @@ def test_smart_dimension_to_the_face_edge(window, monkeypatch):
         QApplication.processEvents()
     group = face_sketch.make(window, block, (40.0, 20.0, 10.0),
                              (0.0, 0.0, 1.0))
-    rect = m.add_node("rect", dict(x=-30, y=-5, width=20, height=15),
+    # the sketch's 0, 0 is the part origin seen on the face (40, 20 off
+    # the click), so the click-relative numbers shift by it
+    rect = m.add_node("rect", dict(x=10, y=15, width=20, height=15),
                       parent=group)
     scene = window.view2d.scene()
     scene.rebuild()
@@ -650,18 +652,18 @@ def test_smart_dimension_to_the_face_edge(window, monkeypatch):
 
         def accept(self):
             pass
-    ui.dimension_press(scene, Ev(-20.0, -5.0))       # rect bottom edge
-    ui.dimension_press(scene, Ev(0.0, -20.0))        # the face's edge
+    ui.dimension_press(scene, Ev(20.0, 15.0))        # rect bottom edge
+    ui.dimension_press(scene, Ev(40.0, 0.0))         # the face's edge
     kinds = [r["kind"] for r in sc.rows(group)]
     assert "point_line" in kinds
     ref = [n for n in group.children if n.name == "Reference edge"]
     assert ref and ref[0].params.get("modifier") == "%"
     assert not ref[0].visible            # hidden once dimensioned
-    assert rect.params["y"] == pytest.approx(-12, abs=1e-3)   # 8 above
+    assert rect.params["y"] == pytest.approx(8, abs=1e-3)     # 8 above
     # it still drives: a new value moves the rectangle again
     i = [r["kind"] for r in sc.rows(group)].index("point_line")
     sc.set_value(m, group, i, 5)
-    assert rect.params["y"] == pytest.approx(-15, abs=1e-3)
+    assert rect.params["y"] == pytest.approx(5, abs=1e-3)
     face_sketch.close(window)
 
 

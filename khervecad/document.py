@@ -106,6 +106,8 @@ def load_kcad(model: DocumentModel, path: str):
         raise ValueError("not a KherveCAD document")
     model.root = node_from_dict(data["tree"])
     retire_masters(model.root)          # an old Masters store -> Objects
+    from .face_sketch import rebase_all
+    rebase_all(model.root)              # face sketches onto the origin
     resolve_paths(model.root, os.path.dirname(os.path.abspath(path)))
     # segment override — default on at 45 when the file predates it
     model.global_fn = int(data.get("global_fn", 45))
