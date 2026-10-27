@@ -177,7 +177,11 @@ def _centre(cont, row):
 def _text(row):
     unit = "°" if row["kind"] == "angle" else ""
     prefix = {"radius": "R", "diameter": "Ø"}.get(row["kind"], "")
-    return "%s%s%s" % (prefix, row["value"], unit)
+    value = row["value"]
+    if isinstance(value, (int, float)):
+        from . import units
+        value = units.number(value)
+    return "%s%s%s" % (prefix, value, unit)
 
 
 def paint(window, painter, project):

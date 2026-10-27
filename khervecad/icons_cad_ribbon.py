@@ -617,6 +617,22 @@ def _doc_units(d):
     d.text(0.5, 0.86, "mm", 0.13, d.pal.select)
 
 
+@draws("options")
+def _options(d):
+    import math
+    cog = QPainterPath()
+    for i in range(16):                 # eight teeth round a wheel
+        a = math.pi * 2 * i / 16
+        r = 0.40 if i % 2 == 0 else 0.30
+        for da in (-0.17, 0.17):
+            p = _q(0.5 + r * math.cos(a + da), 0.5 + r * math.sin(a + da))
+            (cog.lineTo if cog.elementCount() else cog.moveTo)(p)
+    cog.closeSubpath()
+    cog.addEllipse(_q(0.5, 0.5), 0.12, 0.12)
+    d.path(cog, d.pal.body)
+    d.ball(_q(0.5, 0.5), 0.07, d.pal.select)
+
+
 @draws("doc_scale")
 def _doc_scale(d):
     d.box(-1.2, -0.3, 0, 0.5, 0.5, 0.5)

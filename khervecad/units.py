@@ -182,9 +182,26 @@ def parse_ratio(text) -> float:
     return den / num
 
 
-def length(value: float, unit, digits: int = 2) -> str:
+#: how dimensions read (Tools ▸ Options ▸ Document Properties, set by
+#: options_dialog from QSettings): decimal places, and whether 2.50
+#: keeps its trailing zero like a SolidWorks drawing
+DIM_DECIMALS = 2
+TRAILING_ZEROS = False
+
+
+def number(value: float, digits: int = None) -> str:
+    """A dimension's number as the options say (2.5 or 2.50)."""
+    digits = DIM_DECIMALS if digits is None else digits
+    if TRAILING_ZEROS:
+        text = f"{value:.{digits}f}"
+        return text[1:] if text.startswith("-") and not float(text) \
+            else text
+    return tidy(value, digits)
+
+
+def length(value: float, unit, digits: int = None) -> str:
     """"36.06 nm" — a tidy length with its unit."""
-    return f"{tidy(value, digits)} {symbol(unit)}"
+    return f"{number(value, digits)} {symbol(unit)}"
 
 
 def mm(value: float, unit, power: int = 1) -> float:

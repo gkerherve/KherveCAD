@@ -135,7 +135,7 @@ FUSION = [
                       "file/make 2d drawing of this view"]),
         ("&Make", ["file/publish to printables", "file/export stl"]),
         ("&Add-Ins", ["ai", "git"]),
-        "-", "edit/locate openscad", "edit/language"]),
+        "-", "edit/options", "edit/locate openscad", "edit/language"]),
     ("&View", [
         "view/grid", "view/snap", "view/vibe model", "-",
         "view/zoom in", "view/zoom out", "view/reset 2d zoom",
@@ -257,7 +257,7 @@ SOLIDWORKS = [
                                     "file/blueprint (2d drawing)"]),
         "view/customizer (sliders)", "view/animate ($t)", "-",
         ("Add-&Ins", ["ai", "git"]),
-        ("&Options", ["edit/configurations", "edit/document units", "edit/document scale (1 : n)",
+        ("&Options", ["edit/options", "-", "edit/configurations", "edit/document units", "edit/document scale (1 : n)",
                       "edit/common segments ($fn)",
                       "edit/locate openscad", "edit/language"])]),
     ("&Window", [

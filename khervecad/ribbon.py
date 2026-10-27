@@ -51,8 +51,7 @@ TABS = [
     # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
      ["create", "extrude", "cuts", "mechanical", "transform",
-      "combine", "finish", "logic", "assemble", "solid_insert",
-      "document"]),
+      "combine", "finish", "logic", "assemble", "solid_insert"]),
     # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
     ("sheetmetal", "SHEET METAL", "Sheet Metal",
      ["sheet_create", "sheet_modify", "sheet_export"]),
@@ -68,7 +67,7 @@ TABS = [
     ("publish", "PUBLISH", "Publish",
      ["documents", "pub_share", "pub_media"]),
     ("utilities", "UTILITIES", "Utilities",
-     ["util_addins", "util_utility"]),
+     ["document", "util_addins", "util_utility"]),
     # every builder window (2026-10-19, the user: "where are all the
     # builders?") — the Tools menu's Builders section
     ("build", "BUILD", "Builders", ["builders"]),
@@ -81,13 +80,25 @@ SW_ORDER = ["features", "sketch", "surface", "sheetmetal", "inspect",
             "form", "character", "publish", "utilities", "build"]
 
 
+#: panels SolidWorks keeps off its Features tab (2026-10-27, the user:
+#: "the feature tab seems to have so many things"): SolidWorks' Features
+#: holds the features only — inserting files and parts is the Insert
+#: menu's, so the imports go with the options to Utilities
+SW_MOVED = {"solid_insert": "utilities"}
+
+
 def tab_order(fusion):
     """The TABS entries in the order the style shows them."""
     if fusion:
         return list(TABS)
-    by_key = {t[0]: t for t in TABS}
+    tabs = []
+    for key, f, w, panels in TABS:
+        panels = [p for p in panels if SW_MOVED.get(p, key) == key] + \
+            [p for p, to in SW_MOVED.items() if to == key]
+        tabs.append((key, f, w, panels))
+    by_key = {t[0]: t for t in tabs}
     return [by_key[k] for k in SW_ORDER if k in by_key] + \
-        [t for t in TABS if t[0] not in SW_ORDER]
+        [t for t in tabs if t[0] not in SW_ORDER]
 
 
 #: panels that are not operation families: key -> title
@@ -98,7 +109,7 @@ EXTRA_PANELS = {"sheet_create": "Create", "sheet_modify": "Modify",
                 "surfaces": "From curves", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
                 "sketch_shapes": "Shapes", "shapes3d": "Shapes",
-                "document": "Document", "checks": "Evaluate", "dimension": "Dimension",
+                "document": "Options", "checks": "Evaluate", "dimension": "Dimension",
                 "builders": "Builders", "sketch": "Create", "create": "Create",
                 "sketch_modify": "Modify", "sketch_insert": "Insert",
                 "sketch_constrain": "Constraints",
@@ -194,7 +205,8 @@ MENU_PANELS = {
                     ("git/connect to github / gitlab", None)],
     "util_utility": [("edit/locate openscad", None),
                      ("edit/language", None)],
-    "document": [("edit/common segments ($fn)", "kc:common_segments"),
+    "document": [("edit/options", "mdi.cog-outline"),
+                 ("edit/common segments ($fn)", "kc:common_segments"),
                  ("edit/document units", "mdi.ruler-square"),
                  ("edit/document scale (1 : n)", "mdi.scale-balance"),
                  ("view/customizer (sliders)", None),
@@ -336,6 +348,7 @@ PAINT = {
     "view/add reference image": "ref_add",
     "view/clear reference images": "ref_clear",
     "insert/code & files": "code_files",
+    "edit/options": "options",
     "edit/document units": "doc_units",
     "edit/configurations": "configurations",
     "edit/document scale (1 : n)": "doc_scale",

@@ -285,6 +285,12 @@ COMMANDS = {
               "together.", [], "Ctrl+G."),
     "ungroup": ("Ungroup", "Dissolves a group, keeping its contents.",
                 [], None),
+    "options": (
+        "Options", "Every preference in one window, like SolidWorks' "
+        "Tools ▸ Options: language, theme and interface style (System "
+        "Options); units, scale, common segments and how many decimals "
+        "dimensions show (Document Properties).", [],
+        "Ctrl+, opens it."),
     "document units": (
         "Document units", "What one model unit means: nm, µm, mm, cm, "
         "m or in. A label only — nothing is rescaled.", [],

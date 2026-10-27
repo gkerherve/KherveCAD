@@ -385,6 +385,16 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.tr("&Ungroup"), self._ungroup_selection,
                             "Ctrl+Shift+G")
         edit_menu.addSeparator()
+        # every preference in one window, as SolidWorks' Tools ▸ Options
+        from . import options_dialog
+        options_dialog.load()
+        opt_act = edit_menu.addAction(
+            icons.icon("mdi.cog-outline"), self.tr("&Options..."),
+            lambda: options_dialog.open_dialog(self), "Ctrl+,")
+        opt_act.setMenuRole(QAction.NoRole)
+        opt_act.setToolTip(self.tr(
+            "Units, dimension decimals, language, theme and interface "
+            "style in one window"))
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
         from . import configurations
         conf_act = edit_menu.addAction(
