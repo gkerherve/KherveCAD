@@ -173,6 +173,12 @@ class ObjectTree(QTreeWidget):
         if node is not None and node.type == "component":
             self.open_component.emit(node)
             return
+        if node is not None and node.type == "ref_plane" and \
+                hasattr(self.window(), "view3d"):
+            from . import sketch3d          # a Plane: draw on it in 3D
+            self.select_nodes([node])
+            sketch3d.start(self.window())
+            return
         from . import face_sketch
         win = self.window()
         if node is not None and face_sketch.group_of(node) is not None \
@@ -838,6 +844,8 @@ class ObjectTree(QTreeWidget):
         menu = QMenu(self)
         if nodes:
             self._objects_menu(menu, nodes, roots)
+            from . import refgeom_ui
+            refgeom_ui.tree_entries(self.window(), menu, nodes)
         else:
             self._insert_object_menu(menu)
             menu.addAction(icons.icon("mdi.content-paste"),

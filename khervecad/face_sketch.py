@@ -198,7 +198,10 @@ def open_sketch(window, group):
     """Turn to the face and sketch inside *group*."""
     from . import face_outline, normal_to
     try:                                 # the face itself, in the sketch
-        face_outline.show(window, group, part_of(group))
+        if not face_outline.show(window, group, part_of(group)):
+            # no face there (a reference plane): the part CUT by it
+            from . import section_outline
+            section_outline.for_group(window, group)
     except Exception:                    # never stop the sketch opening
         import traceback
         traceback.print_exc()
@@ -256,8 +259,9 @@ def close(window):
     goes."""
     group = getattr(window, "_face_sketch", None)
     window._face_sketch = None
-    from . import face_outline
+    from . import face_outline, section_outline
     face_outline.clear(window)
+    section_outline.schedule(window)     # back on a main plane: its cut
     if group is not None and group.parent is not None and \
             not group.children:
         window.model.remove_node(group)

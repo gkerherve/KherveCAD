@@ -175,9 +175,12 @@ NODE_TYPES = {
                 # schema-only: extrude down the -Z side (a cut INTO the
                 # face it is sketched on — SolidWorks' Reverse Direction)
                 ("reverse", "Reverse direction", "bool", None, None),
+                # schema-only: SolidWorks' Direction 2 — also this deep
+                # down -Z (kcad_extrude_two)
+                ("height2", "Direction 2 depth", "float", 0.0, 1e6),
                 # end conditions (extent.py), schema-only
                 ("extent", "End condition", "choice",
-                 ("", "through_all", "up_to"), None),
+                 ("", "through_all", "up_to", "up_to_face"), None),
                 ("up_to", "Up to (object name)", "str", None, None),
                 ("up_to_side", "Up to its", "choice", ("far", "near"),
                  None),
@@ -539,6 +542,20 @@ def keeps_segments(segments) -> bool:
     not replace."""
     return isinstance(segments, (int, float)) and \
         not isinstance(segments, bool) and 0 < segments <= POLYGON_SEGMENTS
+
+
+def _two_way(p):
+    """A linear extrude going both ways (Direction 2): a positive depth
+    on an uncentred, forward extrude."""
+    if p.get("center") or p.get("reverse"):
+        return False
+    h2 = p.get("height2")
+    if isinstance(h2, str):
+        return bool(h2.strip())
+    try:
+        return float(h2 or 0) > 0
+    except (TypeError, ValueError):
+        return False
 
 
 def _fn(p) -> object:
@@ -1098,6 +1115,9 @@ class CadNode:
                 # down -Z: OpenSCAD's mirror in a helper, so it re-imports
                 # as this one node (organic HELPERS "extrude_reverse")
                 return f"kcad_extrude_reverse({', '.join(args)})"
+            if _two_way(p):
+                args.insert(1, f"height2={fmt(p['height2'])}")
+                return f"kcad_extrude_two({', '.join(args)})"
             return f"linear_extrude({', '.join(args)})"
         if t == "rotate_extrude":
             args = []

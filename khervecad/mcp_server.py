@@ -415,6 +415,15 @@ crosses, and finish with action state's `problems` empty. Instruments: \
 tag with ISA letters (TE-101, PT-201, FS-101). Link symbols to their 3D \
 part with `node`.
 
+Reference geometry — a sketch that is not on a main plane or a face \
+(a boss 30 mm above the top, a cut at 45°): reference_geometry action \
+plane (offset_from Front / Top / Right + distance, three points, or \
+origin + normal), then action sketch on it, put rect / circle / line \
+nodes in that Group and extrude it. An extrude can stop at a face \
+(action up_to_face, the face from probe_surface) or go both ways \
+(action two_way). Planes, axes and points stay in the tree and draw \
+nothing.
+
 Sketch constraints — a 2D profile whose sizes must stay related \
 (a plate with equal sides, a slot tangent to its arcs): draw the shapes, \
 then sketch_constraint (list shows each shape's entity refs) to add \

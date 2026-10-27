@@ -1603,6 +1603,45 @@ TOOLS = [
         }),
     },
     {
+        "name": "reference_geometry",
+        "description": (
+            "REFERENCE GEOMETRY, SolidWorks style: planes, axes and "
+            "points that stay in the tree, are drawn in the 3D view and "
+            "render nothing (kcad_ref_* in the program). action: plane "
+            "(origin + normal, or offset_from: 'Front' / 'Top' / "
+            "'Right' + distance, or points: three [x, y, z]), axis "
+            "(point + direction, or points: two, or planes: two "
+            "ref_plane node ids — where they meet), point (at), sketch "
+            "(node_id of a plane, or origin + normal: makes the Group "
+            "'Sketch on …' lying on it; add rect / circle / line nodes "
+            "inside it with add_node and extrude it), up_to_face "
+            "(node_id of a linear_extrude + face: [x, y, z, nx, ny, nz] "
+            "from probe_surface — the depth then follows that face), "
+            "two_way (node_id of a linear_extrude + depth: also extrude "
+            "this far down -Z), list (default)."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["list", "plane", "axis", "point",
+                                "sketch", "up_to_face", "two_way"]},
+            "origin": {"type": "array", "items": {"type": "number"}},
+            "normal": {"type": "array", "items": {"type": "number"}},
+            "point": {"type": "array", "items": {"type": "number"}},
+            "direction": {"type": "array", "items": {"type": "number"}},
+            "at": {"type": "array", "items": {"type": "number"}},
+            "points": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"}}},
+            "planes": {"type": "array", "items": {"type": "integer"}},
+            "offset_from": {"type": "string",
+                            "enum": ["Front", "Top", "Right"]},
+            "distance": {"type": "number"},
+            "size": {"type": "number"},
+            "node_id": {"type": "integer"},
+            "face": {"type": "array", "items": {"type": "number"}},
+            "depth": {"type": "number"},
+        }),
+    },
+    {
         "name": "sketch_constraint",
         "description": (
             "SKETCH CONSTRAINTS and driven dimensions on 2D shapes "

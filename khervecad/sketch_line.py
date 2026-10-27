@@ -75,6 +75,11 @@ def snap(scene, raw, start=None, skip=None):
     from PyQt5.QtCore import QPointF
     info = dict(point=None, angle=None, guides=[], origin=False)
     pts = sketch_points(scene, skip)
+    # the part under the sketch: the face sketched on, or the part cut
+    # by the main plane (section_outline) — its corners, middles, centres
+    outline = getattr(scene, "face_outline", None) or {}
+    pts = pts + [(QPointF(x, y), None, kind)
+                 for x, y, kind in outline.get("points", ())]
     draft = _draft(scene)
     # the points of the shape being drawn count too: line up with them
     # (the user: the point above was just above, and nothing snapped)
@@ -126,6 +131,19 @@ def snap(scene, raw, start=None, skip=None):
                         info["angle"] = "perp"
                         info["guides"].append((QPointF(start),
                                                QPointF(x, y)))
+    # ON an edge of the part under the sketch (the cut / face outline)
+    if info["angle"] is None and outline.get("segments"):
+        from . import face_outline
+        etol = _px(scene, SNAP_PX / 2)
+        best_e = None
+        for a, b in outline["segments"]:
+            ex_, ey_ = face_outline._on_segment(x, y, a, b)
+            d = math.hypot(ex_ - x, ey_ - y)
+            if d <= etol and (best_e is None or d < best_e[0]):
+                best_e = (d, ex_, ey_)
+        if best_e is not None:
+            info["edge"] = True
+            return QPointF(best_e[1], best_e[2]), info
     # line up with an existing point's x or y (the free coordinate)
     atol = _px(scene, ALIGN_PX)
     if info["angle"] != "v":

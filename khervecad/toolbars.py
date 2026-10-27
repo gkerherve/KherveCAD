@@ -471,6 +471,8 @@ def build_insert_menu(win, menu):
                 lambda _=False, t=key: win._add_primitive(t)))
     from . import sheet_metal_ui
     sheet_metal_ui.build_menu(win, menu)
+    from . import refgeom_ui              # planes, axes, points
+    refgeom_ui.build_menu(win, menu)
     return menu
 
 

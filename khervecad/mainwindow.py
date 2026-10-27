@@ -205,6 +205,9 @@ class MainWindow(QMainWindow):
         self._build_options_bar()
         self._build_menus()
         self._build_status_bar()
+        from . import massbar, refgeom_ui
+        refgeom_ui.install(self)          # planes / axes / points in 3D
+        massbar.install(self)             # mass of the selection, live
         # help you can see while using the menus (macOS menus never show
         # tooltips) and a clear word when an operation needs a selection
         from . import toolguide
@@ -850,6 +853,8 @@ class MainWindow(QMainWindow):
 
     def _set_plane(self, plane):
         self.scene.set_plane(plane)
+        from . import section_outline     # the part cut by this plane
+        section_outline.schedule(self)
         button = getattr(self, "_plane_buttons", {}).get(plane)
         if button is not None:
             button.setChecked(True)
@@ -1224,6 +1229,8 @@ class MainWindow(QMainWindow):
         self._update_title()
         self.view3d.set_reference_images(self.model.reference_images)
         self._refresh_preview()
+        from . import section_outline     # the sketch plane's cut follows
+        section_outline.schedule(self)
 
     def _note_sketch_edit(self, node):
         """The shape just edited weighs most when the sketch's
@@ -1912,6 +1919,11 @@ class MainWindow(QMainWindow):
         viewnav.add_toggle_button(
             bar, "smart_dims", "mdi.ruler", "↔", "smart_dims_bar",
             self._smart_dims_act)
+        planes = getattr(self, "_ref_planes_act", None)
+        if planes is not None:            # Front / Top / Right on or off
+            viewnav.add_toggle_button(
+                bar, "planes", "mdi.layers-triple-outline", "▱",
+                "planes_bar", planes)
         viewnav.add_options_button(
             bar, "display", "mdi.eye-settings-outline", "☰",
             "nav3d_display",

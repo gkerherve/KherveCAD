@@ -25,7 +25,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-EXTENTS = ("", "through_all", "up_to")
+EXTENTS = ("", "through_all", "up_to", "up_to_face")
 SIDES = ("far", "near")
 MARGIN = 1.0
 
@@ -34,6 +34,10 @@ SCHEMA = [("extent", "End condition", "choice", EXTENTS, None),
           ("up_to_side", "Up to its", "choice", SIDES, None),
           ("up_to_offset", "Offset beyond (mm)", "float", -1e6, 1e6)]
 TEXT = {"extent", "up_to", "up_to_side"}
+# "up_to_face" (2026-10-27, SolidWorks' Up To Surface by a CLICK): the
+# picked face as ``up_to_face`` [x, y, z, nx, ny, nz] in world
+# coordinates; the depth is where the extrude's axis, through its
+# sketch's centre, meets that face's plane (+ ``up_to_offset``).
 
 
 def _np():
@@ -126,7 +130,46 @@ def height_for(model, extrude, env=None):
             raise ValueError("Up to: %r's %s face is not above the "
                              "sketch." % (name, side))
         return round(h, 4), False
+    if kind == "up_to_face":
+        return _to_face(extrude, env)
     raise ValueError("Blind extrude: no extent to work out.")
+
+
+def _sketch_centre(extrude, env):
+    from . import mesh
+    try:
+        loops = [o for o in mesh.collect_outlines(extrude, env) if o]
+    except Exception:
+        loops = []
+    pts = [p for o in loops for p in o]
+    if not pts:
+        return 0.0, 0.0
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+
+
+def _to_face(extrude, env):
+    """Depth from the sketch to the picked face's plane along +Z."""
+    from . import mesh
+    np = _np()
+    row = extrude.params.get("up_to_face") or []
+    if len(row) < 6:
+        raise ValueError("Up to face: no face picked.")
+    q, n = np.array(row[:3], float), np.array(row[3:6], float)
+    m = np.array(mesh.ancestor_matrix(extrude, env), float)
+    cx, cy = _sketch_centre(extrude, env)
+    o = m[:3, :3] @ np.array([cx, cy, 0.0]) + m[:3, 3]
+    a = m[:3, 2]                       # world step for one local z
+    den = float(n @ a)
+    if abs(den) < 1e-9:
+        raise ValueError("Up to face: the face runs along the extrude, "
+                         "it never meets it.")
+    h = float(n @ (q - o)) / den
+    h += float(extrude.params.get("up_to_offset") or 0.0)
+    if h <= 0.01:
+        raise ValueError("Up to face: the face is behind the sketch "
+                         "(try Reverse direction).")
+    return round(h, 4), False
 
 
 _BUSY = False
@@ -161,17 +204,26 @@ def refresh(model):
     return errors
 
 
-def set_extent(model, extrude, kind, up_to="", side="far", offset=0.0):
+def set_extent(model, extrude, kind, up_to="", side="far", offset=0.0,
+               face=None):
     if kind not in EXTENTS:
         raise ValueError("extent is one of %s." % ", ".join(
             repr(k) for k in EXTENTS))
     p = extrude.params
-    for k in ("extent", "up_to", "up_to_side", "up_to_offset"):
+    for k in ("extent", "up_to", "up_to_side", "up_to_offset",
+              "up_to_face"):
         p.pop(k, None)
     if kind:
         p["extent"] = kind
     if kind == "up_to":
         p["up_to"], p["up_to_side"] = up_to, side
+        if offset:
+            p["up_to_offset"] = float(offset)
+    if kind == "up_to_face":
+        if face is None or len(face) < 6:
+            raise ValueError("Up to face needs the face: [x, y, z, nx, "
+                             "ny, nz].")
+        p["up_to_face"] = [round(float(v), 6) for v in face[:6]]
         if offset:
             p["up_to_offset"] = float(offset)
     if kind:

@@ -192,6 +192,14 @@ module kcad_extrude_reverse(height = 10, twist = 0, scale = 1,
                                      scale = scale, center = center,
                                      slices = slices) children();
 }""",
+    # a linear extrude going both ways (its `height2`, Direction 2)
+    "extrude_two": """\
+module kcad_extrude_two(height = 10, height2 = 0, twist = 0, scale = 1,
+                        slices = undef) {
+    translate([0, 0, -height2])
+        linear_extrude(height = height + height2, twist = twist,
+                       scale = scale, slices = slices) children();
+}""",
     # a rotate about a pivot (the rotate node's px / py / pz)
     "rotate_pivot": """\
 module kcad_rotate(a = [0, 0, 0], pivot = [0, 0, 0]) {
@@ -249,6 +257,10 @@ def preamble(root) -> list:
     if any(n.type == "linear_extrude" and n.params.get("reverse")
            for n in root.walk()):
         lines.extend(HELPERS["extrude_reverse"].split("\n"))
+    from .model import _two_way
+    if any(n.type == "linear_extrude" and _two_way(n.params)
+           for n in root.walk()):
+        lines.extend(HELPERS["extrude_two"].split("\n"))
     if any(n.type == "color" and
            str(n.params.get("material") or "Default") != "Default"
            for n in root.walk()):
@@ -412,6 +424,18 @@ def _b_joint(parser, positional, named):
         min_angle=_num(lo, -180.0), max_angle=_num(hi, 180.0)))
 
 
+def _b_extrude_two(parser, positional, named):
+    from .model import CadNode, NODE_TYPES
+    from .scadparse import _num
+    d = NODE_TYPES["linear_extrude"]["params"]
+    return CadNode("linear_extrude", "Linear extrude", dict(
+        height=_num(named.get("height", d["height"]), d["height"]),
+        twist=_num(named.get("twist", 0.0), 0.0),
+        scale=_num(named.get("scale", 1.0), 1.0), center=False,
+        segments=_num(named.get("slices", 0), 0),
+        height2=_num(named.get("height2", 0.0), 0.0)))
+
+
 def _b_extrude_reverse(parser, positional, named):
     from .model import CadNode, NODE_TYPES
     from .scadparse import _num
@@ -471,6 +495,7 @@ BUILDERS = {
     "kcad_joint": _b_joint,
     "kcad_rotate": _b_rotate_pivot,
     "kcad_extrude_reverse": _b_extrude_reverse,
+    "kcad_extrude_two": _b_extrude_two,
 }
 BUILDERS.update(bake.BUILDERS)
 BUILDERS.update(pattern.BUILDERS)

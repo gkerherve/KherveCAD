@@ -51,7 +51,8 @@ TABS = [
     # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
      ["create", "extrude", "cuts", "mechanical", "transform",
-      "combine", "finish", "logic", "assemble", "solid_insert"]),
+      "combine", "finish", "logic", "assemble", "reference",
+      "solid_insert"]),
     # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
     ("sheetmetal", "SHEET METAL", "Sheet Metal",
      ["sheet_create", "sheet_modify", "sheet_export"]),
@@ -102,7 +103,8 @@ def tab_order(fusion):
 
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"sheet_create": "Create", "sheet_modify": "Modify",
+EXTRA_PANELS = {"reference": "Reference Geometry",
+                "sheet_create": "Create", "sheet_modify": "Modify",
                 "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
                 "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "_move_tools": "Move", "curves": "Curves",
@@ -129,6 +131,20 @@ FUSION_SHOWN = {1: 12, 2: 7}
 #: the user: the menu had far more than the tab): classic menu path,
 #: glyph for an item that has no icon of its own
 MENU_PANELS = {
+    # SolidWorks' Reference Geometry (refgeom_ui, 2026-10-27)
+    "reference": [
+        ("insert/reference geometry/plane offset from a face", None),
+        ("insert/reference geometry/plane through three points", None),
+        ("insert/reference geometry/plane at an angle through an edge", None),
+        ("insert/reference geometry/plane parallel to a main plane", None),
+        ("insert/reference geometry/axis of a round face or edge", None),
+        ("insert/reference geometry/axis where two planes meet", None),
+        ("insert/reference geometry/point", None),
+        ("insert/reference geometry/sketch in 3d (rectangle, circle, line)", None),
+        ("insert/reference geometry/extrude up to a face", None),
+        ("insert/reference geometry/measure (click two things)", None),
+        ("insert/reference geometry/show main planes in 3d", None),
+    ],
     "checks": [("analyse/heat map", "mdi.thermometer"),
                ("analyse/check sharp edges", "mdi.angle-acute"),
                ("analyse/check fits & tolerances", "mdi.arrow-collapse-horizontal"),

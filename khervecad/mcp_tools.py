@@ -1609,6 +1609,13 @@ class McpToolExecutor:
             raise ToolError(str(exc))
         return cf.state(model)
 
+    def _t_reference_geometry(self, params) -> dict:
+        from . import refgeom_mcp
+        try:
+            return refgeom_mcp.run(self, params)
+        except ValueError as exc:
+            raise ToolError(str(exc))
+
     def _t_suppress(self, params) -> dict:
         from . import suppress
         model = self._w.model

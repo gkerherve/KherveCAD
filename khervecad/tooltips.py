@@ -26,6 +26,15 @@ _SELECTION = ("Select the object(s) in the tree (Ctrl-click to add "
               "more), or click one in the 2D view.")
 
 TIPS = {
+    "planes_bar": (
+        "Show Planes",
+        "Shows or hides the Front, Top and Right planes in the 3D view, "
+        "as SolidWorks' View ▸ Hide/Show ▸ Planes. Hidden, they still "
+        "appear while Sketch in 3D waits for you to pick a plane.",
+        ["Click to show the three main planes; click again to hide them.",
+         "Your own planes (Insert ▸ Reference Geometry) hide one by one: "
+         "select one in the tree and press Space."],
+        "A plane selected in the tree is always drawn."),
     "smart_dims_bar": (
         "Show Smart Dimensions",
         "Shows or hides the sketch's Smart Dimensions (the driving sizes "

@@ -998,6 +998,10 @@ def linear_extrude_mesh(node: CadNode, env=None):
     twist = p.get("twist", 0.0)
     scale_top = p.get("scale", 1.0)
     z0 = -height / 2 if p.get("center") else 0.0
+    from .model import _two_way
+    if _two_way(p):                   # Direction 2: down -Z as well
+        h2 = float(p.get("height2") or 0.0)
+        height, z0 = height + h2, -h2
     slices = max(int(p.get("segments") or 0), 1)
     if twist and slices == 1:
         slices = max(int(abs(twist) / 6), 8)

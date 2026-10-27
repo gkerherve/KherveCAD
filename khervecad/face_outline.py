@@ -330,10 +330,51 @@ def paint(scene, painter):
     info = getattr(scene, "face_outline", None)
     if not info:
         return
+    painter.save()
+    if info.get("section"):
+        # the part CUT by the sketch plane (section_outline): hatched
+        # like a section view, over the flattened part behind it
+        from PyQt5.QtCore import Qt
+        from PyQt5.QtGui import QBrush, QPainterPath
+        path = QPainterPath()
+        path.setFillRule(Qt.OddEvenFill)
+        for a, b in info["segments"]:
+            path.moveTo(QPointF(*a))
+            path.lineTo(QPointF(*b))
+        from . import section as _section
+        fill = QPainterPath()
+        fill.setFillRule(Qt.OddEvenFill)
+        for pts, closed in _section.chain(
+                [((a[0], a[1]), (b[0], b[1])) for a, b in
+                 info["segments"]]):
+            if closed and len(pts) >= 3:
+                fill.moveTo(QPointF(*pts[0]))
+                for q in pts[1:]:
+                    fill.lineTo(QPointF(*q))
+                fill.closeSubpath()
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(255, 255, 255, 150))
+        painter.drawPath(fill)
+        hatch = QBrush(QColor(40, 90, 170), Qt.BDiagPattern)
+        views = scene.views()
+        if views:                 # hatch at screen size, not model size
+            from PyQt5.QtGui import QTransform
+            m = views[0].transform()
+            hatch.setTransform(QTransform.fromScale(
+                1 / (abs(m.m11()) or 1), 1 / (abs(m.m22()) or 1)))
+        painter.setBrush(hatch)
+        painter.drawPath(fill)
+        edge = QPen(QColor(30, 60, 120), 0)
+        edge.setCosmetic(True)
+        edge.setWidthF(2.2)
+        painter.setPen(edge)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawPath(path)
+        painter.restore()
+        return
     pen = QPen(QColor(110, 120, 135), 0)
     pen.setCosmetic(True)
     pen.setWidthF(1.6)
-    painter.save()
     painter.setPen(pen)
     for a, b in info["segments"]:
         painter.drawLine(QLineF(QPointF(*a), QPointF(*b)))

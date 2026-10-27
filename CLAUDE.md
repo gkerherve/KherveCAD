@@ -3321,6 +3321,71 @@ into a new module and import.
                        shrinkwrap, scatter) take the body then the others
                        and apply on Done / Esc. Pattern / Group with no
                        parts in view still add an empty container.
+  - `refgeom.py` / `refgeom_ui.py` / `refgeom_mcp.py` — **Reference
+                       Geometry** (2026-10-27, the user's SolidWorks list
+                       1-7): `ref_plane` (origin + normal + size),
+                       `ref_axis`, `ref_point` nodes (feature module,
+                       category "ctl", draw nothing; `kcad_ref_*` calls
+                       whose helpers are EMPTY modules, re-imported as the
+                       same nodes) added at the END of the scope. Drawn in
+                       3D by an overlay painter (blue, orange selected),
+                       with the main Front / Top / Right planes while View
+                       ▸ Show main planes is on (QSettings `render_planes`).
+                       Made by clicks: plane offset from a face, through
+                       three points, at an angle through an edge, parallel
+                       to a main plane; axis of a round face
+                       (`smooth_region` + `axis_of_cylinder`: least
+                       eigenvector of Σ n nᵀ, circle fit) or edge, where two
+                       planes meet; point. Insert ▸ Reference Geometry,
+                       ribbon SOLID ▸ Reference Geometry, tree right-click
+                       (Sketch on This Plane, Extrude Up To a Face), MCP
+                       `reference_geometry`.
+  - `sketch3d.py`    — **Sketch in 3D**: a `View3D.edit_tool`; a click
+                       picks the nearest drawn plane or flat face (camera
+                       untouched, `user_moved` set so the first shape does
+                       not trigger the first-geometry Fit), a face-sketch
+                       Group is made there (`refgeom_ui.sketch_on`), and
+                       clicks draw rect / circle / line ON it in 3D, grid
+                       snapped in the plane's axes; drawn points are
+                       draggable (`drag_to` emits node_changed, so the
+                       sketch constraints re-solve LIVE — the 2D view's
+                       handles already did). Double-click a Plane starts it.
+  - Extrude end conditions, second pass (same day): `extent` gained
+                       "up_to_face" (`up_to_face` [x, y, z, nx, ny, nz]: the
+                       depth where the axis through the sketch's centre
+                       meets that plane), and `linear_extrude` a schema-only
+                       `height2` (Direction 2: `kcad_extrude_two`, organic
+                       HELPERS, `model._two_way`).
+  - `section_outline.py` — the part CUT by the sketch plane (same day,
+                       the user: sketching a rib on the Front plane showed
+                       only the brown projected silhouette, nothing to
+                       draw against). Main planes: `segments` cuts just
+                       in front of AND behind the plane (a part extruded
+                       from it lies ON it) and `merged` joins the loops
+                       in one Manifold CrossSection (FillRule.Positive:
+                       an L's base and upright meet in a real corner,
+                       holes stay holes); `plane_segments` does any plane
+                       (a sketch on a reference plane, via
+                       `face_sketch.open_sketch` when no face lies there).
+                       Handed to the scene as `face_outline` with
+                       `section: True` — drawn hatched over the parts —
+                       so the scene snap AND `sketch_line.snap` (Line,
+                       Polygon) take its corners, middles, centres and
+                       edges. Recomputed on plane change and model edits
+                       (debounced). The main planes are HIDDEN by default
+                       (SolidWorks): the 3D bar's planes button / Insert ▸
+                       Reference Geometry ▸ Show main planes, and shown
+                       while Sketch in 3D waits for a pick
+                       (`window._ref_force_planes`). Icons in
+                       `icons_cad_ref.py`, help in `refgeom_ui.TIPS`.
+  - `measure3d.py`   — **Measure** in 3D: click a face (area, a round
+                       face's radius) or edge (length), then another
+                       (distance, dX/dY/dZ, angle, face-to-face when
+                       parallel); a card in the view, a line between.
+  - `massbar.py`     — the status bar's live **Mass** of the selection or
+                       every SOLID in view (`is_solid`: flat sketches would
+                       count their triangles as volume), material from the
+                       root's `params["mass_material"]` (click to choose).
   - `tree_menu.py`    — the tree's right-click menu made compact
                        (2026-10-21): everyday commands on top, the rest in
                        Clipboard / Position / Modify / Organise submenus,
