@@ -75,6 +75,11 @@ KINDS = {
     "symmetric": ("Symmetric", ["point", "point", "line"], False),
     "fix": ("Fix", ["point"], False),
     "point_on": ("Point on curve", ["point", "curve"], False),
+    # a point kept on an edge of the PART under the sketch (the face or
+    # the section outline): the row carries the edge, ``edge`` [ax, ay,
+    # bx, by] in the sketch's frame (2026-10-27, the user's rectangle
+    # drawn up to a face's edge came off it at the first dimension)
+    "on_edge": ("On model edge", ["point"], False),
     "distance": ("Distance", ["point", "point"], True),
     "hdistance": ("Horizontal distance", ["point", "point"], True),
     "vdistance": ("Vertical distance", ["point", "point"], True),
@@ -321,6 +326,9 @@ def residuals(container, row, vals, env=None):
     if kind == "fix":
         x, y = row["at"]
         return [geo[0][0] - x, geo[0][1] - y]
+    if kind == "on_edge":
+        ax, ay, bx, by = (float(v) for v in row["edge"][:4])
+        return [_pl_dist(geo[0], ((ax, ay), (bx, by)))]
     if kind == "point_on":
         if kinds[1] == "line":
             return [_pl_dist(geo[0], geo[1])]
@@ -522,10 +530,14 @@ def ref_of(container, node, name):
     return "%d.%s" % (container.children.index(node), name)
 
 
-def add(model, container, kind, refs, value=None):
+def add(model, container, kind, refs, value=None, edge=None):
     """Add one constraint and solve. Raises ValueError / Conflict; the
     sketch is untouched then. Returns the report."""
     row = {"kind": kind, "refs": list(refs)}
+    if kind == "on_edge":
+        if edge is None or len(edge) < 4:
+            raise ValueError("On model edge needs the edge.")
+        row["edge"] = [round(float(v), 6) for v in edge[:4]]
     if value is not None:
         row["value"] = value
     if kind == "fix":
@@ -946,8 +958,12 @@ def add_dimension(model, container, kind, refs, value):
     sketch to it (when the option is on and it is a length), later ones
     drive their own shapes. Returns (report, scaled)."""
     scaled = False
+    # a sketch tied to the part (a point fixed on it or on its edge) is
+    # never rescaled: SolidWorks scales only a free-floating sketch
+    anchored = any(r["kind"] in ("fix", "on_edge")
+                   for r in rows(container))
     if kind in DIMENSION_KINDS and not has_dimension(container) and \
-            scale_first_enabled():
+            not anchored and scale_first_enabled():
         try:
             now = measure(container, kind, refs)
             target = float(value) if _num(value) else value_of(

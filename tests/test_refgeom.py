@@ -231,3 +231,25 @@ def test_any_plane_cuts_the_part():
         tris, (0, 21, 0), (0, -1, 0), (1, 0, 0), (0, 0, 1))
     pts = {p for s in segs for p in s}
     assert (54.0, 12.0) in pts and (66.0, 60.0) in pts
+
+
+def test_a_shape_drawn_up_to_the_part_edge_stays_on_it(app):
+    """The user's case: a centre rectangle up to the top edge of the
+    face, then a width of 14 — the height must not change."""
+    from types import SimpleNamespace
+    from khervecad import face_outline, sketch_constraints as sc
+    m = model.DocumentModel()
+    g = m.add_node("union", {})
+    rect = m.add_node("rect", dict(x=-5, y=-40, width=10, height=80),
+                      parent=g)
+    top = ((-100.0, 40.0), (100.0, 40.0))
+    scene = SimpleNamespace(face_outline=dict(
+        segments=[top], points=[]), views=lambda: [])
+    assert face_outline.pin(scene, m, rect) == 2     # both top corners
+    assert {r["kind"] for r in sc.rows(g)} == {"on_edge"}
+    _report, scaled = sc.add_dimension(m, g, "hdistance",
+                                       ["0.v2", "0.v3"], 14)
+    assert not scaled                    # tied to the part: no rescale
+    p = rect.params
+    assert abs(p["width"] - 14) < 1e-6
+    assert abs(p["y"] + p["height"] - 40) < 1e-6     # still on the edge

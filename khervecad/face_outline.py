@@ -282,7 +282,7 @@ def pin(scene, model, node):
                     if id(owner) not in mine and kind == "centre"]
     except Exception:
         pass
-    if not targets:
+    if not targets and not (info or {}).get("segments"):
         return 0
     n = 0
     for shape in [node] + list(node.children):
@@ -307,6 +307,20 @@ def pin(scene, model, node):
                     n += 1
                 except (ValueError, KeyError):
                     pass
+                continue
+            # ON an edge of the part (not at a corner): it stays on that
+            # edge, free to slide along it (SolidWorks' On Edge)
+            for a, b in (info or {}).get("segments", ()):
+                ex_, ey_ = _on_segment(pt[0], pt[1], a, b)
+                if abs(ex_ - pt[0]) < 1e-6 and abs(ey_ - pt[1]) < 1e-6:
+                    try:
+                        sc.add(model, shape.parent, "on_edge",
+                               [sc.ref_of(shape.parent, shape, name)],
+                               edge=[a[0], a[1], b[0], b[1]])
+                        n += 1
+                    except (ValueError, KeyError):
+                        pass
+                    break
     return n
 
 

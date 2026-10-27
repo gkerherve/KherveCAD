@@ -3378,6 +3378,14 @@ into a new module and import.
                        while Sketch in 3D waits for a pick
                        (`window._ref_force_planes`). Icons in
                        `icons_cad_ref.py`, help in `refgeom_ui.TIPS`.
+                       **On model edge** (same day, the user's centre
+                       rectangle drawn up to a face's top edge lost its
+                       height at the first Smart Dimension): a point drawn
+                       ON an outline edge gets the `on_edge` constraint
+                       (row `edge` [ax, ay, bx, by], `face_outline.pin`),
+                       and `add_dimension` never rescales a sketch tied to
+                       the part (any `fix` / `on_edge` row) — the "scale
+                       on first dimension" had stretched it.
   - `measure3d.py`   — **Measure** in 3D: click a face (area, a round
                        face's radius) or edge (length), then another
                        (distance, dX/dY/dZ, angle, face-to-face when

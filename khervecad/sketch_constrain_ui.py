@@ -51,7 +51,8 @@ TOOLS = [
 MARK = {"coincident": "●", "horizontal": "H", "vertical": "V", "diagonal": "45°",
         "parallel": "∥", "perpendicular": "⊥", "tangent": "T",
         "equal": "=", "concentric": "◎", "collinear": "—",
-        "midpoint": "M", "symmetric": "⇹", "fix": "🔒", "point_on": "∘"}
+        "midpoint": "M", "symmetric": "⇹", "fix": "🔒", "point_on": "∘",
+        "on_edge": "⊸"}
 PICK_PX = 10.0
 #: what each constraint does (the tooltips' "what")
 WHAT = {
@@ -74,6 +75,7 @@ WHAT = {
     "symmetric": "Mirrors two points about a line.",
     "fix": "Locks a point where it is now.",
     "point_on": "Keeps a point on a line or circle.",
+    "on_edge": "Keeps a point on an edge of the part under the sketch.",
     "distance": "Drives the distance between two points.",
     "hdistance": "Drives the horizontal distance between two points.",
     "vdistance": "Drives the vertical distance between two points.",
