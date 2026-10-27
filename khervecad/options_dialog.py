@@ -211,6 +211,21 @@ def action(win):
     return act
 
 
+def add_mac_settings(win, menu):
+    """Also File ▸ Options, and on macOS the app menu's Settings… (Cmd+,)
+    — where a Mac user looks first; a PreferencesRole action leaves the
+    menu it is added to, so it is a second action."""
+    menu.addAction(action(win))
+    import sys
+    if sys.platform == "darwin":
+        from PyQt5.QtWidgets import QAction
+        mac = QAction(language.tr("Settings..."), win)
+        mac.setMenuRole(QAction.PreferencesRole)
+        mac.triggered.connect(lambda: open_dialog(win))
+        menu.addAction(mac)
+        win._options_mac = mac
+
+
 def open_dialog(win, page=0):
     dlg = OptionsDialog(win)
     dlg.pages.setCurrentRow(page)

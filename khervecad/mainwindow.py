@@ -389,6 +389,7 @@ class MainWindow(QMainWindow):
         from . import options_dialog
         options_dialog.load()
         edit_menu.addAction(options_dialog.action(self))
+        options_dialog.add_mac_settings(self, file_menu)
         edit_menu.addAction(self.tr("Document &Units..."), self.choose_unit)
         from . import configurations
         conf_act = edit_menu.addAction(

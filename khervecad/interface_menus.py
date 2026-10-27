@@ -60,7 +60,7 @@ FUSION = [
         ("&3D Print", ["file/publish to printables", "file/export stl"]),
         ("&Share", ["file/publish to printables", "file/send to planetcraft"]),
         "-", "file/show in file explorer",
-        "-", "file/exit"]),
+        "-", "edit/options", "file/settings", "-", "file/exit"]),
     ("&Edit", [
         "edit/undo", "edit/redo", "-", "edit/cut", "edit/copy",
         "edit/paste", "edit/delete", "edit/duplicate", "-", "edit/group",
@@ -163,7 +163,7 @@ SOLIDWORKS = [
         ("Print&3D", ["file/publish to printables", "file/export stl"]),
         ("Pu&blish", ["file/publish to printables",
                       "file/send to planetcraft"]),
-        "-", "file/show in file explorer", "-", "file/exit"]),
+        "-", "file/show in file explorer", "-", "edit/options", "file/settings", "-", "file/exit"]),
     ("&Edit", [
         "edit/undo", "edit/redo", "-", "edit/cut", "edit/copy",
         "edit/paste", "edit/delete", "-", "edit/duplicate", "edit/group",
@@ -231,6 +231,7 @@ SOLIDWORKS = [
                      "file/import animated character (glb)"]),
         "view/add reference image"]),
     ("&Tools", [
+        "edit/options", "-",
         ("Sketch &Entities", ["insert/2d shapes"]),
         ("&Relations", ["tools/sketch constraints"]),
         ("Sketch &Tools", ["tools/sketch modify"]),
