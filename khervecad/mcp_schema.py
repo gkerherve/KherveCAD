@@ -1699,6 +1699,90 @@ TOOLS = [
             "size": {"type": "number", "exclusiveMinimum": 0},
         }, ["action"]),
     },
+    {
+        "name": "sheet_metal",
+        "description": (
+            "SHEET METAL (the ribbon's SHEET METAL tab, after SolidCraft / "
+            "SolidWorks). A body = a flat base OUTLINE (mm, XY, the sheet "
+            "from z = 0 up by the thickness) or a CONTOUR (open X, Z "
+            "chain, width along Y), plus flanges / hems / folds; one "
+            "thickness, inside bend radius, K-factor and hem gap (or a "
+            "named RULE = document variables smr_<rule>_t/_r/_k/_hem). "
+            "Panels: 0 = the base, then the contour's segments, then each "
+            "flange in order. Edges: base outline edge i runs from point i "
+            "to i + 1 (a rectangle from (0,0): 0 front -Y, 1 right +X, 2 "
+            "back +Y, 3 left -X); on a flange 0 = bend, 1 and 3 sides, 2 "
+            "the far edge. Flange height is to the OUTSIDE (virtual "
+            "sharp), so a 100 x 60 outline with four 20 mm flanges is a "
+            "100 x 60 x 20 box. angle > 0 bends up (toward +Z of the "
+            "panel), < 0 down. action: create (outline | contour + width, "
+            "thickness, bend_radius, k_factor, rule), convert (node_id: a "
+            "thin cube / extruded rect, polygon, circle / old sheet metal "
+            "part), flange (panel, edge, height, angle, bend_radius 0 = "
+            "the body's, inset_start/end, then [[height, angle], ...] "
+            "chained on the far edge), hem (panel, edge, length, flip), "
+            "path_flange (panel, edge, segments [[length, angle], ...]), fold "
+            "(line [[x1,y1],[x2,y2]] across the base, angle — the outline "
+            "is the flat blank), perforate (diameter, pitch, margin, "
+            "pattern staggered|square: holes in the flat pattern), unfold "
+            "/ refold (show flat / folded), flat_pattern (a flat copy "
+            "beside it), remove (what flanges|hems|folds|perforate, "
+            "index), state (panels, bends, bend table, every edge with its "
+            "label, flat size, errors), rules, set_rule (rule + "
+            "thickness, bend_radius, k_factor, hem_gap; node_id applies "
+            "it), apply_rule, delete_rule, export_dxf (path: CUT, "
+            "BEND_UP/DOWN, ETCH layers), export_bend_table (path, else "
+            "the CSV text). Every edit answers the state: read 'errors'."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string", "enum": [
+                "create", "convert", "flange", "hem", "path_flange", "fold",
+                "perforate", "unfold", "refold", "flat_pattern", "remove",
+                "state", "rules", "set_rule", "apply_rule", "delete_rule",
+                "export_dxf", "export_bend_table"]},
+            "node_id": {"type": "integer"},
+            "parent_id": {"type": "integer"},
+            "name": {"type": "string"},
+            "outline": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "contour": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "width": {"type": "number", "exclusiveMinimum": 0},
+            "thickness": {"type": "number", "exclusiveMinimum": 0},
+            "bend_radius": {"type": "number", "minimum": 0},
+            "k_factor": {"type": "number", "minimum": 0, "maximum": 1},
+            "hem_gap": {"type": "number", "minimum": 0},
+            "rule": {"type": "string"},
+            "panel": {"type": "integer", "minimum": 0},
+            "edge": {"type": "integer", "minimum": 0},
+            "height": {"type": "number", "exclusiveMinimum": 0},
+            "angle": {"type": "number"},
+            "inset_start": {"type": "number", "minimum": 0},
+            "inset_end": {"type": "number", "minimum": 0},
+            "then": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "segments": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "path": {"type": "string"},
+            "length": {"type": "number", "exclusiveMinimum": 0},
+            "flip": {"type": "boolean"},
+            "line": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "diameter": {"type": "number", "exclusiveMinimum": 0},
+            "pitch": {"type": "number", "exclusiveMinimum": 0},
+            "margin": {"type": "number", "minimum": 0},
+            "pattern": {"type": "string", "enum": ["staggered", "square"]},
+            "what": {"type": "string",
+                     "enum": ["flanges", "hems", "folds", "perforate"]},
+            "index": {"type": "integer", "minimum": 0},
+            "bend_notes": {"type": "boolean"},
+        }, ["action"]),
+    },
     # ── Parts and assemblies ───────────────────────────────────────
     {
         "name": "bill_of_materials",

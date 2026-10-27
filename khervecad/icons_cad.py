@@ -767,7 +767,7 @@ def icon(key, style):
     """The painted *style* icon for toolbar *key*, or None."""
     from . import (icons_cad_more, icons_cad_build,  # noqa: F401
                    icons_cad_sketch, icons_cad_ribbon,
-                   icons_cad_constrain)
+                   icons_cad_constrain, icons_cad_sheet)
     if style not in PALETTES or key not in DRAW:
         return None
     got = _CACHE.get((key, style))

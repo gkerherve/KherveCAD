@@ -85,6 +85,7 @@ FUSION = [
                           "tools/edit vertices (edit mode)"]),
         ("S&urface", ["tools/surface from curves",
                       "insert/draw 3d curve (click points)"]),
+        "insert/sheet metal",
         "insert/mechanical features", "insert/shapes & patterns",
         "insert/repeat & logic"]),
     ("&Modify", [
@@ -211,6 +212,7 @@ SOLIDWORKS = [
             "insert/repeat & logic/pattern (linear / polar / grid)",
             "insert/repeat & logic/scatter on surface"]),
         ("Fas&tening Feature", ["insert/mechanical features"]),
+        "insert/sheet metal",
         ("&Surface", ["tools/surface from curves",
                       "insert/subd box (smooth, edit its cage)",
                       "tools/convert to subd (smooth cage)"]),

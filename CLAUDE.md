@@ -5442,6 +5442,35 @@ into a new module and import.
                        Unfold (a flat blank Object beside the part) and
                        Export flat pattern DXF. One bend per edge, no
                        reliefs or hems — by design.
+  - `sheet_body.py` / `sheet_metal_ops.py` / `sheet_metal_ui.py` /
+    `sheet_metal_mcp.py` / `icons_cad_sheet.py` — the **SHEET METAL tab**
+                       (2026-10-27, the user: SolidCraft "has a whole tab
+                       about it — introduce the same"; icons "like
+                       SolidWorks"). A `sheet_body` (bakedkit leaf) is a
+                       base OUTLINE (or an X, Z `contour` + width) plus
+                       `flanges` [panel, edge, height, angle, radius,
+                       insets], `hems`, `folds` (the outline = the blank,
+                       allowance centred on the line) and `perforate`;
+                       every piece is a Panel (polygon + edge tags in a 3D
+                       Frame AND a flat 2D frame) and each bend a shell
+                       sector between them (`bend_child`), unioned by
+                       Manifold — so the folded part and the flat pattern
+                       come from the same frames. Height to the OUTER
+                       virtual sharp (the parent edge set back (r+t)
+                       tan(a/2); past 150° the bend starts on the edge).
+                       `flat` shows the blank (holes cut). Rules are
+                       document variables `smr_<rule>_t/_r/_k/_hem`
+                       written into the body. Tab panels Create (Base
+                       Flange, Convert — thin cube / extruded shape / the
+                       old `sheet_metal` part —, Edge Flange, Fold, Hem,
+                       Path Flange, Contour Flange, Perforate, Create Flat
+                       Pattern), Modify (Unfold, Refold, Rules), Export
+                       (DXF with CUT / BEND_UP / BEND_DOWN / ETCH, bend
+                       table CSV); edge tools pick the edge in 3D
+                       (`nearest_edge`). Insert ▸ Sheet Metal; MCP
+                       `sheet_metal`. An edit that breaks the body is
+                       refused (`ops._set`). Next: corner reliefs, flanges
+                       on a picked FACE, flanges joined at corners.
   - `pattern.py`     — the **Pattern** wrapper (Blender's Array,
                        SolidWorks' linear/circular pattern; Repeat &
                        logic family): `kind` linear (`count` copies at

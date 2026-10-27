@@ -1651,6 +1651,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_sheet_metal(self, params) -> dict:
+        from . import sheet_metal_mcp
+        try:
+            return sheet_metal_mcp.run(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+
     def _t_bill_of_materials(self, params) -> dict:
         from . import bom_mcp
         try:

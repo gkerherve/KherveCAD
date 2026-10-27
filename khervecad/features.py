@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from . import (armature, brep, character, curve3d, curve_surface, curves2d,
                displace, gears, holes, outfit, regions2d, scatter,
-               shapekeys, skin,
+               shapekeys, sheet_body, skin,
                solids, strands, subd, textured, textures, threads, vpaint,
                weathering)
 
@@ -34,7 +34,7 @@ MODULES = [gears, threads, holes, solids, curves2d, curve3d, textures,
            textured, outfit, weathering, scatter, displace.KIT,
            armature.KIT, brep.KIT, curve_surface.KIT, subd.KIT,
            shapekeys.KIT, strands.KIT, skin.KIT, vpaint, character,
-           regions2d]
+           regions2d, sheet_body.KIT]
 
 NODE_TYPES = {}
 LEAVES = frozenset()

@@ -466,6 +466,8 @@ def build_insert_menu(win, menu):
             sub.addAction(_action(
                 win, spec["icon"], spec["label"], key,
                 lambda _=False, t=key: win._add_primitive(t)))
+    from . import sheet_metal_ui
+    sheet_metal_ui.build_menu(win, menu)
     return menu
 
 

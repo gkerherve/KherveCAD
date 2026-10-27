@@ -53,6 +53,9 @@ TABS = [
      ["create", "extrude", "cuts", "mechanical", "transform",
       "combine", "finish", "logic", "assemble", "solid_insert",
       "document"]),
+    # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
+    ("sheetmetal", "SHEET METAL", "Sheet Metal",
+     ["sheet_create", "sheet_modify", "sheet_export"]),
     ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
     ("form", "FORM", "Sculpt", ["form_create", "deform", "edit"]),
     ("character", "CHARACTER", "Character", ["figures", "character"]),
@@ -72,7 +75,8 @@ TABS = [
 ]
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
+EXTRA_PANELS = {"sheet_create": "Create", "sheet_modify": "Modify",
+                "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
                 "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "_move_tools": "Move", "curves": "Curves",
                 "surfaces": "From curves", "form_create": "Create form",
@@ -326,6 +330,7 @@ PAINT = {
     "analyse/check welds": "welds",
     "view/compare to reference image (overlay)": "ref_compare",
     "view/show dimensions": "dims_selection",
+    "view/show smart dimensions": "con_dimension",
     "view/clear dimensions": "dims_clear",
     "insert/subd box (smooth, edit its cage)": "subd_box",
     "tools/convert to subd (smooth cage)": "subd_convert",
@@ -446,6 +451,10 @@ def _panel_actions(win, key):
         # Create Region first, before Line (the user)
         tools.sort(key=lambda a: a.data() != "make_region")
         return title, first + tools
+    if key.startswith("sheet_"):
+        from . import sheet_metal_ui
+        return title, _painted(win, sheet_metal_ui.actions(
+            win, key[len("sheet_"):]))
     if key == "cuts":
         # SolidWorks' Extruded / Revolved / Swept / Lofted / Boundary Cut
         from . import cut_feature, hole_wizard

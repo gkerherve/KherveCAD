@@ -431,6 +431,15 @@ polygon or rectangle corner (kept sharp underneath, a corners row draws the \
 arc) or the corner two lines make. Shapes on a Front / Side plane sit in \
 one turned "<plane> sketch" group — add them there, in its frame.
 
+Sheet metal — a bent part (bracket, enclosure, chassis, tray, channel) is \
+ONE sheet_metal body, never boxes: create (a base outline, or a contour + \
+width for a channel / Z / hat), then flange each edge (height to the \
+OUTSIDE, angle +up / -down), hem, fold, perforate; a named rule \
+(set_rule) keeps thickness and bend radius in document variables. Read \
+the reply's 'edges' to choose panel + edge and its 'errors' after each \
+step; export_dxf / export_bend_table give the flat pattern for the laser \
+and the press brake.
+
 Holes — a bolt hole, tapped hole, counterbore or countersink is ONE \
 hole_wizard call: probe_surface for the face's point + normal, then \
 hole_wizard with the points, type, size (ISO M1-M64 or inch UNC / UNF like '1/4-20 UNC') and end (Through all / \
