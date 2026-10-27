@@ -192,6 +192,25 @@ class OptionsDialog(QDialog):
         super().accept()
 
 
+def action(win):
+    """The window's one Options action (gear), shared by the Edit menu
+    and the top bar — SolidWorks keeps its Options gear up there."""
+    act = getattr(win, "_options_act", None)
+    if act is None:
+        from PyQt5.QtWidgets import QAction
+        from . import icons
+        act = QAction(icons.icon("mdi.cog-outline"),
+                      language.tr("&Options..."), win)
+        act.setShortcut("Ctrl+,")
+        act.setMenuRole(QAction.NoRole)
+        act.setToolTip(language.tr(
+            "Options — units, dimension decimals, language, theme and "
+            "interface style in one window (Ctrl+,)"))
+        act.triggered.connect(lambda: open_dialog(win))
+        win._options_act = act
+    return act
+
+
 def open_dialog(win, page=0):
     dlg = OptionsDialog(win)
     dlg.pages.setCurrentRow(page)

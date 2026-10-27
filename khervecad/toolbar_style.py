@@ -264,6 +264,9 @@ def _fill_quick(win, bar):
     win._vibe_keep = set(bar.actions())
     win._quick_spacer = bar.addWidget(spacer)
     win._vibe_keep.add(win._quick_spacer)
+    from . import options_dialog
+    bar.addAction(options_dialog.action(win))     # SolidWorks' gear
+    win._vibe_keep.add(options_dialog.action(win))
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
     win._op_groups = {}

@@ -22,11 +22,44 @@ the Free Software Foundation, either version 3 of the License, or
 
 from . import language, mesh
 
-#: operations that pick their part in 3D when nothing is selected
-PICKED = ("hull", "bisect", "shell", "minkowski")
+#: operations that pick their part in 3D when nothing is selected —
+#: every tool that works on a solid (2026-10-27, the user: "all the
+#: tools ... done the same way" as Fillet and the extrudes)
+PICKED = ("hull", "bisect", "shell", "minkowski",
+          "translate", "rotate", "scale", "resize", "multmatrix",
+          "render", "pattern", "symmetry", "joint",
+          "bevel", "blend", "subdivide", "subd", "decimate", "remesh",
+          "wireframe", "bend", "twist", "taper", "lattice", "displace",
+          "sculpt", "weathering", "paint", "vertex_paint", "hair_cap",
+          "hair_strands", "shape_keys", "armature",
+          "difference", "intersection", "union",
+          "shrinkwrap", "scatter")
+#: these take SEVERAL parts: the body first, then the others; Done
+#: (or Esc) applies once enough are picked
+MULTI = {"difference": 2, "intersection": 2, "union": 2,
+         "shrinkwrap": 2, "scatter": 2}
+_MULTI_BANNER = {
+    "difference": "Combine ▸ Subtract: click the body to keep, then "
+                  "the bodies to cut away · Done applies",
+    "intersection": "Combine ▸ Common: click the bodies to intersect "
+                    "· Done applies",
+    "union": "Combine ▸ Add: click the bodies to join · Done applies",
+    "shrinkwrap": "Shrinkwrap: click the part to wrap, then the "
+                  "target · Done applies",
+    "scatter": "Scatter: click the part to copy, then the surface to "
+               "scatter it on · Done applies",
+}
 #: gap between the two halves of a new split, mm
 SPLIT_GAP = 5.0
 MINKOWSKI_RADIUS = 1.0
+
+
+def has_parts(window):
+    from . import meshedit_ui
+    try:
+        return bool(meshedit_ui._parts(window))
+    except Exception:
+        return False
 
 
 def pick_part(window, op):
@@ -38,17 +71,44 @@ def pick_part(window, op):
             "There is no solid in view — add a part first."), 6000)
         return
 
-    def picked(desc, node):
-        if desc is None or node is None:
-            window.statusBar().showMessage(language.tr("Cancelled."), 3000)
-            return
-        window.builder.active_tree().select_nodes([node])
+    need = MULTI.get(op, 1)
+    chosen = []
+    tree = window.builder.active_tree()
+
+    def finish():
+        tree.select_nodes(chosen)
         window._apply_operation(op)
 
-    window.view3d.start_pick(
-        picked, groups=parts,
-        banner=language.tr("Click the part to apply it to · Esc cancels"),
-        labeler=lambda desc, node: getattr(node, "name", ""))
+    def picked(desc, node):
+        if desc is None or node is None:
+            if need > 1 and len(chosen) >= need:
+                finish()
+            else:
+                window.statusBar().showMessage(language.tr(
+                    "Cancelled."), 3000)
+            return
+        if node not in chosen:
+            chosen.append(node)
+        if need == 1:
+            finish()
+            return
+        tree.select_nodes(chosen)            # the picks show as chosen
+        arm()
+
+    def arm():
+        left = [(k, t) for k, t in parts if k not in chosen]
+        if not left:
+            finish()
+            return
+        banner = language.tr(_MULTI_BANNER.get(
+            op, "Click the part to apply it to · Esc cancels"))
+        if need > 1:
+            banner += f"  ({len(chosen)} / {need}+)"
+        window.view3d.start_pick(
+            picked, groups=left, banner=banner,
+            labeler=lambda desc, node: getattr(node, "name", ""))
+
+    arm()
 
 
 def _local_box(node, env, fn):

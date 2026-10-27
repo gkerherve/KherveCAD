@@ -85,12 +85,13 @@ def test_every_bar_tool_is_on_the_ribbon(window, app, style):
     wanted += parts["docs"]
     missing = [a.text() for a in wanted if a not in on_ribbon]
     assert not missing
-    # file, undo and Vibe Model stay on the quick-access row
+    # file, undo, the Options gear and Vibe Model stay on the
+    # quick-access row
     quick = [a.text() for a in window._options_bar.actions()
              if a.text()]
     extra = ["Select", "Rebuild"] if style == "SolidWorks" else []
     assert quick == ["New", "Open", "Save", "Undo", "Redo"] + extra + \
-        ["Vibe Model"]
+        ["&Options...", "Vibe Model"]
     assert window.ribbon.tabs.count() == len(ribbon.TABS)
     ticked = [a.data() for a in window._interface_style_group.actions()
               if a.isChecked()]
@@ -131,7 +132,8 @@ def test_vibe_model_hides_the_ribbon_but_keeps_the_quick_row(window):
     shown = {a.text() for a in window._options_bar.actions()
              if a.isVisible() and a.text()}
     assert shown - {"Select", "Rebuild"} == {"New", "Open", "Save", "Undo",
-                                             "Redo", "Vibe Model"}
+                                             "Redo", "&Options...",
+                                             "Vibe Model"}
     toolbar_style.apply(window, "Fusion")        # stays in Vibe Model
     assert window._vibe_act.isChecked() and window._ribbon_bar.isHidden()
     window._vibe_act.trigger()

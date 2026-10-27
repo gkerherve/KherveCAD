@@ -369,6 +369,9 @@ def fill_classic(win, bar):
     for act in parts["docs"]:
         bar.addAction(act)
     bar.addSeparator()
+    from . import options_dialog
+    bar.addAction(options_dialog.action(win))
+    win._vibe_keep.add(options_dialog.action(win))
     bar.addAction(win._vibe_act)
     win._vibe_keep.add(win._vibe_act)
 

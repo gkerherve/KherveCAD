@@ -201,9 +201,19 @@ def _keep_selection(rows, operands):
     if not todo:
         return rows
     from .shrinkwrap import Target
-    target = Target(sel)
     centres = [tuple(sum(v[k] for v in rows[i][0]) / 3.0 for k in range(3))
                for i in todo]
+    # only a face inside the selection's box can lie on it: a far one
+    # made the nearest search walk ring after ring (a Subtract of two
+    # apart parts froze the window for minutes)
+    pts = np.asarray([v for tri in sel for v in tri], dtype=np.float64)
+    lo, hi = pts.min(axis=0) - ON_SURFACE, pts.max(axis=0) + ON_SURFACE
+    inside = [(i, c) for i, c in zip(todo, centres)
+              if all(lo[k] <= c[k] <= hi[k] for k in range(3))]
+    if not inside:
+        return rows
+    todo, centres = [i for i, _c in inside], [c for _i, c in inside]
+    target = Target(sel)
     near, _tri = target.nearest(centres)
     gap = np.linalg.norm(near - np.asarray(centres), axis=1)
     out = list(rows)

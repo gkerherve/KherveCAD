@@ -3304,6 +3304,23 @@ into a new module and import.
                        Difference round the part; an Object is drilled
                        INSIDE in its own frame (`body_of`). Update selected
                        re-sizes a feature. MCP `hole_wizard`.
+  - `options_dialog.py` — Edit ▸ Options… (Ctrl+,; 2026-10-27, the user:
+                       "like SolidWorks"): System Options (language,
+                       theme, interface style, OpenSCAD) and Document
+                       Properties (unit, scale, $fn, dimension decimals
+                       `units.DIM_DECIMALS` + trailing zeros, QSettings
+                       `options/*`). ONE action (`action(win)`) shared by
+                       the Edit menu and the TOP bar (a gear before Vibe
+                       Model in every style, as SolidWorks' quick-access
+                       Options), and the Utilities ▸ Options panel.
+  - `op_pick.py`     — every solid tool (`PICKED`: transforms, hull,
+                       split, shell, minkowski, deformers, sculpt / paint,
+                       combine...) run with NOTHING selected asks for a
+                       click on the part in 3D, as Fillet does; `MULTI`
+                       tools (Combine add / subtract / common,
+                       shrinkwrap, scatter) take the body then the others
+                       and apply on Done / Esc. Pattern / Group with no
+                       parts in view still add an empty container.
   - `tree_menu.py`    — the tree's right-click menu made compact
                        (2026-10-21): everyday commands on top, the rest in
                        Clipboard / Position / Modify / Organise submenus,
