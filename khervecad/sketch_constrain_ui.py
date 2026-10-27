@@ -733,6 +733,36 @@ def _smart(first, second):
     return None
 
 
+def _rehome(scene, pick, container):
+    """A "Reference point" made by a click on the model, remade inside
+    *container*; None when *pick* is not one."""
+    node, name, kind = pick
+    if node.parent is container or node.name != "Reference point" or \
+            node.params.get("modifier") != "%" or kind != "point":
+        return None
+    from PyQt5.QtCore import QPointF
+    from . import face_outline
+    old = node.parent
+    x, y = float(node.params["x"]), float(node.params["y"])
+    try:
+        ref = sc.ref_of(old, node, "c")
+        rows = [r for r in sc.rows(old)
+                if not (r["kind"] == "fix" and r["refs"] == [ref])]
+        if any(ref in r.get("refs", ()) for r in rows):
+            return None                  # used by another dimension
+        if old.children and old.children[-1] is not node:
+            return None                  # removing it would renumber rows
+        old.params["constraints"] = rows
+        if not rows:
+            old.params.pop("constraints", None)
+        scene.model.remove_node(node)
+        made = face_outline.reference(scene, QPointF(x, y), "point",
+                                      parent=container)
+    except Exception:
+        return None
+    return made
+
+
 def _hide_references(scene, chosen):
     """A face's edge / point copied in to dimension to (face_outline.
     reference) is hidden once the dimension holds it (the user): the
@@ -786,6 +816,12 @@ def dimension_press(scene, event):
         if hit is None:
             scene.status.emit("Dimension: click the second point or line.")
             return
+        if hit[0].parent is not first[0].parent:
+            # the part's origin / a face point clicked FIRST was put in the
+            # sketch Group; the hole's circle lives in its extrude — move
+            # that reference beside the second pick, whichever came first
+            first = _rehome(scene, first, hit[0].parent) or first
+            hit = _rehome(scene, hit, first[0].parent) or hit
         if hit[0].parent is not first[0].parent:
             scene.status.emit("Dimensions join shapes of one group.")
             return
