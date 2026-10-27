@@ -639,3 +639,13 @@ def test_cut_icons_are_painted_when_the_style_is_applied_once(app):
     finally:
         win._dirty = False
         win.close()
+
+
+def test_solidworks_orders_tabs_like_its_command_manager():
+    from khervecad import ribbon
+    sw = [t[0] for t in ribbon.tab_order(False)]
+    assert sw[:5] == ["features", "sketch", "surface", "sheetmetal",
+                      "inspect"]
+    assert sorted(sw) == sorted(t[0] for t in ribbon.TABS)
+    fusion = [t[0] for t in ribbon.tab_order(True)]
+    assert fusion.index("sheetmetal") < fusion.index("character")

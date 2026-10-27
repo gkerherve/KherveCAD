@@ -38,7 +38,7 @@ def entries(ribbon):
     """[(label, tab index, panel title, action)] for every command."""
     from . import ribbon as rb
     out, seen = [], set()
-    for i, (_key, _f, _s, panels) in enumerate(rb.TABS):
+    for i, (_key, _f, _s, panels) in enumerate(getattr(ribbon, "order", rb.TABS)):
         tab = ribbon.tabs.tabText(i).replace("&", "")
         for panel in panels:
             title, acts = rb.panel_actions(ribbon.win, panel)

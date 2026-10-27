@@ -74,6 +74,22 @@ TABS = [
     ("build", "BUILD", "Builders", ["builders"]),
 ]
 
+#: SolidWorks' own CommandManager order (2026-10-27, the user): Features
+#: first, Sketch beside it, then Surfaces, Sheet Metal and Evaluate; the
+#: tabs SolidWorks has no counterpart for follow
+SW_ORDER = ["features", "sketch", "surface", "sheetmetal", "inspect",
+            "form", "character", "publish", "utilities", "build"]
+
+
+def tab_order(fusion):
+    """The TABS entries in the order the style shows them."""
+    if fusion:
+        return list(TABS)
+    by_key = {t[0]: t for t in TABS}
+    return [by_key[k] for k in SW_ORDER if k in by_key] + \
+        [t for t in TABS if t[0] not in SW_ORDER]
+
+
 #: panels that are not operation families: key -> title
 EXTRA_PANELS = {"sheet_create": "Create", "sheet_modify": "Modify",
                 "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
@@ -622,7 +638,8 @@ class Ribbon(QWidget):
         if not self.fusion:
             self.tabs.setShape(QTabBar.RoundedSouth)
         self.stack = QStackedWidget(self)
-        for key, fusion_title, sw_title, panels in TABS:
+        self.order = tab_order(self.fusion)
+        for key, fusion_title, sw_title, panels in self.order:
             self.tabs.addTab(language.tr(fusion_title if self.fusion
                                          else sw_title))
             self.stack.addWidget(self._page(panels))
@@ -653,11 +670,17 @@ class Ribbon(QWidget):
             outer.addWidget(self.stack)
             outer.addLayout(tab_row)
 
+        # remembered by KEY: the two styles order the tabs differently
         saved = QSettings(*_SETTINGS).value(TAB_KEY, 0)
-        try:
-            index = min(max(int(saved), 0), len(TABS) - 1)
-        except (TypeError, ValueError):
-            index = 0
+        keys = [t[0] for t in self.order]
+        if saved in keys:
+            index = keys.index(saved)
+        else:
+            try:
+                index = min(max(int(saved), 0), len(TABS) - 1)
+                index = keys.index(TABS[index][0])
+            except (TypeError, ValueError):
+                index = 0
         self.tabs.setCurrentIndex(index)
         self.stack.setCurrentIndex(index)
         self.tabs.currentChanged.connect(self._tab_changed)
@@ -676,11 +699,13 @@ class Ribbon(QWidget):
     # ------------------------------------------------------------ tabs
     def _tab_changed(self, index):
         self.stack.setCurrentIndex(index)
-        QSettings(*_SETTINGS).setValue(TAB_KEY, index)
+        if 0 <= index < len(self.order):
+            QSettings(*_SETTINGS).setValue(TAB_KEY, self.order[index][0])
         # leaving the SKETCH tab finishes the sketch (there is no Finish
         # Sketch button any more)
         from . import sketch_mode
-        if 0 <= index < len(TABS) and TABS[index][0] != "sketch" and \
+        if 0 <= index < len(self.order) and \
+                self.order[index][0] != "sketch" and \
                 sketch_mode.sketching(self.win):
             sketch_mode.finish(self.win)
         self._fit()
@@ -690,7 +715,7 @@ class Ribbon(QWidget):
 
     def show_tab(self, key):
         """Bring the tab *key* ("features", "form"...) to the front."""
-        for i, tab in enumerate(TABS):
+        for i, tab in enumerate(self.order):
             if tab[0] == key:
                 self.tabs.setCurrentIndex(i)
 
@@ -703,7 +728,7 @@ class Ribbon(QWidget):
         b.setToolButtonStyle(Qt.ToolButtonTextOnly)
         b.setToolTip(language.tr("Pick a tab of tools"))
         menu = QMenu(b)
-        for i, tab in enumerate(TABS):
+        for i, tab in enumerate(self.order):
             menu.addAction(language.tr(tab[1]).title(),
                            lambda i=i: self.tabs.setCurrentIndex(i))
         b.setMenu(menu)
