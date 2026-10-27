@@ -283,3 +283,30 @@ def test_dimension_a_face_sketch_to_the_part_origin(window, app):
     c = face_sketch.to_world(group, hole.params["x"], hole.params["y"])
     assert abs(math.hypot(c[0], c[1]) - 50) < 1e-3
     window.model.remove_node(group)
+
+
+def test_part_origin_reference_joins_a_circle_inside_an_extrude(window, app):
+    """The cut's circle lives in its Extruded Cut, under the sketch Group:
+    the part-origin point must land beside it, or the dimension between
+    them is refused ("Dimensions join shapes of one group")."""
+    from PyQt5.QtCore import QPointF
+    from khervecad import face_outline, face_sketch
+    ex = McpToolExecutor(window)
+    ex.execute("apply_code", {"code":
+                              "translate([-49, -21, 0]) cube([98, 42, 20]);"})
+    app.processEvents()
+    part = window.model.root.children[-1]
+    group = face_sketch.make(window, part, (28.0, 0.0, 20.0), (0, 0, 1))
+    app.processEvents()
+    scene = window.view2d.scene()
+    pts = {k: (x, y) for x, y, k in scene.face_outline["points"]}
+    ox, oy = pts["part origin"]
+    ext = window.model.add_node("linear_extrude", dict(height=20),
+                                parent=group)
+    hole = window.model.add_node("circle", dict(x=0.0, y=0.0, radius=6),
+                                 parent=ext)
+    app.processEvents()
+    ref = face_outline.reference(scene, QPointF(ox, oy), "point",
+                                 parent=hole.parent)
+    assert ref is not None and ref[0].parent is ext
+    window.model.remove_node(group)

@@ -759,7 +759,9 @@ def dimension_press(scene, event):
         # on the face's own edge or corner: dimension to it (SolidWorks)
         from . import face_outline
         try:
-            hit = face_outline.reference(scene, event.scenePos())
+            hit = face_outline.reference(
+                scene, event.scenePos(),
+                parent=picks[0][0].parent if picks else None)
         except Exception:
             hit = None
     if not picks:

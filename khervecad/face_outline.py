@@ -510,7 +510,7 @@ def paint_hint(view, painter):
     painter.restore()
 
 
-def reference(scene, pos, want=None):
+def reference(scene, pos, want=None, parent=None):
     """The face under a constraint / dimension click when no sketch shape
     is: SolidWorks lets you dimension to the model's edges. A fixed
     CONSTRUCTION copy is added to the sketch — a line along the edge, or
@@ -522,6 +522,11 @@ def reference(scene, pos, want=None):
     group = resolver() if resolver else None
     if not info or group is None:
         return None
+    # into the container of the shape it is dimensioned to (a cut's
+    # circle lives inside its extrude, not in the sketch Group): a
+    # dimension joins shapes of ONE container, else it was refused
+    if parent is not None:
+        group = parent
     views = scene.views()
     k = abs(views[0].transform().m11()) if views else 1.0
     model = scene.model
