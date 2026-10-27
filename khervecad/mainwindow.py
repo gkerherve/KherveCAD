@@ -992,6 +992,11 @@ class MainWindow(QMainWindow):
             from . import drag_feature
             drag_feature.pick(self, op)
             return
+        from . import op_pick
+        if not nodes and op in op_pick.PICKED:
+            # nothing selected: click the part in the 3D view (as Fillet)
+            op_pick.pick_part(self, op)
+            return
         if not nodes:
             if op in ("for_loop", "while_loop", "if_else", "union",
                       "pattern", "intersection_for", "let"):
@@ -1010,6 +1015,7 @@ class MainWindow(QMainWindow):
             guide = getattr(self, "tool_guide", None)
             if guide is not None:
                 guide.applied(op, wrapper, nodes)
+            op_pick.after_wrap(self, op, wrapper)
             if op == "fillet":                # now: which edges?
                 self.start_fillet_pick(wrapper)
             elif op == "sculpt":              # now: where to push?
