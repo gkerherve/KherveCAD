@@ -78,8 +78,14 @@ def faces(shapes, any_state=False):
             owners.append(shapes.index(s))
     # two open runs of lines whose ends rest on other shapes close a
     # region between them (two circles joined by two lines)
-    for loop, first in bridges(lines, secs[closed_shapes:]):
+    shapes_cs = secs[closed_shapes:]
+    for loop, first in bridges(lines, shapes_cs):
         cs = _cross_section([loop])
+        # only the band between the lines: its closing chords cut across
+        # the circles it rests on, splitting a hole inside them in two
+        for other in shapes_cs:
+            if cs is not None and not cs.is_empty():
+                cs = cs - other
         if cs is not None and not cs.is_empty():
             secs.append(cs)
             owners.append(shapes.index(first))
@@ -623,7 +629,14 @@ def overlapping(container):
     """True when the container's shapes cut each other into more
     regions than there are shapes (a circle ON a rectangle)."""
     shapes = shapes_of(container)
-    return len(shapes) >= 2 and len(faces(shapes)) > len(shapes)
+    if len(shapes) < 2:
+        return False
+    got = len(faces(shapes))
+    if got > len(shapes):
+        return True
+    # lines bridging shapes (two circles joined by two lines) add a band
+    lines = [n for n in shapes if n.type == "line"]
+    return bool(lines) and got > len(shapes) - len(lines)
 
 
 def overlap_container(window, nodes):

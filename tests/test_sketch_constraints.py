@@ -821,3 +821,20 @@ def test_coincident_picks_a_curve_first_too(view):
     row = sc.rows(m.root)[-1]
     assert row["kind"] == "point_on" and row["refs"] == ["1.p1", "0.o"]
     assert abs(c.params["x"]) < 1e-3
+
+
+def test_tangent_lines_do_not_split_a_hole_inside_the_circles():
+    """Two circles with holes joined by two lines: each hole stays ONE
+    face (the band's closing chords used to cut it in two)."""
+    from khervecad.model import DocumentModel
+    from khervecad import sketch_regions as sr
+    m = DocumentModel()
+    g = m.add_node("union", {})
+    for x, r in ((0, 10), (40, 8), (0, 4), (40, 3)):
+        m.add_node("circle", dict(x=x, y=0, radius=r), parent=g)
+    m.add_node("line", dict(x1=0, y1=10, x2=40, y2=8, width=0.1), parent=g)
+    m.add_node("line", dict(x1=0, y1=-10, x2=40, y2=-8, width=0.1),
+               parent=g)
+    got = sr.faces(sr.shapes_of(g))
+    for x in (0, 40):
+        assert sr.face_at(got, (x, 0.5)) == sr.face_at(got, (x, -0.5))

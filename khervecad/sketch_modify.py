@@ -505,7 +505,7 @@ TIPS = {
                  "those regions is made and the sketch shapes are "
                  "hidden."],
                 "Set the height in Properties, or drag the arrow in 3D."),
-    "make_region": ("Create region",
+    "make_region": ("Create region — group the 2D, extrude later",
                     "Makes a Regions node from overlapping sketch shapes: "
                     "the regions you click, the shapes inside it with "
                     "their Smart Dimensions — extrude or revolve it later.",

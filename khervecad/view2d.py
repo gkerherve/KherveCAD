@@ -209,7 +209,8 @@ class ShapeItem:
             free = self.node.type in ("line", "polygon", "text")
             center = self.boundingRect().center()
             for role, pos in self.handle_spec():
-                cur = Qt.SizeAllCursor if free else _resize_cursor(
+                cur = Qt.SizeAllCursor if free or role == "center" \
+                    else _resize_cursor(
                     pos.x() - center.x(), pos.y() - center.y())
                 handle = HandleItem(role, self, hot=(role == hot),
                                     cursor=cur)
@@ -360,10 +361,16 @@ class CircleShapeItem(ShapeItem, QGraphicsEllipseItem):
         self._scene.model.node_changed.emit(self.node)
 
     def handle_spec(self):
-        return [("radius", QPointF(self.rv("radius", 1.0), 0))]
+        # the centre is a handle too: drag it to move the circle
+        return [("radius", QPointF(self.rv("radius", 1.0), 0)),
+                ("center", QPointF(0, 0))]
 
     def handle_dragged(self, role, scene_pos):
         p = self.node.params
+        if role == "center":
+            p["x"], p["y"] = scene_pos.x(), scene_pos.y()
+            self._scene.model.node_changed.emit(self.node)
+            return
         center = self.pos()
         radius = ((scene_pos.x() - center.x()) ** 2 +
                   (scene_pos.y() - center.y()) ** 2) ** 0.5
