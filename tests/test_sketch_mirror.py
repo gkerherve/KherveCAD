@@ -264,3 +264,22 @@ def test_in_the_window_the_panel_stands_beside_the_sketch(app):
     finally:
         w._dirty = False
         w.close()
+
+
+def test_a_centerline_is_not_drawn_in_3d(app):
+    """Construction geometry is for the sketch: the 3D view draws
+    nothing of a centerline or a construction circle; a % on a 3D part
+    keeps its grey ghost."""
+    from khervecad import mesh
+    m = DocumentModel()
+    centre = m.add_node("line", dict(x1=0, y1=-10, x2=0, y2=30,
+                                     modifier="%"))
+    point = m.add_node("circle", dict(x=5, y=5, radius=0.25,
+                                      modifier="%"))
+    shape = m.add_node("circle", dict(x=-14, y=20, radius=3))
+    assert mesh.tessellate(centre) == [] and mesh.tessellate(point) == []
+    assert mesh.tessellate(shape)
+    cube = m.add_node("cube", dict(width=5, depth=5, height=5),)
+    cube.params["modifier"] = "%"
+    ghost = mesh.tessellate_colored(cube)
+    assert ghost and ghost[0][1][0] == mesh.MODIFIER_TINT["%"][0]

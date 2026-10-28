@@ -1518,6 +1518,11 @@ def _tess(node, env, color, sel, selected):
             out.extend(_tess(child, env, color, sel, selected))
         return out
     mod = node.params.get("modifier")
+    if mod == "%" and node.category == SHAPE_2D:
+        # construction geometry (a centerline, a construction circle or
+        # point) belongs to the 2D sketch only (the user: not a grey ghost
+        # in the 3D view); a % on a 3D part still shows as its ghost
+        return []
     if mod in MODIFIER_TINT and node.id not in _MODIFIER_ACTIVE:
         _MODIFIER_ACTIVE.add(node.id)
         try:
