@@ -256,8 +256,9 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
             pen = _pen("#7a8a99", 1.2)
             pen.setStyle(Qt.DashLine)
         else:
-            pen = _pen("#2e3440", max(self.rv("width", 1.0), 0.5))
-            pen.setCosmetic(False)
+            # drawn as a sketch line, a hair whatever its width (the
+            # width only matters once it is extruded on its own)
+            pen = _pen("#2e3440", 1.6)
             pen.setCapStyle(Qt.RoundCap)
         self.setPen(pen)
         self.reposition_handles()

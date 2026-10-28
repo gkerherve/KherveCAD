@@ -729,3 +729,16 @@ def test_a_dimension_made_while_hidden_shows_when_shown_again(view,
     drawn = ui._paint_dimensions(view, p)
     p.end()
     assert drawn, "the dimension is not drawn once shown again"
+
+
+def test_tangent_moves_the_line_not_the_circle():
+    """Drawing a line tangent to a circle: the circle stays put."""
+    from khervecad.model import DocumentModel
+    from khervecad import sketch_constraints as C
+    m = DocumentModel()
+    g = m.add_node("union", {})
+    c = m.add_node("circle", dict(x=0, y=0, radius=30), parent=g)
+    m.add_node("line", dict(x1=-25, y1=5, x2=-10, y2=80), parent=g)
+    C.add(m, g, "tangent", ["1.l", "0.o"])
+    assert abs(c.params["x"]) < 1e-3 and abs(c.params["y"]) < 1e-3
+    assert abs(c.params["radius"] - 30) < 1e-3

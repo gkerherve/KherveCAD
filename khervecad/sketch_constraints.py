@@ -548,11 +548,17 @@ def add(model, container, kind, refs, value=None, edge=None):
     check_row(container, row)
     rs = rows(container) + [row]
     env = _env(model)
-    report = solve(container, rs, env=env, write=False)
+    # a line tied to a circle (tangent, on it) moves, the circle stays:
+    # the line is what is being drawn to it, as in SolidWorks
+    shapes = [entity(container, r)[0] for r in refs]
+    keep = ([(n.id, path) for n in shapes if n.type != "line"
+             for path, _v in _vars(n, False)]
+            if any(n.type == "line" for n in shapes) else [])
+    report = solve(container, rs, env=env, write=False, held=keep)
     if not report["ok"]:
         raise Conflict("%s cannot hold with the sketch's other "
                        "constraints." % KINDS[kind][0])
-    report = solve(container, rs, env=env)
+    report = solve(container, rs, env=env, held=keep)
     container.params[KEY] = rs
     _remember(_nodes_of(container, rs))
     model._last_sketch = container          # its marks show (the 2D view)
