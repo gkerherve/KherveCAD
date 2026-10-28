@@ -2693,6 +2693,7 @@ class SketchView(QGraphicsView):
                 sketch_constrain_ui.handles(self.scene().tool) or \
                 self.scene().tool in ("sk_trim", "sk_extend",
                                       "sk_fillet", "sk_chamfer",
+                                      "sk_mirror",
                                       "regions", "make_region"):
             event.accept()                     # right-click finished it
             return
@@ -2977,6 +2978,10 @@ class SketchView(QGraphicsView):
             pass
         elif scene.tool in ("regions", "make_region") and \
                 sketch_regions.key(scene, event):
+            pass
+        elif scene.tool == "sk_mirror" and \
+                __import__("khervecad.sketch_mirror",
+                           fromlist=["key"]).key(scene, event):
             pass
         elif sketch_constrain_ui.handles(scene.tool) and \
                 sketch_constrain_ui.key(scene, event):

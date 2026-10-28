@@ -3143,6 +3143,39 @@ into a new module and import.
                        line + empty click → length, two lines → angle, two
                        points → distance, point + line); a selected
                        polygon shows every side's length.
+  - `sketch_mirror.py` — **Mirror Entities** (2026-10-28, the user: the
+                       Mirror feature reflects about a face, not right for
+                       a sketch): sketch shapes mirrored about a LINE —
+                       usually a centerline. The selection (with one
+                       centerline it mirrors at once) or clicks with the
+                       "sk_mirror" tool, then a click on a centerline;
+                       Enter / right-click first makes any line the
+                       mirror. Its window (tool_panel) has the two boxes:
+                       Entities to mirror, Mirror about. A copy is the same kind of shape (a rect
+                       about a slanted line becomes a polygon, an arc's
+                       start angle is reflected, a polygon's own x / y
+                       origin reflected with its points) tied by Symmetric
+                       relations (Equal for circles). SKETCH ▸ Modify panel
+                       (`sketch_modify.TOOLS`), MCP `sketch_modify` action
+                       `mirror`. A Symmetric mark shows on its two points
+                       only, not piled on the centerline.
+  - `tool_panel.py` / `extrude_panel.py` — **tool windows** (2026-10-28,
+                       the user, from SolidCraft: "very easy, very
+                       descriptive ... for many types of tools"): a
+                       `ToolPanel` stands BESIDE the view it serves (over
+                       the tree column, never on the drawing), themed from
+                       `style.tokens`, built from selection boxes (the
+                       active one outlined), choices, numbers, checks,
+                       sections and OK / Cancel. Mirror Entities uses it;
+                       `extrude_panel` opens with every extrude arrow
+                       (`drag_feature.start` / `exit`): Profiles,
+                       Direction (One side / Two sides `height2` /
+                       Symmetric `center`), End condition (Blind / Through
+                       all), Distance, Distance 2, Reverse — applied live,
+                       the arrow's drag shown, OK / Cancel = the drag
+                       tool's. Its own edits set `busy`, so the selection
+                       moving (Reverse wraps a mirror) does not close it.
+                       Next tools for it: Revolve, Fillet, Chamfer, Hole.
   - `equalize.py`    — **equal sizes between parts** (2026-10-21, the
                        user: "choose two surfaces to be the same"): two
                        size params share ONE new / reused document

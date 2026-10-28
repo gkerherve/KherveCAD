@@ -35,6 +35,7 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (EXTEND, "mdi.arrow-expand-right", "Extend"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
+         ("sk_mirror", "mdi.flip-horizontal", "Mirror Entities"),
          # (no Extrude regions button: Extruded Boss/Base on overlapping
          # shapes picks the regions itself — the user, 2026-10-25)
          ("make_region", "mdi.vector-union", "Create region")]
@@ -360,7 +361,7 @@ def _band(pts, width):
 # ------------------------------------------------------- the 2D view
 def handles(tool):
     return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
-                    "sk_construction")
+                    "sk_construction", "sk_mirror")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -379,6 +380,10 @@ def press(scene, event):
     from PyQt5.QtCore import Qt
     from . import sketch_constrain_ui as scu
     event.accept()
+    if scene.tool == "sk_mirror":
+        from . import sketch_mirror
+        sketch_mirror.press(scene, event)
+        return
     if scene.tool in ("regions", "make_region") and \
             event.button() == Qt.RightButton:
         from . import sketch_regions
@@ -474,6 +479,9 @@ def _ask(scene, tool):
 
 def drop(scene):
     scene._sk_first = None
+    if getattr(scene, "_mirror", None) is not None:
+        from . import sketch_mirror
+        sketch_mirror.drop(scene)
     if getattr(scene, "_regions", None) is not None:
         from . import sketch_regions
         sketch_regions.drop(scene)
@@ -524,6 +532,8 @@ def panel_actions(win):
     from PyQt5.QtWidgets import QAction
     from . import icons, language, toolbars, tooltips
     tooltips.TIPS.update(TIPS)
+    from . import sketch_mirror
+    tooltips.TIPS.update(sketch_mirror.TIPS)
     acts = []
     for tool, glyph, label in TOOLS:
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
@@ -534,6 +544,9 @@ def panel_actions(win):
         tooltips.apply(act, tool)
         if tool in ("regions", "make_region"):
             act.triggered.connect(lambda _=False, t=tool: _regions(win, t))
+        elif tool == "sk_mirror":
+            act.triggered.connect(
+                lambda _=False: sketch_mirror.start(win))
         else:
             act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)
@@ -652,4 +665,19 @@ def run_mcp(window, params):
         shape = out if hasattr(out, "params") else shape
         return {"result": action, "node_id": shape.id,
                 "corners": shape.params.get("corners", [])}
-    raise ValueError("action is trim, extend, fillet or chamfer.")
+    if action == "mirror":
+        from . import sketch_mirror
+        ids = params.get("node_ids") or []
+        if not ids or params.get("mirror_line") is None:
+            raise ValueError("Give node_ids (the shapes) and mirror_line "
+                             "(the line to mirror about).")
+        line = node(params["mirror_line"])
+        if line.type != "line":
+            raise ValueError("mirror_line must be a line; %s is a %s."
+                             % (line.name, line.type))
+        copies, skipped = sketch_mirror.mirror(
+            model, [node(i) for i in ids], line,
+            relate=params.get("relate", True))
+        return {"result": "mirrored", "node_ids": [c.id for c in copies],
+                "skipped": skipped}
+    raise ValueError("action is trim, extend, fillet, chamfer or mirror.")

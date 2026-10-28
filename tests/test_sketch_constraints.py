@@ -314,8 +314,11 @@ def test_sketch_dimension_tool(view, monkeypatch):
     _click(view, 20, 1.5)
     _click(view, 60, -30)
     assert abs(_len(a) - 33) < 1e-3
-    # a circle: its diameter at once
+    # a circle, then empty paper: its diameter (a circle waits for a
+    # second circle / point / line first — centre distances)
     _click(view, 24, -15)
+    assert not sc.rows(m.root)[1:]          # nothing yet
+    _click(view, 60, 20)
     assert c.params["radius"] == pytest.approx(5)
     kinds = [r["kind"] for r in sc.rows(m.root)]
     assert kinds == ["length", "diameter"]
@@ -478,6 +481,7 @@ def test_diameter_value_drags_out_of_the_way(view, monkeypatch):
     view.scene().ask_value = lambda kind, measured: "10"
     view.set_tool(ui.DIMENSION)
     _click(view, 24, -15)
+    _click(view, 24, -15)                 # the circle again: its diameter
     view.set_tool("select")
     view.viewport().repaint()
     QApplication.processEvents()
@@ -562,6 +566,7 @@ def test_smart_dimension_gives_a_slots_end_radius(view, monkeypatch):
     view.set_tool(ui.DIMENSION)
     QApplication.processEvents()
     _click(view, 29, 0)                   # on the right round end
+    _click(view, 60, 40)                  # empty paper: its radius
     rows = sc.rows(m.root)
     assert [r["kind"] for r in rows] == ["radius"]
     assert rows[0]["refs"] == ["0.a2"]
@@ -586,6 +591,7 @@ def test_a_slot_radius_drags_and_retypes_under_smart_dimension(view,
     view.set_tool(ui.DIMENSION)
     QApplication.processEvents()
     _click(view, 29, 0)
+    _click(view, 29, 0)                   # the round end again: R
     view.viewport().repaint()
     QApplication.processEvents()
     rect, _ctx = next(h for h in view._dim_hits if h[1][1] == "constraint")
@@ -844,3 +850,36 @@ def test_tangent_lines_do_not_split_a_hole_inside_the_circles():
     got = sr.faces(sr.shapes_of(g))
     for x in (0, 40):
         assert sr.face_at(got, (x, 0.5)) == sr.face_at(got, (x, -0.5))
+
+
+def test_two_circles_give_the_distance_between_their_centres(view,
+                                                             monkeypatch):
+    """The user: clicking a circle gave its diameter at once, so the
+    distance between two circles could not be set. A circle then another
+    circle is the centre-to-centre distance; a circle then a line, the
+    centre to the line."""
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    a = m.add_node("circle", dict(x=0, y=0, radius=4))
+    b = m.add_node("circle", dict(x=30, y=0, radius=3))
+    ln = m.add_node("line", dict(x1=-10, y1=-20, x2=40, y2=-20))
+    answers = iter(["40", "25"])
+    view.scene().ask_value = lambda kind, measured: next(answers)
+    view.set_tool(ui.DIMENSION)
+    _click(view, 4, 0)                      # circle a's rim
+    _click(view, 27, 0)                     # circle b's rim
+    row = sc.rows(m.root)[-1]
+    assert row["kind"] == "distance" and sorted(row["refs"]) == \
+        ["0.c", "1.c"]
+    assert math.hypot(b.params["x"] - a.params["x"],
+                      b.params["y"] - a.params["y"]) == pytest.approx(
+        40, abs=1e-3)
+    assert a.params["radius"] == pytest.approx(4)       # sizes untouched
+    assert b.params["radius"] == pytest.approx(3)
+    _click(view, a.params["x"] + 4, a.params["y"])      # circle a…
+    _click(view, 0, -20)                                # …the line
+    row = sc.rows(m.root)[-1]
+    assert row["kind"] == "point_line" and row["refs"][0] == "0.c"
+    d = sc._pl_dist((a.params["x"], a.params["y"]),
+                    sc._line(ln, "l", {}))
+    assert abs(d) == pytest.approx(25, abs=1e-3)

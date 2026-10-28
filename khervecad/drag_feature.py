@@ -171,6 +171,13 @@ def start(window, node=None, quiet=False, created=False):
     view.edit_tool = tool
     view.setMouseTracking(True)
     view.update()
+    # its window: profiles, direction, end condition, distance, OK
+    try:
+        from . import extrude_panel
+        extrude_panel.show(window, tool)
+    except Exception:                          # never stop the arrow
+        import traceback
+        traceback.print_exc()
     window.statusBar().showMessage(language.tr(
         "Drag the blue arrow up or down (Ctrl snaps); click the value to "
         "type it. Select something else when done."), 8000)
@@ -193,6 +200,9 @@ def follow_selection(window, nodes):
     takes an arrow that came that way down again."""
     view = window.view3d
     tool = view.edit_tool
+    from . import extrude_panel
+    if extrude_panel.busy(window):
+        return                  # the Extrude window is changing its own
     node = nodes[0] if len(nodes) == 1 else None
     target = node if node is not None and node.type in KINDS else None
     if isinstance(tool, DragFeature):
@@ -497,6 +507,11 @@ class DragFeature:
         return True
 
     def exit(self):
+        try:
+            from . import extrude_panel
+            extrude_panel.close(self.window, self)
+        except Exception:                       # pragma: no cover
+            pass
         watch = getattr(self, "_watch", None)
         if watch is not None:
             try:

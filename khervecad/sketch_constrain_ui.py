@@ -589,6 +589,10 @@ def glyphs(view):
                 place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
                       index)
             else:
+                if row["kind"] == "symmetric" and len(spots) == 3:
+                    # on its two points only: every pair mirrored about
+                    # one centerline piled its mark up on that line
+                    spots = spots[:2]
                 for spot in spots:
                     place(spot, MARK.get(row["kind"], "?"), cont, index)
     return out, font
@@ -842,12 +846,21 @@ def _smart(first, second):
     """(kind, picks) a Fusion-style sketch dimension makes of one or two
     picks — None when it needs another click."""
     k1 = first[2]
-    if k1 == "circle":
+    if second is None:
+        # a circle WAITS (the user: a click on a circle gave its diameter
+        # at once, so two circles' centres could not be dimensioned): a
+        # second circle / point / line measures from its centre, an
+        # empty click or the same circle again gives its size
+        return None
+    if k1 == "circle" and second[:2] == first[:2]:
         # a slot's end gives its radius, a circle its diameter
         return ("radius" if str(first[1]).startswith("a") else
                 "diameter"), [first]
-    if second is None:
-        return None
+    if k1 == "circle":
+        first = _centre(first)
+        k1 = "point"
+    if second[2] == "circle" and k1 != "circle":
+        second = _centre(second)
     k2 = second[2]
     if k1 == "line" and k2 == "line":
         if second[:2] == first[:2]:
@@ -864,10 +877,18 @@ def _smart(first, second):
         return "point_line", [first, second]
     if k1 == "line" and k2 == "point":
         return "point_line", [second, first]
-    if k2 == "circle":
-        return ("radius" if str(second[1]).startswith("a") else
-                "diameter"), [second]
     return None
+
+
+def _centre(pick):
+    """A circle pick as its centre point: a circle's c, a slot end's
+    centre (its line's end)."""
+    node, name, _kind = pick
+    if node.type == "circle":
+        return (node, "c", "point")
+    if str(name).startswith("a"):
+        return (node, "p1" if name == "a1" else "p2", "point")
+    return pick
 
 
 def _rehome(scene, pick, container):
@@ -911,8 +932,10 @@ def _hide_references(scene, chosen):
 
 
 def dimension_press(scene, event):
-    """The sketch Dimension tool: a circle gives its diameter at once; a
-    line then a click off the geometry (or on the same line) its length;
+    """The sketch Dimension tool: a circle then a click off the geometry
+    (or on it again) its diameter, then another circle / point / line the
+    distance from its centre; a line then a click off the geometry (or
+    on the same line) its length;
     two lines the angle; two points the distance; a point and a line
     the distance between them. The value typed DRIVES the shapes."""
     from PyQt5.QtCore import Qt
@@ -939,17 +962,21 @@ def dimension_press(scene, event):
         made = _smart(hit, None)
         if made is None:
             picks.append(hit)
-            scene.status.emit("Dimension: click a second line or point — "
-                              "or anywhere empty for this one's length."
-                              if hit[2] == "line" else
-                              "Dimension: click the second point or a "
-                              "line.")
+            scene.status.emit(
+                "Dimension: click a second line or point — or anywhere "
+                "empty for this one's length." if hit[2] == "line" else
+                "Dimension: click another circle, a point or a line for "
+                "the distance from the centre — or anywhere empty (or "
+                "the circle again) for its diameter."
+                if hit[2] == "circle" else
+                "Dimension: click the second point or a line.")
             scene.update()
             return
     else:
         first = picks[0]
         if hit is None:
-            hit = first if first[2] == "line" else None
+            # empty space: a line's length, a circle's size
+            hit = first if first[2] in ("line", "circle") else None
         if hit is None:
             scene.status.emit("Dimension: click the second point or line.")
             return

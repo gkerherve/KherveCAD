@@ -1724,14 +1724,22 @@ TOOLS = [
             "becomes a polygon; the corner is kept and a corners row "
             "draws the arc), or node_ids [two lines meeting at an end] "
             "(both trimmed, an arc / chamfer piece added); size = radius "
-            "or distance."
+            "or distance. mirror (Mirror Entities): node_ids = the shapes, "
+            "mirror_line = the line (usually a centerline, a construction "
+            "line) in the same sketch — each copy is the same kind of "
+            "shape tied by Symmetric relations (Equal for circles) unless "
+            "relate is false; a rect about a slanted line becomes a "
+            "polygon."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
-                       "enum": ["trim", "extend", "fillet", "chamfer"]},
+                       "enum": ["trim", "extend", "fillet", "chamfer",
+                                "mirror"]},
             "node_id": {"type": "integer"},
             "node_ids": {"type": "array", "items": {"type": "integer"},
-                         "minItems": 2, "maxItems": 2},
+                         "minItems": 1},
+            "mirror_line": {"type": "integer"},
+            "relate": {"type": "boolean"},
             "point": {"type": "array", "items": {"type": "number"},
                       "minItems": 2, "maxItems": 2},
             "vertex": {"type": "integer", "minimum": 0},

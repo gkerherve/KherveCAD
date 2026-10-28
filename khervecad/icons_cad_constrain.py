@@ -281,6 +281,18 @@ def _sk_extend(d):
     d.arrow(P(0.5, 0.35), P(0.78, 0.35), d.pal.make, 0.05, 0.1)
 
 
+@draws("sk_mirror")
+def _sk_mirror(d):
+    """A dashed centerline, a sketched triangle on its left and its
+    mirror image on the right in the make colour, an arrow across."""
+    d.line(P(0.5, 0.06), P(0.5, 0.94), d.pal.edge, 0.05, [3, 2])
+    d.poly([P(0.12, 0.78), P(0.4, 0.78), P(0.4, 0.3)],
+           color=d.pal.sketch, width=0.06)
+    d.poly([P(0.88, 0.78), P(0.6, 0.78), P(0.6, 0.3)],
+           color=d.pal.make, width=0.06)
+    d.arrow(P(0.3, 0.16), P(0.7, 0.16), d.pal.make, 0.04, 0.08)
+
+
 @draws("sk_fillet")
 def _sk_fillet(d):
     from PyQt5.QtGui import QPainterPath

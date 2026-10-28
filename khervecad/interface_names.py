@@ -50,6 +50,7 @@ SOLIDWORKS = {
     "bspline": "Style Spline",
     "sk_trim": "Trim Entities",
     "sk_extend": "Extend Entities",
+    "sk_mirror": "Mirror Entities",
     "con_list": "Display/Delete Relations",
     "con_auto": "Fully Define Sketch",
     "con_dimension": "Smart Dimension",
@@ -85,6 +86,7 @@ FUSION = {
     "bspline": "Control Point Spline",
     "sk_trim": "Trim",
     "sk_extend": "Extend",
+    "sk_mirror": "Mirror",
     "dimension": "Sketch Dimension",
     "measure": "Measure",
 }
