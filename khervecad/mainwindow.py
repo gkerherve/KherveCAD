@@ -965,13 +965,21 @@ class MainWindow(QMainWindow):
             round_ui.start(self, op, "round")
             return
         if op in ("linear_extrude", "rotate_extrude") and nodes:
+            # the 2D content inside the sketch plane's rotate, never the
+            # rotate itself (the user's Front-plane lever: an extrude round
+            # rotate([90, ...]) made nothing)
+            from . import sketch_regions
+            nodes = sketch_regions.extrude_targets(nodes)
+
             # never an extrude round what is already extruded or cut: a
             # slot's Extruded Cut wrapped in a second extrude made the
-            # cut empty (the user's hole that did not appear)
+            # cut empty (the user's hole that did not appear). A Regions
+            # with no extrude above it is NOT extruded (Create Region's,
+            # waiting for one — it was refused as "already extruded")
             def extruded(n):
                 while n is not None:
                     if n.type in ("linear_extrude", "rotate_extrude",
-                                  "regions", "sweep", "section_loft"):
+                                  "sweep", "section_loft"):
                         return True
                     n = n.parent
                 return False

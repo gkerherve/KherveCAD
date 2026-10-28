@@ -396,3 +396,99 @@ def test_deleting_leaves_the_view_where_it_was(win):
         assert after[3] == before[3] and after[4] == before[4]   # 3D
     finally:
         delete_ui.ask_hook = None
+
+
+@pytest.mark.parametrize("pick", ["object", "sketch", "regions"])
+def test_an_extrude_goes_inside_the_sketch_plane(win, pick):
+    """The user's Exercise 4: a Front-plane lever already made into a
+    Regions node; Linear Extrude with the Object (or the sketch, or the
+    Regions) selected wrapped the plane's rotate — an extrude round a
+    turned 2D shape makes nothing. It goes INSIDE the rotate now."""
+    from khervecad import analysis
+    m = win.model
+    obj = m.add_node("component", {}, name="Lever")
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0), parent=obj,
+                     name="Front sketch")
+    for x, y, r in ((0, 0, 10), (30, 20, 6), (0, 0, 4), (30, 20, 2.5)):
+        m.add_node("circle", dict(x=x, y=y, radius=r), parent=rot)
+    m.add_node("line", dict(x1=-5.736, y1=8.192, x2=26.558, y2=24.915),
+               parent=rot)
+    m.add_node("line", dict(x1=5.736, y1=-8.192, x2=33.442, y2=15.085),
+               parent=rot)
+    shapes = R.shapes_of(rot)
+    got = R.faces(shapes)
+    reg = R.make(m, rot, got, R.solid_faces(shapes, got), hide=shapes)
+    QTest.qWait(50)
+    target = {"object": obj, "sketch": rot, "regions": reg}[pick]
+    if pick == "object":
+        win.builder.tree.select_nodes([target])        # Main: its row
+    else:
+        win.builder.open_component(obj)                # inside: Object tab
+        QTest.qWait(50)
+        win.builder.active_tree().select_nodes([target])
+    QTest.qWait(50)
+    act = next(a for a in win.findChildren(QAction)
+               if a.data() == "linear_extrude")
+    act.trigger()
+    QTest.qWait(100)
+    ext = [n for n in m.root.walk() if n.type == "linear_extrude"]
+    assert len(ext) == 1
+    assert ext[0].parent is rot and ext[0].children == [reg]
+    m.set_param(ext[0], "height", 10)
+    vol = analysis.mass_properties(mesh.tessellate(obj))
+    area = R._cross_section(mesh.collect_outlines(reg)).area()
+    assert vol["volume"] == pytest.approx(area * 10, rel=1e-3)
+
+
+def test_the_lever_on_the_front_plane_by_mouse(win):
+    """The user's way: Sketch Mode on the FRONT plane, the lever drawn,
+    Features ▸ Extruded Boss, the regions clicked in 3D, Done, the arrow
+    pulled to 10 mm — a solid standing up from the Front plane."""
+    from khervecad.fillet_pick import _apply
+    v2, v3 = win.view2d, win.view3d
+    _open_top_sketch(win, "Front (XZ)")
+    big, small = ((0, 0), 10), ((30, 20), 6)
+    for c, r in (big, small, ((0, 0), 4), ((30, 20), 2.5)):
+        v2.set_tool("circle")
+        _drag(v2.viewport(), _at(win, *c), _at(win, c[0] + r, c[1]))
+    for deg in (125, -55):
+        v2.set_tool("line")
+        for c, r in (big, small):
+            p = _at(win, *_rim(c, r, deg))
+            _move(v2.viewport(), p)
+            QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+        QTest.keyClick(v2.viewport(), Qt.Key_Escape)
+    sketch = next(n for n in win.model.root.walk() if n.type == "rotate")
+    _extruded_boss(win)
+    assert v3._pick_cb is not None
+    QTest.mouseClick(v3.nav_bar.buttons["fit"], Qt.LeftButton)
+    QTest.qWait(100)
+    shapes = R.shapes_of(sketch)
+    got = R.faces(shapes)
+    keep = R.solid_faces(shapes, got)
+    assert len(keep) == 3                          # two rings + the band
+    mat = mesh.mat_mul(mesh.ancestor_matrix(sketch, {}),
+                       mesh.node_matrix(sketch, {}))
+    cam = v3._camera()
+    for i in keep:
+        q = v3._project(*cam, _apply(mat, (*R.seed(got[i][0]), 0.01)))
+        p = QPoint(int(round(q[0])), int(round(q[1])))
+        _move(v3, p)
+        QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
+        QTest.qWait(20)
+    done = next(b for b in v3.findChildren(QPushButton)
+                if b.isVisible() and "Done" in b.text())
+    QTest.mouseClick(done, Qt.LeftButton)
+    QTest.qWait(100)
+    ext = [n for n in win.model.root.walk() if n.type == "linear_extrude"]
+    assert len(ext) == 1 and ext[0].parent is sketch   # inside the plane
+    _drag_arrow(win, 10.0)
+    assert ext[0].params["height"] == pytest.approx(10)
+    region = ext[0].children[0]
+    loops = mesh.collect_outlines(region)
+    assert len(loops) == 3
+    area = R._cross_section(loops).area()
+    vol = analysis.mass_properties(mesh.tessellate(win.model.root))
+    assert vol["volume"] == pytest.approx(area * 10, rel=1e-3)
+    # standing up from the Front plane: 10 mm deep along Y
+    assert vol["size"][1] == pytest.approx(10, abs=1e-6)

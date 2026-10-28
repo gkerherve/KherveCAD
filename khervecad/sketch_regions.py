@@ -122,7 +122,49 @@ def faces(shapes, any_state=False):
             out.append((piece, [[(float(q[0]), float(q[1]))
                                  for q in loop]
                                 for loop in piece.to_polygons()], inside))
-    return out
+    return _merge_slivers(out, crumb)
+
+
+#: a face this thin (4π·area / perimeter²: 1 a disc, 0.79 a square) and small is a
+#: sliver: a line drawn rim to rim, not quite tangent, dips into a circle
+#: and cuts a crescent off its ring
+SLIVER = 0.3
+
+
+def _perimeter(loops):
+    return sum(math.dist(a, b) for lp in loops
+               for a, b in zip(lp, lp[1:] + lp[:1]))
+
+
+def _merge_slivers(out, crumb):
+    """Each sliver joins the face it shares the longest edge with, so it
+    is neither a region of its own nor a notch in the union."""
+    import manifold3d as m
+    small = max(crumb * 1000.0, 1e-6)
+    thin = [k for k, (cs, loops, _i) in enumerate(out)
+            if cs.area() < small and 4 * math.pi * cs.area()
+            < SLIVER * _perimeter(loops) ** 2]
+    if not thin:
+        return out
+    faces_ = list(out)
+    for k in thin:
+        cs = out[k][0]
+        grown = cs.offset(1e-3, m.JoinType.Miter)
+        best, best_a = None, 0.0
+        for j, (other, _l, _i) in enumerate(faces_):
+            if j in thin or other is None:
+                continue
+            a = (grown ^ other).area()
+            if a > best_a:
+                best, best_a = j, a
+        if best is None:
+            continue
+        other, _l, inside = faces_[best]
+        fused = (other + cs).offset(1e-4, m.JoinType.Miter).offset(
+            -1e-4, m.JoinType.Miter)
+        faces_[best] = (fused, [[(float(q[0]), float(q[1])) for q in lp]
+                                for lp in fused.to_polygons()], inside)
+    return [f for k, f in enumerate(faces_) if k not in thin]
 
 
 def _covers(cs, pt):
@@ -899,6 +941,52 @@ def solid_faces(shapes, face_list):
         if max(depth.values(), default=1) % 2 == 1:
             out.append(i)
     return out
+
+
+#: what may hold a sketch without making it 3D: the plane's rotate, an
+#: Object, a group, a move
+SKETCH_HOLDERS = ("rotate", "translate", "mirror", "scale", "multmatrix",
+                  "union", "component", "color")
+
+
+def extrude_targets(nodes):
+    """What an extrude of *nodes* should wrap: the 2D content INSIDE the
+    plane's rotate, never the rotate (an extrude round a turned 2D shape
+    makes nothing — the user's Front-plane lever). An Object, a sketch
+    group or a move holding only 2D is looked into; a shape inside an
+    unextruded Regions stands for the Regions."""
+    from .model import SHAPE_2D
+
+    def flat(n):
+        return not any(c.category == "3d" or c.type in (
+            "linear_extrude", "rotate_extrude", "reference", "sweep",
+            "section_loft") for c in n.walk())
+    out = []
+    for n in nodes:
+        if n.category == SHAPE_2D and n.parent is not None and \
+                n.parent.type == "regions":
+            n = n.parent
+        m = n
+        while m.type in SKETCH_HOLDERS and m.children and flat(m):
+            kids = [c for c in m.children if c.visible]
+            if kids and all(c.category == SHAPE_2D or c.type == "regions"
+                            for c in kids):
+                regions = [c for c in kids if c.type == "regions"]
+                m = None
+                out.extend(regions or kids)
+                break
+            if len(kids) == 1:
+                m = kids[0]
+                continue
+            break
+        if m is not None:
+            out.append(m)
+    seen, uniq = set(), []
+    for n in out:
+        if id(n) not in seen:
+            seen.add(id(n))
+            uniq.append(n)
+    return uniq
 
 
 def extrude_selection(window, nodes):

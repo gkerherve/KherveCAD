@@ -529,13 +529,18 @@ class DragFeature:
         if event.button() != Qt.LeftButton or \
                 getattr(self.view, "_pick_cb", None) is not None:
             return False                   # a pick (Fillet, Snap…) first
+        scr = self._screen()
+        on_arrow = scr is not None and self._hit(event.pos().x(),
+                                                 event.pos().y(), scr)
         lab = self._label
-        if lab is not None and lab.contains(event.pos()):
+        if not on_arrow and lab is not None and lab.contains(event.pos()):
+            # the value, clicked away from the arrow: type it. On the
+            # arrow the DRAG wins — seen from the Front plane the label
+            # lay over the arrow and every grab opened the box (the user
+            # could not pull the lever up)
             self.edit_value()
             return True
-        scr = self._screen()
-        if scr is None or not self._hit(event.pos().x(), event.pos().y(),
-                                        scr):
+        if not on_arrow:
             return False
         node = scr["node"]
         param = "height" if scr["kind"] == "linear" else "angle"
