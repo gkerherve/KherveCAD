@@ -473,7 +473,8 @@ def snap(scene, pos):
 #: what a snap marker says
 LABELS = {"part origin": "Part origin", "face centre": "Face centre",
           "centre": "Centre", "corner": "Corner", "middle": "Midpoint",
-          "origin": "Origin", "edge": "On edge", "point": "Point"}
+          "origin": "Origin", "edge": "On edge", "point": "Point",
+          "on_line": "On centerline"}
 
 
 def paint_hint(view, painter):
@@ -483,7 +484,8 @@ def paint_hint(view, painter):
     from PyQt5.QtGui import QColor, QPen
     scene = view.scene()
     hint = getattr(scene, "_snap_hint", None)
-    if not hint or getattr(scene, "tool", "select") == "select":
+    if not hint or (getattr(scene, "tool", "select") == "select" and
+                    not getattr(scene, "_handle_drag", False)):
         return
     p, kind = hint
     k = abs(view.transform().m11()) or 1.0

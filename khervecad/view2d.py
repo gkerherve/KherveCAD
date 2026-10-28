@@ -15,6 +15,7 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 from PyQt5 import sip
+import math
 from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QPainter, QPainterPath,
                          QPen, QPolygonF)
@@ -147,8 +148,17 @@ class HandleItem(QGraphicsRectItem):
         # handle ignores view transforms and slides out from under the
         # cursor (mapToScene of event.pos() jitters in that case)
         pos = event.scenePos()
-        if self._snap:
-            pos = self.scene().snap(pos)
+        scene = self.scene()
+        got = None
+        if self._snap and hasattr(scene, "snap_handle"):
+            # the other shapes' points, the origin, ON a centerline (the
+            # user: a circle's centre moved onto the centerline)
+            got = scene.snap_handle(pos, self.parentItem())
+        self._snapped = got
+        if got is not None:
+            pos = got[0]
+        elif self._snap:
+            pos = scene.snap(pos)
         # a shape drawn through its rotate / move (view2d_edit.Frame)
         # takes the cursor in its own coordinates
         from .view2d_edit import in_frame_coords
@@ -157,6 +167,10 @@ class HandleItem(QGraphicsRectItem):
 
     def mouseReleaseEvent(self, event):
         event.accept()
+        scene = self.scene()
+        got, self._snapped = getattr(self, "_snapped", None), None
+        if scene is not None and hasattr(scene, "end_handle_drag"):
+            scene.end_handle_drag(self.parentItem(), self.role, got)
 
 
 class ShapeItem:
@@ -1012,6 +1026,71 @@ class SketchScene(QGraphicsScene):
             pts.append(item.boundingRect().center())
         return [item.mapToScene(p) for p in pts]
 
+    def snap_handle(self, pos, moving):
+        """Where a dragged handle snaps: another shape's point (end,
+        centre, corner, middle) or the origin, else the nearest point ON
+        a centerline (a construction line). ``(point, kind, item)`` or
+        None; the marker shows what it snapped to."""
+        views = self.views()
+        if not views:
+            return None
+        tol = FEATURE_SNAP_PX / max(views[0].px_per_mm(), 1e-6)
+        best, best_d = None, tol
+        for item in self.items():
+            if not isinstance(item, ShapeItem) or item is moving or \
+                    not item.isVisible():
+                continue
+            try:
+                pts = self._item_feature_points(item)
+            except Exception:
+                continue
+            for p in pts:
+                d = math.hypot(p.x() - pos.x(), p.y() - pos.y())
+                if d < best_d:
+                    best, best_d = (QPointF(p), "point", item), d
+        d = math.hypot(pos.x(), pos.y())
+        if d < best_d:
+            best, best_d = (QPointF(0, 0), "origin", None), d
+        if best is None:
+            for item in self.items():
+                if not isinstance(item, LineShapeItem) or item is moving \
+                        or item.node.params.get("modifier") != "%":
+                    continue
+                ln = item.line()
+                a, b = item.mapToScene(ln.p1()), item.mapToScene(ln.p2())
+                dx, dy = b.x() - a.x(), b.y() - a.y()
+                t = ((pos.x() - a.x()) * dx + (pos.y() - a.y()) * dy) / (
+                    dx * dx + dy * dy or 1.0)
+                t = min(1.0, max(0.0, t))
+                q = QPointF(a.x() + t * dx, a.y() + t * dy)
+                d = math.hypot(q.x() - pos.x(), q.y() - pos.y())
+                if d < best_d:
+                    best, best_d = (q, "on_line", item), d
+        self._handle_drag = True
+        self._set_snap_hint((best[0], best[1]) if best else None)
+        return best
+
+    def end_handle_drag(self, moving, role, got):
+        """A handle let go: drop the marker; a circle's centre left ON a
+        centerline is tied to it (point on curve), as SolidWorks adds the
+        relation when you drop a point on a line."""
+        self._handle_drag = False
+        self._set_snap_hint(None)
+        if got is None or got[1] != "on_line" or role != "center" or \
+                moving is None or got[2] is None:
+            return
+        node, line = moving.node, got[2].node
+        parent = node.parent
+        if parent is None or line.parent is not parent:
+            return
+        from . import sketch_constraints as sc
+        try:
+            sc.add(self.model, parent, "point_on",
+                   [sc.ref_of(parent, node, "c"),
+                    sc.ref_of(parent, line, "l")])
+        except Exception:                       # a conflict: leave it
+            pass
+
     def _set_snap_hint(self, hint):
         """What the cursor snaps to now, drawn by the view (a marker and
         its name: the user could not see that it snapped)."""
@@ -1750,6 +1829,15 @@ class SketchScene(QGraphicsScene):
             self.rebuild()
             return
         item = self._items.get(node.id)
+        if item is not None and self.mouseGrabberItem() is not None:
+            # a handle of THIS shape is held (a circle dragged by its
+            # centre on the Front plane): follow the mouse now — the
+            # rebuild waits for the release, so it only moved then
+            self.updating = True
+            item.apply_node()
+            self.updating = False
+            self.update()
+            return
         if node.id in {n.id for n in self._focus_shapes()}:
             # editing the isolated profile: update it in place so an
             # in-progress point drag is never torn down by a rebuild

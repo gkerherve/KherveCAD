@@ -1184,7 +1184,24 @@ class MainWindow(QMainWindow):
         drawing = getattr(self.scene, "tool", SELECT) != SELECT
         rect = None if drawing else self.scene.isolated_bounds()
         if rect is not None:
+            # remember the view the selection zoom left, to come back to
+            # it when what it framed is deleted (the user: deleting must
+            # leave the view as it was, not zoomed on an empty spot)
+            if getattr(self, "_view_before_focus", None) is None:
+                v = self.view2d
+                self._view_before_focus = (
+                    v.transform(),
+                    v.mapToScene(v.viewport().rect().center()))
+            self._focus_ids = {n.id for n in nodes}
             self.view2d.frame_rect(rect)
+        elif getattr(self, "_view_before_focus", None) is not None:
+            alive = {n.id for n in self.model.root.walk()}
+            if not (getattr(self, "_focus_ids", set()) & alive):
+                tr, centre = self._view_before_focus
+                self.view2d.setTransform(tr)
+                self.view2d.centerOn(centre)
+            if not nodes:
+                self._view_before_focus = None
         tris = self._highlight_tris()
         self.view3d.set_highlight_mesh(tris)
         from . import cut_ghost           # a selected cut, in red

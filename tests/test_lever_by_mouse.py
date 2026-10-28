@@ -73,8 +73,8 @@ def _rim(c, r, deg):
     return (c[0] + r * math.cos(a), c[1] + r * math.sin(a))
 
 
-def _open_top_sketch(win):
-    """Sketch Mode, then a click on the Top Plane in 3D."""
+def _open_top_sketch(win, plane="Top (XY)"):
+    """Sketch Mode, then a click on a main plane (Top) in 3D."""
     v2, v3 = win.view2d, win.view3d
     v2.scene().snap_enabled = False
     QTest.mouseClick(_button_for(win, sketch_mode.create_action(win)),
@@ -83,11 +83,15 @@ def _open_top_sketch(win):
     h = win._plane_pick["half"]
     cam = v3._camera()
     top = None
+    a_, b_ = {"Top (XY)": (0, 1), "Front (XZ)": (0, 2),
+              "Side (YZ)": (1, 2)}[plane]
     for fx in (0.8, 0.6, -0.6, -0.8):
         for fy in (0.8, -0.8, 0.6, -0.6):
-            q = v3._project(*cam, (h * fx, h * fy, 0.0))
+            v = [0.0, 0.0, 0.0]
+            v[a_], v[b_] = h * fx, h * fy
+            q = v3._project(*cam, v)
             cand = QPoint(int(q[0]), int(q[1]))
-            if plane_pick.hit(win, cand) == "Top (XY)":
+            if plane_pick.hit(win, cand) == plane:
                 top = cand
                 break
         if top:
@@ -312,3 +316,83 @@ def test_a_washer_of_two_circles_keeps_its_hole(win):
     region = next(n for n in win.model.root.walk() if n.type == "regions")
     loops = mesh.collect_outlines(region)
     assert len(loops) == 2                         # a ring, not a disc
+
+
+def test_a_circle_dragged_by_its_centre_moves_live_and_snaps_to_a_centerline(
+        win):
+    """Front plane: the circle follows its centre handle WHILE dragged
+    (it only moved on release), and lets go ON the centerline, tied to
+    it."""
+    from khervecad import sketch_constraints as sc
+    _open_top_sketch(win, "Front (XZ)")
+    v2 = win.view2d
+    v2.set_tool("circle")
+    _drag(v2.viewport(), _at(win, 0, 0), _at(win, 8, 0))
+    circ = next(n for n in win.model.root.walk() if n.type == "circle")
+    v2.set_tool("construction_line")
+    for pt in ((20, -15), (20, 25)):
+        p = _at(win, *pt)
+        _move(v2.viewport(), p)
+        QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+    QTest.keyClick(v2.viewport(), Qt.Key_Escape)
+    line = next(n for n in win.model.root.walk() if n.type == "line")
+    lx = float(line.params["x1"])
+    v2.set_tool("select")
+    QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier,
+                     _at(win, 8, 0))
+    QTest.qWait(50)
+    a, b = _at(win, 0, 0), _at(win, lx + 0.6, 8)
+    vp = v2.viewport()
+    QTest.mousePress(vp, Qt.LeftButton, Qt.NoModifier, a)
+    mid = None
+    for i in range(1, 9):
+        q = QPoint(a.x() + (b.x() - a.x()) * i // 8,
+                   a.y() + (b.y() - a.y()) * i // 8)
+        _move(vp, q, Qt.LeftButton)
+        if i == 4:                    # half way: the circle is there
+            item = v2.scene()._items[circ.id]
+            mid = item.mapToScene(QPointF(0, 0))
+            assert mid.x() == pytest.approx(circ.params["x"], abs=1e-6)
+            assert mid.x() > 3                       # it has moved
+    QTest.mouseRelease(vp, Qt.LeftButton, Qt.NoModifier, b)
+    QTest.qWait(50)
+    assert float(circ.params["x"]) == pytest.approx(lx, abs=1e-6)
+    assert float(circ.params["y"]) == pytest.approx(8, abs=0.2)
+    rows = [r for c in sc.containers(win.model) for r in sc.rows(c)]
+    assert any(r["kind"] == "point_on" for r in rows)
+
+
+def test_deleting_leaves_the_view_where_it_was(win):
+    """Selecting a part zooms the 2D view onto it; deleting it brings
+    the view back, never left zoomed on an empty spot."""
+    from khervecad import delete_ui
+    from khervecad.mcp_tools import McpToolExecutor
+    delete_ui.ask_hook = lambda nodes: delete_ui.ALL
+    try:
+        McpToolExecutor(win).execute("apply_code", {"code": (
+            "module A(){cube([20,20,20]);} "
+            "module B(){translate([0,60,0]) cylinder(h=30, r=5);} "
+            "A(); B();")})
+        QTest.qWait(200)
+        v2, v3 = win.view2d, win.view3d
+
+        def state():
+            c = v2.mapToScene(v2.viewport().rect().center())
+            return (round(v2.transform().m11(), 3), c.x(), c.y(),
+                    v3.distance, list(v3.target))
+        before = state()
+        tree = win.builder.active_tree()
+        part = win.model.root.children[-1]
+        tree.select_nodes([part])
+        QTest.qWait(100)
+        tree.setFocus()
+        QTest.keyClick(tree, Qt.Key_Delete)
+        QTest.qWait(200)
+        assert part.parent is None
+        after = state()
+        assert after[0] == before[0]                       # same zoom
+        assert after[1] == pytest.approx(before[1], abs=0.5)
+        assert after[2] == pytest.approx(before[2], abs=0.5)
+        assert after[3] == before[3] and after[4] == before[4]   # 3D
+    finally:
+        delete_ui.ask_hook = None
