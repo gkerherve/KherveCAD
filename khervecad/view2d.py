@@ -779,7 +779,7 @@ class SketchScene(QGraphicsScene):
         self.grid_size = 0.5
         self.snap_enabled = True
         self.show_grid = True
-        self.show_dims = True                  # auto size on selection
+        self.show_dims = False                 # automatic sizes (opt-in)
         self.updating = False
         self._items = {}                       # node id -> shape item
         self._part_items = {}                  # node id -> part item

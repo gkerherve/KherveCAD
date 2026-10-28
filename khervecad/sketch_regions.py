@@ -398,6 +398,11 @@ def make(model, container, face_list, picked, hide=None):
             moved.append(row)
         elif not any(i in new_index for i in idxs):
             kept.append(row)
+    # the rows come OFF the container while the shapes move: each move
+    # re-solves the sketch, and rows still numbered for the shapes that
+    # were there solved the wrong lines (a triangle of lines came out
+    # squashed to a quarter of its height)
+    container.params.pop(sc.KEY, None)
     for s in shapes:
         model.move_node(s, reg)
         s.params.pop("modifier", None)
@@ -732,11 +737,19 @@ def sketch_container(window):
 def overlapping(container):
     """True when the container's shapes cut each other into more
     regions than there are shapes (a circle ON a rectangle)."""
-    shapes = shapes_of(container)
+    return overlapping_shapes(shapes_of(container))
+
+
+def overlapping_shapes(shapes):
     if len(shapes) < 2:
         return False
-    got = len(faces(shapes))
+    face_list = faces(shapes)
+    got = len(face_list)
     if got > len(shapes):
+        return True
+    # a face inside two shapes at once: a circle in a circle (a washer)
+    # or shapes overlapping — what a plain extrude would fill in
+    if any(len(f[2]) > 1 for f in face_list):
         return True
     # lines bridging shapes (two circles joined by two lines) add a band
     lines = [n for n in shapes if n.type == "line"]
@@ -850,6 +863,86 @@ def start_3d(window, container=None, make_only=False):
     return True
 
 
+def _shape_section(s):
+    from .mesh import collect_outlines, node_outlines, _oriented
+    outlines = collect_outlines(s) or _oriented(s, node_outlines(s, {}))
+    return _cross_section(outlines)
+
+
+def solid_faces(shapes, face_list):
+    """The faces that are material, not holes: a face is a HOLE when the
+    shapes it lies in nest an even number deep — a circle wholly inside
+    another (the lever's bore) — while shapes that merely overlap (a
+    circle on a rectangle's corner) stay solid where they meet."""
+    secs = {}
+    for i, s in enumerate(shapes):
+        try:
+            secs[i] = _shape_section(s)
+        except Exception:
+            secs[i] = None
+
+    def within(b, a):
+        A, B = secs.get(a), secs.get(b)
+        if A is None or B is None or A.is_empty() or B.is_empty():
+            return False
+        return (B - A).area() < 1e-6 * max(B.area(), 1e-9) \
+            and B.area() < A.area()
+    out = []
+    for i, (_cs, _loops, inside) in enumerate(face_list):
+        inside = list(inside)
+        # the deepest chain of shapes nested one inside the next
+        depth = {}
+        for a in sorted(inside, key=lambda k: -(secs[k].area()
+                                                if secs.get(k) else 0)):
+            depth[a] = 1 + max((depth[b] for b in depth if within(a, b)),
+                               default=0)
+        if max(depth.values(), default=1) % 2 == 1:
+            out.append(i)
+    return out
+
+
+def extrude_selection(window, nodes):
+    """Extruded Boss on SELECTED sketch shapes — lines, a polygon's
+    sides, circles: the area they close is extruded at once, holes left
+    out, no regions to click (the user: "as simple as possible"). False
+    when the selection is not such a sketch (a single closed shape
+    extrudes the usual way)."""
+    from .model import SHAPE_2D
+    shapes = [n for n in nodes if n.category == SHAPE_2D]
+    if not shapes or len(shapes) != len(nodes):
+        return False
+    container = shapes[0].parent
+    if container is None or any(s.parent is not container
+                                for s in shapes):
+        return False
+    shapes.sort(key=container.children.index)
+    has_lines = any(s.type == "line" for s in shapes)
+    try:
+        if not has_lines and (len(shapes) < 2 or not overlapping_shapes(
+                shapes)):
+            return False
+        face_list = faces(shapes)
+    except Exception:                         # no Manifold, odd shapes
+        return False
+    keep = solid_faces(shapes, face_list)
+    if not keep:
+        # closes nothing (often just the line drawn last, still
+        # selected): ask for the regions the usual way
+        return False
+    ext = extrude(window.model, container, face_list, keep, hide=shapes)
+    if ext is None:
+        return False
+    window.statusBar().showMessage(
+        "Extruded the area the %d selected shape(s) close — drag the "
+        "arrow or set the height in Properties." % len(shapes), 6000)
+    try:
+        from . import drag_feature
+        drag_feature.start(window, ext, quiet=True, created=True)
+    except Exception:                          # pragma: no cover
+        pass
+    return True
+
+
 def from_selection(window):
     """Create Region on the shapes selected (in the sketch or the tree):
     the area they enclose — closed lines, a polygon, shapes on shapes —
@@ -870,7 +963,7 @@ def from_selection(window):
             "the lines end to end into a closed shape.", 7000)
         return True
     reg = make(window.model, container, face_list,
-               range(len(face_list)), hide=shapes)
+               solid_faces(shapes, face_list), hide=shapes)
     if reg is not None:
         window.builder.active_tree().select_nodes([reg])
         window.statusBar().showMessage(

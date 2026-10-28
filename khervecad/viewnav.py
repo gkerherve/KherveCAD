@@ -423,11 +423,11 @@ def add_sketch_controls(win, bar):
             dims.setIcon(art)
         dims.setCheckable(True)
         set_tip(dims, "dims_bar")
-        # ONE switch on the 2D bar for every dimension: automatic sizes
-        # AND Smart Dimensions (the user hid with one ruler, showed with
-        # its look-alike, and saw nothing)
-        acts = [act] + [a for a in [getattr(win, "_smart_dims_act", None)]
-                        if a is not None]
+        # the 2D bar's ruler is the SMART DIMENSIONS switch: the only
+        # dimensions a sketch needs (2026-10-28, the user — the
+        # automatic sizes crowded it; they stay in View as an opt-in)
+        smart = getattr(win, "_smart_dims_act", None)
+        acts = [smart] if smart is not None else [act]
 
         def sync(*_):
             dims.setChecked(any(a.isChecked() for a in acts))

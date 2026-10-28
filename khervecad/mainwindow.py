@@ -446,8 +446,11 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._snap_act)
         view_menu.addAction(self._vibe_act)
         from PyQt5.QtCore import QSettings
+        # automatic sizes are OFF unless asked for (2026-10-28, the
+        # user: only the Smart Dimensions are needed); a new key, so an
+        # old "on" does not bring them back
         show_dims = QSettings("Kherve", "KherveCAD").value(
-            "show_dims", True, type=bool)
+            "show_auto_dims", False, type=bool)
         self.scene.show_dims = show_dims
         self._dims_act = QAction(icons.icon("mdi.ruler-square"),
                                  self.tr("Show Dimensions"), self)
@@ -984,6 +987,10 @@ class MainWindow(QMainWindow):
             # overlapping sketch shapes: pick the regions to extrude on
             # the 3D view, as SolidWorks' Selected Contours (the user)
             from . import sketch_regions
+            # sketch shapes SELECTED (sides, lines, circles): extrude the
+            # area they close at once — nothing more to click (the user)
+            if nodes and sketch_regions.extrude_selection(self, nodes):
+                return
             container = sketch_regions.overlap_container(self, nodes)
             if container is not None and \
                     sketch_regions.start_3d(self, container):
@@ -1095,7 +1102,7 @@ class MainWindow(QMainWindow):
         self.scene.show_dims = show
         self.view2d.viewport().update()
         from PyQt5.QtCore import QSettings
-        QSettings("Kherve", "KherveCAD").setValue("show_dims", show)
+        QSettings("Kherve", "KherveCAD").setValue("show_auto_dims", show)
 
     def _set_snap(self, snap):
         self.scene.snap_enabled = snap
@@ -1144,7 +1151,10 @@ class MainWindow(QMainWindow):
         if self._syncing:
             return
         self._syncing = True
-        self.builder.tree.select_nodes(nodes)
+        # the tree the commands read: the Object tab's while it is open —
+        # a box round a sketch inside an Object selected nothing there,
+        # so Extruded Boss saw only the shape drawn last
+        self.builder.active_tree().select_nodes(nodes)
         self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
         self.builder.highlight_nodes(nodes)
         self._sync_highlight(nodes)

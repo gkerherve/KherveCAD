@@ -329,6 +329,7 @@ def test_polygon_sides_are_dimensioned_when_selected(view):
     p = m.add_node("polygon", dict(points=[[0, 0], [30, 0], [30, 10],
                                            [0, 10]]))
     from khervecad.view2d import PolygonShapeItem
+    view.scene().show_dims = True                 # automatic sizes: opt-in
     view.set_tool("select")
     QApplication.processEvents()
     for it in view.scene().items():
@@ -688,18 +689,23 @@ def test_smart_dimensions_hide_and_show_from_both_bars(window):
     assert act.isChecked() and window.scene.show_sketch_dims
 
 
-def test_the_2d_dimensions_button_hides_and_shows_both_kinds(window):
-    """The user hid with one ruler and showed with the other: the 2D bar
-    has one button for automatic sizes and Smart Dimensions together."""
+def test_the_2d_ruler_is_the_smart_dimensions_switch(window):
+    """Only Smart Dimensions are drawn (the user: the automatic sizes
+    crowded the sketch); the 2D ruler shows / hides them, and the
+    automatic sizes stay off until View ▸ Show Dimensions."""
     btn = window.view2d.nav_bar.buttons["dims"]
     assert "smart_dims" not in window.view2d.nav_bar.buttons
-    btn.click()
-    assert not window.scene.show_dims
-    assert not window.scene.show_sketch_dims
-    window._smart_dims_act.setChecked(True)     # from the View menu
+    assert not window.scene.show_dims             # off by default
+    window._smart_dims_act.setChecked(True)
     assert btn.isChecked()
-    btn.click()                      # one of them on: all come back
-    assert window.scene.show_dims and window.scene.show_sketch_dims
+    btn.click()
+    assert not window.scene.show_sketch_dims
+    assert not window.scene.show_dims
+    btn.click()
+    assert window.scene.show_sketch_dims and not window.scene.show_dims
+    window._dims_act.setChecked(True)             # opt in from View
+    assert window.scene.show_dims
+    window._dims_act.setChecked(False)
 
 
 def test_the_2d_plane_buttons_are_named_like_solidworks(window):

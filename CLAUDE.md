@@ -3195,6 +3195,22 @@ into a new module and import.
                        by contour (`contour_pick`);
                        `tests/test_sketch_regions_mouse.py` drives it all
                        with the mouse (draw, constrain, pick, make).
+                       Simplest way in (2026-10-28, the user): SELECT the
+                       sides / lines / circles (a box round the sketch) and
+                       press Extruded Boss — `extrude_selection` extrudes
+                       the area they close at once, holes left out
+                       (`solid_faces`: a face nested an even number deep is
+                       a hole); nothing selected still asks for regions.
+                       `tests/test_lever_by_mouse.py` does the lever end to
+                       end in the SolidWorks window. The 2D view's
+                       selection goes to the ACTIVE tree (it went to Main,
+                       so a box in an Object's sketch reached no command),
+                       and `make` takes the sketch's relations off while
+                       the shapes move (each move re-solved them on the
+                       wrong lines and squashed a triangle). Only Smart
+                       Dimensions are drawn by default (automatic sizes:
+                       View ▸ Show Dimensions, QSettings `show_auto_dims`;
+                       the 2D ruler is the Smart Dimensions switch).
                        Since 2026-10-25 the result is a **Regions** node
                        (`regions2d.py`, a 2D wrapper in features.MODULES):
                        Extrude → Regions → the sketch shapes, MOVED in with

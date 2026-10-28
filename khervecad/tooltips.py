@@ -43,15 +43,13 @@ TIPS = {
          "Smart Dimensions is the same switch)."],
         "Hidden dimensions still drive the sketch."),
     "dims_bar": (
-        "Show / hide dimensions",
-        "Shows or hides every dimension on the sketch: the Smart "
-        "Dimensions you added and the sizes of every shape: a rectangle's "
-        "width and height, a circle's diameter, a line's length, each "
-        "side of a polygon, a part's overall sizes (and a cylinder's Ø).",
-        ["Click to show or hide them — the automatic sizes and the "
-         "Smart Dimensions together (View ▸ Show Dimensions and View ▸ "
-         "Show Smart Dimensions are the two halves)."],
-        "The selected shapes' sizes are drawn in the accent colour."),
+        "Show / hide Smart Dimensions",
+        "Shows or hides the sketch's Smart Dimensions — the driving sizes "
+        "you added. They are the only dimensions drawn; a shape's "
+        "automatic sizes are off unless View ▸ Show Dimensions is ticked.",
+        ["Click to hide them; click again to show them (View ▸ Show "
+         "Smart Dimensions is the same switch)."],
+        "Hidden dimensions still drive the sketch."),
     "configurations": (
         "Configurations",
         "Named sets of the document's variable values — 'M6' and 'M8', "

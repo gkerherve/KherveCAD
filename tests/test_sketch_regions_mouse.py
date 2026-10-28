@@ -466,3 +466,32 @@ def test_the_line_stops_when_it_closes_on_its_first_point(view):
     rows = [r for r in sc.rows(m.root) if r["kind"] == "coincident"]
     assert len(rows) == 3                    # every corner joined once
     assert len(_faces(view)) == 1
+
+
+def test_solid_faces_leave_the_lever_holes_out(app):
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    for x, y, r in ((0, 0, 10), (30, 20, 6), (0, 0, 4), (30, 20, 2.5)):
+        m.add_node("circle", dict(x=x, y=y, radius=r))
+    m.add_node("line", dict(x1=-5.736, y1=8.192, x2=26.558, y2=24.915))
+    m.add_node("line", dict(x1=5.736, y1=-8.192, x2=33.442, y2=15.085))
+    shapes = R.shapes_of(m.root)
+    got = R.faces(shapes)
+    keep = R.solid_faces(shapes, got)
+    for c in ((0, 0), (30, 20)):               # the bores are not kept
+        assert R.face_at(got, c) not in keep
+    assert R.face_at(got, (15, 10)) in keep     # the band
+    assert R.face_at(got, (0, 7)) in keep       # the big ring
+    area = R.union_of(got, keep).area()
+    assert area == pytest.approx(
+        sum(got[i][0].area() for i in keep), rel=1e-3)
+
+
+def test_overlapping_shapes_stay_solid_where_they_meet(app):
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    m.add_node("rect", dict(x=0, y=0, width=40, height=20))
+    m.add_node("circle", dict(x=0, y=0, radius=8))
+    shapes = R.shapes_of(m.root)
+    got = R.faces(shapes)
+    assert sorted(R.solid_faces(shapes, got)) == list(range(len(got)))
