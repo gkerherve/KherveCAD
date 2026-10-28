@@ -159,7 +159,7 @@ def entity(container, ref):
 
 def kind_of(node, name):
     """'point', 'line' or 'circle' for an entity name."""
-    if name in ("p1", "p2", "c") or name.startswith("v"):
+    if name in ("p1", "p2", "c", "m") or name.startswith("v"):
         return "point"
     if name in ("l",) or name.startswith("e"):
         return "line"
@@ -175,6 +175,9 @@ def _point(node, name, vals):
             return _f(node, "x1", vals), _f(node, "y1", vals)
         if name == "p2":
             return _f(node, "x2", vals), _f(node, "y2", vals)
+        if name == "m":                  # its midpoint (the user)
+            return ((_f(node, "x1", vals) + _f(node, "x2", vals)) / 2,
+                    (_f(node, "y1", vals) + _f(node, "y2", vals)) / 2)
     if t == "circle" and name == "c":
         return _f(node, "x", vals), _f(node, "y", vals)
     if t == "rect":

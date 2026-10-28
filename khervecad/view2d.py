@@ -1349,6 +1349,9 @@ class SketchScene(QGraphicsScene):
             if node.visible and _produces_3d(node):
                 item = self._make_part_item(node)
                 if item is not None:
+                    # under the sketch: drawn over it, the part hid the
+                    # user's lines
+                    item.setZValue(-2)
                     self.addItem(item)
                     self._part_items[node.id] = item
                     if node.id in selected:

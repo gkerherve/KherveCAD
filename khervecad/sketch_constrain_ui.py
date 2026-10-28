@@ -195,7 +195,8 @@ def _entities(node):
         # a wide line is a slot: its round ends are circles to dimension
         ends = [("a1", "circle"), ("a2", "circle")] \
             if float(node.params.get("width", 0) or 0) > 1e-6 else []
-        return [("p1", "point"), ("p2", "point"), ("l", "line")] + ends
+        return [("p1", "point"), ("p2", "point"), ("m", "point"),
+                ("l", "line")] + ends
     if t == "rect":
         return [("v%d" % i, "point") for i in range(4)] + [("c", "point")] \
             + [("e%d" % i, "line") for i in range(4)]
@@ -214,7 +215,7 @@ def _seg_dist(p, a, b):
     return math.hypot(p[0] - a[0] - t * ab[0], p[1] - a[1] - t * ab[1])
 
 
-def pick(scene, scene_pos, want=None):
+def pick(scene, scene_pos, want=None, midpoints=False):
     """The (node, entity name, kind) nearest *scene_pos* — points before
     curves — of the kinds *want* allows, or None."""
     from .polygon_draw import px_to_scene
@@ -235,6 +236,10 @@ def pick(scene, scene_pos, want=None):
                     pt = sc._point(node, name, {})
                     d = math.hypot(p[0] - pt[0], p[1] - pt[1])
                     rank = 0
+                    if name == "m" and (not midpoints or d > tol * 0.5):
+                        # a line's MIDPOINT only right at it: a click
+                        # elsewhere on the line is the line (its length)
+                        continue
                 elif kind == "line":
                     a, b = sc._line(node, name, {})
                     d, rank = _seg_dist(p, a, b), 1
@@ -991,7 +996,9 @@ def dimension_press(scene, event):
         drop(scene)
         return
     picks = _state(scene)
-    hit = pick(scene, event.scenePos())
+    # a line's midpoint too, right at it (the user: the middle of a line
+    # to a circle's centre)
+    hit = pick(scene, event.scenePos(), midpoints=True)
     if hit is None:
         # on the face's own edge or corner: dimension to it (SolidWorks)
         from . import face_outline
@@ -1021,6 +1028,8 @@ def dimension_press(scene, event):
             return
     else:
         first = picks[0]
+        if hit is None and first[1] == "m" and first[0].type == "line":
+            first = (first[0], "l", "line")   # its midpoint, then empty
         if hit is None:
             # empty space: a line's length, a circle's size
             hit = first if first[2] in ("line", "circle") else None

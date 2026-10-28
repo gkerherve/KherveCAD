@@ -222,3 +222,54 @@ def test_a_region_and_its_shapes_are_highlighted(win):
     # selected and selectable: drawn in the selection blue (ShapeItem.paint,
     # pixel-checked in test_sketch_regions_mouse)
     assert item.isSelected() and item.flags() & item.ItemIsSelectable
+
+
+def test_a_sketch_line_shows_over_an_extruded_part(win):
+    """The user's horizontal line vanished under the extruded part drawn
+    in its own colour in the sketch view: the part goes under."""
+    from PyQt5.QtCore import QRectF
+    from PyQt5.QtGui import QColor
+    from PyQt5.QtWidgets import QTabBar
+    from khervecad import sketch_mode
+    v2 = win.view2d
+    L._open_top_sketch(win, "Front (XZ)")
+    v2.set_tool("circle")
+    L._drag(v2.viewport(), L._at(win, 0, 0), L._at(win, 15, 0))
+    circ = next(n for n in win.model.root.walk() if n.type == "circle")
+    win.builder.active_tree().select_nodes([circ])
+    QTest.qWait(50)
+    L._extruded_boss(win)
+    QTest.qWait(80)
+    panel = extrude_panel._panel(win)
+    panel.fields["direction"].setCurrentIndex(
+        panel.fields["direction"].findText("Symmetric"))
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
+    QTest.qWait(80)
+    win.builder.active_tree().clearSelection()
+    bar = next(b for b in win.findChildren(QTabBar) if b.isVisible() and
+               any(b.tabText(i).replace("&", "") == "Sketch"
+                   for i in range(b.count())))
+    i = next(i for i in range(bar.count())
+             if bar.tabText(i).replace("&", "") == "Sketch")
+    QTest.mouseClick(bar, Qt.LeftButton, Qt.NoModifier,
+                     bar.tabRect(i).center())
+    QTest.qWait(200)
+    L._open_top_sketch(win, "Front (XZ)")
+    v2.frame_rect(QRectF(-25, -25, 50, 50))
+    v2.set_tool("line")
+    for pt in ((-12, 5), (12, 5)):
+        q = L._at(win, *pt)
+        L._move(v2.viewport(), q)
+        QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, q)
+    QTest.keyClick(v2.viewport(), Qt.Key_Escape)
+    v2.set_tool("select")
+    QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier,
+                     L._at(win, 22, -22))
+    QTest.qWait(150)
+    scene = v2.scene()
+    assert scene._part_items
+    assert max(p.zValue() for p in scene._part_items.values()) < \
+        min(i.zValue() for i in scene._items.values())
+    img = v2.viewport().grab().toImage()
+    q = L._at(win, 6, 5)
+    assert QColor(img.pixel(q.x(), q.y())).lightness() < 110   # the line

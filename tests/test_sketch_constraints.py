@@ -908,7 +908,7 @@ def test_smart_dimension_from_a_circle_of_another_sketch(view, monkeypatch):
     view.scene().ask_value = lambda kind, measured: "0"
     view.set_tool(ui.DIMENSION)
     _click(view, 8, 40)                   # the circle's rim (sketch 1)
-    _click(view, 0, 30)                   # the line (sketch 2)
+    _click(view, 7, 30)                   # the line, off its midpoint
     rows = sc.rows(second)
     assert rows[-1]["kind"] == "point_line"
     ref = next(n for n in second.children if n.name == "Reference point")
@@ -916,3 +916,39 @@ def test_smart_dimension_from_a_circle_of_another_sketch(view, monkeypatch):
     assert line.params["y1"] == pytest.approx(40, abs=1e-3)   # through it
     assert line.params["y2"] == pytest.approx(40, abs=1e-3)
     assert c.params["y"] == pytest.approx(40)       # the circle stays
+
+
+def test_a_line_midpoint_dimensions_to_another_sketchs_circle(view,
+                                                              monkeypatch):
+    """The user: Smart Dimension from the MIDDLE of a line to the centre
+    of the extruded sketch's circle. The line's midpoint is a point when
+    clicked right at it; elsewhere the line is the line."""
+    from khervecad import sketch_regions as R
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    first = m.add_node("union", {}, name="Sketch 1")
+    c = m.add_node("circle", dict(x=0, y=40, radius=8), parent=first)
+    m.add_node("circle", dict(x=0, y=0, radius=12), parent=first)
+    got = R.faces(R.shapes_of(first))
+    R.make(m, first, got, range(len(got)), hide=R.shapes_of(first))
+    second = m.add_node("union", {}, name="Sketch 2")
+    line = m.add_node("line", dict(x1=-13, y1=30, x2=13, y2=30),
+                      parent=second)
+    QApplication.processEvents()
+    view.centerOn(0, 30)
+    view.scene().ask_value = lambda kind, measured: "15"
+    view.set_tool(ui.DIMENSION)
+    _click(view, 0, 30)                   # the line's middle
+    _click(view, 8, 40)                   # the circle (sketch 1)
+    row = sc.rows(second)[-1]
+    assert row["kind"] == "distance" and "0.m" in row["refs"]
+    mid = sc._point(line, "m", {})
+    assert math.hypot(mid[0] - 0, mid[1] - 40) == pytest.approx(15,
+                                                                abs=1e-3)
+    assert c.params["y"] == pytest.approx(40)
+    # a click away from the middle still dimensions the line's length
+    view.scene().ask_value = lambda kind, measured: "30"
+    a, b = sc._line(line, "l", {})
+    _click(view, a[0] + (b[0] - a[0]) * 0.2, a[1] + (b[1] - a[1]) * 0.2)
+    _click(view, 60, -30)
+    assert sc.rows(second)[-1]["kind"] == "length"
