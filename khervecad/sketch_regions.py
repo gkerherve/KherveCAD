@@ -4,11 +4,19 @@ three regions — the rectangle's long part, the circle, the rectangle's
 corners beyond it — and picking the first two extrudes a slot-ended
 plate).
 
-Overlapping 2D shapes in one container split into faces: every
-combination of shapes in / out (`faces`), each split again into its
-connected pieces (Manifold `CrossSection.decompose`), so the rectangle's
-long part and its far corners are separate faces though both are
-"rectangle, not circle". The Extrude regions tool (`REGIONS`, a scene
+Every 2D EDGE in one container — lines, polygon sides, every shape's
+outline — cuts the plane (2026-10-28, the user: "a polygon is the same
+as lines, we need to make shapes with all the parts we have"):
+`arrangement` splits the edges where they cross, drops loose ends and
+walks the bounded faces, so a line across a rectangle halves it, lines
+alone close a triangle, two circles joined by lines make a band. A line
+end stopping short of an edge (up to REST) is carried on to it; one
+inside a shape stays (its own crossing joins it). Crumbs where a line
+dips into a circle's polygon are dropped (`CRUMB`) and a union of picks
+closes hairline gaps (`CLOSE`). Faces are picked by AREA (a click
+inside) or by CONTOUR (`contour_pick`: a click on a shape's outline
+takes everything inside it, on a line the smaller face beside it).
+The Extrude regions tool (`REGIONS`, a scene
 tool) toggles faces by clicking inside them; Enter, right-click or
 double-click makes one `polygon` (outlines as `paths`) under a Linear
 extrude in the same container, and hides the sketch shapes it used,
@@ -28,6 +36,7 @@ import math
 REGIONS = "regions"
 MAKE = "make_region"     # Create Region: the Regions node, no extrude
 MAX_SHAPES = 10        # 2^n combinations
+MAX_EDGE_SHAPES = 200  # shapes whose edges cut the sketch into faces
 HEIGHT = 10.0
 
 
@@ -49,22 +58,27 @@ def shapes_of(container, construction=False):
 
 
 def faces(shapes, any_state=False):
-    """[(CrossSection, [loops], [shapes it lies in])] — every connected region the shapes'
-    outlines cut the plane into."""
+    """[(CrossSection, [loops], [shapes it lies in])] — every connected
+    region the shapes' EDGES cut the plane into. Lines, polygon sides
+    and every shape's outline are all edges alike (the user: "a polygon
+    is the same as lines"): wherever they cross they split each other,
+    loose ends are dropped, and each bounded face of what is left is a
+    region — two circles joined by lines, a line cutting a rectangle in
+    two, a polygon on a circle, lines closing a loop by themselves."""
     from .mesh import collect_outlines, node_outlines, _oriented
-    secs, owners = [], []
-    # plain lines are EDGES: where they join end to end into a closed
-    # loop, the loop is a shape (the user: lines like a polygon)
     from . import slot2d
-    lines = [s for s in shapes if s.type == "line" and not slot2d.is_slot(s)]
-    for loop, first in line_loops(lines):
-        cs = _cross_section([loop])
-        if cs is not None and not cs.is_empty():
-            secs.append(cs)
-            owners.append(shapes.index(first))
-    closed_shapes = len(secs)
-    for s in shapes[:MAX_SHAPES]:
-        if s in lines:
+    segs, loose = [], []
+    closed = []                    # (shape index, CrossSection)
+    for idx, s in enumerate(shapes[:MAX_EDGE_SHAPES]):
+        if s.type == "line" and not slot2d.is_slot(s):
+            p = s.params
+            try:
+                a = (float(p["x1"]), float(p["y1"]))
+                b = (float(p["x2"]), float(p["y2"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+            loose.append(len(segs))
+            segs.append((a, b))
             continue
         if any_state or s.params.get("modifier") == "%" or not s.visible:
             # construction (a regions extrude's sketch): its own outline,
@@ -73,45 +87,48 @@ def faces(shapes, any_state=False):
         else:
             outlines = collect_outlines(s)
         cs = _cross_section(outlines)
-        if cs is not None and not cs.is_empty():
-            secs.append(cs)
-            owners.append(shapes.index(s))
-    # two open runs of lines whose ends rest on other shapes close a
-    # region between them (two circles joined by two lines)
-    shapes_cs = secs[closed_shapes:]
-    for loop, first in bridges(lines, shapes_cs):
-        cs = _cross_section([loop])
-        # only the band between the lines: its closing chords cut across
-        # the circles it rests on, splitting a hole inside them in two
-        for other in shapes_cs:
-            if cs is not None and not cs.is_empty():
-                cs = cs - other
-        if cs is not None and not cs.is_empty():
-            secs.append(cs)
-            owners.append(shapes.index(first))
-    out = []
-    n = len(secs)
-    for mask in range(1, 1 << n):
-        inside = [secs[i] for i in range(n) if mask >> i & 1]
-        outside = [secs[i] for i in range(n) if not mask >> i & 1]
-        cs = inside[0]
-        for other in inside[1:]:
-            cs = cs ^ other
-            if cs.is_empty():
-                break
-        for other in outside:
-            if cs.is_empty():
-                break
-            cs = cs - other
-        if cs.is_empty() or cs.area() < 1e-6:
+        if cs is None or cs.is_empty():
             continue
-        for piece in _pieces(cs):
-            if piece.area() > 1e-6:
-                out.append((piece, [[(float(p[0]), float(p[1]))
-                                     for p in loop]
-                                    for loop in piece.to_polygons()],
-                            [owners[i] for i in range(n) if mask >> i & 1]))
+        closed.append((idx, cs))
+        # its outline as the solid sees it (overlapping pieces merged)
+        for loop in cs.to_polygons():
+            lp = [(float(q[0]), float(q[1])) for q in loop]
+            segs.extend(zip(lp, lp[1:] + lp[:1]))
+    loops = arrangement(segs, loose, lambda p: any(
+        _covers(sec, p) for _i, sec in closed))
+    cells = [_cross_section([lp]) for lp in loops]
+    out = []
+    xs = [q[0] for a, b in segs for q in (a, b)]
+    ys = [q[1] for a, b in segs for q in (a, b)]
+    crumb = CRUMB * ((max(xs) - min(xs)) * (max(ys) - min(ys))) if xs \
+        else 0.0
+    for k, cs in enumerate(cells):
+        if cs is None or cs.is_empty():
+            continue
+        # an island inside this face (a hole, a shape standing in it)
+        # (only cells smaller than it: the face round an island must not
+        # take the island away from itself)
+        area = cs.area()
+        for j, other in enumerate(cells):
+            if j != k and other is not None and not cs.is_empty() \
+                    and other.area() < area:
+                cs = cs - other
+        for piece in _pieces(cs) if not cs.is_empty() else []:
+            if piece.area() <= max(1e-6, crumb):
+                continue          # a line dipping into a circle's polygon
+            pt = seed(piece)
+            inside = [i for i, sec in closed
+                      if pt and _covers(sec, pt)]
+            out.append((piece, [[(float(q[0]), float(q[1]))
+                                 for q in loop]
+                                for loop in piece.to_polygons()], inside))
     return out
+
+
+def _covers(cs, pt):
+    loops = [[(float(q[0]), float(q[1])) for q in lp]
+             for lp in cs.to_polygons()]
+    return sum(_inside(pt, lp) for lp in loops) % 2 == 1
 
 
 JOIN = 1e-3            # mm: line ends this close meet
@@ -320,7 +337,22 @@ def union_of(face_list, picked):
     cs = face_list[picked[0]][0]
     for i in picked[1:]:
         cs = cs + face_list[i][0]
+    if len(picked) > 1:
+        # close hairline gaps between faces (a crumb dropped where a line
+        # dips into a circle's polygon would be a hole in the union)
+        import manifold3d as m
+        b = cs.bounds()
+        eps = CLOSE * math.hypot(b[2] - b[0], b[3] - b[1])
+        if eps > 0:
+            closed = cs.offset(eps, m.JoinType.Miter).offset(
+                -eps, m.JoinType.Miter)
+            if not closed.is_empty():
+                cs = closed
     return cs
+
+
+CLOSE = 1e-4           # of the sketch's diagonal: gaps this thin close
+CRUMB = 1e-6           # of the sketch's box area: faces this small go
 
 
 def extrude(model, container, face_list, picked, height=HEIGHT,
@@ -526,7 +558,10 @@ def press(scene, event):
             q = in_frame_coords(item, pos)
             shapes = shapes_of(item.node.parent)
             got = faces(shapes)
-            if face_at(got, (q.x(), q.y())) is not None:
+            px = scene.views()[0].transform().m11() \
+                if scene.views() else 1.0
+            if face_at(got, (q.x(), q.y())) is not None or contour_pick(
+                    shapes, got, (q.x(), q.y()), CONTOUR_PX / max(px, 1e-9)):
                 st.update(container=item.node.parent, faces=got,
                           shapes=shapes, frame=item.parentItem(),
                           probe=item)
@@ -537,13 +572,82 @@ def press(scene, event):
             event.accept()
             return
     q = in_frame_coords(st["probe"], pos)
+    views = scene.views()
+    px = views[0].transform().m11() if views else 1.0
+    group = contour_pick(st["shapes"], st["faces"], (q.x(), q.y()),
+                         CONTOUR_PX / max(px, 1e-9))
     i = face_at(st["faces"], (q.x(), q.y()))
-    if i is not None:
+    if group:
+        # a click ON an outline takes the area it closes, all of it
+        if group <= st["picked"]:
+            st["picked"] -= group
+        else:
+            st["picked"] |= group
+        _redraw(scene)
+        scene.status.emit("Extrude regions: %d chosen — Enter or "
+                          "right-click extrudes them." % len(st["picked"]))
+    elif i is not None:
         st["picked"] ^= {i}
         _redraw(scene)
         scene.status.emit("Extrude regions: %d chosen — Enter or "
                           "right-click extrudes them." % len(st["picked"]))
     event.accept()
+
+
+CONTOUR_PX = 5        # a click this near an outline picks its contour
+
+
+def _seg_dist(pt, loop):
+    best = float("inf")
+    for a, b in zip(loop, loop[1:] + loop[:1]):
+        _t, q = _closest(pt, a, b)
+        best = min(best, math.dist(pt, q))
+    return best
+
+
+def contour_pick(shapes, face_list, pt, tol):
+    """The faces a click ON a contour stands for: on a closed shape's
+    outline, every face inside that shape; on a line, the smallest face
+    the line borders. An empty set when *pt* is on no edge."""
+    from .mesh import collect_outlines, node_outlines, _oriented
+    best = None
+    for idx, s in enumerate(shapes):
+        if s.type == "line":
+            p = s.params
+            try:
+                a = (float(p["x1"]), float(p["y1"]))
+                b = (float(p["x2"]), float(p["y2"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+            d = math.dist(pt, _closest(pt, a, b)[1])
+            if d <= tol and (best is None or d < best[0]):
+                best = (d, idx, (a, b))
+            continue
+        loops = collect_outlines(s) or _oriented(s, node_outlines(s, {}))
+        for lp in loops:
+            lp = [(float(x), float(y)) for x, y in lp]
+            if len(lp) < 2:
+                continue
+            d = _seg_dist(pt, lp)
+            if d <= tol and (best is None or d < best[0]):
+                best = (d, idx, None)
+    if best is None:
+        return set()
+    _d, idx, seg = best
+    if seg is None:
+        return {i for i, f in enumerate(face_list) if idx in f[2]}
+    # faces with a boundary run lying on this line
+    a, b = seg
+    touching = []
+    for i, (cs, loops, *_r) in enumerate(face_list):
+        for lp in loops:
+            if any(math.dist(m, _closest(m, a, b)[1]) < 1e-3 and
+                   math.dist(p1, p2) > 1e-6
+                   for p1, p2 in zip(lp, lp[1:] + lp[:1])
+                   for m in [((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)]):
+                touching.append((cs.area(), i))
+                break
+    return {min(touching)[1]} if touching else set()
 
 
 def finish(scene):
@@ -772,3 +876,171 @@ def from_selection(window):
         window.statusBar().showMessage(
             "Region made from %d shape(s)." % len(shapes), 6000)
     return True
+
+
+# --------------------------------------------- planar arrangement
+SNAP = 1e-4            # mm: crossing points this close are one vertex
+
+
+def _seg_cross(a, b, c, d):
+    """Parameters (t on ab, u on cd) where the segments meet, or None."""
+    rx, ry = b[0] - a[0], b[1] - a[1]
+    sx, sy = d[0] - c[0], d[1] - c[1]
+    den = rx * sy - ry * sx
+    if abs(den) < 1e-12:
+        return None
+    qx, qy = c[0] - a[0], c[1] - a[1]
+    t = (qx * sy - qy * sx) / den
+    u = (qx * ry - qy * rx) / den
+    e = 1e-9
+    if -e <= t <= 1 + e and -e <= u <= 1 + e:
+        return min(1.0, max(0.0, t)), min(1.0, max(0.0, u))
+    return None
+
+
+def _closest(p, a, b):
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy
+                                                     or 1)
+    t = min(1.0, max(0.0, t))
+    return t, (a[0] + t * dx, a[1] + t * dy)
+
+
+def arrangement(segs, loose, inside=None):
+    """The bounded faces [loop counter-clockwise] the segments cut the
+    plane into. *segs* [(a, b)]; *loose* the indices of segments whose
+    ENDS may rest on another segment up to REST away (a drawn line
+    ending on a circle's true arc, just off its polygon); *inside(p)*
+    tells whether a point lies inside a closed shape."""
+    segs = [(tuple(map(float, a)), tuple(map(float, b))) for a, b in segs
+            if math.dist(a, b) > SNAP]
+    n = len(segs)
+    cuts = [[0.0, 1.0] for _ in range(n)]
+    ends = [list(s) for s in segs]
+    # a loose end stopping short of another segment is carried on to
+    # it: along its own line first, else to a corner or the nearest
+    # point. An end INSIDE a shape stays — the line's own crossing joins
+    # it and the stub inside is dropped (moving it onto the rim bent the
+    # line back across the circle, cutting crumbs off it)
+    for i in loose:
+        if i >= n:
+            continue
+        for k in (0, 1):
+            p, o = ends[i][k], ends[i][1 - k]
+            if inside is not None and inside(p):
+                continue
+            ln = math.dist(p, o)
+            d = ((p[0] - o[0]) / ln, (p[1] - o[1]) / ln)
+            ray = (p, (p[0] + d[0] * REST, p[1] + d[1] * REST))
+            best = None
+            for j in range(n):
+                if j == i:
+                    continue
+                hit = _seg_cross(*ray, *segs[j])
+                if hit and (best is None or hit[0] < best[0]):
+                    best = (hit[0], j, hit[1])
+            if best is not None:
+                t, j, u = best
+                q = (p[0] + d[0] * REST * t, p[1] + d[1] * REST * t)
+                if math.dist(p, q) > SNAP:
+                    ends[i][k] = q
+                    cuts[j].append(u)
+                continue
+            near = None
+            for j in range(n):
+                if j == i:
+                    continue
+                t, q = _closest(p, *segs[j])
+                dist = math.dist(p, q)
+                # a corner within reach wins
+                for tt, corner in ((0.0, segs[j][0]), (1.0, segs[j][1])):
+                    if math.dist(p, corner) < REST:
+                        t, q, dist = tt, corner, math.dist(p, corner) - REST
+                        break
+                if dist < REST and (near is None or dist < near[0]):
+                    near = (dist, j, t, q)
+            if near and math.dist(p, near[3]) > SNAP:
+                ends[i][k] = near[3]
+                cuts[near[1]].append(near[2])
+    segs = [tuple(e) for e in ends]
+    box = [(min(a[0], b[0]), max(a[0], b[0]), min(a[1], b[1]),
+            max(a[1], b[1])) for a, b in segs]
+    order = sorted(range(n), key=lambda i: box[i][0])
+    for k, i in enumerate(order):
+        for j in order[k + 1:]:
+            if box[j][0] > box[i][1] + SNAP:
+                break
+            if box[j][3] < box[i][2] - SNAP or box[j][2] > box[i][3] + SNAP:
+                continue
+            # an end touching the other segment: they meet THERE. Tried
+            # first — a line drawn tangent to a circle runs nearly along
+            # the polygon side it starts on, and the crossing of two such
+            # sides is ill-conditioned (it landed 0.01 mm along them and
+            # left sliver faces at every tangent point)
+            touched = False
+            for (s_, o) in ((i, j), (j, i)):
+                for p in segs[s_]:
+                    t, q = _closest(p, *segs[o])
+                    if math.dist(p, q) < SNAP:
+                        cuts[o].append(t)
+                        touched = True
+            if touched:
+                continue
+            hit = _seg_cross(*segs[i], *segs[j])
+            if hit:
+                cuts[i].append(hit[0])
+                cuts[j].append(hit[1])
+    keys, pts = {}, []
+
+    def vid(p):
+        key = (round(p[0] / SNAP), round(p[1] / SNAP))
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                v = keys.get((key[0] + dx, key[1] + dy))
+                if v is not None:
+                    return v
+        keys[key] = len(pts)
+        pts.append(p)
+        return keys[key]
+    edges = set()
+    for (a, b), ts in zip(segs, cuts):
+        ts = sorted(set(round(t, 12) for t in ts))
+        vs = [vid((a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])))
+              for t in ts]
+        for u, v in zip(vs, vs[1:]):
+            if u != v:
+                edges.add((min(u, v), max(u, v)))
+    adj = {}
+    for u, v in edges:
+        adj.setdefault(u, set()).add(v)
+        adj.setdefault(v, set()).add(u)
+    # dangling ends bound nothing
+    stack = [v for v, s in adj.items() if len(s) < 2]
+    while stack:
+        v = stack.pop()
+        for w in adj.pop(v, ()):
+            if w in adj:
+                adj[w].discard(v)
+                if len(adj[w]) < 2:
+                    stack.append(w)
+    around = {v: sorted(s, key=lambda w: math.atan2(
+        pts[w][1] - pts[v][1], pts[w][0] - pts[v][0])) for v, s in adj.items()}
+    seen, loops = set(), []
+    for u in around:
+        for v in around[u]:
+            if (u, v) in seen:
+                continue
+            loop, a, b = [], u, v
+            while (a, b) not in seen:
+                seen.add((a, b))
+                loop.append(pts[a])
+                ring = around[b]
+                k = ring.index(a)
+                a, b = b, ring[k - 1]          # turn as far right as can
+            if len(loop) < 3:
+                continue
+            area = sum(loop[k][0] * loop[k - 1][1] - loop[k - 1][0]
+                       * loop[k][1] for k in range(len(loop)))
+            if area < -1e-9:                  # counter-clockwise: a face
+                loops.append(loop)
+    return loops

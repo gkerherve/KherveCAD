@@ -3188,6 +3188,13 @@ into a new module and import.
                        faces by click, Enter / right-click makes one polygon
                        (paths) under a Linear extrude and hides the shapes.
                        Baked: editing the sketch later does not regrow it.
+                       **Any edges** (2026-10-28): faces come from a
+                       planar ARRANGEMENT of every edge (lines, polygon
+                       sides, outlines) — crossing, loose ends dropped,
+                       short ends carried on — and are picked by area or
+                       by contour (`contour_pick`);
+                       `tests/test_sketch_regions_mouse.py` drives it all
+                       with the mouse (draw, constrain, pick, make).
                        Since 2026-10-25 the result is a **Regions** node
                        (`regions2d.py`, a 2D wrapper in features.MODULES):
                        Extrude → Regions → the sketch shapes, MOVED in with
