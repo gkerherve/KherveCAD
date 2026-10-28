@@ -414,7 +414,9 @@ def add_sketch_controls(win, bar):
     act = getattr(win, "_dims_act", None)
     if act is not None:
         dims = QToolButton(bar)
-        art = icons.icon("mdi.ruler-square", "#e6e9ec")
+        # the 3D bar's ruler: the same switch looks the same in both
+        # views (the user looked for it "just like it is for the 3D")
+        art = icons.icon("mdi.ruler", "#e6e9ec")
         if art.isNull():
             dims.setText("↔")
         else:
