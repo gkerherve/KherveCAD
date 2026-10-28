@@ -451,3 +451,18 @@ def test_lines_and_shapes_mixed_freely(view):
     total = _region_area(view, _made(view))
     assert total == pytest.approx(800 + math.pi * 64 * 0.75 + 225 - 25,
                                   rel=2e-2)
+
+
+def test_the_line_stops_when_it_closes_on_its_first_point(view):
+    m = view.scene().model
+    view.set_tool("line")
+    for p in ((0, 0), (30, 0), (15, 20), (0, 0)):
+        _click(view, *p)
+    from khervecad import sketch_line
+    assert sketch_line._state(view.scene())["start"] is None   # stopped
+    _click(view, 40, 40)                     # a fresh line starts here
+    _key(view, Qt.Key_Escape)
+    assert len(_nodes(view, "line")) == 3
+    rows = [r for r in sc.rows(m.root) if r["kind"] == "coincident"]
+    assert len(rows) == 3                    # every corner joined once
+    assert len(_faces(view)) == 1

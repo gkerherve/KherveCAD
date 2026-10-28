@@ -3,7 +3,9 @@
 SolidWorks").
 
 - Lines CHAIN: each click ends a line and starts the next from that
-  point; a double-click, right-click, Enter or Esc ends the chain.
+  point; a double-click, right-click, Enter or Esc ends the chain, and
+  so does a click back on the chain's first point (the shape is closed,
+  as with the polygon).
 - While the cursor moves it SNAPS, first match wins: to an existing
   point (a line end, a corner, a centre, the ORIGIN) within `SNAP_PX`;
   else to horizontal / vertical / 45° from the start within
@@ -317,8 +319,35 @@ def press(scene, event):
     st.setdefault("chain", []).append(pt)
     st.setdefault("made", []).append(node)
     st["start_point"], st["start_origin"] = None, False
+    chain = st["chain"]
+    if len(chain) >= 4 and math.hypot(pt.x() - chain[0].x(),
+                                      pt.y() - chain[0].y()) < MIN_LEN:
+        # back on the chain's first point: the shape is closed, so the
+        # line stops there like the polygon (and SolidWorks') does
+        _close_corner(scene, st["made"][0], node)
+        end_chain(scene)
+        scene.status.emit("Line: shape closed.")
+        return
     draw_overlay(scene, pt, pt, info)
     _bar(scene)
+
+
+def _close_corner(scene, first, last):
+    """Coincident between the closing line's end and the first line's
+    start, unless the snap already put one there (it does not when the
+    point was the origin)."""
+    from . import sketch_constraints as sc
+    parent = last.parent
+    if parent is None or first.parent is not parent or first is last:
+        return
+    want = {sc.ref_of(parent, last, "p2"), sc.ref_of(parent, first, "p1")}
+    if any(r["kind"] == "coincident" and set(r["refs"]) == want
+           for r in sc.rows(parent)):
+        return
+    try:
+        sc.add(scene.model, parent, "coincident", sorted(want)[::-1])
+    except Exception:                          # a conflict: leave it
+        pass
 
 
 def _relations(scene, node, info, st):
