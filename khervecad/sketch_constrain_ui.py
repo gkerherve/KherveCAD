@@ -50,9 +50,11 @@ TOOLS = [
 MARK = {"coincident": "●", "horizontal": "H", "vertical": "V", "diagonal": "45°",
         "parallel": "∥", "perpendicular": "⊥", "tangent": "T",
         "equal": "=", "concentric": "◎", "collinear": "—",
-        "midpoint": "M", "symmetric": "⇹", "fix": "🔒", "point_on": "∘",
+        "midpoint": "M", "symmetric": "⇹", "fix": "🔒", "point_on": "⊙",
         "on_edge": "⊸"}
 PICK_PX = 10.0
+#: point size of the relation marks (H, V, ●, T, ∘ …) in the 2D view
+MARK_PT = 11
 #: what each constraint does (the tooltips' "what")
 WHAT = {
     "coincident": "Makes things touch: two points become one (line ends "
@@ -535,7 +537,9 @@ def glyphs(view):
         return []
     items = {it.node.id: it for it in _shape_items(scene)}
     font = QFont(view.font())
-    font.setPointSize(8)
+    # readable: at 8 pt a coincident or point-on mark was a speck (the
+    # user could not read it); each sits on its own small tile
+    font.setPointSize(MARK_PT)
     font.setBold(True)
     fm = QFontMetrics(font)
     taken = {}                      # spot key -> x advance used so far
@@ -545,10 +549,10 @@ def glyphs(view):
     def place(spot, text, cont, index):
         key = (round(spot.x() / 6), round(spot.y() / 6))
         dx = taken.get(key, 0)
-        w = fm.horizontalAdvance(text) + 2
+        w = fm.horizontalAdvance(text) + 8
         taken[key] = dx + w + MARK_GAP
-        x, y = spot.x() + 5 + dx, spot.y() - 5 - fm.ascent()
-        out.append((QRectF(x, y, w, fm.height()), text, cont, index))
+        x, y = spot.x() + 6 + dx, spot.y() - 7 - fm.ascent()
+        out.append((QRectF(x, y, w, fm.height() + 2), text, cont, index))
 
     for cont in shown_containers(scene):
         for index, row in enumerate(sc.rows(cont)):
@@ -781,6 +785,12 @@ def paint(view, painter):
         is_hot = deleting and hot == (cont.id, index)
         if (cont.id, index) in drawn and not is_hot:
             continue                     # drawn as a dimension line
+        if "value" not in sc.rows(cont)[index]:
+            # a relation mark: on a white tile, outlined in its colour
+            painter.setPen(QPen(red if is_hot else ink, 1.0))
+            painter.setBrush(QColor(255, 255, 255, 235))
+            painter.drawRoundedRect(rect, 3, 3)
+            painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(red if is_hot else ink, 1.2))
         if is_hot:
             painter.drawRect(rect.adjusted(-1, -1, 1, 1))
