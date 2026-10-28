@@ -495,3 +495,30 @@ def test_overlapping_shapes_stay_solid_where_they_meet(app):
     shapes = R.shapes_of(m.root)
     got = R.faces(shapes)
     assert sorted(R.solid_faces(shapes, got)) == list(range(len(got)))
+
+
+def test_a_selected_shape_has_no_dashed_box(view):
+    """Qt draws a dashed rectangle round a selected item's bounding box;
+    round a slanted line it looked like a selected rectangle (the user).
+    A selected shape shows itself in blue and its own handles only."""
+    from PyQt5.QtGui import QColor
+    m = view.scene().model
+    m.add_node("line", dict(x1=0, y1=0, x2=20, y2=30, width=0.2))
+    QApplication.processEvents()
+    view.set_tool("select")
+    _click(view, 10, 15)
+    assert [n.type for n in view.scene().selected_nodes()] == ["line"]
+    img = view.viewport().grab().toImage()
+
+    def dark(x, y):
+        p = view.mapFromScene(QPointF(x, y))
+        c = QColor(img.pixel(p.x(), p.y()))
+        return c.lightness() < 110
+    # the bounding box's far corners and edges are empty grid, not dashes
+    for x, y in ((0, 30), (20, 0), (0, 15), (10, 30), (20, 15), (10, 0)):
+        assert not any(dark(x + dx, y + dy) for dx in (-0.1, 0, 0.1)
+                       for dy in (-0.1, 0, 0.1)), (x, y)
+    # the line itself is drawn in the accent blue
+    p = view.mapFromScene(QPointF(10, 15))
+    c = QColor(img.pixel(p.x(), p.y()))
+    assert c.blue() > c.red() + 60

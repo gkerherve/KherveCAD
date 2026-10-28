@@ -191,6 +191,53 @@ class ShapeItem:
                 self._scene.emit_selection()
         return super().itemChange(change, value)
 
+    #: a selected shape is drawn again in this colour (no dashed box)
+    SELECTED_INK = "#1f7ae0"
+
+    def paint(self, painter, option, widget=None):
+        """Qt's own "selected" look is a dashed rectangle round the
+        item's bounding box — round a slanted line it read as a selected
+        rectangle (the user: a line selected shows its two end points and
+        nothing else). The flag is dropped and the shape itself is drawn
+        over in the accent colour instead."""
+        from PyQt5.QtWidgets import QStyle, QStyleOptionGraphicsItem
+        selected = bool(option.state & QStyle.State_Selected)
+        if selected:
+            option = QStyleOptionGraphicsItem(option)
+            option.state &= ~QStyle.State_Selected
+        super().paint(painter, option, widget)
+        if selected:
+            pen = QPen(QColor(self.SELECTED_INK), 2.4)
+            pen.setCosmetic(True)
+            pen.setCapStyle(Qt.RoundCap)
+            pen.setJoinStyle(Qt.RoundJoin)
+            if self.node.params.get("modifier") == "%":
+                pen.setStyle(Qt.DashLine)     # construction stays dashed
+            painter.save()
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawPath(self._outline_path())
+            painter.restore()
+
+    def _outline_path(self):
+        path = QPainterPath()
+        if isinstance(self, QGraphicsLineItem):
+            line = self.line()
+            path.moveTo(line.p1())
+            path.lineTo(line.p2())
+        elif isinstance(self, QGraphicsRectItem):
+            path.addRect(self.rect())
+        elif isinstance(self, QGraphicsEllipseItem):
+            path.addEllipse(self.rect())
+        elif isinstance(self, QGraphicsPolygonItem):
+            poly = self.polygon()
+            if poly.size():
+                path.addPolygon(poly)
+                path.closeSubpath()
+        elif isinstance(self, QGraphicsPathItem):
+            path = self.path()
+        return path
+
     # -------- handles: subclasses define handle roles + positions
     def handle_spec(self):
         return []                                  # [(role, local pos)]
