@@ -236,10 +236,21 @@ def pick(scene, scene_pos, want=None, midpoints=False):
                     pt = sc._point(node, name, {})
                     d = math.hypot(p[0] - pt[0], p[1] - pt[1])
                     rank = 0
-                    if name == "m" and (not midpoints or d > tol * 0.5):
-                        # a line's MIDPOINT only right at it: a click
-                        # elsewhere on the line is the line (its length)
-                        continue
+                    if name == "m":
+                        if not midpoints:
+                            continue
+                        # the middle fifth of the line is its MIDPOINT
+                        # (5 px round the exact centre, unmarked, was too
+                        # small to find — the user); elsewhere the line
+                        a, b = sc._point(node, "p1", {}), \
+                            sc._point(node, "p2", {})
+                        L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1.0
+                        t = ((p[0] - a[0]) * (b[0] - a[0]) +
+                             (p[1] - a[1]) * (b[1] - a[1])) / (L * L)
+                        off = _seg_dist(p, a, b)
+                        if off > tol or abs(t - 0.5) > 0.1:
+                            continue
+                        d = min(d, off)
                 elif kind == "line":
                     a, b = sc._line(node, name, {})
                     d, rank = _seg_dist(p, a, b), 1
@@ -269,7 +280,20 @@ def drop(scene):
 def hover(scene, event):
     """Highlight what a click would pick now, and say what to do."""
     tool = getattr(scene, "tool", "")
-    if not handles(tool) or tool in (DELETE, DIMENSION):
+    if tool == DIMENSION:
+        # Smart Dimension shows what a click picks: a line's MIDPOINT,
+        # a centre, a line, a circle (the user could not find the
+        # midpoint)
+        hit = pick(scene, event.scenePos(), midpoints=True)
+        if hit != getattr(scene, "_con_hover", None):
+            scene._con_hover = hit
+            if hit is not None:
+                scene.status.emit("Smart Dimension — click to pick this "
+                                  "%s." % _say(hit))
+            for v in scene.views():
+                v.viewport().update()
+        return
+    if not handles(tool) or tool == DELETE:
         return
     kind = tool[len(PREFIX):]
     picks = _state(scene)
@@ -291,8 +315,8 @@ def hover(scene, event):
 def _say(hit):
     node, name, k = hit
     if k == "point":
-        return {"c": "centre", "p1": "line end", "p2": "line end"}.get(
-            name, "corner")
+        return {"c": "centre", "p1": "line end", "p2": "line end",
+                "m": "midpoint"}.get(name, "corner")
     return "circle" if k == "circle" else "line"
 
 
@@ -325,6 +349,41 @@ def _paint_entity(view, painter, items, node, name, colour, width):
     del QPointF
 
 
+def _paint_dimension_picks(view, painter):
+    """Smart Dimension: the first pick orange, what a click would pick
+    blue — a point named (Midpoint, Centre…) so it can be found."""
+    from PyQt5.QtCore import QRectF, Qt
+    from PyQt5.QtGui import QColor
+    scene = view.scene()
+    items = {it.node.id: it for it in _shape_items(scene)}
+    painter.save()
+    try:
+        for node, name, _k in _state(scene):
+            _paint_entity(view, painter, items, node, name,
+                          QColor(230, 120, 20, 230), 4.0)
+        hot = getattr(scene, "_con_hover", None)
+        if hot is not None:
+            node, name, k = hot
+            colour = QColor(230, 120, 20) if k == "point" else \
+                QColor(33, 118, 199, 220)
+            _paint_entity(view, painter, items, node, name, colour, 4.0)
+            if k == "point":
+                p = _view_point(view, items, node,
+                                sc._point(node, name, {}))
+                painter.resetTransform()
+                font = painter.font()
+                font.setBold(True)
+                painter.setFont(font)
+                painter.setPen(QColor("#c26a00"))
+                painter.drawText(QRectF(p.x() + 9, p.y() + 6, 120, 18),
+                                 int(Qt.AlignLeft | Qt.AlignVCenter),
+                                 _say(hot).capitalize())
+    except Exception:                       # never raise out of a paint
+        pass
+    finally:
+        painter.restore()
+
+
 def paint_picks(view, painter):
     """The first pick in orange, what the cursor would pick in blue, and
     the step to do written at the top of the view."""
@@ -332,7 +391,10 @@ def paint_picks(view, painter):
     from PyQt5.QtGui import QColor
     scene = view.scene()
     tool = getattr(scene, "tool", "")
-    if not handles(tool) or tool in (DELETE, DIMENSION):
+    if tool == DIMENSION:
+        _paint_dimension_picks(view, painter)
+        return
+    if not handles(tool) or tool == DELETE:
         return
     kind = tool[len(PREFIX):]
     items = {it.node.id: it for it in _shape_items(scene)}

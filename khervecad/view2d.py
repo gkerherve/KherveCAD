@@ -2075,6 +2075,8 @@ class SketchScene(QGraphicsScene):
             _scu.delete_move(self, event)
             event.accept()
             return
+        if self.tool == _scu.DIMENSION:
+            _scu.hover(self, event)          # what a click would pick
         if _scu.handles(self.tool) and self.tool != _scu.DIMENSION:
             _scu.hover(self, event)
             event.accept()

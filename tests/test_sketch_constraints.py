@@ -1010,3 +1010,24 @@ def test_right_click_deletes_one_or_all_dimensions(view, monkeypatch):
         QContextMenuEvent.Mouse, p, view.viewport().mapToGlobal(p)))
     rows = sc.rows(m.root)
     assert [r["kind"] for r in rows] == ["horizontal"]   # relations kept
+
+
+def test_smart_dimension_shows_and_takes_a_lines_midpoint(view):
+    """The user could not hit a line's midpoint: the middle fifth of the
+    line is it, and hovering there marks it before the click."""
+    from PyQt5.QtCore import QEvent
+    from PyQt5.QtGui import QMouseEvent
+    m = view.scene().model
+    line = m.add_node("line", dict(x1=-15, y1=20, x2=15, y2=20))
+    QApplication.processEvents()
+    view.centerOn(0, 20)
+    view.set_tool(ui.DIMENSION)
+    p = view.mapFromScene(QPointF(2.5, 20.2))      # near, not at, middle
+    QApplication.sendEvent(view.viewport(), QMouseEvent(
+        QEvent.MouseMove, QPointF(p), Qt.NoButton, Qt.NoButton,
+        Qt.NoModifier))
+    hot = view.scene()._con_hover
+    assert hot is not None and hot[0] is line and hot[1] == "m"
+    view.viewport().repaint()                      # the marker paints
+    far = ui.pick(view.scene(), QPointF(-10, 20), midpoints=True)
+    assert far[1] == "l"                           # the line elsewhere
