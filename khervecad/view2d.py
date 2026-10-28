@@ -2715,6 +2715,10 @@ class SketchView(QGraphicsView):
     def contextMenuEvent(self, event):
         from . import sketch_tools
         from . import sketch_constrain_ui
+        from . import dim_edit
+        if dim_edit.context_menu(self, event.pos(), event.globalPos()):
+            event.accept()                     # a dimension's own menu
+            return
         if self.scene().tool in (POLYGON, LINE) or \
                 sketch_tools.handles(self.scene().tool) or \
                 sketch_constrain_ui.handles(self.scene().tool) or \
@@ -2982,12 +2986,24 @@ class SketchView(QGraphicsView):
                 e.key() in (Qt.Key_Tab, Qt.Key_Backtab):
             self.step_object.emit(1 if e.key() == Qt.Key_Tab else -1)
             return True
+        if e.type() == QEvent.ShortcutOverride and \
+                e.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            # a dimension selected: Delete is ITS, not the window's
+            # (which would delete the selected shape)
+            from . import dim_edit
+            if dim_edit.selected(self) is not None:
+                e.accept()
+                return True
         return super().event(e)
 
     def keyPressEvent(self, event):
         from PyQt5.QtGui import QKeySequence
         from . import sketch_tools, sketch_constrain_ui, sketch_regions
         scene = self.scene()
+        from . import dim_edit
+        if event.key() in (Qt.Key_Delete, Qt.Key_Backspace) and \
+                dim_edit.delete_key(self):
+            return                            # the selected dimension
         if event.key() == Qt.Key_Q:
             self.step_object.emit(-1)         # Q: up / previous
         elif event.key() == Qt.Key_A:

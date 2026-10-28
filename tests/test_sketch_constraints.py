@@ -952,3 +952,61 @@ def test_a_line_midpoint_dimensions_to_another_sketchs_circle(view,
     _click(view, a[0] + (b[0] - a[0]) * 0.2, a[1] + (b[1] - a[1]) * 0.2)
     _click(view, 60, -30)
     assert sc.rows(second)[-1]["kind"] == "length"
+
+
+def _chip(view, index=0):
+    view.viewport().repaint()
+    QApplication.processEvents()
+    hits = [h for h in view._dim_hits if h[1][1] == "constraint"]
+    return hits[index][0].center().toPoint()
+
+
+def test_click_a_dimension_then_delete(view, monkeypatch):
+    from PyQt5.QtCore import QPoint  # noqa: F401
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    c = m.add_node("circle", dict(x=0, y=0, radius=5))
+    sc.add_dimension(m, m.root, "diameter", ["0.o"], 10)
+    view.set_tool("select")
+    view.centerOn(0, 0)
+    p = _chip(view)
+    QTest.mousePress(view.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+    QTest.mouseRelease(view.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+    QApplication.processEvents()
+    editor = getattr(view, "_dim_editor", None)
+    if editor is not None:                 # the typing box: leave it
+        editor.close()
+    view.setFocus()
+    QTest.keyClick(view.viewport(), Qt.Key_Delete)
+    assert not [r for r in sc.rows(m.root) if "value" in r]
+    assert c.parent is m.root              # the circle is kept
+
+
+def test_right_click_deletes_one_or_all_dimensions(view, monkeypatch):
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    m.add_node("circle", dict(x=0, y=0, radius=5))
+    m.add_node("line", dict(x1=10, y1=0, x2=30, y2=0))
+    sc.add_dimension(m, m.root, "diameter", ["0.o"], 10)
+    sc.add_dimension(m, m.root, "length", ["1.l"], 20)
+    sc.add(m, m.root, "horizontal", ["1.l"])
+    view.set_tool("select")
+    view.centerOn(10, 0)
+    picks = iter(["Delete dimension",
+                  "Delete all dimensions of this sketch"])
+
+    def choose(menu):
+        want = next(picks)
+        return next(a for a in menu.actions() if a.text() == want)
+    view.menu_hook = choose
+    p = _chip(view)
+    QTest.mouseClick(view.viewport(), Qt.RightButton, Qt.NoModifier, p)
+    from PyQt5.QtGui import QContextMenuEvent
+    QApplication.sendEvent(view.viewport(), QContextMenuEvent(
+        QContextMenuEvent.Mouse, p, view.viewport().mapToGlobal(p)))
+    assert len([r for r in sc.rows(m.root) if "value" in r]) == 1
+    p = _chip(view)
+    QApplication.sendEvent(view.viewport(), QContextMenuEvent(
+        QContextMenuEvent.Mouse, p, view.viewport().mapToGlobal(p)))
+    rows = sc.rows(m.root)
+    assert [r["kind"] for r in rows] == ["horizontal"]   # relations kept

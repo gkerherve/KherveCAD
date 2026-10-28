@@ -112,6 +112,7 @@ def press(view, pos):
         return False
     rect, (node, kind, index) = got
     if kind == "constraint":
+        view._dim_selected = (node, index)      # Delete removes it
         # a sketch dimension: a drag moves it out of the way, a click
         # without moving types its value (release). Lengths slide their
         # dimension line; Ø, R and angles move their value
@@ -232,3 +233,86 @@ def open_editor(view, rect, node, kind, index):
     box.show()
     box.setFocus()
     return box
+
+
+# ------------------------------------------------- removing dimensions
+# (2026-10-28, the user: "how do you remove dimensions? all, or some?")
+def selected(view):
+    """(sketch, row index) of the dimension last clicked, still there."""
+    got = getattr(view, "_dim_selected", None)
+    if not got:
+        return None
+    from . import sketch_constraints as sc
+    node, index = got
+    try:
+        row = sc.rows(node)[index]
+    except (IndexError, TypeError):
+        return None
+    return (node, index) if "value" in row else None
+
+
+def delete(view, node, index):
+    from . import sketch_constraints as sc
+    try:
+        sc.remove(view.scene().model, node, index)
+    except Exception as exc:                  # pragma: no cover
+        view.scene().status.emit(str(exc))
+        return
+    view._dim_selected = None
+    view.viewport().update()
+    view.scene().status.emit("Dimension deleted (Ctrl+Z brings it back).")
+
+
+def delete_all(view, node):
+    """Every dimension of the sketch *node*; its relations stay."""
+    from . import sketch_constraints as sc
+    rows = sc.rows(node)
+    keep = [r for r in rows if "value" not in r]
+    gone = len(rows) - len(keep)
+    if not gone:
+        return 0
+    model = view.scene().model
+    if keep:
+        model.set_param(node, sc.KEY, keep)
+    else:
+        node.params.pop(sc.KEY, None)
+        model.node_changed.emit(node)
+    view._dim_selected = None
+    view.viewport().update()
+    view.scene().status.emit(
+        "%d dimension(s) of %s deleted (Ctrl+Z brings them back)."
+        % (gone, node.name))
+    return gone
+
+
+def delete_key(view):
+    """Delete / Backspace with a dimension selected. True when taken."""
+    got = selected(view)
+    if got is None:
+        return False
+    delete(view, *got)
+    return True
+
+
+def context_menu(view, pos, global_pos):
+    """Right-click on a dimension's value: delete it, or all of the
+    sketch's. True when a dimension was under the click."""
+    got = hit(view, pos)
+    if got is None or got[1][1] != "constraint":
+        return False
+    from PyQt5.QtWidgets import QMenu
+    from . import language
+    node, _kind, index = got[1]
+    view._dim_selected = (node, index)
+    view.viewport().update()
+    menu = QMenu(view)
+    one = menu.addAction(language.tr("Delete dimension"))
+    every = menu.addAction(language.tr(
+        "Delete all dimensions of this sketch"))
+    hook = getattr(view, "menu_hook", None)
+    chosen = hook(menu) if hook is not None else menu.exec_(global_pos)
+    if chosen is one:
+        delete(view, node, index)
+    elif chosen is every:
+        delete_all(view, node)
+    return True
