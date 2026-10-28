@@ -367,8 +367,8 @@ def paint(scene, painter):
         return
     painter.save()
     if info.get("section"):
-        # the part CUT by the sketch plane (section_outline): hatched
-        # like a section view, over the flattened part behind it
+        # the part CUT by the sketch plane (section_outline): a light
+        # section fill, drawn UNDER the sketch shapes (drawBackground)
         from PyQt5.QtCore import Qt
         from PyQt5.QtGui import QBrush, QPainterPath
         path = QPainterPath()
@@ -387,10 +387,12 @@ def paint(scene, painter):
                 for q in pts[1:]:
                     fill.lineTo(QPointF(*q))
                 fill.closeSubpath()
+        # blue like the sketch's own shapes, the holes left empty (the
+        # user expected blue where a white veil and brown hatch were)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(255, 255, 255, 150))
+        painter.setBrush(QColor(33, 118, 199, 55))
         painter.drawPath(fill)
-        hatch = QBrush(QColor(40, 90, 170), Qt.BDiagPattern)
+        hatch = QBrush(QColor(33, 118, 199, 110), Qt.BDiagPattern)
         views = scene.views()
         if views:                 # hatch at screen size, not model size
             from PyQt5.QtGui import QTransform

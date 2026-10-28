@@ -53,6 +53,27 @@ def _under(node, scope):
     return False
 
 
+def assembly_mode(window):
+    """The Main tab and no sketch open: parts, not their sketches."""
+    builder = getattr(window, "builder", None)
+    if builder is None or builder.isolated_component() is not None:
+        return False
+    from . import sketch_mode
+    if sketch_mode.sketching(window) or \
+            getattr(window, "_face_sketch", None) is not None:
+        return False
+    return True
+
+
+def _in_object(c, root):
+    probe = c
+    while probe is not None and probe is not root:
+        if probe.type == "component":
+            return True
+        probe = probe.parent
+    return False
+
+
 def placements(window):
     """[(container, 4x4 matrix to the world)] for every sketch with
     dimensions that the 3D view shows now."""
@@ -64,6 +85,10 @@ def placements(window):
     out = []
     conts = [c for c in sc.containers(model)
              if any("value" in r for r in sc.rows(c))]
+    if iso is None and assembly_mode(window):
+        # the assembly (Main tab, not sketching): an Object's sketch
+        # dimensions stay in its Object tab (the user: none at all here)
+        conts = [c for c in conts if not _in_object(c, root)]
     if iso is not None:
         with window._isolated_frame(iso):
             for c in conts:

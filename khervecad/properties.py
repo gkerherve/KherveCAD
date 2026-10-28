@@ -316,8 +316,12 @@ class PropertiesPanel(QScrollArea):
         spec = NODE_TYPES[node.type]
         from . import slot2d
         slot = slot2d.is_slot(node)
+        label = spec["label"]
+        if node.type == "linear_extrude":
+            from . import extrude_props
+            label = extrude_props.title(node)
         title = QLabel("<b>%s</b>" % language.tr("Slot" if slot
-                                                  else spec["label"]))
+                                                  else label))
         self._layout.addWidget(title)
 
         form = QFormLayout()
@@ -337,8 +341,16 @@ class PropertiesPanel(QScrollArea):
                     self._variable_names)
                 self._editors["slot:" + key] = editor
                 form.addRow(language.tr(label), editor)
+        self._extrude = None
+        if node.type == "linear_extrude" and not slot:
+            # in the words of the Extrude window (the user): profiles,
+            # direction, end condition, distances, reverse — then twist,
+            # scale, slices
+            from . import extrude_props
+            extrude_props.build(self, form, node)
         for key, label, kind, minimum, maximum in (
-                [] if slot else spec["schema"]):
+                [] if slot or node.type == "linear_extrude"
+                else spec["schema"]):
             editor = self._make_editor(key, kind, minimum, maximum)
             if editor is not None:
                 self._editors[key] = editor
@@ -478,6 +490,9 @@ class PropertiesPanel(QScrollArea):
                 editor.setPlainText(str(value))
             elif isinstance(editor, QLineEdit):
                 editor.setText(str(value))
+        if getattr(self, "_extrude", None):
+            from . import extrude_props
+            extrude_props.load(self)
         self._updating = False
 
     # --------------------------------------------------------- events

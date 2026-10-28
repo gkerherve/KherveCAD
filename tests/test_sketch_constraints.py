@@ -883,3 +883,36 @@ def test_two_circles_give_the_distance_between_their_centres(view,
     d = sc._pl_dist((a.params["x"], a.params["y"]),
                     sc._line(ln, "l", {}))
     assert abs(d) == pytest.approx(25, abs=1e-3)
+
+
+def test_smart_dimension_from_a_circle_of_another_sketch(view, monkeypatch):
+    """The user's lever: the top circle belongs to the extruded sketch
+    (in its Regions), the horizontal line to a new sketch; Smart
+    Dimension circle -> line was refused ("one group"). Now the circle's
+    centre comes in as a fixed Reference point and the line moves."""
+    from khervecad import sketch_regions as R
+    monkeypatch.setattr(sc, "scale_first_enabled", lambda: False)
+    m = view.scene().model
+    first = m.add_node("union", {}, name="Sketch 1")
+    c = m.add_node("circle", dict(x=0, y=40, radius=8), parent=first)
+    m.add_node("circle", dict(x=0, y=0, radius=12), parent=first)
+    got = R.faces(R.shapes_of(first))
+    R.make(m, first, got, range(len(got)),
+           hide=R.shapes_of(first))
+    second = m.add_node("union", {}, name="Sketch 2")
+    line = m.add_node("line", dict(x1=-15, y1=30, x2=15, y2=30),
+                      parent=second)
+    sc.add(m, second, "horizontal", ["0.l"])
+    QApplication.processEvents()
+    view.centerOn(0, 30)
+    view.scene().ask_value = lambda kind, measured: "0"
+    view.set_tool(ui.DIMENSION)
+    _click(view, 8, 40)                   # the circle's rim (sketch 1)
+    _click(view, 0, 30)                   # the line (sketch 2)
+    rows = sc.rows(second)
+    assert rows[-1]["kind"] == "point_line"
+    ref = next(n for n in second.children if n.name == "Reference point")
+    assert (ref.params["x"], ref.params["y"]) == pytest.approx((0, 40))
+    assert line.params["y1"] == pytest.approx(40, abs=1e-3)   # through it
+    assert line.params["y2"] == pytest.approx(40, abs=1e-3)
+    assert c.params["y"] == pytest.approx(40)       # the circle stays

@@ -140,6 +140,8 @@ class MainWindow(QMainWindow):
         # a face sketch (face_sketch.py) isolates the sketch to its
         # Group, drawn in the Group's own frame; else the Object tab's
         from . import face_sketch as _fs
+        from . import sketch_dims3d as _sd3
+        self.scene.assembly_mode = lambda: _sd3.assembly_mode(self)
         self.scene.isolation_resolver = lambda: _fs.current(self) or \
             self.builder.isolated_component()
         self.builder.active_component_changed.connect(
@@ -2916,6 +2918,17 @@ class MainWindow(QMainWindow):
             twin = getattr(mini, "_twin_view", None)
             if twin is not None:
                 twin.close()
+            # a tool window (Extrude's) goes with it: one left open past
+            # its window crashed PyQt's clean-up at exit
+            view = getattr(self, "view3d", None)
+            tool = getattr(view, "edit_tool", None)
+            if tool is not None and hasattr(tool, "exit"):
+                try:
+                    tool.exit()
+                except Exception:              # pragma: no cover
+                    pass
+            from . import extrude_panel
+            extrude_panel.close(self)
             if self in MainWindow._windows:    # let a closed window GC
                 MainWindow._windows.remove(self)
             event.accept()

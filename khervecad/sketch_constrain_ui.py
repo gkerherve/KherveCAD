@@ -507,8 +507,13 @@ def shown_containers(scene):
     resolver = getattr(scene, "isolation_resolver", None)
     scope = resolver() if resolver else None
     drawn = {id(it.node.parent) for it in _shape_items(scene)}
+    assembly = getattr(scene, "assembly_mode", None)
+    assembly = bool(assembly and assembly())
+    from .sketch_dims3d import _in_object
     out = []
     for c in sc.containers(model):
+        if assembly and _in_object(c, model.root):
+            continue          # the assembly shows parts, not sketches
         if id(c) not in drawn:
             # (only what is drawn: an Object's definition is HIDDEN by
             # design — "visible" would drop every Object's dimensions)
@@ -921,6 +926,48 @@ def _rehome(scene, pick, container):
     return made
 
 
+def _editable(pick):
+    """Is the pick in a sketch still being drawn (not one an extrude has
+    taken into its Regions)?"""
+    parent = pick[0].parent
+    return parent is not None and parent.type != "regions"
+
+
+def _reference_copy(scene, pick, container):
+    """A fixed construction point in *container* where *pick*'s point (a
+    circle's centre) lies; (node, "c", "point") or None."""
+    from PyQt5.QtCore import QPointF
+    from .view2d_edit import in_frame_coords
+    node, name, kind = pick
+    if kind == "circle":
+        name, kind = ("p1" if name == "a1" else "p2") \
+            if str(name).startswith("a") else "c", "point"
+    if kind != "point":
+        return None
+    try:
+        x, y = sc._point(node, name, {})
+    except (KeyError, ValueError, IndexError):
+        return None
+    items = getattr(scene, "_items", {})
+    src = items.get(node.id)
+    frame = src.parentItem() if src is not None else None
+    world = frame.mapToScene(QPointF(x, y)) if frame is not None \
+        else QPointF(x, y)
+    probe = next((items[c.id] for c in container.children
+                  if c.id in items), None)
+    q = in_frame_coords(probe, world) if probe is not None else world
+    ref = scene.model.add_node(
+        "circle", dict(x=round(q.x(), 4), y=round(q.y(), 4), radius=0.25,
+                       modifier="%"), parent=container,
+        name="Reference point")
+    try:
+        sc.add(scene.model, container, "fix",
+               [sc.ref_of(container, ref, "c")])
+    except Exception:
+        pass
+    return (ref, "c", "point")
+
+
 def _hide_references(scene, chosen):
     """A face's edge / point copied in to dimension to (face_outline.
     reference) is hidden once the dimension holds it (the user): the
@@ -987,7 +1034,20 @@ def dimension_press(scene, event):
             first = _rehome(scene, first, hit[0].parent) or first
             hit = _rehome(scene, hit, first[0].parent) or hit
         if hit[0].parent is not first[0].parent:
-            scene.status.emit("Dimensions join shapes of one group.")
+            # a shape of ANOTHER sketch (the circle of the extruded one,
+            # the user's): a fixed Reference point copy of its centre /
+            # point in the sketch being drawn, and the dimension to it
+            target, other = (first, hit) if _editable(first) or \
+                not _editable(hit) else (hit, first)
+            copy = _reference_copy(scene, other, target[0].parent)
+            if copy is not None:
+                if other is hit:
+                    hit = copy
+                else:
+                    first = copy
+        if hit[0].parent is not first[0].parent:
+            scene.status.emit("Dimensions join shapes of one sketch — "
+                              "pick a point or circle of the other one.")
             return
         made = _smart(first, hit)
     drop(scene)

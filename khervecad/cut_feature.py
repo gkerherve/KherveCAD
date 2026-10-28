@@ -152,7 +152,8 @@ def finish(window, group):
         if kind in BOSS:
             try:
                 from . import drag_feature
-                drag_feature.start(window, diff, quiet=True)  # 10 mm kept
+                drag_feature.start(window, diff, quiet=True,
+                                   panel=True)  # 10 mm kept
             except Exception:
                 pass
     return diff

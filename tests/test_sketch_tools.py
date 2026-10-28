@@ -385,7 +385,9 @@ def test_regions_extrude_follows_its_sketch(window):
 
 
 def test_sketch_dimensions_are_drawn_on_the_3d_view(window):
-    """An Object's sketch dimensions show on its instances in 3D."""
+    """An Object's sketch dimensions show in 3D in its Object tab — not
+    among the assembly's parts (the user, 2026-10-28: "in assembly mode
+    no dimension shown at all")."""
     from khervecad import sketch_constraints as sc, sketch_dims3d as d3
     m = window.model
     obj = m.add_node("component", {}, name="Plate")
@@ -394,6 +396,9 @@ def test_sketch_dimensions_are_drawn_on_the_3d_view(window):
                       parent=obj)
     sc.add(m, obj, "length", [sc.ref_of(obj, rect, "e0")], 118)
     m.add_instance(obj)
+    assert d3.placements(window) == []          # the assembly: none
+    window.builder.open_component(obj)          # its Object tab
+    QApplication.processEvents()
     placed = d3.placements(window)
     assert placed and placed[0][0] is obj
     from PyQt5.QtGui import QImage, QPainter

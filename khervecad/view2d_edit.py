@@ -148,7 +148,9 @@ def lock_contents(scene):
         if node is None or node.id in scene._highlight_ids:
             continue
         container = _selected_container(scene, node)
-        if container is None:
+        if container is None or container.type == "regions":
+            # a Regions shows its area highlighted (region_area) and its
+            # shapes stay clickable — the user picks one to see it
             continue
         item.setSelected(False)
         item.setFlag(QGraphicsItem.ItemIsSelectable, False)

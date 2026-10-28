@@ -8,6 +8,7 @@ shows what it extrudes and every option the extrude really has:
   (`center`);
 - End condition — Blind, Through all (`extent`, extent.py);
 - Distance / Distance 2;
+- Twist (degrees over the height) and Scale (the top's size, a taper);
 - Reverse direction (`drag_feature.set_direction`).
 
 Every change is applied at once (one undo step each, the arrow follows);
@@ -88,6 +89,21 @@ def set_direction(model, ext, which):
         model.set_param(ext, "height2", 0.0)
 
 
+def is_reversed(ext):
+    """Going the other way: its own reverse param (a cut's) or the
+    mirror the arrow wraps round it."""
+    from . import drag_feature
+    return bool(ext.params.get("reverse")) or \
+        drag_feature.reversed_of(ext) is not None
+
+
+def set_reversed(model, ext, on):
+    from . import drag_feature
+    if not on and ext.params.get("reverse"):
+        model.set_param(ext, "reverse", False)
+    drag_feature.set_direction(model, ext, bool(on))
+
+
 def _panel(window):
     return getattr(window, "_extrude_panel", None)
 
@@ -102,9 +118,19 @@ def show(window, tool):
     close(window)
     model = window.model
     view = window.view3d
+    # OK / Cancel find the tool when pressed: holding the drag tool (its
+    # buttons, its timer) past its window crashed PyQt's clean-up at exit
+    import weakref
+    ref = weakref.ref(tool)
+
+    def press(name):
+        t = ref()
+        if t is not None:
+            getattr(t, name)()
     panel = ToolPanel(view, "Extruded Cut" if is_cut(ext) else
-                      "Extrude", on_ok=tool.ok, on_cancel=tool.cancel)
-    panel.tool, panel.ext = tool, ext
+                      "Extrude", on_ok=lambda: press("ok"),
+                      on_cancel=lambda: press("cancel"))
+    panel.tool, panel.ext = ref, ext
     panel.busy = False
     panel.hint("Drag the blue arrow in the 3D view, or set the options "
                "here; every change shows at once. OK keeps it.")
@@ -142,11 +168,19 @@ def show(window, tool):
                  _num(ext.params.get("height2"), 0),
                  changed(lambda v: model.set_param(ext, "height2", v)),
                  minimum=0.0)
+    # the extrude's own shaping (the user): a twist turns the profile
+    # as it rises, a scale tapers it to the top
+    panel.number("twist", "Twist", _num(ext.params.get("twist"), 0),
+                 changed(lambda v: model.set_param(ext, "twist", v)),
+                 suffix="°", minimum=-100000.0, maximum=100000.0,
+                 step=15.0, decimals=1)
+    panel.number("scale", "Scale (top)", _num(ext.params.get("scale"), 1),
+                 changed(lambda v: model.set_param(ext, "scale", v)),
+                 suffix="", minimum=0.0, maximum=10000.0, step=0.1,
+                 decimals=3)
     panel.section("Options")
-    panel.check("reverse", "Reverse direction",
-                drag_feature.reversed_of(ext) is not None,
-                changed(lambda v: drag_feature.set_direction(model, ext,
-                                                             bool(v))))
+    panel.check("reverse", "Reverse direction", is_reversed(ext),
+                changed(lambda v: set_reversed(model, ext, bool(v))))
     panel.finish()
 
     def follow(node):
@@ -155,6 +189,7 @@ def show(window, tool):
     model.node_changed.connect(follow)
     panel._follow = follow
     window._extrude_panel = panel
+
     refresh(window)
     panel.open()
     return panel
@@ -174,7 +209,9 @@ def refresh(window):
     panel.set_value("extent", ext.params.get("extent") or "")
     panel.set_value("height", _num(ext.params.get("height"), 10))
     panel.set_value("height2", _num(ext.params.get("height2"), 0))
-    panel.set_value("reverse", drag_feature.reversed_of(ext) is not None)
+    panel.set_value("reverse", is_reversed(ext))
+    panel.set_value("twist", _num(ext.params.get("twist"), 0))
+    panel.set_value("scale", _num(ext.params.get("scale"), 1))
     through = (ext.params.get("extent") or "") == "through_all"
     panel.fields["height"].setEnabled(not through)
     panel.show_row("height2", d == TWO)
@@ -184,16 +221,23 @@ def refresh(window):
 
 def close(window, tool=None):
     panel = _panel(window)
-    if panel is None or (tool is not None and panel.tool is not tool):
+    if panel is None or (tool is not None and panel.tool is not None
+                         and panel.tool() is not tool):
         return
     window._extrude_panel = None
     try:
         window.model.node_changed.disconnect(panel._follow)
     except (TypeError, RuntimeError):
         pass
+    panel.tool = panel.ext = None
     try:
         panel.hide()
-        panel.deleteLater()
+        # deleted NOW, not later: a panel waiting for an event loop that
+        # never came (a window closed at exit) crashed PyQt's clean-up
+        from PyQt5 import sip
+        if not sip.isdeleted(panel):
+            panel.setParent(None)
+            sip.delete(panel)
     except RuntimeError:                       # went with its window
         pass
 

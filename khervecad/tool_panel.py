@@ -47,8 +47,6 @@ QLabel#toolSection {{ font-weight: 700; color: {t['icon']};
     letter-spacing: 1px; }}
 QFrame#toolBox {{ background: {t['editor']}; border: 1px solid {t['border']};
     border-radius: 6px; }}
-QFrame#toolBox[active="true"] {{ border: 2px solid {accent};
-    background: {t['hover']}; }}
 QLabel#toolBoxCaption {{ font-weight: 700; }}
 QPushButton#toolOk {{ background: {accent}; color: white; border: none;
     border-radius: 5px; padding: 6px 18px; font-weight: 700; }}
@@ -84,9 +82,18 @@ class _Box(QFrame):
         self.body.setText(text)
 
     def set_active(self, on):
-        self.setProperty("active", bool(on))
-        self.style().unpolish(self)
-        self.style().polish(self)
+        # its own small stylesheet: re-polishing through self.style()
+        # handed PyQt the panel's style-sheet style, which Qt replaces
+        # when a sheet is set again — the stale handle crashed PyQt's
+        # clean-up at exit
+        if on:
+            from .style import tokens
+            t = tokens()
+            self.setStyleSheet(
+                "QFrame#toolBox { border: 2px solid %s; background: %s; }"
+                % (t.get("select", "#2176c7"), t["hover"]))
+        else:
+            self.setStyleSheet("")
 
     def mousePressEvent(self, event):
         if self._on_activate is not None:

@@ -351,7 +351,7 @@ class RectShapeItem(ShapeItem, QGraphicsRectItem):
         super().__init__()
         self.init_node(node, scene)
         self.setPen(_pen("#2e3440"))
-        self.setBrush(QBrush(QColor(33, 118, 199, 40)))
+        self.setBrush(_shape_fill(self.node))
         self.apply_node()
 
     def apply_node(self):
@@ -398,7 +398,7 @@ class CircleShapeItem(ShapeItem, QGraphicsEllipseItem):
         super().__init__()
         self.init_node(node, scene)
         self.setPen(_pen("#2e3440"))
-        self.setBrush(QBrush(QColor(33, 118, 199, 40)))
+        self.setBrush(_shape_fill(self.node))
         self.apply_node()
 
     def apply_node(self):
@@ -444,7 +444,7 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
         super().__init__()
         self.init_node(node, scene)
         self.setPen(_pen("#2e3440"))
-        self.setBrush(QBrush(QColor(33, 118, 199, 40)))
+        self.setBrush(_shape_fill(self.node))
         self.apply_node()
 
     def apply_node(self):
@@ -608,6 +608,16 @@ def _profile_shapes(focus):
                 seen.add(n.id)
                 out.append(n)
     return out
+
+
+def _shape_fill(node):
+    """A sketch shape's fill: light blue — but only its outline once a
+    Regions node uses it (the region is the solid; filled, a hole read as
+    material — the user's lever)."""
+    parent = node.parent
+    if parent is not None and parent.type == "regions":
+        return QBrush(Qt.NoBrush)
+    return QBrush(QColor(33, 118, 199, 40))
 
 
 def _construction_look(item, node):
@@ -1330,6 +1340,10 @@ class SketchScene(QGraphicsScene):
                     if node.id in selected:
                         item.setSelected(True)
                         self._apply_point_hl(item, node)
+            # the area each Regions keeps, under its (outlined) shapes
+            from . import region_area
+            region_area.add_all(self, scope,
+                                selected | set(self._highlight_ids))
         # assembly mode: every top-level part gets a draggable outline
         for node in scope.children:
             if node.visible and _produces_3d(node):
@@ -2413,8 +2427,19 @@ class SketchView(QGraphicsView):
         if refs:                        # under the grid, like a backdrop
             from . import refimage
             refimage.draw_2d(painter, refs, scene.plane)
-        if not scene.show_grid:
-            return
+        if scene.show_grid:
+            self._draw_grid(painter, rect)
+        # the face sketched on / the part cut by the sketch plane: UNDER
+        # the sketch shapes (painted over them it hid a thin line — the
+        # user's horizontal line — and veiled every shape)
+        from . import face_outline
+        try:
+            face_outline.paint(scene, painter)
+        except Exception:               # never raise out of a paint
+            pass
+
+    def _draw_grid(self, painter, rect):
+        scene = self.scene()
         from .style import tokens
         t = tokens()
         g = scene.grid_size
@@ -2503,7 +2528,6 @@ class SketchView(QGraphicsView):
     def drawForeground(self, painter, rect):
         from . import face_outline       # the face sketched on, grey
         try:
-            face_outline.paint(self.scene(), painter)
             face_outline.paint_hint(self, painter)
         except Exception:               # never raise out of a paint
             pass

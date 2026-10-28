@@ -135,7 +135,7 @@ def revolve_handle(node, m, tris):
 
 # =================================================================== Qt
 
-def start(window, node=None, quiet=False, created=False):
+def start(window, node=None, quiet=False, created=False, panel=None):
     """Switch the drag handles on (for *node*, else the selection; a
     selected 2D shape is extruded first). *created*: Cancel removes the
     extrude again."""
@@ -171,10 +171,13 @@ def start(window, node=None, quiet=False, created=False):
     view.edit_tool = tool
     view.setMouseTracking(True)
     view.update()
-    # its window: profiles, direction, end condition, distance, OK
+    # its window — profiles, direction, end condition, distance, OK —
+    # for a NEW extrude; one merely selected shows its arrow, and its
+    # Properties say the same things (the window covered them)
     try:
         from . import extrude_panel
-        extrude_panel.show(window, tool)
+        if created if panel is None else panel:
+            extrude_panel.show(window, tool)
     except Exception:                          # never stop the arrow
         import traceback
         traceback.print_exc()

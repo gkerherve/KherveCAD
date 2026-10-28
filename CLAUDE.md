@@ -3176,6 +3176,24 @@ into a new module and import.
                        tool's. Its own edits set `busy`, so the selection
                        moving (Reverse wraps a mirror) does not close it.
                        Next tools for it: Revolve, Fillet, Chamfer, Hole.
+                       It opens for a NEW extrude (and a face Boss); a
+                       selected one shows its arrow and `extrude_props`
+                       gives its Properties the same words (Profiles,
+                       Direction, End condition, Distance (2), Reverse,
+                       then Twist / Scale / Slices). The window has Twist
+                       and Scale too. Known: test_drag_feature sometimes
+                       crashes in PyQt's clean-up at exit (all tests pass)
+                       since the window opens there — not yet pinned.
+  - 2026-10-28 sketch view: the section (face_outline) is painted UNDER
+                       the shapes in light blue (over them it hid a thin
+                       line); shapes a Regions holds are outlines and
+                       `region_area.py` draws the area it keeps (outlined
+                       when the Regions is selected; its shapes stay
+                       clickable — no ContainerArea lock); Smart Dimension
+                       to a shape of ANOTHER sketch copies its point in as
+                       a fixed Reference point; the Main tab (assembly)
+                       shows no sketch dimensions of an Object
+                       (`sketch_dims3d.assembly_mode`).
   - `equalize.py`    — **equal sizes between parts** (2026-10-21, the
                        user: "choose two surfaces to be the same"): two
                        size params share ONE new / reused document

@@ -169,6 +169,10 @@ class ToolGuide(QFrame):
         self.mode = "applied"
         spec = NODE_TYPES.get(op, {})
         labels = [label for _k, label, *_r in spec.get("schema", [])][:5]
+        if op == "linear_extrude":
+            # its Properties speak like the Extrude window (extrude_props)
+            labels = ["Direction", "End condition", "Distance",
+                      "Reverse direction", "Twist", "Scale"]
         settings = ", ".join(labels)
         what = tooltips.entry(op)[1]
         html = language.tr(

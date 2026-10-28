@@ -113,4 +113,112 @@ def test_reverse_keeps_the_window_open(win):
     QTest.qWait(50)
     assert extrude_panel._panel(win) is panel and panel.isVisible()
     assert drag_feature.reversed_of(ext) is not None
-    assert win.view3d.edit_tool is panel.tool
+    assert win.view3d.edit_tool is panel.tool()
+
+
+def test_the_extrude_properties_speak_like_its_window(win):
+    """Properties of a Boss / Cut extrude: Profiles, Direction, End
+    condition, Distance (2), Reverse — then Twist, Scale, Slices."""
+    from PyQt5.QtWidgets import QCheckBox, QComboBox
+    panel, ext = _rect_extrude(win)
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
+    QTest.qWait(50)
+    win.builder.active_tree().select_nodes([ext])
+    QTest.qWait(50)
+    props = win.properties
+    assert props.node is ext
+    st = props._extrude
+    assert "Rectangle" in st["profiles"].text() or \
+        "region" in st["profiles"].text()
+    for key in ("height", "height2", "twist", "scale", "segments"):
+        assert key in props._editors
+    assert "center" not in props._editors and "extent" not in \
+        props._editors                         # spoken as Direction / End
+    st["direction"].setCurrentIndex(st["direction"].findData("symmetric"))
+    assert ext.params["center"] is True
+    st["direction"].setCurrentIndex(st["direction"].findData("two"))
+    assert not ext.params["center"] and ext.params["height2"] > 0
+    assert st["row:height2"][1].isVisibleTo(props)
+    st["direction"].setCurrentIndex(st["direction"].findData("one"))
+    assert not st["row:height2"][1].isVisibleTo(props)
+    st["reverse"].click()                    # its box, as a click does
+    QTest.qWait(30)
+    assert extrude_panel.is_reversed(ext)
+    assert win.properties.node is ext          # still showing it
+    st = props._extrude                        # (rebuilt for it)
+    assert st["reverse"].isChecked()
+    st["extent"].setCurrentIndex(st["extent"].findData("through_all"))
+    assert ext.params["extent"] == "through_all"
+    assert not st["row:height"][1].isEnabled()
+    # the arrow / window changing the height shows here too
+    win.model.set_param(ext, "height", 6)
+    QApplication.processEvents()
+    assert props._editors["height"].currentText().startswith("6")
+
+
+def test_twist_and_scale_in_the_extrude_window(win):
+    panel, ext = _rect_extrude(win)
+    _type(panel.fields["twist"], "90")
+    assert ext.params["twist"] == pytest.approx(90)
+    _type(panel.fields["scale"], "0.5")
+    assert ext.params["scale"] == pytest.approx(0.5)
+    win.model.set_param(ext, "twist", 30)       # changed elsewhere
+    QApplication.processEvents()
+    assert panel.fields["twist"].value() == pytest.approx(30)
+
+
+def test_the_assembly_shows_no_sketch_dimensions(win):
+    """The Main tab is the assembly: an Object's sketch dimensions show
+    in its Object tab and while sketching, not among the parts."""
+    from khervecad import sketch_constraints as sc, sketch_dims3d
+    from khervecad import sketch_constrain_ui as ui
+    m = win.model
+    obj = m.add_node("component", {}, name="Washer")
+    obj.visible = True
+    sk = m.add_node("linear_extrude", dict(height=3), parent=obj)
+    m.add_node("circle", dict(x=0, y=0, radius=10), parent=sk)
+    sc.add_dimension(m, sk, "diameter", ["0.o"], 20)
+    QTest.qWait(50)
+    win.builder.open_component(obj)            # the Object tab
+    QTest.qWait(80)
+    assert not sketch_dims3d.assembly_mode(win)
+    assert sketch_dims3d.placements(win)
+    win.builder.setCurrentIndex(0)                # the Main tab
+    QTest.qWait(80)
+    assert sketch_dims3d.assembly_mode(win)
+    assert sketch_dims3d.placements(win) == []
+    assert sk not in ui.shown_containers(win.scene)
+
+
+def test_a_region_and_its_shapes_are_highlighted(win):
+    """In the 2D view a Regions node shows the area it keeps; selected,
+    that area is outlined; a shape of it selected shows its own blue
+    outline (the shapes are outlines once a Regions uses them)."""
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtGui import QColor
+    from khervecad import region_area, sketch_regions as R
+    m = win.model
+    g = m.add_node("union", {}, name="Sketch")
+    for r in (10, 4):
+        m.add_node("circle", dict(x=0, y=0, radius=r), parent=g)
+    m.add_node("rect", dict(x=-20, y=-15, width=40, height=30), parent=g)
+    shapes = R.shapes_of(g)
+    got = R.faces(shapes)
+    reg = R.make(m, g, got, R.solid_faces(shapes, got), hide=shapes)
+    QTest.qWait(80)
+    scene = win.view2d.scene()
+    areas = scene._region_areas
+    assert len(areas) == 1 and areas[0].node is reg
+    assert areas[0].pen().style() == Qt.NoPen      # not selected yet
+    tree = win.builder.active_tree()
+    tree.select_nodes([reg])
+    QTest.qWait(100)
+    area = scene._region_areas[0]
+    assert area.pen().style() != Qt.NoPen          # the region, outlined
+    big = reg.children[0]
+    tree.select_nodes([big])
+    QTest.qWait(100)
+    item = scene._items[big.id]
+    # selected and selectable: drawn in the selection blue (ShapeItem.paint,
+    # pixel-checked in test_sketch_regions_mouse)
+    assert item.isSelected() and item.flags() & item.ItemIsSelectable
