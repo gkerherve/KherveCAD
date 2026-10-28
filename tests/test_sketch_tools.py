@@ -1108,3 +1108,20 @@ def test_a_fillet_where_an_ear_meets_the_plate_adds_material():
                     edges=[[10.0, 5.0, 5.0, 10.0, 15.0, 5.0]])
     res = fillet.baked(f, {})
     assert res["adds"] and not res["cuts"]
+
+
+def test_two_lines_join_two_circles_into_one_region():
+    """Two circles joined by two lines (a lever's outline): the waist
+    between the lines is a face, so the whole outline can be extruded."""
+    from khervecad.model import DocumentModel
+    from khervecad import sketch_regions as R
+    m = DocumentModel()
+    g = m.add_node("union", {})
+    m.add_node("circle", dict(x=0, y=0, radius=18.5), parent=g)
+    m.add_node("circle", dict(x=0, y=40, radius=12.35), parent=g)
+    m.add_node("line", dict(x1=-14.6, y1=1.2, x2=-10, y2=40.2), parent=g)
+    m.add_node("line", dict(x1=14.8, y1=1.3, x2=10.6, y2=40.3), parent=g)
+    f = R.faces(R.shapes_of(g))
+    assert R.face_at(f, (0, 20)) is not None
+    assert R.face_at(f, (-16, 25)) is None     # outside the lines: no face
+    assert R.overlapping(g)

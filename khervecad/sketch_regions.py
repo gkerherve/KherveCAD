@@ -23,6 +23,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 REGIONS = "regions"
 MAKE = "make_region"     # Create Region: the Regions node, no extrude
 MAX_SHAPES = 10        # 2^n combinations
@@ -60,6 +62,7 @@ def faces(shapes, any_state=False):
         if cs is not None and not cs.is_empty():
             secs.append(cs)
             owners.append(shapes.index(first))
+    closed_shapes = len(secs)
     for s in shapes[:MAX_SHAPES]:
         if s in lines:
             continue
@@ -73,6 +76,13 @@ def faces(shapes, any_state=False):
         if cs is not None and not cs.is_empty():
             secs.append(cs)
             owners.append(shapes.index(s))
+    # two open runs of lines whose ends rest on other shapes close a
+    # region between them (two circles joined by two lines)
+    for loop, first in bridges(lines, secs[closed_shapes:]):
+        cs = _cross_section([loop])
+        if cs is not None and not cs.is_empty():
+            secs.append(cs)
+            owners.append(shapes.index(first))
     out = []
     n = len(secs)
     for mask in range(1, 1 << n):
@@ -149,6 +159,87 @@ def line_loops(lines):
                 pts.reverse()
             loops.append((pts, ln))
     return loops
+
+
+REST = 0.5            # mm: a line end this near a shape rests on it
+
+
+def _chains(lines):
+    """[(points, first line)] of the OPEN runs the *lines* make end to
+    end (a fork ends a run)."""
+    def key(p):
+        return (round(p[0] / JOIN), round(p[1] / JOIN))
+    segs, ends = [], {}
+    for ln in lines:
+        p = ln.params
+        try:
+            a = (float(p["x1"]), float(p["y1"]))
+            b = (float(p["x2"]), float(p["y2"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        segs.append((a, b, ln))
+        ends.setdefault(key(a), []).append(len(segs) - 1)
+        ends.setdefault(key(b), []).append(len(segs) - 1)
+    seen, out = set(), []
+    for i, (a, b, ln) in enumerate(segs):
+        if i in seen or len(ends[key(a)]) == 2 and len(ends[key(b)]) == 2:
+            continue                  # inside a run, or part of a loop
+        start = a if len(ends[key(a)]) != 2 else b
+        pts, cur, at = [start], i, None
+        seen.add(i)
+        while True:
+            s0, s1, _l = segs[cur]
+            at = s1 if key(s0) == key(pts[-1]) else s0
+            pts.append(at)
+            nxt = [j for j in ends[key(at)] if j not in seen]
+            if len(ends[key(at)]) != 2 or not nxt:
+                break
+            cur = nxt[0]
+            seen.add(cur)
+        out.append((pts, ln))
+    return out
+
+
+def _near(pt, cs):
+    loops = [[(float(q[0]), float(q[1])) for q in lp]
+             for lp in cs.to_polygons()]
+    if sum(_inside(pt, lp) for lp in loops) % 2:
+        return True
+    x, y = pt
+    for lp in loops:
+        for (x1, y1), (x2, y2) in zip(lp, lp[1:] + lp[:1]):
+            dx, dy = x2 - x1, y2 - y1
+            t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy or 1)
+            t = min(1.0, max(0.0, t))
+            if math.hypot(x1 + t * dx - x, y1 + t * dy - y) < REST:
+                return True
+    return False
+
+
+def bridges(lines, sections):
+    """[(points counter-clockwise, first line)]: the region between each
+    two open runs of lines whose four ends rest on the *sections* — the
+    shapes then cut it back to their own edges."""
+    rested = [(pts, ln) for pts, ln in _chains(lines)
+              if any(_near(pts[0], cs) for cs in sections)
+              and any(_near(pts[-1], cs) for cs in sections)]
+    out = []
+    for i in range(len(rested)):
+        for j in range(i + 1, len(rested)):
+            a, b = rested[i][0], rested[j][0]
+            # join end to the nearer end, so the closing sides do not cross
+            if math.dist(a[-1], b[0]) + math.dist(b[-1], a[0]) > \
+                    math.dist(a[-1], b[-1]) + math.dist(b[0], a[0]):
+                b = b[::-1]
+            pts = a + b
+            area = sum(pts[k][0] * pts[k - 1][1] - pts[k - 1][0] * pts[k][1]
+                       for k in range(len(pts)))
+            if abs(area) < 1e-6:
+                continue
+            if area > 0:
+                pts.reverse()
+            out.append((pts, rested[i][1]))
+    return out
 
 
 def _pieces(cs, eps=1e-3):
