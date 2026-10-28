@@ -550,10 +550,13 @@ def add(model, container, kind, refs, value=None, edge=None):
     env = _env(model)
     # a line tied to a circle (tangent, on it) moves, the circle stays:
     # the line is what is being drawn to it, as in SolidWorks
+    # — and so does everything else in the sketch (earlier relations
+    # would otherwise nudge a circle while the new one is met)
     shapes = [entity(container, r)[0] for r in refs]
-    keep = ([(n.id, path) for n in shapes if n.type != "line"
-             for path, _v in _vars(n, False)]
-            if any(n.type == "line" for n in shapes) else [])
+    moving = {n.id for n in shapes if n.type == "line"}
+    keep = ([(n.id, path) for n in container.children
+             if n.id not in moving and n.type in SHAPES
+             for path, _v in _vars(n, False)] if moving else [])
     report = solve(container, rs, env=env, write=False, held=keep)
     if not report["ok"]:
         raise Conflict("%s cannot hold with the sketch's other "

@@ -742,3 +742,82 @@ def test_tangent_moves_the_line_not_the_circle():
     C.add(m, g, "tangent", ["1.l", "0.o"])
     assert abs(c.params["x"]) < 1e-3 and abs(c.params["y"]) < 1e-3
     assert abs(c.params["radius"] - 30) < 1e-3
+
+
+def _move(view, x, y):
+    QTest.mouseMove(view.viewport(), view.mapFromScene(QPointF(x, y)))
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtCore import QEvent
+    pos = view.mapFromScene(QPointF(x, y))
+    QApplication.sendEvent(view.viewport(), QMouseEvent(
+        QEvent.MouseMove, QPointF(pos), Qt.NoButton, Qt.NoButton,
+        Qt.NoModifier))
+
+
+def _on_circle(c, deg):
+    r = c.params["radius"]
+    return (c.params["x"] + r * math.cos(math.radians(deg)),
+            c.params["y"] + r * math.sin(math.radians(deg)))
+
+
+def test_join_two_circles_with_tangent_lines_by_clicking(view):
+    """The user's lever: two circles, two lines, each line's ends put ON
+    the circles with Coincident and made Tangent to both, all by clicks
+    — the circles never move, and the outline is one region."""
+    from khervecad import sketch_regions as R
+    m = view.scene().model
+    big = m.add_node("circle", dict(x=0, y=0, radius=20))
+    small = m.add_node("circle", dict(x=0, y=60, radius=12))
+    left = m.add_node("line", dict(x1=-24, y1=4, x2=-16, y2=57, width=2))
+    right = m.add_node("line", dict(x1=23, y1=3, x2=15, y2=58, width=2))
+    view.centerOn(0, 30)
+    view.resetTransform()
+    view.scale(4, 4)
+    for line, side in ((left, 180), (right, 0)):
+        view.set_tool(ui.tool_of("coincident"))
+        p1 = sc._point(line, "p1", {})
+        _move(view, *p1)
+        assert view.scene()._con_hover[1] == "p1"     # the end lights up
+        view.viewport().repaint()
+        _click(view, *p1)
+        spot = _on_circle(big, side + (25 if side else -25))
+        _move(view, *spot)
+        assert view.scene()._con_hover[0] is big      # then the circle
+        _click(view, *spot)
+        assert sc.rows(m.root)[-1]["kind"] == "point_on"
+        p2 = sc._point(line, "p2", {})
+        _click(view, *p2)
+        _click(view, *_on_circle(small, side + (40 if side else -40)))
+        for c, end in ((big, "p1"), (small, "p2")):
+            view.set_tool(ui.tool_of("tangent"))
+            a, b = sc._line(line, "l", {})
+            _click(view, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+            _click(view, *_on_circle(c, side + (90 if c is big else 60)
+                                     * (1 if side == 0 else -1)))
+            assert sc.rows(m.root)[-1]["kind"] == "tangent"
+    for c, x, y, r in ((big, 0, 0, 20), (small, 0, 60, 12)):
+        assert (abs(c.params["x"] - x) < 1e-3 and abs(c.params["y"] - y)
+                < 1e-3 and abs(c.params["radius"] - r) < 1e-3)
+        for line in (left, right):
+            dist = sc._pl_dist((x, y), sc._line(line, "l", {}))
+            assert abs(abs(dist) - r) < 1e-3       # tangent
+    for line, c, end in ((left, big, "p1"), (left, small, "p2"),
+                         (right, big, "p1"), (right, small, "p2")):
+        p = sc._point(line, end, {})
+        assert abs(math.hypot(p[0] - c.params["x"], p[1] - c.params["y"])
+                   - c.params["radius"]) < 1e-3   # its end on the circle
+    f = R.faces(R.shapes_of(m.root))
+    assert R.face_at(f, (0, 30)) is not None
+
+
+def test_coincident_picks_a_curve_first_too(view):
+    m = view.scene().model
+    c = m.add_node("circle", dict(x=0, y=0, radius=10))
+    line = m.add_node("line", dict(x1=30, y1=0, x2=40, y2=10))
+    view.centerOn(15, 0)
+    view.set_tool(ui.tool_of("coincident"))
+    _click(view, 0, -10)                  # the circle first
+    _click(view, 30, 0)                   # then the line's end
+    row = sc.rows(m.root)[-1]
+    assert row["kind"] == "point_on" and row["refs"] == ["1.p1", "0.o"]
+    assert abs(c.params["x"]) < 1e-3

@@ -37,7 +37,6 @@ TOOLS = [
     ("midpoint", "mdi.format-horizontal-align-center"),
     ("symmetric", "mdi.mirror"),
     ("fix", "mdi.lock-outline"),
-    ("point_on", "mdi.vector-circle-variant"),
     ("distance", "mdi.ruler"),
     ("hdistance", "mdi.arrow-expand-horizontal"),
     ("vdistance", "mdi.arrow-expand-vertical"),
@@ -56,8 +55,10 @@ MARK = {"coincident": "●", "horizontal": "H", "vertical": "V", "diagonal": "45
 PICK_PX = 10.0
 #: what each constraint does (the tooltips' "what")
 WHAT = {
-    "coincident": "Makes two points one: line ends meet, a corner lands "
-                  "on a centre.",
+    "coincident": "Makes things touch: two points become one (line ends "
+                  "meet, a corner lands on a centre), or a point sits ON "
+                  "a line or circle — whichever is highlighted when you "
+                  "click.",
     "horizontal": "Makes a line level — or two points level with each "
                   "other.",
     "vertical": "Makes a line upright — or two points one above the "
@@ -138,7 +139,36 @@ def handles(tool):
              or tool in (PREFIX + "delete", PREFIX + "dimension"))
 
 
+#: what to click, step by step, for the tools whose second pick depends
+#: on the first (any order)
+STEPS = {
+    "coincident": ["Coincident: click a point (a line end, corner or "
+                   "centre) — or a line or circle.",
+                   "Coincident: click the point, line or circle it must "
+                   "touch."],
+    "tangent": ["Tangent: click a line or circle.",
+                "Tangent: click the circle it must touch."],
+}
+
+
+def _wants(kind, picks):
+    """What the next click may pick: None = anything."""
+    if kind == "coincident":
+        if not picks:
+            return None
+        return None if picks[0][2] == "point" else "point"
+    if kind == "tangent":
+        if not picks:
+            return "curve"
+        return "circle" if picks[0][2] == "line" else "curve"
+    if kind in sc.TWO_POINT:
+        return None if not picks else "point"
+    return sc.KINDS[kind][1][len(picks)]
+
+
 def prompt(kind, n):
+    if kind in STEPS:
+        return STEPS[kind][min(n, 1)]
     picks = sc.KINDS[kind][1]
     if kind in sc.TWO_POINT:
         return "%s: click a line, or two points." % sc.KINDS[kind][0]
@@ -225,7 +255,103 @@ def _state(scene):
 
 def drop(scene):
     scene._con_picks = []
+    scene._con_hover = None
     scene.update()
+
+
+def hover(scene, event):
+    """Highlight what a click would pick now, and say what to do."""
+    tool = getattr(scene, "tool", "")
+    if not handles(tool) or tool in (DELETE, DIMENSION):
+        return
+    kind = tool[len(PREFIX):]
+    picks = _state(scene)
+    if len(picks) >= len(sc.KINDS[kind][1]):
+        return
+    hit = pick(scene, event.scenePos(), _wants(kind, picks))
+    if hit is not None and picks and hit[0] is picks[0][0] \
+            and hit[1] == picks[0][1]:
+        hit = None
+    if hit != getattr(scene, "_con_hover", None):
+        scene._con_hover = hit
+        scene.status.emit(prompt(kind, len(picks)) if hit is None else
+                          "%s — click to pick this %s." % (
+                              prompt(kind, len(picks)), _say(hit)))
+        for v in scene.views():
+            v.viewport().update()
+
+
+def _say(hit):
+    node, name, k = hit
+    if k == "point":
+        return {"c": "centre", "p1": "line end", "p2": "line end"}.get(
+            name, "corner")
+    return "circle" if k == "circle" else "line"
+
+
+def _paint_entity(view, painter, items, node, name, colour, width):
+    """Draw one entity over the sketch, in view pixels."""
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtGui import QPen
+    from PyQt5.QtCore import Qt
+    pen = QPen(colour, width)
+    pen.setCapStyle(Qt.RoundCap)
+    painter.setPen(pen)
+    painter.setBrush(Qt.NoBrush)
+    k = sc.kind_of(node, name)
+    if k == "point":
+        p = _view_point(view, items, node, sc._point(node, name, {}))
+        painter.setBrush(colour)
+        painter.drawEllipse(p, 5.0, 5.0)
+    elif k == "line":
+        a, b = sc._line(node, name, {})
+        painter.drawLine(_view_point(view, items, node, a),
+                         _view_point(view, items, node, b))
+    else:
+        c, r = sc._circle(node, name, {})
+        pts = [_view_point(view, items, node,
+                           (c[0] + r * math.cos(t * math.pi / 36),
+                            c[1] + r * math.sin(t * math.pi / 36)))
+               for t in range(73)]
+        for a, b in zip(pts, pts[1:]):
+            painter.drawLine(a, b)
+    del QPointF
+
+
+def paint_picks(view, painter):
+    """The first pick in orange, what the cursor would pick in blue, and
+    the step to do written at the top of the view."""
+    from PyQt5.QtCore import Qt, QRectF
+    from PyQt5.QtGui import QColor
+    scene = view.scene()
+    tool = getattr(scene, "tool", "")
+    if not handles(tool) or tool in (DELETE, DIMENSION):
+        return
+    kind = tool[len(PREFIX):]
+    items = {it.node.id: it for it in _shape_items(scene)}
+    picks = _state(scene)
+    painter.save()
+    painter.resetTransform()
+    painter.setRenderHint(painter.Antialiasing, True)
+    for node, name, _k in picks:
+        _paint_entity(view, painter, items, node, name,
+                      QColor(230, 120, 20, 230), 4.0)
+    hot = getattr(scene, "_con_hover", None)
+    if hot is not None:
+        _paint_entity(view, painter, items, hot[0], hot[1],
+                      QColor(33, 118, 199, 220), 4.0)
+    text = prompt(kind, len(picks))
+    font = painter.font()
+    font.setPointSizeF(10.5)
+    painter.setFont(font)
+    w = painter.fontMetrics().horizontalAdvance(text) + 20
+    box = QRectF((view.viewport().width() - w) / 2, 8, w, 24)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(33, 118, 199, 215))
+    painter.drawRoundedRect(box, 6, 6)
+    painter.setPen(QColor("white"))
+    painter.drawText(box, int(Qt.AlignCenter), text)
+    painter.restore()
 
 
 def _ask_value(scene, kind, measured):
@@ -267,10 +393,7 @@ def press(scene, event):
     kind = scene.tool[len(PREFIX):]
     picks = _state(scene)
     wants = sc.KINDS[kind][1]
-    if kind in sc.TWO_POINT:
-        want = None if not picks else "point"
-    else:
-        want = wants[len(picks)]
+    want = _wants(kind, picks)
     hit = pick(scene, event.scenePos(), want)
     if hit is None:
         from . import face_outline         # a relation to the face's edge
@@ -287,7 +410,11 @@ def press(scene, event):
         scene.status.emit("Constraints join shapes of one group: pick a "
                           "shape beside the first.")
         return
+    if picks and hit[0] is picks[0][0] and hit[1] == picks[0][1]:
+        scene.status.emit("That is the first pick — click something else.")
+        return
     picks.append(hit)
+    scene._con_hover = None
     done = len(picks) == len(wants) or \
         (kind in sc.TWO_POINT and k == "line" and len(picks) == 1)
     if not done:
@@ -300,6 +427,12 @@ def press(scene, event):
 def finish(scene, kind):
     picks = list(_state(scene))
     drop(scene)
+    if kind == "coincident" and any(k != "point" for _n, _e, k in picks):
+        kind = "point_on"              # a point ON a line or circle
+    if kind == "point_on" and picks[0][2] != "point":
+        picks.reverse()                # the point first
+    if kind == "tangent" and picks[1][2] == "line":
+        picks.reverse()                # the line first, the circle second
     container = picks[0][0].parent
     refs = [sc.ref_of(container, node, name) for node, name, _ in picks]
     value = None
@@ -629,6 +762,7 @@ def paint(view, painter):
     from PyQt5.QtCore import QPointF, Qt
     from PyQt5.QtGui import QColor, QPen
     scene = view.scene()
+    paint_picks(view, painter)
     marks = glyphs(view)
     if not marks:
         return
@@ -664,13 +798,6 @@ def paint(view, painter):
         y = min(max(home.y(), rect.top()), rect.bottom())
         painter.drawLine(home, QPointF(x, y))
         painter.drawEllipse(home, 2.0, 2.0)
-    painter.setPen(QPen(QColor("#2176c7"), 2))
-    painter.setBrush(Qt.NoBrush)
-    items = {it.node.id: it for it in _shape_items(scene)}
-    for node, name, _ in getattr(scene, "_con_picks", []):
-        spot = _anchor(view, items, node, name)
-        if spot is not None:
-            painter.drawEllipse(spot, 6, 6)
     painter.restore()
 
 
