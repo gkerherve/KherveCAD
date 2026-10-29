@@ -550,3 +550,54 @@ def test_a_line_across_a_part_cuts_its_top_away_by_mouse(win):
     names = [n.name for n in obj.walk()]
     assert sketch_section.NAME in names                # kept with it
     del _apply
+
+
+def test_extruded_cut_offers_the_areas_a_line_makes(win):
+    """The user pressed Extruded CUT (not Boss) with a line across the
+    part: it asked for a face to sketch on and the top could not be
+    picked. It now offers the areas, and the clicked one is cut away."""
+    from khervecad.mcp_tools import McpToolExecutor
+    from khervecad import cut_feature, extrude_panel, sketch_section
+    McpToolExecutor(win).execute("apply_code", {"code": (
+        "module Plate() {\n"
+        "  translate([0, -0.5, -4.5]) rotate([90, 0, 0])"
+        " linear_extrude(height = 10, center = true) square([40, 30]);\n"
+        "  rotate([90, 0, 0]) {\n"
+        "    hull() { translate([-5, 18]) circle(d = 0.2, $fn = 32);"
+        " translate([45, 18]) circle(d = 0.2, $fn = 32); };\n"
+        "  }\n"
+        "}\n"
+        "Plate();\n")})
+    QTest.qWait(150)
+    obj = next(n for n in win.model.root.walk() if n.type == "component")
+    win.builder.open_component(obj)
+    QTest.qWait(150)
+    win.builder.active_tree().clearSelection()
+    act = next(a for a in cut_feature.actions(win)
+               if a.data() == "extruded_cut")
+    act.trigger()
+    QTest.qWait(50)
+    v3 = win.view3d
+    assert v3._pick_cb is not None
+    assert "Cut" in (v3._pick_banner or "")
+    QTest.mouseClick(v3.nav_bar.buttons["fit"], Qt.LeftButton)
+    QTest.qWait(100)
+    sketch = next(n for n in obj.walk() if n.type == "line").parent
+    o, r, u, _n = sketch_section._frame(sketch)
+    world = tuple(o[i] + r[i] * 20 + u[i] * 20 for i in range(3))
+    q = v3._project(*v3._camera(), world)          # the top area
+    p = QPoint(int(round(q[0])), int(round(q[1])))
+    _move(v3, p)
+    QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
+    QTest.qWait(30)
+    done = next(b for b in v3.findChildren(QPushButton)
+                if b.isVisible() and "Done" in b.text())
+    QTest.mouseClick(done, Qt.LeftButton)
+    QTest.qWait(100)
+    panel = extrude_panel._panel(win)
+    assert panel is not None and panel.title.text() == "Extruded Cut"
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
+    QTest.qWait(100)
+    after = analysis.mass_properties(mesh.tessellate(obj))["volume"]
+    # the section is 4.5 lower: the line at 18 leaves 22.5 of the 30
+    assert after == pytest.approx(40 * 22.5 * 10, rel=2e-2)

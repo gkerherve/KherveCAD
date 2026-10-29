@@ -174,6 +174,16 @@ def start(window, kind):
                 and not any(sketch_regions.used(s) for s in _shapes(group)):
             group.params[KEY] = kind
             return apply(window.model, group, part, kind)
+    if kind == "extruded_cut":
+        # a sketch whose lines split the part's section (a line across
+        # the lever): click the areas to cut away (the user)
+        try:
+            container = sketch_regions.overlap_container(window, nodes)
+            if container is not None and sketch_regions.start_3d(
+                    window, container, cut=True):
+                return None
+        except Exception:
+            pass
     from . import meshedit_ui
     parts = meshedit_ui._parts(window)
     if not parts:

@@ -836,7 +836,7 @@ def overlap_container(window, nodes):
     return None
 
 
-def start_3d(window, container=None, make_only=False):
+def start_3d(window, container=None, make_only=False, cut=False):
     """Pick regions on the 3D view: the region under the mouse lights
     up, a click keeps it (again drops it), Esc or right-click extrudes
     what was picked. False when no sketch has regions."""
@@ -880,6 +880,10 @@ def start_3d(window, container=None, make_only=False):
         if make_only:
             return ("Create Region: click the regions to keep (%d picked) "
                     "· Esc or right-click makes it" % len(picked))
+        if cut:
+            return ("Extruded Cut — Selected Contours: click the areas "
+                    "to cut away (%d picked) · Esc or right-click cuts"
+                    % len(picked))
         return ("Extruded Boss/Base — Selected Contours: click the "
                 "regions to extrude (%d picked) · Esc or right-click "
                 "makes it" % len(picked))
@@ -912,6 +916,16 @@ def start_3d(window, container=None, make_only=False):
                                        created=True)
                 except Exception:              # pragma: no cover
                     pass
+                if cut:
+                    # what the window's Operation ▸ Cut does
+                    from . import extrude_panel
+                    panel = extrude_panel._panel(window)
+                    box = panel.fields.get("operation") if panel else None
+                    if box is not None:
+                        box.setCurrentIndex(box.findData("cut"))
+                    else:
+                        extrude_panel.set_operation(window.model, ext,
+                                                    "cut")
             return
         picked.symmetric_difference_update({key})
         view.set_highlight_mesh([t for i in sorted(picked)
