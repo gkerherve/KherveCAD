@@ -144,8 +144,7 @@ FUSION = [
         "view/3d background", "-", "view/3d platform and shadow",
         "view/3d cavity shading", "view/3d edge lines",
         "view/3d scale bar", "view/3d ground grid", "view/3d axes (x y z)",
-        "view/3d smooth shading", "view/3d hardware rendering (opengl)",
-        "-", "view/theme", "view/interface style"]),
+        "view/3d smooth shading", "view/3d hardware rendering (opengl)"]),
     ("&Help", ["help"]),
 ]
 
@@ -187,8 +186,7 @@ SOLIDWORKS = [
                           "view/add reference image",
                           "view/clear reference images",
                           "view/compare to reference image (overlay)"]),
-        ("&User Interface", ["view/theme", "view/interface style",
-                             "view/vibe model"]),
+        ("&User Interface", ["edit/options", "view/vibe model"]),
         ("Screen &Capture", ["file/export png",
                              "file/export turntable movie",
                              "file/render photo (blender)"])]),

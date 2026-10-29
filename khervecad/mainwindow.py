@@ -647,7 +647,12 @@ class MainWindow(QMainWindow):
         self._add_view_toggles()
         view_menu.addSeparator()
         from . import toolbar_style
-        theme_menu = view_menu.addMenu(self.tr("&Theme"))
+        # Theme and Interface Style live in Tools ▸ Options (the user,
+        # 2026-10-29, as SolidWorks keeps them): built off the menu bar,
+        # so their actions still tick and the assistant still finds them
+        from PyQt5.QtWidgets import QMenu
+        self._ui_menu = QMenu(self)
+        theme_menu = self._ui_menu.addMenu(self.tr("&Theme"))
         theme_group = QActionGroup(self)
         for name in THEMES:
             act = QAction(self.tr(name), self, checkable=True)
@@ -659,7 +664,7 @@ class MainWindow(QMainWindow):
                                    toolbar_style.restyle(self)))
             theme_group.addAction(act)
             theme_menu.addAction(act)
-        toolbar_style.build_menu(self, view_menu)
+        toolbar_style.build_menu(self, self._ui_menu)
 
         analyse_menu = m.addMenu(self.tr("A&nalyse"))
         from .analysis_dialog import open_analysis
