@@ -521,10 +521,15 @@ def reference(scene, pos, want=None, parent=None):
     a point on a corner / centre — and returned as a pick
     (node, entity, kind). None when the click is on nothing."""
     from . import sketch_constraints as sc
-    info = getattr(scene, "face_outline", None)
+    # the sketch ORIGIN is offered even with no part under the sketch
+    # (the user: the middle of a line to the origin, on an empty plane)
+    info = getattr(scene, "face_outline", None) or {"points": [],
+                                                     "segments": []}
     resolver = getattr(scene, "isolation_resolver", None)
     group = resolver() if resolver else None
-    if not info or group is None:
+    if group is None:
+        group = parent
+    if group is None:
         return None
     # into the container of the shape it is dimensioned to (a cut's
     # circle lives inside its extrude, not in the sketch Group): a

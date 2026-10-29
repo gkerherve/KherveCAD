@@ -273,6 +273,7 @@ def _state(scene):
 
 def drop(scene):
     scene._con_picks = []
+    scene._con_origin_first = False
     scene._con_hover = None
     scene.update()
 
@@ -952,6 +953,15 @@ def _smart(first, second):
     return None
 
 
+def _near_origin(scene, pos):
+    """Is the click on the sketch's origin (within face_outline.SNAP_PX)?"""
+    import math
+    from . import face_outline
+    views = scene.views()
+    k = abs(views[0].transform().m11()) if views else 1.0
+    return math.hypot(pos.x(), pos.y()) * k <= face_outline.SNAP_PX
+
+
 def _centre(pick):
     """A circle pick as its centre point: a circle's c, a slot end's
     centre (its line's end)."""
@@ -1070,8 +1080,24 @@ def dimension_press(scene, event):
                 parent=picks[0][0].parent if picks else None)
         except Exception:
             hit = None
+    if not picks and getattr(scene, "_con_origin_first", False):
+        # the origin was clicked first, before any sketch was known: it
+        # joins the sketch of this second pick
+        scene._con_origin_first = False
+        if hit is not None:
+            from PyQt5.QtCore import QPointF
+            from . import face_outline
+            origin = face_outline.reference(scene, QPointF(0.0, 0.0),
+                                            "point", parent=hit[0].parent)
+            if origin is not None:
+                picks.append(origin)
     if not picks:
         if hit is None:
+            if _near_origin(scene, event.scenePos()):
+                scene._con_origin_first = True
+                scene.status.emit("Dimension: the origin — now click a "
+                                  "point, a line's middle or a circle.")
+                return
             scene.status.emit("Dimension: click a line, a circle or a "
                               "point.")
             return

@@ -814,6 +814,10 @@ class MainWindow(QMainWindow):
         self.statusBar().addWidget(self._cursor_label)
         self._measure_label = QLabel("")
         self.statusBar().addWidget(self._measure_label)
+        # a drawing tool's live size is stale once any message comes: it
+        # stayed and the two were painted over each other
+        self.statusBar().messageChanged.connect(
+            lambda text: text and self._measure_label.clear())
         self._dims_label = QLabel("")          # selected object's size
         self.statusBar().addWidget(self._dims_label)
         self._file_label = QLabel()            # current document path
