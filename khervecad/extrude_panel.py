@@ -124,22 +124,28 @@ def _holder(ext):
     return probe
 
 
-def _body_for(holder):
-    """The solid the cut removes from: the nearest sibling before the
-    sketch that makes 3D geometry."""
+def _bodies_for(holder):
+    """What the cut removes from: EVERY sibling before the sketch that
+    makes 3D geometry — the whole body, as SolidWorks cuts it (the
+    nearest one alone left the clevis's lugs uncut when the ring was the
+    feature just before the slot, 2026-10-29); else the first after it."""
     from .view2d import _produces_3d
     parent = holder.parent
     if parent is None:
-        return None
+        return []
     sibs = parent.children
     i = sibs.index(holder)
-    for node in reversed(sibs[:i]):
-        if node.visible and _produces_3d(node):
-            return node
-    for node in sibs[i + 1:]:
-        if node.visible and _produces_3d(node):
-            return node
-    return None
+    before = [n for n in sibs[:i] if n.visible and _produces_3d(n)]
+    if before:
+        return before
+    return [n for n in sibs[i + 1:]
+            if n.visible and _produces_3d(n)][:1]
+
+
+def _body_for(holder):
+    """The first of `_bodies_for`, or None."""
+    bodies = _bodies_for(holder)
+    return bodies[0] if bodies else None
 
 
 def set_operation(model, ext, op):
@@ -150,9 +156,16 @@ def set_operation(model, ext, op):
         return True
     holder = _holder(ext)
     if op == "cut":
-        body = _body_for(holder)
-        if body is None:
+        bodies = _bodies_for(holder)
+        if not bodies:
             return False
+        body = bodies[0]
+        if len(bodies) > 1:
+            # several features make the body: one group, cut as one
+            body = model.wrap_nodes(bodies, "union")
+            if body is None:
+                return False
+            model.rename(body, "Body")
         parent = body.parent
         if parent.children.index(body) > parent.children.index(holder):
             model.move_node(holder, parent, parent.children.index(body))

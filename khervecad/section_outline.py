@@ -39,23 +39,28 @@ def segments(tris, plane, offset=0.0):
     # plane crosses shows in both, a part lying ON it (extruded from
     # the plane) in one — exactly at the plane a face's triangles cut
     # into slivers
-    segs = section.cut(tris, axis, offset + NUDGE) + \
-        section.cut(tris, axis, offset - NUDGE)
-    return merged(segs) if segs else []
+    groups = [section.cut(tris, axis, offset + NUDGE),
+              section.cut(tris, axis, offset - NUDGE)]
+    return merged(groups=groups) if any(groups) else []
 
 
-def merged(segs):
+def merged(segs=None, groups=None):
     """The cut outlines as ONE region (Manifold CrossSection): parts that
     overlap — a base and its upright — meet in a real corner, and the
     slivers a cut along a face leaves fall away. Without Manifold, the
-    raw segments."""
+    raw segments. *groups*: separate cuts (just in front of and just
+    behind the plane), each chained into loops ON ITS OWN — chained
+    together, their pieces mixed where the plane ran through mesh points
+    (a pin hole's top and bottom) and the loops broke: the clevis's
+    middle fell out of its section (2026-10-29)."""
     from . import section
-    raw = [(tuple(a), tuple(b)) for a, b in segs]
+    groups = groups if groups is not None else [segs or []]
+    raw = [(tuple(a), tuple(b)) for g in groups for a, b in g]
     try:
         import manifold3d as m
     except ImportError:                              # pragma: no cover
         return raw
-    loops = [pts for pts, closed in section.chain(segs)
+    loops = [pts for g in groups if g for pts, closed in section.chain(g)
              if closed and len(pts) >= 3]
     if not loops:
         return raw
@@ -92,8 +97,10 @@ def plane_segments(tris, origin, normal, right, up):
     def cross(a, b):
         return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2],
                 a[0] * b[1] - a[1] * b[0])
-    out = []
+    groups = []
     for nudge in (NUDGE, -NUDGE):
+        out = []
+        groups.append(out)
         o = tuple(origin[i] + normal[i] * nudge for i in range(3))
         for tri in tris:
             d = [dot(sub(p, o), normal) for p in tri]
@@ -116,7 +123,7 @@ def plane_segments(tris, origin, normal, right, up):
                          round(dot(rel_a, up), 6)),
                         (round(dot(rel_b, right), 6),
                          round(dot(rel_b, up), 6))))
-    return merged(out) if out else []
+    return merged(groups=groups) if any(groups) else []
 
 
 def for_group(window, group):

@@ -88,6 +88,14 @@ def track(node):
         return
     # only when EVERY pick is still found: half way through a move (the
     # rectangle in, the circle not yet) the circle's pick was dropped
+    # ... and each in the SAME shapes as remembered: half way through
+    # the move a pick inside the part's section fell on the box of lines
+    # alone (the section not in yet) and was saved there — the clevis's
+    # bottom cut then cut only air (2026-10-29)
+    insides = node.params.get("inside") or []
+    found = sorted(face_list[i][2] for i in picked)
+    if insides and found != sorted(list(x) for x in insides):
+        return
     if picked and len(picked) == len(node.params.get("seeds") or []):
         node.params["seeds"] = [sr.seed(face_list[i][0])
                                 for i in sorted(picked)]

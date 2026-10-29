@@ -385,6 +385,14 @@ class DragFeature:
         from . import language
         ext = self.target()
         self.exit()
+        # the feature is finished: nothing stays selected (SolidWorks) —
+        # the extrude left selected made the next Sketch reopen ITS
+        # sketch instead of asking for a plane (2026-10-29)
+        try:
+            self.window.builder.active_tree().clearSelection()
+            self.window.view2d.scene().clearSelection()
+        except Exception:
+            pass
         if ext is not None:
             self.window.statusBar().showMessage(language.tr(
                 "{name} kept.").format(name=ext.name), 4000)
