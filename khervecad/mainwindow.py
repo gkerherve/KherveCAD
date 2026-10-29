@@ -1138,41 +1138,49 @@ class MainWindow(QMainWindow):
         if self._syncing:
             return
         self._syncing = True
+        # finally: an error half way once left the guard on and no
+        # later click reached Properties (2026-10-29)
         try:
-            self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
-        except Exception:
-            # a panel that cannot show a node must not stop the views
-            # following the selection (a polygon's expression point once
-            # did, and the 2D view kept the whole part on show)
-            import traceback
-            traceback.print_exc()
-        self.scene.select_nodes(nodes)
-        self.builder.highlight_nodes(nodes)
-        self._sync_highlight(nodes)
-        # picked in the TREE: frame it in the sketch whatever it is (a
-        # part is framed by _sync_highlight; a plain 2D shape was only
-        # selected in place, often off screen — the user, 2026-10-19).
-        # A click in the sketch itself never re-zooms.
-        # Not while drawing: a line just made is selected through the
-        # tree, and that pulled the view onto it (the user, twice)
-        from .view2d import SELECT
-        if nodes and self.scene.isolated_bounds() is None and \
-                getattr(self.scene, "tool", SELECT) == SELECT:
-            self.view2d.zoom_selection()
-        self._syncing = False
+            try:
+                self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+            except Exception:
+                # a panel that cannot show a node must not stop the views
+                # following the selection (a polygon's expression point once
+                # did, and the 2D view kept the whole part on show)
+                import traceback
+                traceback.print_exc()
+            self.scene.select_nodes(nodes)
+            self.builder.highlight_nodes(nodes)
+            self._sync_highlight(nodes)
+            # picked in the TREE: frame it in the sketch whatever it is (a
+            # part is framed by _sync_highlight; a plain 2D shape was only
+            # selected in place, often off screen — the user, 2026-10-19).
+            # A click in the sketch itself never re-zooms.
+            # Not while drawing: a line just made is selected through the
+            # tree, and that pulled the view onto it (the user, twice)
+            from .view2d import SELECT
+            if nodes and self.scene.isolated_bounds() is None and \
+                    getattr(self.scene, "tool", SELECT) == SELECT:
+                self.view2d.zoom_selection()
+        finally:
+            self._syncing = False
 
     def _scene_selected(self, nodes):
         if self._syncing:
             return
         self._syncing = True
-        # the tree the commands read: the Object tab's while it is open —
-        # a box round a sketch inside an Object selected nothing there,
-        # so Extruded Boss saw only the shape drawn last
-        self.builder.active_tree().select_nodes(nodes)
-        self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
-        self.builder.highlight_nodes(nodes)
-        self._sync_highlight(nodes)
-        self._syncing = False
+        # finally: an error half way once left the guard on and no
+        # later click reached Properties (2026-10-29)
+        try:
+            # the tree the commands read: the Object tab's while it is open —
+            # a box round a sketch inside an Object selected nothing there,
+            # so Extruded Boss saw only the shape drawn last
+            self.builder.active_tree().select_nodes(nodes)
+            self.properties.set_node(nodes[0] if len(nodes) == 1 else None)
+            self.builder.highlight_nodes(nodes)
+            self._sync_highlight(nodes)
+        finally:
+            self._syncing = False
 
     def _sync_highlight(self, nodes):
         """Draw the selected object's geometry highlighted in both

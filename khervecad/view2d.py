@@ -1291,7 +1291,8 @@ class SketchScene(QGraphicsScene):
                     pen = QPen(item.pen())
                     pen.setStyle(Qt.DashLine)
                     item.setPen(pen)
-                    item.setBrush(QBrush(Qt.NoBrush))
+                    if hasattr(item, "setBrush"):  # a line has no fill
+                        item.setBrush(QBrush(Qt.NoBrush))
                     item.setToolTip(language.tr(
                         "{name} — cut away by the Difference").format(
                             name=node.name))
