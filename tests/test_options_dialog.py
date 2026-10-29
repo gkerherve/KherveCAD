@@ -73,3 +73,16 @@ def test_material_and_grid_apply(win):
     from khervecad import massbar
     assert massbar.material_of(win.model) == chosen
     assert win.scene.grid_size == 2.5
+
+
+def test_cancel_takes_back_what_apply_tried(win):
+    paths = interface_menus.index(win)
+    edges = paths["view/3d edge lines"]
+    was = edges.isChecked()
+    dlg = options_dialog.OptionsDialog(win)
+    box = next(b for b, a in dlg._checks if a is edges)
+    box.click()
+    dlg.apply()                              # try it
+    assert edges.isChecked() is (not was)
+    dlg.reject()                             # Cancel: back as it was
+    assert edges.isChecked() is was

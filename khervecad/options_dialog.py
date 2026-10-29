@@ -122,6 +122,9 @@ class OptionsDialog(QDialog):
         lay.addWidget(buttons)
         self.resize(760, 480)
         self.setCurrentRow(0)
+        # Apply to try a setting, Cancel to take it back (the user)
+        self._initial = self._state()
+        self._applied = False
 
     def setCurrentRow(self, row):
         row = max(0, min(int(row), len(self._items) - 1))
@@ -360,6 +363,7 @@ class OptionsDialog(QDialog):
 
     # ── applying ───────────────────────────────────────────────────
     def apply(self):
+        self._applied = True
         win = self.win
         code = self.lang.currentData()
         if code != language.current_language():
@@ -415,9 +419,50 @@ class OptionsDialog(QDialog):
         if self.material.currentData() != massbar.material_of(model):
             massbar.set_material(win, self.material.currentData())
 
+    def _widgets(self):
+        boxes = [self.lang, self.theme, self.style, self.autosave,
+                 self.scale_first, self.grid, self.history, self.unit,
+                 self.scale, self.fn, self.decimals, self.zeros,
+                 self.material]
+        boxes += [b for b, _a in self._checks]
+        boxes += [c for c, _a in self._choices]
+        return boxes
+
+    def _state(self):
+        out = []
+        for w in self._widgets():
+            if isinstance(w, QComboBox):
+                out.append(w.currentIndex())
+            elif isinstance(w, QCheckBox):
+                out.append(w.isChecked())
+            elif isinstance(w, QSpinBox):
+                out.append(w.value())
+            else:
+                out.append(w.text())
+        return out
+
+    def _restore(self, state):
+        for w, v in zip(self._widgets(), state):
+            if isinstance(w, QComboBox):
+                w.setCurrentIndex(v)
+            elif isinstance(w, QCheckBox):
+                w.setChecked(v)
+            elif isinstance(w, QSpinBox):
+                w.setValue(v)
+            else:
+                w.setText(v)
+
     def accept(self):
         self.apply()
         super().accept()
+
+    def reject(self):
+        """Cancel after Apply: everything goes back as it was."""
+        if self._applied:
+            self._restore(self._initial)
+            self.apply()
+            self._applied = False
+        super().reject()
 
 
 def action(win):
