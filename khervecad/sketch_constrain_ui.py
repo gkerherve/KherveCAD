@@ -440,10 +440,18 @@ def _ask_value(scene, kind, measured):
 
 
 def _value(text):
+    """A typed dimension: a number, a calculation of numbers ("52 - 10",
+    "84 / 2" — the user) worked out, else an expression of the document
+    variables kept as written."""
     try:
         return float(text)
     except (TypeError, ValueError):
-        return text                 # an expression of the variables
+        pass
+    from .expr import resolve
+    got = resolve(str(text).replace(",", "."), {}, None)
+    if got is not None:
+        return round(got, 6)
+    return text                     # an expression of the variables
 
 
 def press(scene, event):

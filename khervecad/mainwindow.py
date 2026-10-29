@@ -1021,6 +1021,15 @@ class MainWindow(QMainWindow):
             if not sketch_regions.free_shapes(self):
                 cut_feature.start(self, "extruded_boss")
                 return
+        if not nodes and op == "linear_extrude":
+            # the sketch just left holds ONE shape: extrude it at once,
+            # as one with several does (it asked for a click in 3D)
+            from . import sketch_regions, drag_feature
+            free = sketch_regions.free_shapes(self)
+            if len(free) == 1:
+                drag_feature.start(self, drag_feature._new_extrude(
+                    self, free[0], op), created=True)
+                return
         if not nodes and op in ("linear_extrude", "rotate_extrude"):
             # nothing selected: click the 2D shape in the 3D view, as
             # Fillet and the Hole Wizard ask for a face (the user)

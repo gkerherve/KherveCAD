@@ -221,8 +221,9 @@ def open_editor(view, rect, node, kind, index):
         view._dim_editor = None
         text = box.text().strip().replace(",", ".")
         box.deleteLater()
+        from .sketch_constrain_ui import _value
         try:
-            apply(model, node, kind, index, float(text))
+            apply(model, node, kind, index, _value(text))
         except (ValueError, KeyError, IndexError) as exc:
             win = view.window()
             if hasattr(win, "statusBar"):

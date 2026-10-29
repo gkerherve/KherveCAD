@@ -64,6 +64,12 @@ def section_shape(window, container):
         return None
     tris = [t for node, ts in parts if not _inside(container, node)
             for t in ts]
+    for node, _ts in parts:
+        if _inside(container, node):
+            # the sketch shares its plane's group with features made
+            # before (every Front sketch is one "Front sketch" rotate):
+            # those are part of the section, only its own shapes are not
+            tris += _beside(window, node, container)
     if not tris or len(tris) > MAX_TRIS:
         return None
     o, r, u, n = _frame(container)
@@ -80,6 +86,38 @@ def section_shape(window, container):
     if not paths:
         return None
     return {"points": points, "paths": paths}
+
+
+def _beside(window, part, container):
+    """World triangles of what *part* holds besides *container*'s own 2D
+    shapes and the chain down to it."""
+    from . import mesh
+    from .model import SHAPE_2D
+    chain = []
+    probe = container
+    while probe is not None:
+        chain.append(probe)
+        if probe is part:
+            break
+        probe = probe.parent
+    ids = set()
+    for holder in chain:
+        for child in holder.children:
+            if child in chain or not child.visible:
+                continue
+            if holder is container and child.category == SHAPE_2D:
+                continue
+            ids.add(child.id)
+    if not ids:
+        return []
+    root = window._render_scope()[0]
+    iso = root if root is not window.model.root else None
+    try:
+        with window._isolated_frame(iso):
+            return mesh.selected_world_tris(
+                root, ids, fn=window.model.effective_fn())
+    except Exception:
+        return []
 
 
 def _grown(loops):

@@ -46,7 +46,9 @@ def _half(window):
                 break
     # big enough to read on an empty document: a share of the view
     seen = getattr(window.view3d, "distance", 0.0) * 0.22
-    return max(MIN_HALF, reach * 0.75, seen)
+    # past the part on every side: at 0.75 a plate's Top plane lay wholly
+    # under the plate, and a click on it sketched on the plate's face
+    return max(MIN_HALF, reach * 1.2, seen)
 
 
 def _polygons(window, project):

@@ -79,24 +79,42 @@ def _open_top_sketch(win, plane="Top (XY)"):
     v2.scene().snap_enabled = False
     QTest.mouseClick(_button_for(win, sketch_mode.create_action(win)),
                      Qt.LeftButton)
-    QTest.qWait(30)
+    QTest.qWait(600)                 # the turn to the isometric ends
     h = win._plane_pick["half"]
     cam = v3._camera()
     top = None
     a_, b_ = {"Top (XY)": (0, 1), "Front (XZ)": (0, 2),
               "Side (YZ)": (1, 2)}[plane]
-    for fx in (0.8, 0.6, -0.6, -0.8):
-        for fy in (0.8, -0.8, 0.6, -0.6):
+    from khervecad import analysis, mesh
+    tris = mesh.tessellate(win.model.root)
+
+    def seen(v):
+        """Is the plane's point *v* in sight — no part in front of it?"""
+        eye = cam[0]
+        d = [v[i] - eye[i] for i in range(3)]
+        far = math.sqrt(sum(c * c for c in d))
+        hits = analysis.surface_hits(eye, [c / far for c in d],
+                                     [("p", tris)]) if tris else []
+        return all(hit["distance"] > far - 0.5 for hit in hits)
+    steps = (0.8, 0.6, -0.6, -0.8, 0.95, -0.95, 0.9, -0.9, 0.45, -0.45,
+             0.3, -0.3, 0.2, -0.2)
+    for fx in steps:
+        for fy in steps:
             v = [0.0, 0.0, 0.0]
             v[a_], v[b_] = h * fx, h * fy
             q = v3._project(*cam, v)
+            if q is None:                # behind the camera
+                continue
             cand = QPoint(int(q[0]), int(q[1]))
-            if plane_pick.hit(win, cand) == plane:
+            if not v3.rect().adjusted(20, 20, -20, -20).contains(cand):
+                continue
+            if plane_pick.hit(win, cand) == plane and seen(v):
                 top = cand
                 break
         if top:
             break
-    assert top is not None
+    assert top is not None, (h, v3.width(), v3.height(), v3.distance,
+                             v3.yaw, v3.pitch, win._plane_pick)
     QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, top)
     assert _wait(lambda: sketch_mode.sketching(win))
     QTest.qWait(200)

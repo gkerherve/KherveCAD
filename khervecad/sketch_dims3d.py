@@ -442,10 +442,8 @@ def edit(window, rect, cont, index):
         view._dim3d_editor = None
         text = box.text().strip().replace(",", ".")
         box.deleteLater()
-        try:
-            value = float(text)
-        except ValueError:
-            value = text                    # an expression of variables
+        from .sketch_constrain_ui import _value
+        value = _value(text)        # "52 - 10" -> 42; variables kept
         try:
             sc.set_value(window.model, cont, index, value)
         except (ValueError, KeyError, IndexError) as exc:

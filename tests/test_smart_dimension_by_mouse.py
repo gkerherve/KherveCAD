@@ -69,7 +69,7 @@ def test_line_middle_to_origin_and_circle_then_change_the_extrude(win):
     assert circle.params["y"] == pytest.approx(25, abs=0.01)
     _shot(win, "sd3-origin-to-circle")
     # the rectangle's top edge middle to the origin: 50 -> 40
-    asked = _dimension(win, (0, 50), (0, 0), value=40)
+    asked = _dimension(win, (0, 50), (0, 0), value="52 - 12")
     assert asked and asked[0][1] == pytest.approx(50, abs=0.01), asked
     # extrude the rectangle with its hole
     _extruded_boss(win)
@@ -97,7 +97,7 @@ def test_line_middle_to_origin_and_circle_then_change_the_extrude(win):
     QTest.qWait(50)
     box = v3._dim3d_editor
     box.selectAll()
-    QTest.keyClicks(box, "24")
+    QTest.keyClicks(box, "30 - 6")      # a calculation: 24
     QTest.keyClick(box, Qt.Key_Return)
     QTest.qWait(300)
     assert circle.params["radius"] == pytest.approx(12, abs=0.01)

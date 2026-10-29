@@ -965,6 +965,14 @@ def scale_shapes(model, container, factor):
     _remember(_nodes_of(container, rows(container)))
 
 
+_SOLIDS = ("linear_extrude", "rotate_extrude", "cube", "sphere",
+           "cylinder", "polyhedron", "stl_import", "sweep", "section_loft")
+
+
+def _part_exists(model):
+    return any(n.type in _SOLIDS and n.visible for n in model.root.walk())
+
+
 def add_dimension(model, container, kind, refs, value):
     """A sketch dimension: the FIRST one of a sketch scales the whole
     sketch to it (when the option is on and it is a length), later ones
@@ -974,6 +982,10 @@ def add_dimension(model, container, kind, refs, value):
     # never rescaled: SolidWorks scales only a free-floating sketch
     anchored = any(r["kind"] in ("fix", "on_edge")
                    for r in rows(container))
+    # nor one drawn once a part exists: it is placed against that part,
+    # and scaling about the origin slid a hole's circle off its spot (the
+    # user's bracket: Ø8 typed on four Ø10 holes pulled them all inward)
+    anchored = anchored or _part_exists(model)
     if kind in DIMENSION_KINDS and not has_dimension(container) and \
             not anchored and scale_first_enabled():
         try:

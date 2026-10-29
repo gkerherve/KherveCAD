@@ -116,10 +116,17 @@ def operation_of(ext):
 def _holder(ext):
     """The top of *ext*'s branch inside its part / scope (the sketch
     group holding it)."""
+    from .view2d import _produces_3d
     probe = ext
     while probe.parent is not None and probe.parent.type not in (
             "component", "root") and \
             not probe.parent.params.get(CUT_KEY):
+        sibs = probe.parent.children
+        if any(n.visible and _produces_3d(n)
+               for n in sibs[:sibs.index(probe)]):
+            # the sketch shares its plane's group with what was built
+            # before (every Front sketch is one rotate): cut that
+            break
         probe = probe.parent
     return probe
 
@@ -148,6 +155,27 @@ def _body_for(holder):
     return bodies[0] if bodies else None
 
 
+def _own_plane_group(model, ext, holder):
+    """A cut's sketch sharing its plane's group with earlier features is
+    moved into a group of its own (the same turn) at the end of the
+    scope, so the cut takes EVERYTHING built before — the bracket's rib,
+    made on the Side plane, stood inside a bore cut on the Front plane."""
+    plane = _plane_holder(ext)
+    if plane is None or holder is plane or plane.parent is None:
+        return holder
+    branch = holder
+    while branch.parent is not None and branch.parent is not plane:
+        branch = branch.parent
+    if branch.parent is not plane:
+        return holder
+    scope = plane.parent
+    twin = model.add_node("rotate", {k: plane.params.get(k)
+                                     for k in ("x", "y", "z")},
+                          parent=scope, name=plane.name)
+    model.move_node(branch, twin, 0)
+    return _holder(ext)
+
+
 def set_operation(model, ext, op):
     """Boss: the extrude adds (as drawn). Cut: the part before it and
     the sketch's branch go into a Difference — the area is removed, Through
@@ -156,6 +184,7 @@ def set_operation(model, ext, op):
         return True
     holder = _holder(ext)
     if op == "cut":
+        holder = _own_plane_group(model, ext, holder)
         bodies = _bodies_for(holder)
         if not bodies:
             return False

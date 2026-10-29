@@ -61,6 +61,9 @@ def _tab(win, name):
 def _sketch(win, plane):
     """The Sketch tab, Sketch, then the plane clicked in 3D."""
     _tab(win, "Sketch")
+    # Fit first, as one would: the planes then show around the part
+    QTest.mouseClick(win.view3d.nav_bar.buttons["fit"], Qt.LeftButton)
+    QTest.qWait(50)
     _open_top_sketch(win, plane)
 
 
@@ -104,9 +107,10 @@ def _click_areas(win, container, points):
         _move(v3, p)
         QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
         QTest.qWait(30)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
-    QTest.mouseClick(done, Qt.LeftButton)
+    done = next((b for b in v3.findChildren(QPushButton)
+                 if b.isVisible() and "Done" in b.text()), None)
+    if done is not None:             # else the pick ended by itself
+        QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(150)
 
 

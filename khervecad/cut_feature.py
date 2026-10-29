@@ -174,6 +174,9 @@ def start(window, kind):
                 and not any(sketch_regions.used(s) for s in _shapes(group)):
             group.params[KEY] = kind
             return apply(window.model, group, part, kind)
+    if kind == "extruded_cut" and nodes and \
+            sketch_regions.extrude_selection(window, nodes, cut=True):
+        return None                     # the selected shapes, cut whole
     if kind == "extruded_cut":
         # a sketch whose lines split the part's section (a line across
         # the lever): click the areas to cut away (the user)

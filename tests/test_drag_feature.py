@@ -216,14 +216,15 @@ def test_an_arrow_from_selection_makes_way_for_the_gumball(win):
     gumball.toggle(win, False)
 
 
-def test_linear_extrude_with_nothing_selected_asks_for_the_shape(win):
+def test_linear_extrude_with_nothing_selected_takes_the_lone_shape(win):
+    """One free shape: extruded at once, as a sketch of several is (it
+    asked for a click on it in 3D, 2026-10-29)."""
     m = win.model
     poly = m.add_node("polygon", dict(points=[[0, 0], [10, 0], [10, 10]]))
     win.builder.tree.select_nodes([])
     win._apply_operation("linear_extrude")
-    cb = win.view3d._pick_cb
-    assert cb is not None                       # waiting for a click
-    cb(dict(kind="face", pos=[5, 3, 0], dir=[0, 0, 1]), poly)
+    assert win.view3d._pick_cb is None
+    assert poly.parent.type == "linear_extrude"
     tool = win.view3d.edit_tool
     assert tool.target().type == "linear_extrude" and tool.created
     assert poly.parent is tool.target()

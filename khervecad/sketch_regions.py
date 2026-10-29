@@ -778,6 +778,11 @@ def sketch_container(window):
     for n in scope.walk():
         if not used(n) and any(c.type == "line" for c in shapes_of(n)):
             return n
+    # one closed shape (a hole's circle) the part's section splits into
+    # areas: the latest sketch holding any (the user's pivot hole)
+    for n in reversed(list(scope.walk())):
+        if not used(n) and shapes_of(n):
+            return n
     return None
 
 
@@ -823,9 +828,12 @@ def overlap_container(window, nodes):
         try:
             if overlapping(c):
                 return c
-            # loose lines the parts' outline closes into areas
+            # loose lines — or, with nothing selected, a lone circle /
+            # rectangle — the parts' outline closes into areas (a shape
+            # SELECTED is extruded whole)
             shapes = shapes_of(c)
-            if any(n.type == "line" for n in shapes):
+            if any(n.type == "line" for n in shapes) or \
+                    (shapes and not nodes):
                 from . import sketch_section
                 more, ghost = sketch_section.with_section(window, c,
                                                           shapes)
@@ -1025,7 +1033,7 @@ def extrude_targets(nodes):
     return uniq
 
 
-def extrude_selection(window, nodes):
+def extrude_selection(window, nodes, cut=False):
     """Extruded Boss on SELECTED sketch shapes — lines, a polygon's
     sides, circles: the area they close is extruded at once, holes left
     out, no regions to click (the user: "as simple as possible"). False
@@ -1037,13 +1045,13 @@ def extrude_selection(window, nodes):
         return False
     container = shapes[0].parent
     if container is None or any(s.parent is not container
-                                for s in shapes):
+                                for s in shapes) or used(container):
         return False
     shapes.sort(key=container.children.index)
     has_lines = any(s.type == "line" for s in shapes)
     try:
-        if not has_lines and (len(shapes) < 2 or not overlapping_shapes(
-                shapes)):
+        if not cut and not has_lines and (len(shapes) < 2 or
+                                          not overlapping_shapes(shapes)):
             return False
         face_list = faces(shapes)
     except Exception:                         # no Manifold, odd shapes
@@ -1064,7 +1072,22 @@ def extrude_selection(window, nodes):
         drag_feature.start(window, ext, quiet=True, created=True)
     except Exception:                          # pragma: no cover
         pass
+    if cut:
+        # Extruded Cut on selected shapes: the whole area they close is
+        # cut — no piece left standing where a part's outline split it
+        _make_cut(window, ext)
     return True
+
+
+def _make_cut(window, ext):
+    """What the Extrude window's Operation ▸ Cut does."""
+    from . import extrude_panel
+    panel = extrude_panel._panel(window)
+    box = panel.fields.get("operation") if panel else None
+    if box is not None:
+        box.setCurrentIndex(box.findData("cut"))
+    else:
+        extrude_panel.set_operation(window.model, ext, "cut")
 
 
 def from_selection(window):
