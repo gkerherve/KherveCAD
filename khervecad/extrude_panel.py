@@ -177,10 +177,11 @@ PLANE_TURNS = {"Top (XY)": (0.0, 0.0, 0.0), "Front (XZ)": (90.0, 0.0, 0.0),
 
 
 def _plane_holder(ext):
-    """The "<plane> sketch" rotate *ext* lies in, or None (on Top)."""
+    """The rotate that puts *ext*'s sketch on its plane — by its TURN,
+    not its name (an imported "Body-Rotate" read as Top) — or None."""
     probe = ext.parent
     while probe is not None and probe.type not in ("component", "root"):
-        if probe.type == "rotate" and probe.name.endswith(" sketch"):
+        if probe.type == "rotate":
             return probe
         probe = probe.parent
     return None

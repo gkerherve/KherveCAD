@@ -339,3 +339,12 @@ def test_the_extrude_window_moves_the_sketch_to_another_plane(win):
     ys = [p[1] for p in pts]
     assert max(ys) - min(ys) == pytest.approx(ext.params["height"],
                                               abs=1e-6)  # up along -Y now
+
+
+def test_the_sketch_plane_is_read_from_the_turn_not_the_name(app=None):
+    from khervecad.model import DocumentModel
+    m = DocumentModel()
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0), name="Body-Rotate")
+    ext = m.add_node("linear_extrude", dict(height=5), parent=rot)
+    m.add_node("circle", dict(radius=3), parent=ext)
+    assert extrude_panel.plane_of(ext) == "Front (XZ)"
