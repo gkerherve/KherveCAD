@@ -49,6 +49,22 @@ def build(panel, form, node):
                 fn(*a)
         return run
 
+    operation = QComboBox()
+    for v, text in ep.OPERATIONS:
+        operation.addItem(tr(text), v)
+
+    def set_op(_i):
+        ep.set_operation(model, node, operation.currentData())
+        win = panel.window()
+        builder = getattr(win, "builder", None)
+        if builder is not None:
+            tree = builder.active_tree()
+            if tree.selected_nodes() != [node]:
+                tree.select_nodes([node])
+    operation.currentIndexChanged.connect(guard(set_op))
+    form.addRow(tr("Operation"), operation)
+    st["operation"] = operation
+
     direction = QComboBox()
     for v, text in ep.DIRECTIONS:
         direction.addItem(tr(text), v)
@@ -125,7 +141,8 @@ def load(panel):
         return
     st["profiles"].setText(ep.profiles_text(node))
     d = ep.direction_of(node)
-    for key, value in (("direction", d),
+    for key, value in (("operation", ep.operation_of(node)),
+                       ("direction", d),
                        ("extent", node.params.get("extent") or "")):
         box = st[key]
         box.blockSignals(True)

@@ -3184,6 +3184,21 @@ into a new module and import.
                        and Scale too. Known: test_drag_feature sometimes
                        crashes in PyQt's clean-up at exit (all tests pass)
                        since the window opens there — not yet pinned.
+  - `wireframe.py` / `sketch_section.py` (2026-10-29, the user, from
+                       SolidCraft's extrude): the 3D toolbar's Wireframe
+                       shows the parts see-through with their real edges
+                       (shading creases) and every sketch as its lines on
+                       its plane. A sketch's loose lines make AREAS with
+                       the parts' outline at its plane (`with_section`: a
+                       transient construction polygon "Part section",
+                       kept in the sketch when an area is picked so the
+                       Regions rebuilds); Extruded Boss offers them in 3D
+                       (`sketch_container` also takes a one-line sketch).
+                       The Extrude window has Operation (Boss / Cut: the
+                       part before the sketch and the sketch's branch in a
+                       Difference marked `cut_operation`, Through all) and
+                       a Sketch plane box (`plane_pick.start(on_plane=)`
+                       moves the sketch to Front / Top / Right).
   - 2026-10-28 sketch view: the section (face_outline) is painted UNDER
                        the shapes in light blue (over them it hid a thin
                        line); shapes a Regions holds are outlines and

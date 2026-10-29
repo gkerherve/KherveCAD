@@ -773,6 +773,11 @@ def sketch_container(window):
     for n in scope.walk():
         if len(shapes_of(n)) >= 2 and not used(n):
             return n
+    # a single line the part's outline may close areas with (the user's
+    # line across the lever)
+    for n in scope.walk():
+        if not used(n) and any(c.type == "line" for c in shapes_of(n)):
+            return n
     return None
 
 
@@ -818,6 +823,14 @@ def overlap_container(window, nodes):
         try:
             if overlapping(c):
                 return c
+            # loose lines the parts' outline closes into areas
+            shapes = shapes_of(c)
+            if any(n.type == "line" for n in shapes):
+                from . import sketch_section
+                more, ghost = sketch_section.with_section(window, c,
+                                                          shapes)
+                if ghost is not None and faces(more):
+                    return c
         except Exception:                     # no Manifold, odd shapes
             return None
     return None
@@ -834,7 +847,11 @@ def start_3d(window, container=None, make_only=False):
             "Extrude regions: draw overlapping 2D shapes first (a "
             "rectangle and a circle on it).", 6000)
         return False
-    shapes = shapes_of(container)
+    # the parts' outline at the sketch's plane closes areas with its
+    # lines (the user's line across the lever, "select the top")
+    from . import sketch_section
+    shapes, ghost = sketch_section.with_section(
+        window, container, shapes_of(container))
     face_list = faces(shapes)
     if not face_list:
         return False
@@ -868,8 +885,13 @@ def start_3d(window, container=None, make_only=False):
                 "makes it" % len(picked))
 
     def on_pick(desc, key):
+        nonlocal shapes
         if desc is None:                       # done
             view.set_highlight_mesh([])
+            if picked and ghost is not None:
+                # the section the picked areas rely on: kept in the sketch
+                real = sketch_section.keep(window.model, container, ghost)
+                shapes = [real if s is ghost else s for s in shapes]
             if make_only:
                 reg = make(window.model, container, face_list, picked,
                            hide=shapes) if picked else None

@@ -171,16 +171,23 @@ def press(window, pos):
     plane = hit(window, pos)
     if plane is None:
         return False                     # a drag on empty space orbits
+    cb = state.get("on_plane")
     stop(window)
+    if cb is not None:                   # a tool asked which plane
+        cb(plane)
+        return True
     from . import normal_to
     normal_to.turn_to(window, plane)
     return True
 
 
-def start(window):
-    """Show the three planes; the next click on one sketches there."""
+def start(window, on_plane=None):
+    """Show the three planes; the next click on one sketches there — or,
+    given *on_plane*, hands it the plane clicked instead (the Extrude
+    window's Sketch plane box)."""
     from . import language
-    window._plane_pick = {"half": _half(window), "hover": None}
+    window._plane_pick = {"half": _half(window), "hover": None,
+                          "on_plane": on_plane}
     if not _all_seen(window):
         # square on to one plane the other two are edge-on: turn to the
         # isometric so all three show, as SolidWorks shows them
@@ -215,7 +222,7 @@ def _arm(window, msg):
             return
         pos = state.pop("pos", None)
         if desc is not None and node is not None:
-            if desc.get("kind") == "face":
+            if desc.get("kind") == "face" and not state.get("on_plane"):
                 stop(window)
                 face_sketch.make(window, node, desc["pos"], desc["dir"])
                 return
@@ -231,7 +238,11 @@ def _arm(window, msg):
         if plane is None:                # empty space: keep asking
             _arm(window, msg)
             return
+        cb = state.get("on_plane")
         stop(window)
+        if cb is not None:
+            cb(plane)
+            return
         from . import normal_to
         normal_to.turn_to(window, plane)
     window.view3d.start_pick(

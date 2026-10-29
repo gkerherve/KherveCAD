@@ -104,6 +104,123 @@ def set_reversed(model, ext, on):
     drag_feature.set_direction(model, ext, bool(on))
 
 
+OPERATIONS = [("join", "Boss (add)"), ("cut", "Cut (remove)")]
+#: the Difference an Operation ▸ Cut made, so Boss can undo it
+CUT_KEY = "cut_operation"
+
+
+def operation_of(ext):
+    return "cut" if is_cut(ext) else "join"
+
+
+def _holder(ext):
+    """The top of *ext*'s branch inside its part / scope (the sketch
+    group holding it)."""
+    probe = ext
+    while probe.parent is not None and probe.parent.type not in (
+            "component", "root") and \
+            not probe.parent.params.get(CUT_KEY):
+        probe = probe.parent
+    return probe
+
+
+def _body_for(holder):
+    """The solid the cut removes from: the nearest sibling before the
+    sketch that makes 3D geometry."""
+    from .view2d import _produces_3d
+    parent = holder.parent
+    if parent is None:
+        return None
+    sibs = parent.children
+    i = sibs.index(holder)
+    for node in reversed(sibs[:i]):
+        if node.visible and _produces_3d(node):
+            return node
+    for node in sibs[i + 1:]:
+        if node.visible and _produces_3d(node):
+            return node
+    return None
+
+
+def set_operation(model, ext, op):
+    """Boss: the extrude adds (as drawn). Cut: the part before it and
+    the sketch's branch go into a Difference — the area is removed, Through
+    all by default (the user: a line across the lever, the top cut)."""
+    if op == operation_of(ext):
+        return True
+    holder = _holder(ext)
+    if op == "cut":
+        body = _body_for(holder)
+        if body is None:
+            return False
+        parent = body.parent
+        if parent.children.index(body) > parent.children.index(holder):
+            model.move_node(holder, parent, parent.children.index(body))
+        diff = model.wrap_nodes([body, holder], "difference")
+        if diff is None:
+            return False
+        diff.params[CUT_KEY] = True
+        model.rename(diff, "Extruded Cut")
+        model.set_param(ext, "extent", "through_all")
+        return True
+    diff = holder.parent
+    if diff is not None and diff.params.get(CUT_KEY):
+        model.set_param(ext, "extent", "")
+        model.ungroup(diff)
+        return True
+    return False
+
+
+#: a main plane's sketch group turn (view2d.SketchScene.SKETCH_TURNS)
+PLANE_TURNS = {"Top (XY)": (0.0, 0.0, 0.0), "Front (XZ)": (90.0, 0.0, 0.0),
+               "Side (YZ)": (90.0, 0.0, 90.0)}
+
+
+def _plane_holder(ext):
+    """The "<plane> sketch" rotate *ext* lies in, or None (on Top)."""
+    probe = ext.parent
+    while probe is not None and probe.type not in ("component", "root"):
+        if probe.type == "rotate" and probe.name.endswith(" sketch"):
+            return probe
+        probe = probe.parent
+    return None
+
+
+def plane_of(ext):
+    """Front (XZ) / Top (XY) / Side (YZ) the sketch lies in, or ''."""
+    rot = _plane_holder(ext)
+    if rot is None:
+        return "Top (XY)"
+    turn = tuple(round(_num(rot.params.get(k)), 3) for k in "xyz")
+    for name, t in PLANE_TURNS.items():
+        if turn == t:
+            return name
+    return ""
+
+
+def plane_text(ext):
+    from . import plane_pick
+    name = plane_of(ext)
+    return plane_pick.name_of(name) if name else "A face / plane of its own"
+
+
+def set_plane(model, ext, plane):
+    """Put the sketch (and so its extrude) on main *plane*."""
+    turn = PLANE_TURNS.get(plane)
+    if turn is None:
+        return False
+    rot = _plane_holder(ext)
+    if rot is None:
+        holder = _holder(ext)
+        rot = model.wrap_nodes([holder], "rotate")
+        if rot is None:
+            return False
+    for k, v in zip("xyz", turn):
+        model.set_param(rot, k, v)
+    model.rename(rot, plane.split()[0] + " sketch")
+    return True
+
+
 def _panel(window):
     return getattr(window, "_extrude_panel", None)
 
@@ -137,6 +254,23 @@ def show(window, tool):
     panel.selection("profiles", "Profiles", profiles_text(ext))
     panel.set_active("profiles")
 
+    def pick_plane(_key):
+        # the planes in 3D; the one clicked takes the sketch
+        from . import plane_pick
+        panel.set_active("plane")
+
+        def chosen(plane):
+            panel.busy = True
+            try:
+                set_plane(model, ext, plane)
+            finally:
+                panel.busy = False
+            refresh(window)
+            panel.set_active("profiles")
+        plane_pick.start(window, on_plane=chosen)
+    panel.selection("plane", "Sketch plane", plane_text(ext),
+                    on_activate=pick_plane)
+
     def changed(fn):
         def run(value):
             # the panel's own edit (Reverse wraps the extrude in a mirror
@@ -156,6 +290,8 @@ def show(window, tool):
                     panel.busy = False
             refresh(window)
         return run
+    panel.choice("operation", "Operation", OPERATIONS, operation_of(ext),
+                 changed(lambda v: set_operation(model, ext, v)))
     panel.choice("direction", "Direction", DIRECTIONS, direction_of(ext),
                  changed(lambda v: set_direction(model, ext, v)))
     panel.choice("extent", "End condition", EXTENTS,
@@ -205,6 +341,11 @@ def refresh(window):
     if ext.parent is None:
         return
     d = direction_of(ext)
+    panel.set_value("operation", operation_of(ext))
+    if "plane" in panel.boxes:
+        panel.boxes["plane"].set_text(
+            plane_text(ext) + " — click to choose another")
+    panel.title.setText("Extruded Cut" if is_cut(ext) else "Extrude")
     panel.set_value("direction", d)
     panel.set_value("extent", ext.params.get("extent") or "")
     panel.set_value("height", _num(ext.params.get("height"), 10))
