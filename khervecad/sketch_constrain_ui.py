@@ -1027,6 +1027,8 @@ def _reference_copy(scene, pick, container):
     if kind == "circle":
         name, kind = ("p1" if name == "a1" else "p2") \
             if str(name).startswith("a") else "c", "point"
+    if kind == "line":
+        return _reference_edge(scene, node, name, container)
     if kind != "point":
         return None
     try:
@@ -1051,6 +1053,40 @@ def _reference_copy(scene, pick, container):
     except Exception:
         pass
     return (ref, "c", "point")
+
+
+def _reference_edge(scene, node, name, container):
+    """A fixed construction line in *container* along *node*'s edge /
+    line *name* (another sketch's rectangle side, the user's boss
+    dimensioned to the base's edge); (line, "l", "line") or None."""
+    from PyQt5.QtCore import QPointF
+    from .view2d_edit import in_frame_coords
+    try:
+        a, b = sc._line(node, name, {})
+    except (KeyError, ValueError, IndexError):
+        return None
+    items = getattr(scene, "_items", {})
+    src = items.get(node.id)
+    frame = src.parentItem() if src is not None else None
+    probe = next((items[c.id] for c in container.children
+                  if c.id in items), None)
+
+    def local(p):
+        w = frame.mapToScene(QPointF(*p)) if frame is not None \
+            else QPointF(*p)
+        q = in_frame_coords(probe, w) if probe is not None else w
+        return round(q.x(), 4), round(q.y(), 4)
+    (x1, y1), (x2, y2) = local(a), local(b)
+    ref = scene.model.add_node(
+        "line", dict(x1=x1, y1=y1, x2=x2, y2=y2, width=0.2, modifier="%"),
+        parent=container, name="Reference edge")
+    try:
+        for end in ("p1", "p2"):
+            sc.add(scene.model, container, "fix",
+                   [sc.ref_of(container, ref, end)])
+    except Exception:
+        pass
+    return (ref, "l", "line")
 
 
 def _hide_references(scene, chosen):
@@ -1152,7 +1188,8 @@ def dimension_press(scene, event):
                     first = copy
         if hit[0].parent is not first[0].parent:
             scene.status.emit("Dimensions join shapes of one sketch — "
-                              "pick a point or circle of the other one.")
+                              "pick a point, a line or a circle of the "
+                              "other one.")
             return
         made = _smart(first, hit)
     drop(scene)

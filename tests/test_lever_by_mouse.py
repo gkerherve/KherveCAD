@@ -81,45 +81,89 @@ def _open_top_sketch(win, plane="Top (XY)"):
                      Qt.LeftButton)
     QTest.qWait(600)                 # the turn to the isometric ends
     h = win._plane_pick["half"]
-    cam = v3._camera()
     top = None
-    a_, b_ = {"Top (XY)": (0, 1), "Front (XZ)": (0, 2),
-              "Side (YZ)": (1, 2)}[plane]
-    from khervecad import analysis, mesh
-    tris = mesh.tessellate(win.model.root)
+    for turn in (0, 180, 90, -90):          # orbit round if it is hidden
+        if turn:
+            v3.yaw = (v3.yaw + turn) % 360
+            v3.repaint()                     # the planes' outlines too
+            QTest.qWait(30)
+        cam = v3._camera()
+        a_, b_ = {"Top (XY)": (0, 1), "Front (XZ)": (0, 2),
+                  "Side (YZ)": (1, 2)}[plane]
+        from khervecad import analysis, mesh
+        tris = mesh.tessellate(win.model.root)
 
-    def seen(v):
-        """Is the plane's point *v* in sight — no part in front of it?"""
-        eye = cam[0]
-        d = [v[i] - eye[i] for i in range(3)]
-        far = math.sqrt(sum(c * c for c in d))
-        hits = analysis.surface_hits(eye, [c / far for c in d],
-                                     [("p", tris)]) if tris else []
-        return all(hit["distance"] > far - 0.5 for hit in hits)
-    steps = (0.8, 0.6, -0.6, -0.8, 0.95, -0.95, 0.9, -0.9, 0.45, -0.45,
-             0.3, -0.3, 0.2, -0.2)
-    for fx in steps:
-        for fy in steps:
-            v = [0.0, 0.0, 0.0]
-            v[a_], v[b_] = h * fx, h * fy
-            q = v3._project(*cam, v)
-            if q is None:                # behind the camera
-                continue
-            cand = QPoint(int(q[0]), int(q[1]))
-            if not v3.rect().adjusted(20, 20, -20, -20).contains(cand):
-                continue
-            if plane_pick.hit(win, cand) == plane and seen(v):
-                top = cand
+        def seen(v):
+            """Is the plane's point *v* in sight — no part in front of it?"""
+            eye = cam[0]
+            d = [v[i] - eye[i] for i in range(3)]
+            far = math.sqrt(sum(c * c for c in d))
+            hits = analysis.surface_hits(eye, [c / far for c in d],
+                                         [("p", tris)]) if tris else []
+            return all(hit["distance"] > far - 0.5 for hit in hits)
+        steps = (0.8, 0.6, -0.6, -0.8) + tuple(
+            k / 20.0 for k in range(-19, 20) if k)
+        for fx in steps:
+            for fy in steps:
+                v = [0.0, 0.0, 0.0]
+                v[a_], v[b_] = h * fx, h * fy
+                q = v3._project(*cam, v)
+                if q is None:                # behind the camera
+                    continue
+                cand = QPoint(int(q[0]), int(q[1]))
+                if not v3.rect().adjusted(20, 20, -20, -20).contains(cand):
+                    continue
+                if plane_pick.hit(win, cand) == plane and seen(v):
+                    top = cand
+                    break
+            if top:
                 break
         if top:
             break
-    assert top is not None, (h, v3.width(), v3.height(), v3.distance,
-                             v3.yaw, v3.pitch, win._plane_pick)
-    QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, top)
+    if top is None:
+        # the plane is behind the part from every side: double-click it
+        # under Origin in the History tree instead
+        QTest.keyClick(v3, Qt.Key_Escape)    # the 3D plane pick off
+        QTest.qWait(50)
+        _history_plane(win, plane)
+    else:
+        QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, top)
     assert _wait(lambda: sketch_mode.sketching(win))
     QTest.qWait(200)
     v2.frame_rect(QRectF(-15, -15, 60, 50))
     QTest.qWait(30)
+
+
+def _history_plane(win, plane):
+    from khervecad import tree_history
+    tree = win.builder.active_tree()
+    if not getattr(tree, "history", False):
+        btn = next(b for b in (win.builder.object_tab.history_btn,
+                               win.builder.history_btn) if b.isVisible())
+        QTest.mouseClick(btn, Qt.LeftButton)
+        QTest.qWait(100)
+        tree = win.builder.active_tree()
+    item = None
+    for i in range(tree.topLevelItemCount()):
+        top = tree.topLevelItem(i)
+        if top.data(0, tree_history.ROLE_FIXED) == "origin":
+            top.setExpanded(True)
+            for k in range(top.childCount()):
+                if top.child(k).data(0, tree_history.ROLE_FIXED) == \
+                        "plane:" + plane:
+                    item = top.child(k)
+    assert item is not None, "no %s row under Origin" % plane
+    tree.scrollToItem(item)
+    QTest.qWait(100)
+    rect = tree.visualItemRect(item)
+    # select the row, then Sketch (its tooltip: "Select it and click
+    # Sketch, or double-click")
+    QTest.mouseClick(tree.viewport(), Qt.LeftButton, Qt.NoModifier,
+                     rect.center())
+    QTest.qWait(50)
+    QTest.mouseClick(_button_for(win, sketch_mode.create_action(win)),
+                     Qt.LeftButton)
+    QTest.qWait(50)
 
 
 def _extruded_boss(win):

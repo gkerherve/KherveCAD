@@ -72,8 +72,11 @@ def to_manifold(rows, palette):
             props[k, 3] = idx
             props[k, 4] = flag
             k += 1
-    props[:, :3] = pos
     keys = np.round(pos / WELD).astype(np.int64)
+    # every point ON the weld grid: a face a rotation left 1e-13 off its
+    # plane met a cut's face that was not, and the difference kept a
+    # sheet of no thickness between them (the S bracket's boss corner)
+    props[:, :3] = keys * WELD
     _u, first, inverse = np.unique(keys, axis=0, return_index=True,
                                    return_inverse=True)
     inverse = inverse.reshape(-1)

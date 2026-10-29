@@ -44,7 +44,7 @@ def _crossings(win, origin, direction):
 def _views(win, name):
     if SHOTS:
         for yaw in (-55, 35):
-            win.view3d.snapshot(1000, 900, yaw=yaw, pitch=25,
+            win.view3d.snapshot(1000, 900, yaw=yaw, pitch=25, frame=True,
                                 clean=True)[0].save(os.path.join(
                                     SHOTS, "%s-%d.png" % (name, yaw)))
 

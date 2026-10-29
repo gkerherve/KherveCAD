@@ -83,9 +83,49 @@ def hit(window, pos):
     squarely (the biggest on screen)."""
     from PyQt5.QtCore import QPointF, Qt
     polys = window._plane_pick.get("polys") or []
-    found = [(_area(p), plane) for plane, _n, p in polys
+    found = [plane for plane, _n, p in polys
              if p.containsPoint(QPointF(pos), Qt.OddEvenFill)]
-    return max(found)[1] if found else None
+    if not found:
+        return None
+    # the plane NEAREST the eye under the cursor: by size, a big Front
+    # plane took every click meant for the Top plane it overlapped
+    depth = _depths(window, pos)
+    if depth:
+        near = [(depth[p], p) for p in found if p in depth]
+        if near:
+            return min(near)[1]
+    return max((_area(p), plane) for plane, _n, p in polys
+               if plane in found)[1]
+
+
+def _depths(window, pos):
+    """{plane: distance along the view ray through *pos*} (planes the
+    ray meets in front of the eye)."""
+    view = window.view3d
+    try:
+        eye, right, up, forward = view._camera()
+        w2, h2 = view.width() / 2, view.height() / 2
+        if view.projection == "Orthographic":
+            s = view._focal() / max(view.distance, 1e-6)
+            cx, cy = (pos.x() - w2) / s, -(pos.y() - h2) / s
+            origin = [eye[i] + right[i] * cx + up[i] * cy for i in range(3)]
+            d = list(forward)
+        else:
+            f = view._focal()
+            cx, cy = (pos.x() - w2) / f, -(pos.y() - h2) / f
+            origin = list(eye)
+            d = [right[i] * cx + up[i] * cy + forward[i] for i in range(3)]
+    except Exception:
+        return {}
+    out = {}
+    for _name, plane, (a, b) in PLANES:
+        n = 3 - a - b                      # the axis the plane faces
+        if abs(d[n]) < 1e-12:
+            continue
+        t = -origin[n] / d[n]
+        if t > 0:
+            out[plane] = t
+    return out
 
 
 def paint(window, painter, project):
