@@ -601,3 +601,7 @@ def test_extruded_cut_offers_the_areas_a_line_makes(win):
     after = analysis.mass_properties(mesh.tessellate(obj))["volume"]
     # the section is 4.5 lower: the line at 18 leaves 22.5 of the 30
     assert after == pytest.approx(40 * 22.5 * 10, rel=2e-2)
+    # nothing left standing above the line: an area cut along the part's
+    # own sides once left them as walls
+    tris = mesh.tessellate(obj)
+    assert max(p[2] for t in tris for p in t[:3]) < 18.01

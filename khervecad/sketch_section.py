@@ -22,6 +22,9 @@ the Free Software Foundation, either version 3 of the License, or
 
 NAME = "Part section"
 MAX_TRIS = 400000
+#: how far the section is grown past the part's outline (mm): an area cut
+#: exactly along the part's own side faces left them standing as walls
+GROW = 0.05
 
 
 def _frame(container):
@@ -67,15 +70,30 @@ def section_shape(window, container):
     segs = section_outline.plane_segments(tris, o, n, r, u)
     if not segs:
         return None
+    loops = [pts for pts, closed in section.chain(segs)
+             if closed and len(pts) >= 3]
+    loops = _grown(loops)
     points, paths = [], []
-    for pts, closed in section.chain(segs):
-        if not closed or len(pts) < 3:
-            continue
+    for pts in loops:
         paths.append(list(range(len(points), len(points) + len(pts))))
         points.extend([[round(p[0], 4), round(p[1], 4)] for p in pts])
     if not paths:
         return None
     return {"points": points, "paths": paths}
+
+
+def _grown(loops):
+    """*loops* (outlines CCW, holes CW) grown GROW outward, holes shrunk
+    by as much; as they are without Manifold."""
+    try:
+        import manifold3d as m
+        cs = m.CrossSection([[(float(p[0]), float(p[1])) for p in lp]
+                             for lp in loops], m.FillRule.Positive)
+        out = [list(lp) for lp in
+               cs.offset(GROW, m.JoinType.Miter).to_polygons()]
+        return [lp for lp in out if len(lp) >= 3] or loops
+    except Exception:
+        return loops
 
 
 def with_section(window, container, shapes):
