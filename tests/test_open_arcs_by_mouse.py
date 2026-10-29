@@ -109,8 +109,13 @@ def test_back_on_the_last_point_the_line_turns_into_a_tangent_arc(win):
         p = _at(win, *pt)
         _move(v2.viewport(), p)
         QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
-    # back onto (20, 0), away again, then click the arc's end
-    for pt in ((20.2, 0), (21, 3), (24, 8), (20, 20)):
+    # just leaving the point is a LINE: no arc
+    for pt in ((20.2, 0), (21, 3), (24, 8)):
+        _move(v2.viewport(), _at(win, *pt))
+        QTest.qWait(10)
+    assert not win.view2d.scene()._ln.get("arc")
+    # drawn out first, back onto (20, 0), away again: the arc
+    for pt in ((35, 10), (20.2, 0), (21, 3), (24, 8), (20, 20)):
         _move(v2.viewport(), _at(win, *pt))
         QTest.qWait(10)
     p = _at(win, 20, 20)

@@ -326,6 +326,7 @@ def press(scene, event):
     scene.node_created.emit(node)
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
+    st["away"] = st["armed"] = False          # a fresh line from here
     st.setdefault("chain", []).append(pt)
     st.setdefault("made", []).append(node)
     st["start_point"], st["start_origin"] = None, False
@@ -430,6 +431,8 @@ def move(scene, event):
 #: back to the last point, the next one is an arc"); one arc, then lines
 ARC_ARM_PX = 8.0
 ARC_GO_PX = 16.0
+#: how far the next line must first be drawn before coming back counts
+ARC_AWAY_PX = 40.0
 
 
 def _arc_switch(scene, st, raw):
@@ -438,8 +441,14 @@ def _arc_switch(scene, st, raw):
         st["armed"] = st["arc"] = False
         return
     d = math.hypot(raw.x() - start.x(), raw.y() - start.y())
-    if d <= _px(scene, ARC_ARM_PX):
+    if d >= _px(scene, ARC_AWAY_PX):
+        # the next line was really being drawn (the mouse sits ON the
+        # point right after a click: arming then made an arc far too
+        # easily — the user)
+        st["away"] = True
+    if d <= _px(scene, ARC_ARM_PX) and st.get("away"):
         st["armed"] = True
+        st["away"] = False
     elif st.get("armed") and d >= _px(scene, ARC_GO_PX):
         st["armed"] = False
         st["arc"] = not st.get("arc")
