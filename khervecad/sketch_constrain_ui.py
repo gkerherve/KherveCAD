@@ -254,6 +254,8 @@ def pick(scene, scene_pos, want=None, midpoints=False):
                 elif kind == "line":
                     a, b = sc._line(node, name, {})
                     d, rank = _seg_dist(p, a, b), 1
+                    if node.type == "line" and name == "l":
+                        d = _line_shape_dist(node, p, a, b, d, tol)
                 else:
                     c, r = sc._circle(node, name, {})
                     d = abs(math.hypot(p[0] - c[0], p[1] - c[1]) - r)
@@ -263,6 +265,25 @@ def pick(scene, scene_pos, want=None, midpoints=False):
             if d <= tol and (best is None or (rank, d) < best[0]):
                 best = ((rank, d), (node, name, kind))
     return best[1] if best else None
+
+
+def _line_shape_dist(node, p, a, b, d, tol):
+    """How far *p* is from a line node AS DRAWN: an arc along its curve
+    (not its chord), and a SLOT also from its outline — a click on the
+    slot's edge takes its centre line (the user could not dimension a
+    slot whose outline is all that shows)."""
+    from . import sketch_arc, slot2d
+    if sketch_arc.is_arc(node):
+        pts = sketch_arc.node_points(node)
+        d = min(_seg_dist(p, q0, q1) for q0, q1 in zip(pts, pts[1:]))
+    if slot2d.is_slot(node):
+        try:
+            r = float(node.params.get("width", 0)) / 2.0
+        except (TypeError, ValueError):
+            r = 0.0
+        if abs(d - r) <= tol:
+            return abs(d - r)
+    return d
 
 
 def _state(scene):

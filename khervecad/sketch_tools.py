@@ -394,6 +394,18 @@ def finish(scene):
     if tool == SLOT and node is not None and node.type == "line":
         from . import slot2d             # a slot, not "Line n"
         slot2d.mark(scene.model, node)
+        # drawn level / upright: it stays so (Horizontal / Vertical, as
+        # the Line tool does) — a dimension to one end tilted it
+        p = node.params
+        kind = "horizontal" if abs(p["y1"] - p["y2"]) < 1e-9 else \
+            "vertical" if abs(p["x1"] - p["x2"]) < 1e-9 else None
+        if kind and node.parent is not None:
+            from . import sketch_constraints as sc
+            try:
+                sc.add(scene.model, node.parent, kind,
+                       [sc.ref_of(node.parent, node, "l")])
+            except (ValueError, KeyError):
+                pass
     if tool == RECT_CENTER and node is not None and node.parent is not None \
             and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
         # drawn from the origin: its centre stays there, as SolidWorks

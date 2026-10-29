@@ -398,6 +398,28 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
         painter.setPen(self.pen())
         painter.setBrush(Qt.NoBrush)
         painter.drawPath(path)
+        from . import slot2d
+        if slot2d.is_slot(self.node):
+            # its centre line and end centres, dashed like SolidWorks'
+            # (the user: a slot showed no centre line to dimension to)
+            from . import sketch_arc
+            x1, y1 = self.rv("x1"), self.rv("y1")
+            pts = sketch_arc.points(x1, y1, self.rv("x2"), self.rv("y2"),
+                                    sketch_arc.bulge_of(self.node.params))
+            centre = QPainterPath(QPointF(pts[0][0] - x1, pts[0][1] - y1))
+            for x, y in pts[1:]:
+                centre.lineTo(x - x1, y - y1)
+            pen = QPen(QColor("#7a8a99"), 0)
+            pen.setCosmetic(True)
+            pen.setStyle(Qt.DashDotLine)
+            painter.setPen(pen)
+            painter.drawPath(centre)
+            k = abs(painter.worldTransform().m11()) or 1.0
+            c = 4.0 / k                      # 4 px crosses
+            for x, y in (pts[0], pts[-1]):
+                x, y = x - x1, y - y1
+                painter.drawLine(QPointF(x - c, y), QPointF(x + c, y))
+                painter.drawLine(QPointF(x, y - c), QPointF(x, y + c))
 
     def handle_spec(self):
         line = self.line()

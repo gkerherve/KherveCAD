@@ -767,7 +767,10 @@ def test_a_slot_is_a_slot_with_its_own_sizes(view):
            [sc.ref_of(slot.parent, slot, "a2")], 8)
     slot2d.write(m, slot, "width", 20)                 # via the R
     assert _near(slot2d.read(slot)["radius"], 10)
-    assert sc.rows(slot.parent)[0]["value"] == pytest.approx(10)
+    (radius,) = [r for r in sc.rows(slot.parent) if r["kind"] == "radius"]
+    assert radius["value"] == pytest.approx(10)
+    # drawn level, it stays level
+    assert any(r["kind"] == "horizontal" for r in sc.rows(slot.parent))
 
 
 def test_properties_shows_a_slots_sizes(window):
