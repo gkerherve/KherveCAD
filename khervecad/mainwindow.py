@@ -89,7 +89,11 @@ class MainWindow(QMainWindow):
             lambda painter, project: sketch_dims3d.paint(self, painter,
                                                          project),
             lambda painter, project: plane_pick.paint(self, painter,
-                                                      project)]
+                                                      project),
+            # Wireframe (3D toolbar): every sketch as its lines
+            lambda painter, project: __import__(
+                "khervecad.wireframe", fromlist=["paint"]).paint(
+                    self, painter, project)]
         self.view3d.click_hooks = [
             lambda pos: plane_pick.press(self, pos),
             lambda pos: sketch_dims3d.press(self, pos)]
@@ -1956,6 +1960,10 @@ class MainWindow(QMainWindow):
         viewnav.add_toggle_button(
             bar, "smart_dims", "mdi.ruler", "↔", "smart_dims_bar",
             self._smart_dims_act)
+        from . import wireframe            # edges + every sketch's lines
+        viewnav.add_toggle_button(
+            bar, "wireframe", "mdi.cube-outline", "▢", "wireframe_bar",
+            wireframe.action(self))
         planes = getattr(self, "_ref_planes_act", None)
         if planes is not None:            # Front / Top / Right on or off
             viewnav.add_toggle_button(

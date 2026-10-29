@@ -1,18 +1,12 @@
-"""Wireframe — a part's edges as printable struts (Blender's Wireframe).
+"""WIREFRAME on the 3D view's own toolbar (2026-10-29, the user, from
+SolidCraft: sketches seen as wire lines on their planes among the parts).
 
-The `wireframe` wrapper turns the edges of its children into round bars
-of ``thickness`` mm with a ball at every corner, all unioned into one
-closed solid: lamp shades, cages, geodesic domes, lightweight lattices,
-a low-poly animal as a wire sculpture. Put a Decimate (fewer, longer
-edges) or a Remesh (even ones) inside it to choose the pattern.
-
-Only real edges become struts: two triangles meeting flatter than
-``angle`` degrees share a diagonal that is just triangulation (a cube's
-face is two triangles), so it is skipped — 0 keeps every edge.
-
-The struts are Manifold cylinders placed along each edge and the whole
-lattice one batch union (csg.py), so it is exact in the preview and
-bakes like the other deformers. Qt-free.
+Switched on, the parts are drawn in the Wireframe render style (their
+edges) and every 2D sketch shape in view is drawn as its LINES on its own
+plane — a line as a segment, a circle / rectangle / polygon as its
+outline, construction dashed — over the parts, so the sketches that make
+a part (and the ones still waiting to) read in 3D. Off, the style the
+user had comes back. The same action sits in View ▸ Wireframe.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -22,104 +16,183 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-import math
-
-#: a lattice with more struts than this is refused (validation says so)
-MAX_STRUTS = 20000
+SKETCH_INK = "#1f7ae0"
+CONSTRUCTION_INK = "#7a8a99"
 
 
-def edges(tris, angle: float = 1.0):
-    """Distinct edges of *tris* ((a, b) points) whose two faces meet at
-    more than *angle* degrees; border edges always count."""
-    from .decimate import weld
-    points, faces = weld(tris)
-    normals = []
-    for f in faces:
-        a, b, c = (points[i] for i in f)
-        u = [b[k] - a[k] for k in range(3)]
-        v = [c[k] - a[k] for k in range(3)]
-        n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
-             u[0] * v[1] - u[1] * v[0]]
-        length = math.sqrt(sum(x * x for x in n)) or 1.0
-        normals.append([x / length for x in n])
-    owners = {}
-    for fi, f in enumerate(faces):
-        for a, b in ((f[0], f[1]), (f[1], f[2]), (f[2], f[0])):
-            owners.setdefault((min(a, b), max(a, b)), []).append(fi)
-    cos_limit = math.cos(math.radians(max(float(angle), 0.0)))
+def action(window):
+    act = getattr(window, "_wireframe_act", None)
+    if act is not None:
+        return act
+    from PyQt5.QtWidgets import QAction
+    from . import icons, language, tooltips
+    tooltips.TIPS.setdefault("wireframe_bar", (
+        "Wireframe",
+        "Shows the parts as their edges and every sketch as its lines on "
+        "its plane — what a part is made of, and the sketches still "
+        "waiting to become one.",
+        ["Click to switch it on; click again for the shaded parts."],
+        "Pick a sketch's area in 3D (Extruded Boss / Cut) while it is on."))
+    act = QAction(icons.icon("mdi.cube-outline"),
+                  language.tr("Wireframe"), window)
+    act.setCheckable(True)
+    tooltips.apply(act, "wireframe_bar")
+    act.toggled.connect(lambda on: set_on(window, on))
+    window._wireframe_act = act
+    return act
+
+
+def is_on(window):
+    return bool(getattr(window.view3d, "wireframe", False))
+
+
+def set_on(window, on):
+    view = window.view3d
+    on = bool(on)
+    if on == is_on(window):
+        return
+    view.wireframe = on
+    if on:
+        view._style_before_wire = view.style
+        # see-through faces; the real EDGES are drawn by paint (the
+        # Wireframe style drew every triangle — far too busy)
+        view.style = "X-ray"              # not saved: a view switch
+    else:
+        view.style = getattr(view, "_style_before_wire", None) or \
+            "Shaded"
+    act = getattr(window, "_wireframe_act", None)
+    if act is not None and act.isChecked() != on:
+        act.blockSignals(True)
+        act.setChecked(on)
+        act.blockSignals(False)
+    if not view._gl_active():
+        view._start_bsp_build()
+    view.update()
+
+
+def _shapes(window):
+    """(shape, 4x4 world matrix of its params frame) for every 2D shape
+    in view."""
+    from . import mesh
+    from .model import SHAPE_2D
+    root = window.model.root
+    scope = window._render_scope()[0]
+    iso = scope if scope is not root else None
     out = []
-    for (a, b), fs in owners.items():
-        if len(fs) == 2 and angle > 0:
-            na, nb = normals[fs[0]], normals[fs[1]]
-            if sum(x * y for x, y in zip(na, nb)) > cos_limit:
+
+    def shown(node):
+        probe = node
+        while probe is not None and probe is not (iso or root):
+            if not probe.visible and not (iso is not None and
+                                          probe is iso):
+                return False
+            probe = probe.parent
+        return True
+    base = iso or root
+    with window._isolated_frame(iso):
+        for node in base.walk():
+            if node.category != SHAPE_2D or not shown(node):
                 continue
-        out.append((points[a], points[b]))
+            if node.parent is not None and \
+                    node.parent.category == SHAPE_2D:
+                continue                   # a piece of a 2D boolean
+            out.append((node, mesh.ancestor_matrix(node, {}, stop=iso)))
     return out
 
 
-def _frame(d):
-    """A rotation (3 columns) taking +Z to unit *d*."""
-    x, y, z = d
-    ref = (1.0, 0.0, 0.0) if abs(x) < 0.9 else (0.0, 1.0, 0.0)
-    u = (ref[1] * z - ref[2] * y, ref[2] * x - ref[0] * z,
-         ref[0] * y - ref[1] * x)
-    lu = math.sqrt(sum(c * c for c in u))
-    u = tuple(c / lu for c in u)
-    v = (y * u[2] - z * u[1], z * u[0] - x * u[2], x * u[1] - y * u[0])
-    return u, v, d
+def _apply(m, p):
+    return tuple(m[i][0] * p[0] + m[i][1] * p[1] + m[i][2] * p[2]
+                 + m[i][3] for i in range(3))
 
 
-def wireframe(tris, thickness=1.0, sides=6, angle=1.0, joints=True):
-    """Triangles of the lattice, or None without Manifold."""
-    from . import csg
-    if not csg.available() or not tris or thickness <= 0:
-        return None
-    import manifold3d as m
-    r = float(thickness) / 2.0
-    n = max(int(sides), 3)
-    runs = edges(tris, angle)
-    if not runs:
-        return []
-    pieces = []
-    corners = set()
-    for i, (a, b) in enumerate(runs):
-        length = math.dist(a, b)
-        if length < 1e-9:
+def paint(window, painter, project):
+    """Every sketch's lines, over the parts (an overlay painter)."""
+    if not is_on(window):
+        return
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QPen
+    from . import mesh
+    try:
+        shapes = _shapes(window)
+    except Exception:                       # never break the paint
+        return
+    painter.save()
+    painter.setRenderHint(painter.Antialiasing, True)
+    _paint_edges(window, painter, project)
+    for node, m in shapes:
+        construction = node.params.get("modifier") == "%"
+        pen = QPen(QColor(CONSTRUCTION_INK if construction
+                          else SKETCH_INK), 1.8)
+        pen.setCosmetic(True)
+        if construction:
+            pen.setStyle(Qt.DashLine)
+        painter.setPen(pen)
+        try:
+            if node.type == "line":
+                p = node.params
+                loops = [[(float(p["x1"]), float(p["y1"])),
+                          (float(p["x2"]), float(p["y2"]))]]
+                closed = False
+            else:
+                loops = mesh.node_outlines(node, {})
+                closed = True
+        except Exception:
             continue
-        d = tuple((b[k] - a[k]) / length for k in range(3))
-        u, v, w = _frame(d)
-        # a hair of variation per strut: identical struts meeting round a
-        # symmetric vertex (a sphere's pole) cross at the very same points
-        # and the union keeps pinched, coincident vertices there
-        ri = r * (1.0 + 1e-3 * ((i * 7919) % 17) / 17.0)
-        bar = m.Manifold.cylinder(length, ri, ri, n)
-        mat = [[u[0], v[0], w[0], a[0]], [u[1], v[1], w[1], a[1]],
-               [u[2], v[2], w[2], a[2]]]
-        pieces.append(bar.transform(mat))
-        corners.add(tuple(round(c, 6) for c in a))
-        corners.add(tuple(round(c, 6) for c in b))
-    if joints:
-        # the faceted ball must CONTAIN every strut's end cap (a rim
-        # poking out leaves coincident vertices where struts meet)
-        seg = max(n, 12)
-        ball = m.Manifold.sphere(r * 1.12 / math.cos(math.pi / seg), seg)
-        pieces.extend(ball.translate(c) for c in corners)
-    solid = m.Manifold.batch_boolean(pieces, m.OpType.Add)
-    return weld_tiny(csg.to_triangles(solid))
+        for loop in loops:
+            pts = []
+            for x, y in loop:
+                q = project(_apply(m, (float(x), float(y), 0.0)))
+                if q is None:
+                    pts = []
+                    break
+                pts.append(QPointF(q[0], q[1]))
+            if len(pts) < 2:
+                continue
+            if closed:
+                pts.append(pts[0])
+            for a, b in zip(pts, pts[1:]):
+                painter.drawLine(a, b)
+    painter.restore()
 
 
-def weld_tiny(tris, digits: int = 4):
-    """Vertices closer than 10^-digits mm made one, collapsed triangles
-    dropped: where many struts cross, the union leaves edges of a
-    thousandth of a micron that the program's 4-digit points (and any
-    watertight check) would weld into doubled edges anyway."""
-    index, out = {}, []
-    for tri in tris:
-        keys = []
-        for v in tri:
-            k = (round(v[0], digits), round(v[1], digits),
-                 round(v[2], digits))
-            keys.append(index.setdefault(k, k))
-        if len(set(keys)) == 3:
-            out.append(tuple(keys))
+EDGE_INK = "#3a4048"
+
+
+def _edges(view):
+    """The part's real edges (creases + open borders) in world space,
+    cached per mesh."""
+    tris = getattr(view, "model_mesh", None) or getattr(view, "mesh", None)
+    if not tris:
+        return []
+    key = (id(tris), len(tris))
+    cache = getattr(view, "_wire_edges", None)
+    if cache is not None and cache[0] == key:
+        return cache[1]
+    from . import shading
+    try:
+        info = shading.analyse([t[:3] for t in tris])
+    except Exception:
+        return []
+    seen, out = set(), []
+    for _face, pairs in info.creases.items():
+        for p, q in pairs:
+            k = (tuple(round(c, 4) for c in p), tuple(round(c, 4) for c in q))
+            if k in seen or k[::-1] in seen:
+                continue
+            seen.add(k)
+            out.append((p, q))
+    view._wire_edges = (key, out)
     return out
+
+
+def _paint_edges(window, painter, project):
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtGui import QColor, QPen
+    pen = QPen(QColor(EDGE_INK), 1.3)
+    pen.setCosmetic(True)
+    painter.setPen(pen)
+    for p, q in _edges(window.view3d):
+        a, b = project(p), project(q)
+        if a is None or b is None:
+            continue
+        painter.drawLine(QPointF(a[0], a[1]), QPointF(b[0], b[1]))

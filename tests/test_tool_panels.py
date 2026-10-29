@@ -273,3 +273,34 @@ def test_a_sketch_line_shows_over_an_extruded_part(win):
     img = v2.viewport().grab().toImage()
     q = L._at(win, 6, 5)
     assert QColor(img.pixel(q.x(), q.y())).lightness() < 110   # the line
+
+
+def test_the_wireframe_icon_shows_edges_and_sketch_lines(win):
+    """The 3D toolbar's Wireframe: parts see-through with their real
+    edges, every sketch as its lines; off, the user's style is back."""
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad import wireframe
+    m = win.model
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0), name="Front sketch")
+    ext = m.add_node("linear_extrude", dict(height=10), parent=rot)
+    m.add_node("circle", dict(x=0, y=0, radius=10), parent=ext)
+    m.add_node("line", dict(x1=-12, y1=5, x2=12, y2=5), parent=rot)
+    QTest.qWait(100)
+    view = win.view3d
+    before = view.style
+    btn = view.nav_bar.buttons["wireframe"]
+    QTest.mouseClick(btn, Qt.LeftButton)
+    QTest.qWait(50)
+    assert wireframe.is_on(win) and view.style == "X-ray"
+    assert wireframe._edges(view)                     # rims found
+    assert len(wireframe._shapes(win)) == 2           # circle + line
+    drawn = []
+    img = QImage(300, 200, QImage.Format_ARGB32)
+    p = QPainter(img)
+    orig = p.drawLine
+    wireframe.paint(win, p, lambda v: (150 + v[0], 100 - v[2], 1.0))
+    p.end()
+    QTest.mouseClick(btn, Qt.LeftButton)
+    QTest.qWait(50)
+    assert not wireframe.is_on(win) and view.style == before
+    del drawn, orig
