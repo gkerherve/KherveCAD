@@ -2874,7 +2874,15 @@ into a new module and import.
                        reference** chapter is generated from
                        `tooltips.TIPS` with each tool's real icon, so
                        manual and tooltips cannot drift.
-  - `userguide_content.py` — the 23 chapters, `(anchor, title, html)`.
+  - `userguide_content.py` — the chapters, `(anchor, title, html)`; the
+                       guide follows the SolidWorks style first (chapters
+                       solidworks, sw-sketch, sw-features, sw-examples,
+                       options, 2026-10-29), translated in the five
+                       `userguide_content_<lang>.py` (a test keeps the
+                       anchors in step). Their `sw_*` pictures come from the
+                       mouse tests: `packaging/make_help_mouse_shots.py`;
+                       make_help_screenshots.py forces the classic style
+                       (without saving it) for the classic chapters.
                        After a UI change re-run
                        `packaging/make_help_screenshots.py`: it drives
                        the real window offscreen, stages each scene
@@ -3425,6 +3433,15 @@ into a new module and import.
                        the Edit menu and the TOP bar (a gear before Vibe
                        Model in every style, as SolidWorks' quick-access
                        Options), and the Utilities ▸ Options panel.
+                       **SolidWorks' page tree** (2026-10-29, the user: theme
+                       and interface style moved here, OFF the View menu —
+                       their actions live on a detached `win._ui_menu`):
+                       System Options General / Display / Sketch / View /
+                       Performance / FeatureManager / File Locations,
+                       Document Properties Units / Image Quality / Material.
+                       A switch is the menu's own action, found by its path
+                       (`interface_menus.index`; `_check` / `_choice`), so
+                       Options and the menus never disagree.
   - `op_pick.py`     — every solid tool (`PICKED`: transforms, hull,
                        split, shell, minkowski, deformers, sculpt / paint,
                        combine...) run with NOTHING selected asks for a
