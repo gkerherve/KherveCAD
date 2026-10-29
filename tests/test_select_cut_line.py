@@ -11,7 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtTest import QTest
 from PyQt5.QtWidgets import QApplication
 
@@ -44,6 +44,36 @@ def test_properties_follow_after_a_cut_line_is_clicked():
         tree.select_nodes([cube])
         QTest.qWait(30)
         assert w.properties.node is cube
+    finally:
+        w._dirty = False
+        w.close()
+
+
+def test_a_polygon_with_paths_draws_separate_loops():
+    """A part section kept in a sketch (outline + two holes) drew a
+    stray slanted line from one loop to the next (the user, 2026-10-29)."""
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.show()
+    QTest.qWait(50)
+    try:
+        pts = [[0, 0], [40, 0], [40, 40], [0, 40],
+               [10, 10], [10, 15], [15, 15], [15, 10],
+               [25, 25], [25, 30], [30, 30], [30, 25]]
+        node = w.model.add_node("polygon", {
+            "points": pts, "paths": [[0, 1, 2, 3], [4, 5, 6, 7],
+                                     [8, 9, 10, 11]]})
+        QTest.qWait(50)
+        w.builder.active_tree().select_nodes([node])
+        QTest.qWait(30)
+        item = w.scene._items[node.id]
+        path = item.shape()
+        # three closed loops, no line from one to the next
+        polys = path.toSubpathPolygons()
+        assert len(polys) == 3
+        assert not path.contains(QPointF(12.5, 12.5))   # a hole stays open
+        assert path.contains(QPointF(5, 5))
+        w.view2d.viewport().repaint()
     finally:
         w._dirty = False
         w.close()

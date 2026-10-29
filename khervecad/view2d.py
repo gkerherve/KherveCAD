@@ -219,7 +219,7 @@ class ShapeItem:
         if selected:
             option = QStyleOptionGraphicsItem(option)
             option.state &= ~QStyle.State_Selected
-        super().paint(painter, option, widget)
+        self._paint_body(painter, option, widget)
         if selected:
             pen = QPen(QColor(self.SELECTED_INK), 2.4)
             pen.setCosmetic(True)
@@ -233,7 +233,12 @@ class ShapeItem:
             painter.drawPath(self._outline_path())
             painter.restore()
 
+    def _paint_body(self, painter, option, widget):
+        super(ShapeItem, self).paint(painter, option, widget)
+
     def _outline_path(self):
+        if getattr(self, "_loops", None) is not None:
+            return self._loops
         path = QPainterPath()
         if isinstance(self, QGraphicsLineItem):
             line = self.line()
@@ -461,7 +466,36 @@ class PolygonShapeItem(ShapeItem, QGraphicsPolygonItem):
             drawn = [QPointF(x, y) for x, y in sketch_modify.expand(
                 [(q.x(), q.y()) for q in self._corners], p["corners"])]
         self.setPolygon(QPolygonF(drawn))
+        self._loops = None
+        if p.get("paths") and not p.get("corners"):
+            # several loops (an outline and its holes, a part's section):
+            # drawn as ONE polygon they were joined by stray lines
+            path = QPainterPath()
+            path.setFillRule(Qt.OddEvenFill)
+            for loop in p["paths"]:
+                pts = [drawn[i] for i in loop if 0 <= int(i) < len(drawn)]
+                if len(pts) >= 2:
+                    path.addPolygon(QPolygonF(pts + [pts[0]]))
+            self._loops = path
         self.reposition_handles()
+
+    def shape(self):
+        if getattr(self, "_loops", None) is not None:
+            return self._loops
+        return super().shape()
+
+    def boundingRect(self):
+        if getattr(self, "_loops", None) is not None:
+            w = self.pen().widthF()
+            return self._loops.boundingRect().adjusted(-w, -w, w, w)
+        return super().boundingRect()
+
+    def _paint_body(self, painter, option, widget):
+        if getattr(self, "_loops", None) is None:
+            return super()._paint_body(painter, option, widget)
+        painter.setPen(self.pen())
+        painter.setBrush(self.brush())
+        painter.drawPath(self._loops)
 
     def push_pos(self):
         p = self.node.params
