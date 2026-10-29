@@ -3143,6 +3143,23 @@ into a new module and import.
                        line + empty click → length, two lines → angle, two
                        points → distance, point + line); a selected
                        polygon shows every side's length.
+  - `sketch_arc.py` — **open arcs** (2026-10-29, the user: arcs must be
+                       "incomplete", showing their 3 points; spline, conic,
+                       tangent arc open like a line). An arc is a `line`
+                       with a schema-only `bulge` = tan(sweep / 4) (DXF's
+                       way; 0 / absent = straight, so old files are
+                       unchanged): ends, Coincident, Fix, dimensions, trim
+                       and Regions edges all work as for a line; a third
+                       handle ON the arc sets the bulge. Code `kcad_arc(p1,
+                       p2, bulge, d)` (a band of hulled circles), folded
+                       back by the importer. 3-point / centre / tangent
+                       arcs make one; spline, B-spline and conic make
+                       joined arcs through their points (a "Spline" group
+                       with Coincident joins). The Line tool switches to a
+                       tangent arc when the mouse goes back onto the last
+                       point and out again (SolidWorks), one arc then
+                       lines. view2d draws arcs and SLOTS as what they are
+                       (a slot showed as its centre line).
   - `sketch_mirror.py` — **Mirror Entities** (2026-10-28, the user: the
                        Mirror feature reflects about a face, not right for
                        a sketch): sketch shapes mirrored about a LINE —

@@ -80,23 +80,23 @@ def test_centre_rectangle_by_drag(view):
 
 
 def test_centre_arc(view):
+    """An OPEN arc (a line with a bulge, sketch_arc), not a pie slice."""
+    from khervecad import sketch_arc
     _draw(view, st.ARC_CENTER, [(0, 0), (20, 0), (0, 20)])
     (c,) = _nodes(view)
-    assert c.type == "circle"
-    assert _near(c.params["radius"], 20)
-    assert _near(c.params["start_angle"], 0, 2)
-    assert _near(c.params["angle"], 90, 2)
+    assert c.type == "line" and sketch_arc.is_arc(c)
+    g = sketch_arc.geometry(c.params["x1"], c.params["y1"], c.params["x2"],
+                            c.params["y2"], c.params["bulge"])
+    assert _near(g[2], 20) and _near(math.degrees(g[4]), 90, 2)
 
 
 def test_three_point_arc(view):
     _draw(view, st.ARC_3PT, [(-20, 0), (20, 0), (0, 20)])
-    (poly,) = _nodes(view)
-    assert poly.type == "polygon"
-    ox, oy = poly.params["x"], poly.params["y"]
-    for px, py in poly.params["points"]:
-        r = math.hypot(px + ox, py + oy)
-        assert py + oy >= -0.5 and (r < 20.5)
-    assert max(py + oy for _, py in poly.params["points"]) > 19
+    from khervecad import sketch_arc
+    (arc,) = _nodes(view)
+    assert arc.type == "line" and sketch_arc.is_arc(arc)
+    mx, my = sketch_arc.middle(-20, 0, 20, 0, arc.params["bulge"])
+    assert _near(mx, 0, 0.1) and _near(my, 20, 0.1)
 
 
 def test_ellipse(view):
@@ -119,9 +119,11 @@ def test_spline_enter_finishes(view):
     _draw(view, st.SPLINE, [(0, 0), (30, 0), (30, 30), (0, 30)])
     assert not _nodes(view)
     QTest.keyClick(view.viewport(), Qt.Key_Return)
-    (poly,) = _nodes(view)
-    assert poly.type == "polygon"
-    assert len(poly.params["points"]) == 4 * st.SPLINE_STEPS
+    made = [n for n in view.scene().model.root.walk() if n.type == "line"]
+    assert made                          # an OPEN curve of arcs
+    ends = {(n.params["x1"], n.params["y1"]) for n in made} | \
+        {(n.params["x2"], n.params["y2"]) for n in made}
+    assert (0, 0) in ends and (0, 30) in ends
 
 
 def test_spline_right_click_and_escape(view):
@@ -131,7 +133,7 @@ def test_spline_right_click_and_escape(view):
     assert not _nodes(view)
     _draw(view, st.SPLINE, [(0, 0), (30, 0), (15, 25)])
     _click(view, 5, 5, Qt.RightButton)
-    assert [n.type for n in _nodes(view)] == ["polygon"]
+    assert any(n.type == "line" for n in view.scene().model.root.walk())
 
 
 def test_tool_change_drops_half_drawn(view):

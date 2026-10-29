@@ -268,6 +268,9 @@ def preamble(root) -> list:
     from . import sketch_modify
     if sketch_modify.uses(root):
         lines.extend(sketch_modify.HELPER.split("\n"))
+    from . import sketch_arc
+    if sketch_arc.uses(root):
+        lines.extend(sketch_arc.HELPER.split("\n"))
     from . import sketch_constraints
     if sketch_constraints.uses(root):
         lines.extend(sketch_constraints.HELPER.split("\n"))

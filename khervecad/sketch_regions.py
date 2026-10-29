@@ -77,6 +77,16 @@ def faces(shapes, any_state=False):
                 b = (float(p["x2"]), float(p["y2"]))
             except (KeyError, TypeError, ValueError):
                 continue
+            from . import sketch_arc
+            if sketch_arc.is_arc(s):
+                # an open arc: its curve, piece by piece, an edge like a
+                # line's (it closes areas with the other edges)
+                pts = sketch_arc.points(a[0], a[1], b[0], b[1],
+                                        sketch_arc.bulge_of(p))
+                for q0, q1 in zip(pts, pts[1:]):
+                    loose.append(len(segs))
+                    segs.append((q0, q1))
+                continue
             loose.append(len(segs))
             segs.append((a, b))
             continue
@@ -666,9 +676,13 @@ def contour_pick(shapes, face_list, pt, tol):
                 b = (float(p["x2"]), float(p["y2"]))
             except (KeyError, TypeError, ValueError):
                 continue
-            d = math.dist(pt, _closest(pt, a, b)[1])
-            if d <= tol and (best is None or d < best[0]):
-                best = (d, idx, (a, b))
+            from . import sketch_arc
+            pts = sketch_arc.points(a[0], a[1], b[0], b[1],
+                                    sketch_arc.bulge_of(p))
+            for q0, q1 in zip(pts, pts[1:]):
+                d = math.dist(pt, _closest(pt, q0, q1)[1])
+                if d <= tol and (best is None or d < best[0]):
+                    best = (d, idx, (q0, q1))
             continue
         loops = collect_outlines(s) or _oriented(s, node_outlines(s, {}))
         for lp in loops:

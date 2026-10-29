@@ -1360,6 +1360,8 @@ from . import sketch_constraints as _constraints         # noqa: E402
 _BUILDERS.update(_constraints.BUILDERS)
 from . import sketch_modify as _sketch_modify            # noqa: E402
 _BUILDERS.update(_sketch_modify.BUILDERS)
+from . import sketch_arc as _sketch_arc  # noqa: E402
+_BUILDERS.update(_sketch_arc.BUILDERS)
 
 #: a name in an expression (group 1; a "string" matches with no group)
 #: and whether it is called (group 2)

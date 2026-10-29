@@ -384,6 +384,10 @@ def node_outlines(node: CadNode, env=None):
             return [[pts[i] for i in path if 0 <= i < len(pts)]
                     for path in paths]
         return [pts]
+    if node.type == "line" and p.get("bulge"):
+        from . import sketch_arc
+        if sketch_arc.is_arc(node):
+            return [sketch_arc.outline(node, env)]
     if node.type == "line":
         return [_capsule(p["x1"], p["y1"], p["x2"], p["y2"],
                          p["width"] / 2.0)]

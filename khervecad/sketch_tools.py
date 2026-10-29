@@ -94,9 +94,17 @@ def arc_center(c, s, e):
         return None
     a0 = math.degrees(math.atan2(s[1] - c[1], s[0] - c[0]))
     a1 = math.degrees(math.atan2(e[1] - c[1], e[0] - c[0]))
-    sweep = (a1 - a0) % 360.0 or 360.0
-    return [("circle", dict(x=_r(c[0]), y=_r(c[1]), radius=_r(r),
-                            start_angle=_r(a0), angle=_r(sweep)), None)]
+    sweep = (a1 - a0) % 360.0
+    if sweep < 1e-6:
+        # all the way round: the circle itself
+        return [("circle", dict(x=_r(c[0]), y=_r(c[1]), radius=_r(r)),
+                 None)]
+    # an OPEN arc (sketch_arc): its two ends and the bulge — it was a
+    # filled pie slice, so no contour could be built from arcs (the user)
+    from . import sketch_arc
+    t = math.radians(a1)
+    end = (c[0] + r * math.cos(t), c[1] + r * math.sin(t))
+    return [sketch_arc.arc_spec(s, end, sketch_arc.bulge_for_sweep(sweep))]
 
 
 def circumcentre(a, b, p):
@@ -128,10 +136,13 @@ def arc_points(a, b, p, steps=ARC_STEPS):
 
 
 def arc_3pt(a, b, p):
-    pts = arc_points(a, b, p)
-    if pts is None or math.hypot(b[0] - a[0], b[1] - a[1]) < MIN:
+    """An OPEN arc from *a* to *b* through *p*: three points to drag, not
+    a filled polygon of 32 (the user)."""
+    if circumcentre(a, b, p) is None or \
+            math.hypot(b[0] - a[0], b[1] - a[1]) < MIN:
         return None
-    return _polygon(pts)
+    from . import sketch_arc
+    return [sketch_arc.arc_spec(a, b, sketch_arc.bulge_through(a, b, p))]
 
 
 def _polygon(pts):
@@ -186,9 +197,12 @@ def spline_points(pts, steps=SPLINE_STEPS):
 
 
 def spline(*pts):
-    if len(pts) < 3:
+    """An OPEN spline through the points clicked: joined arcs, each point
+    an end or a middle handle (it was a closed filled shape)."""
+    if len(pts) < 2:
         return None
-    return _polygon(spline_points(list(pts)))
+    from . import sketch_arc
+    return sketch_arc.through(sketch_arc.catmull_open(list(pts)))
 
 
 BUILD = {RECT_CENTER: rect_center, ARC_CENTER: arc_center,
@@ -202,7 +216,8 @@ def outline(tool, pts):
     if more is not None:
         return more
     if tool == SPLINE:
-        return spline_points(pts) if len(pts) >= 3 else list(pts)
+        from . import sketch_arc
+        return sketch_arc.catmull_open(list(pts), 8)
     if len(pts) < 2:
         return []
     if tool in (RECT_CENTER, ELLIPSE):
@@ -223,7 +238,7 @@ def outline(tool, pts):
         a0 = math.atan2(s[1] - c[1], s[0] - c[0])
         e = pts[2]
         sweep = (math.atan2(e[1] - c[1], e[0] - c[0]) - a0) % (2 * math.pi)
-        return [c] + [(c[0] + r * math.cos(a0 + sweep * i / 32),
+        return [(c[0] + r * math.cos(a0 + sweep * i / 32),
                        c[1] + r * math.sin(a0 + sweep * i / 32))
                       for i in range(33)]
     if tool == ARC_3PT:
@@ -346,13 +361,14 @@ def finish(scene):
         made.append(node)
         for ktype, kparams, _ in kids or []:
             scene.model.add_node(ktype, kparams, parent=node)
-    if tool == sketch_tools2.POLYLINE and len(made) > 1:
+    if len(made) > 1 and all(n.type == "line" for n in made):
         # one Polyline group (one row, one Object in Main), each line's
         # end joined to the next one's start
         from . import sketch_constraints as sc
         group = scene.model.wrap_nodes(made, "union")
         if group is not None:
-            group.name = "Polyline"
+            group.name = "Polyline" if tool == sketch_tools2.POLYLINE \
+                else "Spline"
             node = group
         parent = made[0].parent
         try:

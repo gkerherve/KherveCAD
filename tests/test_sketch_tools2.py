@@ -117,7 +117,8 @@ def test_spline_conic_tangent_arc_and_circle(view):
                                                abs=1e-3)
     _draw(view, s2.ARC_TAN, [(99, 0), (110, 10)])
     arc = _shapes(view)[-1]
-    assert arc.type == "polygon"
+    from khervecad import sketch_arc
+    assert arc.type == "line" and sketch_arc.is_arc(arc)
     root, warnings = scadparse.parse_scad(m.to_scad())
     assert not warnings
 

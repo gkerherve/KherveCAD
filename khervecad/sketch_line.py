@@ -292,7 +292,9 @@ def press(scene, event):
         return
     if event.button() != Qt.LeftButton:
         return
-    pt, info = snap(scene, event.scenePos(), st["start"])
+    # an arc's end snaps to points, not H / V from its start
+    pt, info = snap(scene, event.scenePos(),
+                    None if st.get("arc") else st["start"])
     if st["start"] is None:
         st["start"], st["start_point"] = pt, info.get("point")
         st["start_origin"] = info.get("origin")
@@ -308,11 +310,19 @@ def press(scene, event):
     if math.hypot(pt.x() - start.x(), pt.y() - start.y()) < MIN_LEN:
         end_chain(scene)                       # a click on the start
         return
-    node = scene._create("line", dict(x1=round(start.x(), 4),
-                                      y1=round(start.y(), 4),
-                                      x2=round(pt.x(), 4),
-                                      y2=round(pt.y(), 4),
-                                      width=LINE_WIDTH))
+    params = dict(x1=round(start.x(), 4), y1=round(start.y(), 4),
+                  x2=round(pt.x(), 4), y2=round(pt.y(), 4),
+                  width=LINE_WIDTH)
+    arc = bool(st.get("arc") and st.get("prev") is not None)
+    if arc:
+        bulge = _arc_bulge(st, pt)
+        if abs(bulge) > 1e-9:
+            params["bulge"] = round(bulge, 10)
+        st["arc"] = st["armed"] = False      # one arc, then lines again
+        info = {k: v for k, v in info.items() if k != "angle"}
+    node = scene._create("line", params)
+    if arc:
+        node.name = "Arc"
     scene.node_created.emit(node)
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
@@ -361,8 +371,9 @@ def _relations(scene, node, info, st):
     def ref(n, name):
         return sc.ref_of(parent, n, name) if n.parent is parent else None
     rows = []
-    kind = info.get("angle") or _angle_of(
-        _qp(node, "p1"), _qp(node, "p2"))
+    from . import sketch_arc
+    kind = None if sketch_arc.is_arc(node) else (
+        info.get("angle") or _angle_of(_qp(node, "p1"), _qp(node, "p2")))
     if kind in ("h", "v"):
         rows.append(("horizontal" if kind == "h" else "vertical",
                      [ref(node, "l")]))
@@ -402,9 +413,73 @@ def _qp(node, name):
 
 def move(scene, event):
     st = _state(scene)
-    pt, info = snap(scene, event.scenePos(), st["start"])
+    _arc_switch(scene, st, event.scenePos())
+    if st.get("arc"):
+        pt, info = snap(scene, event.scenePos(), None, skip=None)
+        info = {k: v for k, v in info.items() if k != "guides"}
+    else:
+        pt, info = snap(scene, event.scenePos(), st["start"])
     draw_overlay(scene, st["start"], pt, info)
+    if st.get("arc") and st["start"] is not None:
+        _arc_overlay(scene, st, pt)
     event.accept()
+
+
+#: SolidWorks' line-to-arc: the mouse brought back onto the chain's last
+#: point and taken away again draws a TANGENT ARC (the user: "if we go
+#: back to the last point, the next one is an arc"); one arc, then lines
+ARC_ARM_PX = 8.0
+ARC_GO_PX = 16.0
+
+
+def _arc_switch(scene, st, raw):
+    start, prev = st.get("start"), st.get("prev")
+    if start is None or prev is None:
+        st["armed"] = st["arc"] = False
+        return
+    d = math.hypot(raw.x() - start.x(), raw.y() - start.y())
+    if d <= _px(scene, ARC_ARM_PX):
+        st["armed"] = True
+    elif st.get("armed") and d >= _px(scene, ARC_GO_PX):
+        st["armed"] = False
+        st["arc"] = not st.get("arc")
+        scene.status.emit(
+            "Line: tangent ARC — click where it ends (back on the point "
+            "and out again for a line)." if st["arc"] else
+            "Line: straight again.")
+
+
+def _arc_bulge(st, pt):
+    from . import sketch_arc
+    start = st["start"]
+    d = sketch_arc.end_tangent(st["prev"].params)
+    return sketch_arc.tangent_bulge((start.x(), start.y()), d,
+                                    (pt.x(), pt.y()))
+
+
+def _arc_overlay(scene, st, pt):
+    from PyQt5.QtCore import QPointF
+    from PyQt5.QtGui import QColor, QPainterPath, QPen
+    from PyQt5.QtCore import Qt
+    from . import sketch_arc
+    start = st["start"]
+    pts = sketch_arc.points(start.x(), start.y(), pt.x(), pt.y(),
+                            _arc_bulge(st, pt))
+    path = QPainterPath(QPointF(*pts[0]))
+    for x, y in pts[1:]:
+        path.lineTo(x, y)
+    # the straight rubber band is replaced by the arc
+    for item in list(st["items"]):
+        if hasattr(item, "line") and not hasattr(item, "rect"):
+            scene.removeItem(item)
+            st["items"].remove(item)
+    pen = QPen(QColor("#2176c7"), 0)
+    pen.setCosmetic(True)
+    pen.setWidthF(1.8)
+    item = scene.addPath(path, pen)
+    item.setZValue(1e6)
+    item.setAcceptedMouseButtons(Qt.NoButton)
+    st["items"].append(item)
 
 
 def end_chain(scene):

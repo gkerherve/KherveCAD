@@ -96,10 +96,16 @@ def _band(pts, width=LINE_W):
 
 
 def _curve(pts):
-    """An open curve as a line-wide band polygon."""
+    """An OPEN curve as joined arcs through its points (sketch_arc): it
+    was a line-wide band polygon — a filled shape that closed nothing
+    with the other edges (the user)."""
     if len(pts) < 2:
         return None
-    return [("polygon", dict(x=0.0, y=0.0, points=_band(pts)), None)]
+    from . import sketch_arc
+    if len(pts) > 5:                       # a few arcs, not dozens
+        k = len(pts) - 1
+        pts = [pts[round(i * k / 4)] for i in range(5)]
+    return sketch_arc.through(list(pts))
 
 
 # ------------------------------------------------------------ geometry
@@ -192,9 +198,14 @@ def bspline_points(ctrl, steps=8):
 
 
 def bspline(*pts):
+    """An OPEN B-spline of the control points, as joined arcs."""
     if len(pts) < 3:
         return None
-    return st._polygon(bspline_points(list(pts)))
+    ctrl = [pts[0], pts[0]] + list(pts) + [pts[-1], pts[-1]]
+    curve = bspline_points(ctrl, 2)[2 * 2:-(2 * 2 - 1)] or list(pts)
+    curve[0], curve[-1] = tuple(pts[0]), tuple(pts[-1])
+    from . import sketch_arc
+    return sketch_arc.through(curve)
 
 
 def conic_points(a, b, shoulder, rho=0.5, steps=CURVE_STEPS):
@@ -292,7 +303,11 @@ def build_tangent_arc(scene, start_click, end):
         a, b = b, a
     L = math.dist(a, b) or 1.0
     d = ((b[0] - a[0]) / L, (b[1] - a[1]) / L)
-    return _curve(tangent_arc_points(b, d, end))
+    pts = tangent_arc_points(b, d, end)
+    from . import sketch_arc               # ONE open arc, tangent at b
+    return [sketch_arc.arc_spec(
+        b, end, sketch_arc.bulge_through(b, end, pts[len(pts) // 2])
+        if len(pts) > 2 else 0.0)]
 
 
 def build_tangent_circle(scene, c1, c2, c3):

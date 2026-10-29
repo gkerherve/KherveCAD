@@ -76,7 +76,10 @@ NODE_TYPES = {
                 ("y1", "Y1", "float", -1e6, 1e6),
                 ("x2", "X2", "float", -1e6, 1e6),
                 ("y2", "Y2", "float", -1e6, 1e6),
-                ("width", "Width", "float", 0.01, 1e4)]),
+                ("width", "Width", "float", 0.01, 1e4),
+                # schema-only: 0 (absent) is the straight line; else an
+                # open arc, tan(sweep / 4) (sketch_arc.py)
+                ("bulge", "Arc bulge (0 = straight)", "float", -1e3, 1e3)]),
     "rect": dict(
         label="Rectangle", category=SHAPE_2D, icon="mdi.rectangle-outline",
         params=dict(x=0.0, y=0.0, width=40.0, height=25.0),
@@ -1013,6 +1016,10 @@ class CadNode:
     def _statement(self) -> str:
         p = self.params
         t = self.type
+        if t == "line" and p.get("bulge"):
+            from . import sketch_arc
+            if sketch_arc.is_arc(self):
+                return sketch_arc.statement(self, fmt)
         if t == "line":
             # A stroked segment: the hull of two circles gives a line
             # with round caps — a real 2D solid OpenSCAD can extrude.

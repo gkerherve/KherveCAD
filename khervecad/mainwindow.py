@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
         self.view2d.step_object.connect(
             lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
+        self.model.structure_changed.connect(self._view_after_delete)
         self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(self._note_sketch_edit)
@@ -937,6 +938,29 @@ class MainWindow(QMainWindow):
             {"cut": tree.cut_selection, "copy": tree.copy_selection,
              "paste": tree.paste_clipboard}[op]()
 
+    def _view_after_delete(self, *_):
+        """What the 2D view framed has been DELETED: back to the view it
+        had before (the user: it zoomed onto the part that no longer
+        exists, or onto the row the tree selected next). True when it
+        went back."""
+        ids = getattr(self, "_focus_ids", None)
+        if not ids:
+            return False
+        if ids & {n.id for n in self.model.root.walk()}:
+            return False
+        self._focus_ids = set()
+        # the selection the tree moves on to after it is not framed
+        self._just_deleted = True
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(0, lambda: setattr(self, "_just_deleted", False))
+        before = getattr(self, "_view_before_focus", None)
+        self._view_before_focus = None
+        if before is not None:
+            tr, centre = before
+            self.view2d.setTransform(tr)
+            self.view2d.centerOn(centre)
+        return True
+
     def _apply_operation(self, op: str):
         tree = self.builder.active_tree()
         nodes = tree.selected_nodes()
@@ -1173,7 +1197,18 @@ class MainWindow(QMainWindow):
             # tree, and that pulled the view onto it (the user, twice)
             from .view2d import SELECT
             if nodes and self.scene.isolated_bounds() is None and \
-                    getattr(self.scene, "tool", SELECT) == SELECT:
+                    getattr(self.scene, "tool", SELECT) == SELECT and \
+                    not self._view_after_delete() and \
+                    not getattr(self, "_just_deleted", False):
+                # remember the view, to go back to it if what it frames
+                # is deleted (the user: Delete zoomed onto the gone part
+                # or the row the tree selected next)
+                if getattr(self, "_view_before_focus", None) is None:
+                    v = self.view2d
+                    self._view_before_focus = (
+                        v.transform(),
+                        v.mapToScene(v.viewport().rect().center()))
+                self._focus_ids = {n.id for n in nodes}
                 self.view2d.zoom_selection()
         finally:
             self._syncing = False
@@ -1218,6 +1253,8 @@ class MainWindow(QMainWindow):
         from .view2d import SELECT
         drawing = getattr(self.scene, "tool", SELECT) != SELECT
         rect = None if drawing else self.scene.isolated_bounds()
+        if self._view_after_delete() or getattr(self, "_just_deleted", False):
+            rect = None      # the tree's next row: not framed either
         if rect is not None:
             # remember the view the selection zoom left, to come back to
             # it when what it framed is deleted (the user: deleting must

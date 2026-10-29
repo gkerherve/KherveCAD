@@ -316,6 +316,7 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
 
     def apply_node(self):
         x1, y1 = self.rv("x1"), self.rv("y1")
+        self.prepareGeometryChange()        # an arc's bulge moves its box
         self.setPos(x1, y1)
         self.setLine(0, 0, self.rv("x2") - x1, self.rv("y2") - y1)
         if self.node.params.get("modifier") == "%":
@@ -340,12 +341,86 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
         p["y2"] += dy
         self._scene.model.node_changed.emit(self.node)
 
+    def _curve(self):
+        """An ARC (sketch_arc) or a SLOT drawn as what it is — a line
+        draws as a hair whatever its width, and a slot showed as its
+        centre line alone (the user). The path in the item's frame, or
+        None for a plain line."""
+        from . import sketch_arc, slot2d
+        x1, y1 = self.rv("x1"), self.rv("y1")
+        x2, y2 = self.rv("x2"), self.rv("y2")
+        if sketch_arc.is_arc(self.node):
+            pts = sketch_arc.points(x1, y1, x2, y2,
+                                    sketch_arc.bulge_of(self.node.params))
+            if slot2d.is_slot(self.node):
+                pts = sketch_arc.band(pts, self.rv("width", 1.0)) + pts[:1]
+        elif slot2d.is_slot(self.node):
+            from .mesh import _capsule
+            pts = _capsule(x1, y1, x2, y2, self.rv("width", 1.0) / 2.0)
+            pts = pts + pts[:1]
+        else:
+            return None
+        path = QPainterPath(QPointF(pts[0][0] - x1, pts[0][1] - y1))
+        for x, y in pts[1:]:
+            path.lineTo(x - x1, y - y1)
+        return path
+
+    def boundingRect(self):
+        path = self._curve()
+        if path is None:
+            return super().boundingRect()
+        return path.boundingRect().adjusted(-2, -2, 2, 2)
+
+    def shape(self):
+        path = self._curve()
+        if path is None:
+            return super().shape()
+        from PyQt5.QtGui import QPainterPathStroker
+        stroker = QPainterPathStroker()
+        stroker.setWidth(max(self._tol(), 0.5))
+        return stroker.createStroke(path)
+
+    def _tol(self):
+        views = self.scene().views() if self.scene() else []
+        k = abs(views[0].transform().m11()) if views else 1.0
+        return 8.0 / (k or 1.0)
+
+    def _outline_path(self):
+        path = self._curve()
+        if path is not None:
+            return path
+        return super()._outline_path()
+
+    def _paint_body(self, painter, option, widget):
+        path = self._curve()
+        if path is None:
+            return super()._paint_body(painter, option, widget)
+        painter.setPen(self.pen())
+        painter.setBrush(Qt.NoBrush)
+        painter.drawPath(path)
+
     def handle_spec(self):
         line = self.line()
-        return [("p1", line.p1()), ("p2", line.p2())]
+        out = [("p1", line.p1()), ("p2", line.p2())]
+        from . import sketch_arc
+        if sketch_arc.is_arc(self.node):
+            # the third handle sits ON the arc: drag it to bend
+            x1, y1 = self.rv("x1"), self.rv("y1")
+            mx, my = sketch_arc.middle(x1, y1, self.rv("x2"), self.rv("y2"),
+                                       sketch_arc.bulge_of(self.node.params))
+            out.append(("mid", QPointF(mx - x1, my - y1)))
+        return out
 
     def handle_dragged(self, role, scene_pos):
         p = self.node.params
+        if role == "mid":
+            from . import sketch_arc
+            p["bulge"] = round(sketch_arc.bulge_through(
+                (self.rv("x1"), self.rv("y1")),
+                (self.rv("x2"), self.rv("y2")),
+                (scene_pos.x(), scene_pos.y())), 10) or 1e-6
+            self._scene.model.node_changed.emit(self.node)
+            return
         key_x, key_y = ("x1", "y1") if role == "p1" else ("x2", "y2")
         p[key_x], p[key_y] = scene_pos.x(), scene_pos.y()
         self._scene.model.node_changed.emit(self.node)
