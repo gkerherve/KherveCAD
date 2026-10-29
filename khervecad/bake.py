@@ -648,7 +648,7 @@ def _compute(node, env) -> list:
         return deform.loop_subdivide(src, int(num("levels", 1.0)),
                                      num("sharp", 0.0))
     if t == "wireframe":
-        from . import wireframe
+        from . import wireframe_struts as wireframe
         out = wireframe.wireframe(src, num("thickness", 1.0),
                                   int(num("sides", 6.0)), num("angle", 1.0),
                                   bool(p.get("joints", True)))
@@ -1079,7 +1079,8 @@ def _check_baked(node, env):
                 return (f"pin {number} needs 6 values: two corners "
                         "x1 y1 z1 x2 y2 z2")
     if t == "wireframe":
-        from . import csg, mesh, wireframe
+        from . import csg, mesh
+        from . import wireframe_struts as wireframe
         if not csg.available():
             return ("wireframe needs the manifold3d package (pip install "
                     "manifold3d) to join its struts")

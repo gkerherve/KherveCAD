@@ -1,4 +1,4 @@
-"""Wireframe (wireframe.py): real edges only, one closed lattice.
+"""Wireframe (wireframe_struts.py): real edges only, one closed lattice.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -18,7 +18,8 @@ os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
 
 from PyQt5.QtWidgets import QApplication
 
-from khervecad import analysis, csg, document, mesh, scadparse, wireframe
+from khervecad import analysis, csg, document, mesh, scadparse
+from khervecad import wireframe_struts as wireframe
 from khervecad.model import DocumentModel, validate
 
 pytestmark = pytest.mark.skipif(not csg.available(),

@@ -3871,7 +3871,7 @@ into a new module and import.
                        chain, point; `miss` — never "error", which means a
                        failed call). `mesh.node_matrix` now knows `joint`
                        (ancestor_matrix ignored joints before).
-  - `wireframe.py`   — **Wireframe** (Blender's modifier, 2026-09-19;
+  - `wireframe_struts.py` — **Wireframe** (Blender's modifier, 2026-09-19;
                        Deform family, baked `kcad_wireframe(thickness=,
                        sides=, angle=, joints=)`): every REAL edge (faces
                        meeting past `angle`°, so a flat face's diagonal is
