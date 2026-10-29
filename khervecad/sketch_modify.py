@@ -469,9 +469,9 @@ def _ask(scene, tool):
             "Corner %s (mm):" % label, text="2")
         if not ok:
             return None
-    try:
-        v = float(text)
-    except (TypeError, ValueError):
+    from .sketch_constrain_ui import _value
+    v = _value(text)                  # "36 / 2" works too
+    if not isinstance(v, (int, float)):
         scene.status.emit("A %s is a number of mm." % label)
         return None
     return v if v > 0 else None

@@ -22,7 +22,7 @@ the Free Software Foundation, either version 3 of the License, or
 import os
 
 import pytest
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtTest import QTest
 
 from khervecad import analysis, mesh, sketch_constraints as sc
@@ -47,6 +47,56 @@ def _views(win, name):
             win.view3d.snapshot(1000, 900, yaw=yaw, pitch=25,
                                 clean=True)[0].save(os.path.join(
                                     SHOTS, "%s-%d.png" % (name, yaw)))
+
+
+def _fillet_corners(win, corners, value):
+    """Sketch Fillet: click each corner, type the radius."""
+    v2 = win.view2d
+    v2.scene().ask_value = lambda tool, measured: str(value)
+    v2.set_tool("sk_fillet")
+    for pt in corners:
+        p = _at(win, *pt)
+        _move(v2.viewport(), p)
+        QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+        QTest.qWait(30)
+    v2.set_tool("select")
+
+
+def _tool_on_part(win, op, world):
+    """A toolbar / ribbon tool with nothing selected, then a click on the
+    part at *world* in 3D."""
+    from PyQt5.QtWidgets import QAction
+    from test_lever_by_mouse import _button_for
+    win.builder.active_tree().clearSelection()
+    act = next(a for a in win.findChildren(QAction) if a.data() == op)
+    act.trigger()                  # its item in the family's menu
+    QTest.qWait(80)
+    v3 = win.view3d
+    assert v3._pick_cb is not None, "no part pick"
+    q = v3._project(*v3._camera(), world)
+    p = QPoint(int(q[0]), int(q[1]))
+    _move(v3, p)
+    QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
+    QTest.qWait(200)
+
+
+def _click_3d(win, world):
+    v3 = win.view3d
+    q = v3._project(*v3._camera(), world)
+    p = QPoint(int(q[0]), int(q[1]))
+    _move(v3, p)
+    QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
+    QTest.qWait(200)
+
+
+def _type_property(win, key, value):
+    ed = win.properties._editors[key]
+    line = ed.lineEdit() if hasattr(ed, "lineEdit") else ed
+    QTest.mouseDClick(line, Qt.LeftButton)
+    line.selectAll()
+    QTest.keyClicks(line, str(value))
+    QTest.keyClick(line, Qt.Key_Return)
+    QTest.qWait(300)
 
 
 def _select_at(win, pt, mods=Qt.NoModifier):
@@ -144,18 +194,19 @@ def test_the_pivot_guide_by_mouse(win):
     _sketch(win, "Front (XZ)")
     _snap(win)
     _frame(win, 20, -30, 90, 60)
-    _rect(win, (45, -12.5), (85, 12.5))
-    _circle(win, (45, 0), 12.5)
-    _circle(win, (85, 0), 12.5)
+    win.view2d.scene().grid_size = 0.5      # the 27 slot: R13.5
+    _rect(win, (45, -13.5), (85, 13.5))
+    _circle(win, (45, 0), 13.5)
+    _circle(win, (85, 0), 13.5)
     slot = _sketch_of(win, before)
     # Smart Dimension: the slot's centre line, origin to its left end
     asked = _dimension(win, (45, 0), (0, 0), value=45)
     _shot(win, "p3a-slot-sketch")
     # the three shapes selected (click, Ctrl+click) and Extruded Cut:
     # everything they close is cut, no wall left where they cross
-    _select_at(win, (65, 12.5))
-    _select_at(win, (32.5, 0), Qt.ControlModifier)
-    _select_at(win, (97.5, 0), Qt.ControlModifier)
+    _select_at(win, (65, 13.5))
+    _select_at(win, (31.5, 0), Qt.ControlModifier)
+    _select_at(win, (98.5, 0), Qt.ControlModifier)
     _cut_selected(win)
     _window_ok(win, extent="through_all")
     _shot(win, "p3b-slot-cut")
@@ -163,6 +214,25 @@ def test_the_pivot_guide_by_mouse(win):
         assert _crossings(win, (x, -100, 0), (0, 1, 0)) == [], x
     assert _crossings(win, (65, -100, 20), (0, 1, 0)) == \
         pytest.approx([-20, 20], abs=0.05)
+    assert _crossings(win, (65, -100, 13), (0, 1, 0)) == []   # 27 wide
+    # ---- 3b. Front plane: the R100 arm — a circle R100 whose arc meets
+    # the seat and runs tangent onto the R25 end; the area under it, over
+    # the plate, clicked and bossed
+    before = _ids(win)
+    _sketch(win, "Front (XZ)")
+    _snap(win)
+    _frame(win, 0, 0, 110, 80)
+    _circle(win, (85, 125), 100)
+    arm = _sketch_of(win, before)
+    _dimension(win, (85, 25), (60, 70), value=200)        # Ø200 = R100
+    _shot(win, "p3c-r100-arm-sketch")
+    _extruded_boss(win)
+    _click_areas(win, arm, [(40, 30)])
+    _window_ok(win, direction="symmetric", distance=40)
+    _shot(win, "p3d-r100-arm")
+    assert _crossings(win, (40, -100, 34), (0, 1, 0)) == \
+        pytest.approx([-20, 20], abs=0.05)
+    assert _crossings(win, (40, -100, 37), (0, 1, 0)) == []  # over the arc
     # ---- 4. Front plane: the lug on the seat, R20 top, 16 thick
     before = _ids(win)
     _sketch(win, "Front (XZ)")
@@ -223,9 +293,16 @@ def test_the_bearing_bracket_by_mouse(win):
     # whole sketch, so it is given its true 70), then the width 85 -> 84
     _dimension(win, (42.5, 0), (55, 0), value=70)
     _dimension(win, (0, 35), (0, 50), value=84)
+    # Sketch Fillet: the four R18 corners (typed as a calculation)
+    _fillet_corners(win, [(-42, -35), (42, -35), (42, 35), (-42, 35)],
+                    "36 / 2")
     _shot(win, "b1a-base-sketch")
-    _extruded_boss(win)            # one rectangle: no areas to pick
+    _extruded_boss(win)            # one outline: no areas to pick
     _window_ok(win, distance=11)
+    # the R18 corners: a ray down just inside a corner misses
+    assert _crossings(win, (-41, -34, 50), (0, 0, -1)) == []
+    assert _crossings(win, (-30, -23, 50), (0, 0, -1)) == \
+        pytest.approx([0, 11], abs=0.05)
     _shot(win, "b1b-base-boss")
     assert _volume(win)["size"] == pytest.approx([84, 70, 11], abs=0.05)
     # ---- 2. Top plane: the four Ø8 holes, cut through
@@ -243,7 +320,8 @@ def test_the_bearing_bracket_by_mouse(win):
     for x in (-29, 29):
         for y in (-23, 23):
             # a click on empty space after the circle: its Ø
-            _dimension(win, (x + 5, y), (x + 8, y - 8), value=8)
+            _dimension(win, (x + 5, y), (x - 8 * (x > 0) + 8 * (x < 0),
+                                         y), value=8)
     assert all(c.params["radius"] == pytest.approx(4)
                for c in holes.children if c.type == "circle")
     _shot(win, "b2a-holes-sketch")
@@ -309,6 +387,20 @@ def test_the_bearing_bracket_by_mouse(win):
     _cut_selected(win)
     _window_ok(win, extent="through_all")
     _shot(win, "b6b-bore-cut")
+    # FILLETS & ROUNDS R3: Fillet, a click on the base's top face (its
+    # rim rounds, the joint with the web and rib is filleted), then the
+    # boss's front face; radius 3 typed in Properties, Esc
+    v_sharp = _volume(win)["volume"]
+    QTest.mouseClick(win.view3d.nav_bar.buttons["fit"], Qt.LeftButton)
+    _tool_on_part(win, "fillet", (-32, 8, 11))
+    fillet = next(n for n in win.model.root.walk() if n.type == "fillet")
+    _click_3d(win, (12, -17, 150))
+    _type_property(win, "radius", 3)
+    QTest.keyClick(win.view3d, Qt.Key_Escape)
+    QTest.qWait(100)
+    assert float(fillet.params["radius"]) == 3
+    _shot(win, "b6c-rounds-r3")
+    assert _volume(win)["volume"] != pytest.approx(v_sharp, rel=1e-4)
     _views(win, "b7-bracket")
     size = _volume(win)["size"]
     assert size == pytest.approx([84, 70, 156], abs=0.6)
