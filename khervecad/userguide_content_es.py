@@ -61,6 +61,230 @@ sobre lo que hace y cómo usarlo, paso a paso. Pulse {K("F1")} para
 volver a esta guía en cualquier momento.</p>
 """),
 
+        ("solidworks", "La ventana SolidWorks", f"""
+<p>En el estilo SolidWorks la ventana se lee como SolidWorks: el
+<b>CommandManager</b> arriba (pestañas <b>Operaciones</b>,
+<b>Croquis</b>, <b>Superficies</b>, <b>Chapa metálica</b>,
+<b>Evaluar</b>, <b>Esculpir</b>&hellip;), el árbol
+<b>FeatureManager</b> a la izquierda con Propiedades debajo, y el área
+gráfica con su barra de vistas, zoom y visualización. El engranaje
+arriba a la derecha abre las <b>Opciones</b> {K("Ctrl+,")}.</p>
+{figure("sw_window", "Una pieza construida con el ratón en el estilo "
+        "SolidWorks: la pestaña Operaciones, el árbol de operaciones y la "
+        "vista 3D.")}
+<ul>
+<li><b>Operaciones</b> &mdash; Saliente/Base extruido, Corte extruido,
+Revolución, Barrido, Recubrimiento, Redondeo, Chaflán, Asistente para
+taladro, patrones, Simetría, Geometría de referencia.</li>
+<li><b>Croquis</b> &mdash; Croquis (Salir del croquis), Cota
+inteligente, Línea, Rectángulo, Círculo, Arco, Ranura, Spline,
+Polígono, las relaciones (Fijar, Coincidente, Igual, Concéntrica,
+Tangente&hellip;), Redondeo de croquis, Recortar, Simetría de
+entidades.</li>
+<li><b>Evaluar</b> &mdash; Medir, Propiedades físicas, Interferencias,
+las comprobaciones de impresión y de ajuste.</li>
+</ul>
+<p>El botón <b>Historial</b> del árbol lo muestra como el FeatureManager
+de SolidWorks: las operaciones en el orden en que se hicieron, con el
+<b>Origen</b> (planos Alzado, Planta y Vista lateral) arriba.</p>
+"""),
+
+        ("sw-sketch", "Croquizar con el ratón", f"""
+<h3>Empezar un croquis</h3>
+<ol>
+<li>En la pestaña <b>Croquis</b>, pulse <b>Croquis</b>. Los tres planos
+principales aparecen en 3D.</li>
+<li>Pulse el plano deseado (<b>Alzado</b>, <b>Planta</b> o
+<b>Lateral</b>) o una cara plana de una pieza. La vista gira de frente a
+él.</li>
+<li>Si una pieza tapa el plano, púlselo bajo <b>Origen</b> en el árbol
+Historial y luego <b>Croquis</b>.</li>
+</ol>
+<p>Se sale del croquis con <b>Salir del croquis</b> o eligiendo otra
+pestaña (Operaciones).</p>
+
+<h3>Líneas, arcos y ranuras</h3>
+<p>La herramienta <b>Línea</b> encadena: cada clic termina una línea y
+empieza la siguiente; doble clic, clic derecho o {K("Esc")} la detiene.
+Se ajusta a puntos, al origen, a horizontal / vertical y a puntos
+alineados (guías punteadas), y añade las relaciones Horizontal, Vertical
+y Coincidente. Para que el segmento siguiente sea un <b>arco
+tangente</b>, trace la línea, vuelva a su último punto y salga de
+nuevo; tras el arco se vuelve a las líneas.</p>
+{figure("sw_line_to_arc", "Una línea, luego de vuelta a su extremo y "
+        "fuera otra vez: un arco tangente con sus tres asas.")}
+<p>El <b>arco por 3 puntos</b> (inicio, fin, un punto del arco), el
+<b>arco por centro</b> y el <b>arco tangente</b> crean un arco
+<i>abierto</i> &mdash; una curva como una línea, con tres asas: sus dos
+extremos y una sobre el arco que lo curva. La <b>spline</b> y la
+<b>cónica</b> también son abiertas. Sola, una curva abierta no encierra
+nada; con líneas y otras formas cierra áreas que se pueden
+extruir.</p>
+{figure("sw_arcs", "Un arco por 3 puntos y un arco por centro: curvas "
+        "abiertas con tres asas.")}
+<p>La <b>Ranura</b>: pulse los dos centros de los extremos y luego el
+ancho.</p>
+{figure("sw_slot", "Una ranura.")}
+
+<h3>Cota inteligente</h3>
+<p>Elija <b>Cota inteligente</b>, pulse lo que quiere medir y escriba el
+valor. Lo que pulsa decide la cota:</p>
+<ul>
+<li>una <b>línea</b> y luego el vacío &mdash; su longitud;</li>
+<li>un <b>círculo</b> y luego el vacío &mdash; su diámetro;</li>
+<li>el <b>centro de una línea</b> (se ajusta allí) y el <b>origen</b>
+&mdash; su distancia; el origen puede pulsarse primero o
+segundo;</li>
+<li>un <b>círculo</b> y un <b>punto, una línea u otro círculo</b>
+&mdash; la distancia desde su <b>centro</b>;</li>
+<li>dos líneas &mdash; su ángulo (paralelas: su distancia);</li>
+<li>una forma y una <b>arista de otro croquis o de la pieza</b>
+&mdash; la arista se copia como referencia fija y se mide a ella.</li>
+</ul>
+<p>El valor puede ser un <b>cálculo</b>: <code>52 - 10</code>,
+<code>84 / 2</code>, <code>2 * (10 + 5)</code>, o una expresión de las
+variables del documento. La primera cota de un croquis libre escala todo
+el croquis (como SolidWorks); en cuanto existe una pieza, nunca.</p>
+{figure("sw_smart_middle_origin", "El centro de la línea superior acotado "
+        "al origen: 70.")}
+{figure("sw_smart_circle", "Del origen al centro del círculo (25) y el "
+        "Ø16 del círculo.")}
+
+<h3>Relaciones</h3>
+<p>Las herramientas de relación de la pestaña Croquis se pulsan sobre el
+croquis: <b>Fijar</b> sujeta un punto donde está, <b>Coincidente</b>,
+<b>Igual</b>, <b>Concéntrica</b>, <b>Tangente</b>, <b>Paralela</b>,
+<b>Perpendicular</b>, <b>Horizontal</b>, <b>Vertical</b>, <b>Punto
+medio</b>, <b>Simétrica</b>. Cada una se muestra con una pequeña marca;
+<b>Borrar restricción</b> quita una.</p>
+{figure("sw_relations", "Fijar en el centro del círculo izquierdo, los "
+        "dos extremos Iguales y los centros a 180.")}
+{figure("sw_fix_origin", "Un rectángulo desde el origen, su esquina "
+        "fijada, sus lados acotados.")}
+
+<h3>Redondeo de croquis y Recortar</h3>
+<p><b>Redondeo de croquis</b>: pulse una esquina de un rectángulo o
+polígono (o dos líneas) y escriba el radio &mdash; las esquinas R18 de
+una base. <b>Recortar</b> y <b>Extender</b> acortan o alargan una línea
+hasta la arista siguiente.</p>
+{figure("sw_sketch_fillet", "Una base con sus cuatro esquinas R18, "
+        "escritas 36 / 2.")}
+"""),
+
+        ("sw-features", "Saliente y corte extruidos", f"""
+<h3>Saliente/Base extruido</h3>
+<ol>
+<li>Salga del croquis (pestaña <b>Operaciones</b>) y pulse
+<b>Saliente/Base extruido</b>.</li>
+<li>Un croquis de una sola forma cerrada se extruye enseguida. Cuando
+sus formas y el contorno de la pieza dividen el plano en <b>áreas</b>,
+pulse las áreas en 3D y luego <b>Hecho</b> &mdash; o seleccione antes
+las formas y pulse Saliente extruido para tomar todas las áreas que
+cierran.</li>
+<li>La ventana <b>Extruir</b> fija la <b>Dirección</b> (un lado, dos
+lados, simétrica), la <b>Condición final</b> (Hasta profundidad
+especificada, Por todo), la <b>Distancia</b> e <b>Invertir</b>; la
+flecha azul en 3D arrastra la profundidad. <b>Aceptar</b> termina.</li>
+</ol>
+{figure("sw_d_sketch", "Una línea y un arco abierto cierran una D.")}
+{figure("sw_d_extruded", "Saliente extruido sobre la D.")}
+
+<h3>Corte extruido</h3>
+<p>Croquice en un plano o una cara, salga del croquis y pulse <b>Corte
+extruido</b>. Pulse las áreas a quitar (una línea que cruza la pieza
+divide su contorno en áreas), o seleccione las formas para cortarlas
+enteras, y elija <b>Por todo</b> en la ventana. Un corte afecta a todo
+lo construido antes.</p>
+{figure("sw_cut_selected", "El agujero Ø45: su centro acotado al origen "
+        "(130), luego Corte extruido, Por todo.")}
+
+<h3>Cambiarlo después</h3>
+<p>Las cotas del croquis se ven sobre la pieza en 3D. Pulse un valor,
+escriba otro (un cálculo sirve) y pulse Intro: la operación se
+reconstruye desde su croquis.</p>
+{figure("sw_extruded", "La placa extruida con su agujero.")}
+{figure("sw_dimension_in_3d", "El Ø del agujero pulsado en 3D y escrito "
+        "30 - 6: el agujero pasa a 24.")}
+
+<h3>Redondeo</h3>
+<p><b>Redondeo</b> sin nada seleccionado: pulse la pieza y luego una
+cara (se redondea todo su borde, también donde toca otras caras) o una
+arista; fije el radio en Propiedades y pulse {K("Esc")} al
+terminar.</p>
+{figure("sw_bracket_rounds", "Redondeos R3 en el borde de una base y "
+        "donde el alma se une a ella.")}
+"""),
+
+        ("sw-examples", "Ejemplos paso a paso, con el ratón", f"""
+<p>Cuatro piezas de ejercicio se construyeron solo con el ratón, como
+describen los capítulos anteriores. La guía de pivote, paso a paso:</p>
+<ol>
+<li>Plano de alzado: el contorno de la placa en líneas y un círculo
+R25; el centro de la línea de apoyo acotado al origen (48).
+{figure("sw_pivot_1", "El croquis de la placa.")}</li>
+<li>Saliente extruido, las tres áreas pulsadas, Simétrico 40.
+{figure("sw_pivot_2", "La placa.")}</li>
+<li>El agujero de pivote dibujado Ø10 y acotado a Ø12,5, cortado Por
+todo.
+{figure("sw_pivot_3", "Cota inteligente en el agujero.")}</li>
+<li>La ranura de 27: un rectángulo entre dos círculos, los tres
+seleccionados, Corte extruido.
+{figure("sw_pivot_4", "La ranura cortada.")}</li>
+<li>El brazo R100: un círculo R100 cuyo arco toca el apoyo; el área de
+debajo como saliente.
+{figure("sw_pivot_5", "El arco R100 sobre la placa.")}</li>
+<li>La oreja (cima R20, 16 de espesor) y su agujero Ø16.
+{figure("sw_pivot_6", "La oreja.")}</li>
+</ol>
+{figure("sw_pivot_done", "La guía de pivote terminada.")}
+{figure("sw_pivot_changed", "Después: el Ø del agujero de pivote cambiado "
+        "a 20 desde la vista 3D.")}
+<p>Del mismo modo: un soporte de cojinete (esquinas R18, cuatro agujeros
+Ø8, alma, nervio, saliente Ø46 con su escariado, redondeos R3), una
+escuadra en S (una S de redondeos de croquis R25 y R50) y un bloque con
+una garganta R50.</p>
+<table><tr>
+<td>{figure("sw_bracket_done", "Soporte de cojinete", 300)}</td>
+<td>{figure("sw_s_bracket", "Escuadra en S", 300)}</td>
+<td>{figure("sw_block", "Bloque con garganta", 300)}</td>
+</tr></table>
+"""),
+
+        ("options", "Opciones", f"""
+<p><b>Herramientas &rsaquo; Opciones</b> {K("Ctrl+,")} (el engranaje)
+reúne todas las preferencias, ordenadas como las Opciones de
+SolidWorks: <b>Opciones de sistema</b> para el programa y
+<b>Propiedades de documento</b> para el documento abierto. Un ajuste
+aquí es el mismo comando de los menús: nunca discrepan.</p>
+<ul>
+<li><b>General</b> &mdash; idioma, buscar actualizaciones, ayuda al
+pasar por los menús, guardar los Objetos nuevos en Mi biblioteca.</li>
+<li><b>Visualización</b> &mdash; <b>Tema</b>, <b>Estilo de interfaz</b>
+(KherveCAD, Fusion, SolidWorks), estilo de visualización, fondo,
+sombreado suave, aristas, sombreado de cavidades, plataforma y sombra,
+rejilla de suelo, barra de escala, ejes.</li>
+<li><b>Croquis</b> &mdash; rejilla, ajuste, paso de rejilla, mostrar
+cotas inteligentes y tamaños automáticos, escalar un croquis con su
+primera cota.</li>
+<li><b>Vista</b> &mdash; perspectiva u ortogonal, las asas de
+movimiento.</li>
+<li><b>Rendimiento</b> &mdash; renderizado por hardware (OpenGL).</li>
+<li><b>FeatureManager</b> &mdash; el árbol como historial de
+operaciones.</li>
+<li><b>Ubicaciones de archivos</b> &mdash; OpenSCAD, Mi biblioteca y la
+caché de piezas exactas.</li>
+<li><b>Unidades</b> &mdash; la unidad del documento, su escala (1 : N),
+los decimales de las cotas y los ceros finales.</li>
+<li><b>Calidad de imagen</b> &mdash; los segmentos comunes ($fn).</li>
+<li><b>Material</b> &mdash; en qué se pesa la masa.</li>
+</ul>
+{figure("sw_options_display", "Opciones ▸ Visualización: tema, estilo de "
+        "interfaz y cómo dibuja la vista 3D.")}
+{figure("sw_options_sketch", "Opciones ▸ Croquis.")}
+{figure("sw_options_units", "Opciones ▸ Unidades (Propiedades de "
+        "documento).")}
+"""),
+
         ("first-part", "Su primera pieza en cinco minutos", f"""
 <p>Este tutorial crea una placa con un agujero &mdash; los cuatro
 movimientos con los que se construyen la mayoría de las piezas:

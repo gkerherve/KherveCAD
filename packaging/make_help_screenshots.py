@@ -130,6 +130,10 @@ def top_left(widget, win, dx=18, dy=18):
 
 def new_window():
     win = MainWindow()
+    # these shots show the CLASSIC layout (the SolidWorks pictures come
+    # from make_help_mouse_shots.py); the user's saved style is untouched
+    from khervecad import toolbar_style
+    toolbar_style.apply(win, toolbar_style.CLASSIC, remember=False)
     win.resize(1440, 900)
     view = win.view3d
     view.style, view.background = "Shaded", "Light"

@@ -56,7 +56,7 @@ def test_reference_covers_every_toolbar_tool(app):
         assert f"<b>{title}</b>" in html, key
     assert "@reference" not in html
     assert len(icons_used) >= len(keys)
-    assert [a for _t, a in toc][:2] == ["welcome", "first-part"]
+    assert [a for _t, a in toc][:2] == ["welcome", "solidworks"]
 
 
 def test_dialog_searches_and_jumps(app):

@@ -25,11 +25,20 @@ exportable solids without learning a programming language first. You
 draw, extrude, combine and arrange; behind the scenes every step is one
 line of an <b>OpenSCAD</b> program, and OpenSCAD is the engine that
 turns it into exact geometry.</p>
+<p><b>This guide follows the SolidWorks interface style</b> &mdash;
+its CommandManager tabs (Features, Sketch, Surfaces, Sheet Metal,
+Evaluate&hellip;), FeatureManager tree and Options window. The first
+chapters show how to sketch, dimension, extrude and cut <i>with the
+mouse</i>, each picture taken from the program while it builds a real
+part. Choose the style in <b>Tools &rsaquo; Options &rsaquo; Display
+&rsaquo; Interface style</b>; the later chapters still show the classic
+KherveCAD toolbars where they explain a tool.</p>
 <p>The one idea to hold on to: <b>your model is a tree of objects</b>.
 Every tool either adds a row to that tree or changes one. The program in
 the <b>Code</b> tab is written from the tree, so the two always agree
 &mdash; you can work in whichever you prefer.</p>
-{figure("window", "The KherveCAD window with an example model loaded.")}
+{figure("window", "The KherveCAD window (classic style) with an "
+        "example model loaded.")}
 <table>
 <tr><td><b>1</b></td><td><b>Object tree &amp; tabs</b> &mdash; the
 model itself. Main (the assembly), Object (the part you are building),
@@ -54,7 +63,221 @@ red.</p>
 use it, step by step. Press {K("F1")} to come back to this guide.</p>
 """),
 
-        ("first-part", "Your first part in five minutes", f"""
+        ("solidworks", "The SolidWorks window", f"""
+<p>In the SolidWorks style the window reads like SolidWorks: the
+<b>CommandManager</b> along the top (tabs <b>Features</b>,
+<b>Sketch</b>, <b>Surfaces</b>, <b>Sheet Metal</b>, <b>Evaluate</b>,
+<b>Sculpt</b>&hellip;), the <b>FeatureManager</b> tree on the left with
+Properties under it, and the graphics area with its heads-up bar of
+views, zoom and display buttons. The gear at the top right is
+<b>Options</b> {K("Ctrl+,")}.</p>
+{figure("sw_window", "A part built with the mouse in the SolidWorks "
+        "style: the Features tab, the tree of features and the 3D view.")}
+<ul>
+<li><b>Features</b> &mdash; Extruded Boss/Base, Extruded Cut, Revolve,
+Sweep, Loft, Fillet, Chamfer, Hole Wizard, patterns, Mirror, Reference
+Geometry.</li>
+<li><b>Sketch</b> &mdash; Sketch (Exit Sketch), Smart Dimension, Line,
+Rectangle, Circle, Arc, Slot, Spline, Polygon, the relations (Fix,
+Coincident, Equal, Concentric, Tangent&hellip;), Sketch Fillet, Trim,
+Mirror Entities.</li>
+<li><b>Evaluate</b> &mdash; Measure, Mass Properties, Interference, the
+print and fit checks.</li>
+</ul>
+<p>The tree's <b>History</b> button shows it as SolidWorks'
+FeatureManager: features in the order they were made, with
+<b>Origin</b> (Front, Top and Right planes) at the top.</p>
+"""),
+
+        ("sw-sketch", "Sketching with the mouse", f"""
+<h3>Start a sketch</h3>
+<ol>
+<li>On the <b>Sketch</b> tab click <b>Sketch</b>. The three main planes
+show in 3D.</li>
+<li>Click the plane you want (<b>Front</b>, <b>Top</b> or <b>Right</b>),
+or a flat face of a part. The view turns square on to it.</li>
+<li>If a part hides the plane, click it under <b>Origin</b> in the
+History tree and then <b>Sketch</b>.</li>
+</ol>
+<p>Leave the sketch with <b>Exit Sketch</b> or by choosing another tab
+(Features).</p>
+
+<h3>Lines, arcs and slots</h3>
+<p>The <b>Line</b> tool chains: every click ends one line and starts the
+next; double-click, right-click or {K("Esc")} stops. It snaps to points,
+the origin, horizontal / vertical and to points it lines up with
+(dotted guides), and adds Horizontal, Vertical and Coincident relations
+as it goes. To make the next segment a <b>tangent arc</b>, draw the line
+out, bring the mouse back onto its last point and move away again; after
+the arc you are back to lines.</p>
+{figure("sw_line_to_arc", "A line, then back on its end and out again: "
+        "a tangent arc with its three handles.")}
+<p>The <b>3-point arc</b> (start, end, a point on it), the <b>centre-point
+arc</b> and the <b>tangent arc</b> make an <i>open</i> arc &mdash; a
+curve like a line, with three handles: its two ends and one on the arc
+that bends it. The <b>spline</b> and <b>conic</b> are open curves too.
+Open curves enclose nothing alone; with lines and other shapes they
+close areas you can extrude.</p>
+{figure("sw_arcs", "A 3-point arc and a centre-point arc: open curves "
+        "with three handles.")}
+<p>The <b>Slot</b>: click the two end centres, then the width.</p>
+{figure("sw_slot", "A slot.")}
+
+<h3>Smart Dimension</h3>
+<p>Pick <b>Smart Dimension</b>, click what to measure, then type the
+value. What you click decides the dimension:</p>
+<ul>
+<li>a <b>line</b>, then empty space &mdash; its length;</li>
+<li>a <b>circle</b>, then empty space &mdash; its diameter;</li>
+<li>a <b>line's middle</b> (it snaps there) and the <b>origin</b> &mdash;
+the distance between them; the origin may be clicked first or
+second;</li>
+<li>a <b>circle</b> and a <b>point, line or another circle</b> &mdash;
+the distance from its <b>centre</b>;</li>
+<li>two lines &mdash; their angle (parallel ones: the distance);</li>
+<li>a shape and an <b>edge of another sketch or of the part</b> &mdash;
+the edge is copied in as a fixed reference and measured to.</li>
+</ul>
+<p>The value may be a <b>calculation</b>: <code>52 - 10</code>,
+<code>84 / 2</code>, <code>2 * (10 + 5)</code>, or an expression of the
+document's variables. The first dimension of a free sketch scales the
+whole sketch to it (as SolidWorks does); once a part exists it never
+does.</p>
+{figure("sw_smart_middle_origin", "The middle of the top line "
+        "dimensioned to the origin: 70.")}
+{figure("sw_smart_circle", "The origin to the circle's centre (25) and "
+        "the circle's Ø16.")}
+
+<h3>Relations</h3>
+<p>The relation tools on the Sketch tab are clicked on the sketch:
+<b>Fix</b> pins a point where it is, <b>Coincident</b>, <b>Equal</b>,
+<b>Concentric</b>, <b>Tangent</b>, <b>Parallel</b>,
+<b>Perpendicular</b>, <b>Horizontal</b>, <b>Vertical</b>,
+<b>Midpoint</b>, <b>Symmetric</b>. Each shows as a small mark beside
+what it holds; <b>Delete constraint</b> removes one.</p>
+{figure("sw_relations", "Fix on the left circle's centre, the two ends "
+        "Equal, and the centres 180 apart.")}
+{figure("sw_fix_origin", "A rectangle from the origin, its corner "
+        "fixed, its sides dimensioned.")}
+
+<h3>Sketch Fillet and Trim</h3>
+<p><b>Sketch Fillet</b>: click a corner of a rectangle or polygon (or
+two lines) and type the radius &mdash; the R18 corners of a base.
+<b>Trim</b> and <b>Extend</b> shorten or lengthen a line to the next
+edge.</p>
+{figure("sw_sketch_fillet", "A base with its four R18 corners, typed "
+        "as 36 / 2.")}
+"""),
+
+        ("sw-features", "Extruded Boss and Cut", f"""
+<h3>Extruded Boss/Base</h3>
+<ol>
+<li>Leave the sketch (the <b>Features</b> tab) and click <b>Extruded
+Boss/Base</b>.</li>
+<li>A sketch of one closed shape extrudes at once. When its shapes and
+the part's outline cut the plane into <b>areas</b>, click the areas in
+3D and then <b>Done</b> &mdash; or select the shapes first and press
+Extruded Boss to take every area they close.</li>
+<li>The <b>Extrude</b> window sets <b>Direction</b> (one side, two
+sides, symmetric), <b>End condition</b> (Blind, Through all),
+<b>Distance</b> and <b>Reverse</b>; the blue arrow in 3D drags the
+depth. <b>OK</b> finishes.</li>
+</ol>
+{figure("sw_d_sketch", "A line and an open arc close a D.")}
+{figure("sw_d_extruded", "Extruded Boss on the D.")}
+
+<h3>Extruded Cut</h3>
+<p>Sketch on a plane or a face, leave the sketch and click
+<b>Extruded Cut</b>. Click the areas to remove (a line across the part
+splits its outline into areas), or select the shapes to cut whole, then
+set <b>Through all</b> in the window. A cut takes everything built
+before it.</p>
+{figure("sw_cut_selected", "The Ø45 hole: its centre dimensioned to the "
+        "origin (130), then Extruded Cut, Through all.")}
+
+<h3>Change it later</h3>
+<p>The sketch's dimensions show on the part in 3D. Click a value, type
+a new one (a calculation works) and press Enter: the feature is rebuilt
+from its sketch.</p>
+{figure("sw_extruded", "The extruded plate with its hole.")}
+{figure("sw_dimension_in_3d", "The hole's Ø clicked in 3D and typed "
+        "30 - 6: the hole grows to 24.")}
+
+<h3>Fillet</h3>
+<p><b>Fillet</b> with nothing selected: click the part, then click a
+face (its whole rim is rounded, where it meets other faces too) or an
+edge; set the radius in Properties and press {K("Esc")} when done.</p>
+{figure("sw_bracket_rounds", "R3 rounds on a base's rim and where the "
+        "web meets it.")}
+"""),
+
+        ("sw-examples", "Worked examples, by mouse", f"""
+<p>Four exercise parts were built only with the mouse, the way the
+chapters above describe. The pivot guide, step by step:</p>
+<ol>
+<li>Front plane: the plate's outline as lines and an R25 circle; the
+seat line's middle dimensioned to the origin (48).
+{figure("sw_pivot_1", "The plate's sketch.")}</li>
+<li>Extruded Boss, the three areas clicked, Symmetric 40.
+{figure("sw_pivot_2", "The plate.")}</li>
+<li>The pivot hole drawn Ø10 and Smart-Dimensioned to Ø12.5, then cut
+Through all.
+{figure("sw_pivot_3", "Smart Dimension on the hole.")}</li>
+<li>The 27 slot: a rectangle between two circles, all three selected,
+Extruded Cut.
+{figure("sw_pivot_4", "The slot cut.")}</li>
+<li>The R100 arm: a circle R100 whose arc meets the seat; the area under
+it bossed.
+{figure("sw_pivot_5", "The R100 arc on the plate.")}</li>
+<li>The lug (R20 top, 16 thick) and its Ø16 hole.
+{figure("sw_pivot_6", "The lug.")}</li>
+</ol>
+{figure("sw_pivot_done", "The finished pivot guide.")}
+{figure("sw_pivot_changed", "Later: the pivot hole's Ø changed to 20 "
+        "from the 3D view.")}
+<p>The same way: a bearing bracket (R18 corners, four Ø8 holes, web,
+rib, Ø46 boss with its reamed bore, R3 rounds), an S-section bracket
+(an S of R25 and R50 sketch fillets) and a block with an R50 trough.</p>
+<table><tr>
+<td>{figure("sw_bracket_done", "Bearing bracket", 300)}</td>
+<td>{figure("sw_s_bracket", "S-section bracket", 300)}</td>
+<td>{figure("sw_block", "Block with a trough", 300)}</td>
+</tr></table>
+"""),
+
+        ("options", "Options", f"""
+<p><b>Tools &rsaquo; Options</b> {K("Ctrl+,")} (the gear) holds every
+preference, laid out as SolidWorks' Options: <b>System Options</b> for
+the program, <b>Document Properties</b> for the open document. A switch
+here is the very command the menus use, so they never disagree.</p>
+<ul>
+<li><b>General</b> &mdash; language, checking for updates, help while
+hovering menus, saving new Objects to My Library.</li>
+<li><b>Display</b> &mdash; <b>Theme</b>, <b>Interface style</b>
+(KherveCAD, Fusion, SolidWorks), display style, background, smooth
+shading, edge lines, cavity shading, platform and shadow, ground grid,
+scale bar, axes.</li>
+<li><b>Sketch</b> &mdash; grid, snap, grid spacing, showing Smart
+Dimensions and automatic sizes, scaling a sketch on its first
+dimension.</li>
+<li><b>View</b> &mdash; perspective or orthographic, the move
+handles.</li>
+<li><b>Performance</b> &mdash; hardware (OpenGL) rendering.</li>
+<li><b>FeatureManager</b> &mdash; the tree as a feature history.</li>
+<li><b>File Locations</b> &mdash; OpenSCAD, My Library and the exact
+part cache.</li>
+<li><b>Units</b> &mdash; the document unit, its scale (1 : N),
+dimension decimals and trailing zeros.</li>
+<li><b>Image Quality</b> &mdash; the common segments ($fn).</li>
+<li><b>Material</b> &mdash; what the mass is weighed in.</li>
+</ul>
+{figure("sw_options_display", "Options ▸ Display: theme, interface style "
+        "and how the 3D view draws.")}
+{figure("sw_options_sketch", "Options ▸ Sketch.")}
+{figure("sw_options_units", "Options ▸ Units (Document Properties).")}
+"""),
+
+        ("first-part", "Your first part in five minutes (classic)", f"""
 <p>This walk-through makes a plate with a hole in it &mdash; the four
 moves that build most parts: <i>draw, extrude, add, cut</i>.</p>
 
@@ -175,7 +398,7 @@ engine: <i>OpenSCAD (ready)</i>, <i>(rendering&hellip;)</i> or
 <i>built-in preview</i> when OpenSCAD is not installed.</p>
 """),
 
-        ("toolbars", "The toolbars", f"""
+        ("toolbars", "The classic toolbars", f"""
 <p>The <b>left toolbar</b> holds the drawing tools (one is always
 active &mdash; Select by default), the two measuring tools, and the 3D
 solids that are added with one click. The <b>main toolbar</b> along the

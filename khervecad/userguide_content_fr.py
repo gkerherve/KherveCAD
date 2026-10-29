@@ -60,6 +60,233 @@ explique ce qu'elle fait et comment l'utiliser, étape par étape. Appuyez
 sur {K("F1")} pour revenir à ce guide.</p>
 """),
 
+        ("solidworks", "La fenêtre SolidWorks", f"""
+<p>Dans le style SolidWorks, la fenêtre se lit comme SolidWorks : le
+<b>CommandManager</b> en haut (onglets <b>Fonctions</b>,
+<b>Esquisse</b>, <b>Surfaces</b>, <b>Tôlerie</b>, <b>Évaluer</b>,
+<b>Sculpter</b>&hellip;), l'arbre <b>FeatureManager</b> à gauche avec
+les Propriétés dessous, et la zone graphique avec sa barre de vues, de
+zoom et d'affichage. La roue dentée en haut à droite ouvre les
+<b>Options</b> {K("Ctrl+,")}.</p>
+{figure("sw_window", "Une pièce construite à la souris dans le style "
+        "SolidWorks : l'onglet Fonctions, l'arbre des fonctions et la vue "
+        "3D.")}
+<ul>
+<li><b>Fonctions</b> &mdash; Bossage/Base extrudé, Enlèvement de matière
+extrudé, Révolution, Balayage, Lissage, Congé, Chanfrein, Assistance pour
+le perçage, répétitions, Symétrie, Géométrie de référence.</li>
+<li><b>Esquisse</b> &mdash; Esquisse (Quitter l'esquisse), Cotation
+intelligente, Ligne, Rectangle, Cercle, Arc, Rainure, Spline, Polygone,
+les relations (Fixe, Coïncidente, Égale, Concentrique,
+Tangente&hellip;), Congé d'esquisse, Ajuster, Symétrie d'entités.</li>
+<li><b>Évaluer</b> &mdash; Mesurer, Propriétés de masse, Interférences,
+les contrôles d'impression et d'ajustement.</li>
+</ul>
+<p>Le bouton <b>Historique</b> de l'arbre l'affiche comme le
+FeatureManager de SolidWorks : les fonctions dans l'ordre où elles ont
+été faites, avec <b>Origine</b> (plans de face, de dessus et de droite)
+en haut.</p>
+"""),
+
+        ("sw-sketch", "Esquisser à la souris", f"""
+<h3>Commencer une esquisse</h3>
+<ol>
+<li>Dans l'onglet <b>Esquisse</b>, cliquez sur <b>Esquisse</b>. Les
+trois plans principaux s'affichent en 3D.</li>
+<li>Cliquez le plan voulu (<b>Face</b>, <b>Dessus</b> ou <b>Droite</b>)
+ou une face plane d'une pièce. La vue se tourne face à lui.</li>
+<li>Si une pièce cache le plan, cliquez-le sous <b>Origine</b> dans
+l'arbre Historique, puis <b>Esquisse</b>.</li>
+</ol>
+<p>On quitte l'esquisse par <b>Quitter l'esquisse</b> ou en choisissant
+un autre onglet (Fonctions).</p>
+
+<h3>Lignes, arcs et rainures</h3>
+<p>L'outil <b>Ligne</b> s'enchaîne : chaque clic termine une ligne et
+commence la suivante ; double-clic, clic droit ou {K("Esc")} arrête. Il
+s'accroche aux points, à l'origine, à l'horizontale / verticale et aux
+points alignés (guides pointillés), et ajoute au fil des clics les
+relations Horizontale, Verticale et Coïncidente. Pour que le segment
+suivant soit un <b>arc tangent</b>, tracez la ligne, revenez sur son
+dernier point puis repartez ; après l'arc on retrouve les lignes.</p>
+{figure("sw_line_to_arc", "Une ligne, puis retour sur son extrémité et "
+        "départ : un arc tangent et ses trois poignées.")}
+<p>L'<b>arc 3 points</b> (début, fin, un point sur l'arc), l'<b>arc par
+le centre</b> et l'<b>arc tangent</b> donnent un arc <i>ouvert</i>
+&mdash; une courbe comme une ligne, avec trois poignées : ses deux
+extrémités et une sur l'arc qui le courbe. La <b>spline</b> et la
+<b>conique</b> sont aussi ouvertes. Seule, une courbe ouverte n'entoure
+rien ; avec des lignes et d'autres formes elle ferme des zones à
+extruder.</p>
+{figure("sw_arcs", "Un arc 3 points et un arc par le centre : des courbes "
+        "ouvertes à trois poignées.")}
+<p>La <b>Rainure</b> : cliquez les deux centres d'extrémité, puis la
+largeur.</p>
+{figure("sw_slot", "Une rainure.")}
+
+<h3>Cotation intelligente</h3>
+<p>Choisissez <b>Cotation intelligente</b>, cliquez ce qu'il faut
+mesurer, puis tapez la valeur. Ce que vous cliquez décide de la
+cote :</p>
+<ul>
+<li>une <b>ligne</b> puis le vide &mdash; sa longueur ;</li>
+<li>un <b>cercle</b> puis le vide &mdash; son diamètre ;</li>
+<li>le <b>milieu d'une ligne</b> (il s'y accroche) et
+l'<b>origine</b> &mdash; leur distance ; l'origine peut être cliquée en
+premier ou en second ;</li>
+<li>un <b>cercle</b> et un <b>point, une ligne ou un autre cercle</b>
+&mdash; la distance depuis son <b>centre</b> ;</li>
+<li>deux lignes &mdash; leur angle (parallèles : leur distance) ;</li>
+<li>une forme et une <b>arête d'une autre esquisse ou de la pièce</b>
+&mdash; l'arête est copiée en référence fixe et sert de mesure.</li>
+</ul>
+<p>La valeur peut être un <b>calcul</b> : <code>52 - 10</code>,
+<code>84 / 2</code>, <code>2 * (10 + 5)</code>, ou une expression des
+variables du document. La première cote d'une esquisse libre met toute
+l'esquisse à l'échelle (comme SolidWorks) ; dès qu'une pièce existe, plus
+jamais.</p>
+{figure("sw_smart_middle_origin", "Le milieu de la ligne du haut coté "
+        "jusqu'à l'origine : 70.")}
+{figure("sw_smart_circle", "De l'origine au centre du cercle (25) et le "
+        "Ø16 du cercle.")}
+
+<h3>Relations</h3>
+<p>Les outils de relation de l'onglet Esquisse se cliquent sur
+l'esquisse : <b>Fixe</b> épingle un point où il est,
+<b>Coïncidente</b>, <b>Égale</b>, <b>Concentrique</b>, <b>Tangente</b>,
+<b>Parallèle</b>, <b>Perpendiculaire</b>, <b>Horizontale</b>,
+<b>Verticale</b>, <b>Milieu</b>, <b>Symétrique</b>. Chacune s'affiche
+par une petite marque ; <b>Supprimer la contrainte</b> en enlève
+une.</p>
+{figure("sw_relations", "Fixe sur le centre du cercle de gauche, les deux "
+        "extrémités Égales et les centres à 180.")}
+{figure("sw_fix_origin", "Un rectangle partant de l'origine, son coin "
+        "fixé, ses côtés cotés.")}
+
+<h3>Congé d'esquisse et Ajuster</h3>
+<p><b>Congé d'esquisse</b> : cliquez un coin de rectangle ou de polygone
+(ou deux lignes) et tapez le rayon &mdash; les coins R18 d'une base.
+<b>Ajuster</b> et <b>Prolonger</b> raccourcissent ou allongent une ligne
+jusqu'à l'arête suivante.</p>
+{figure("sw_sketch_fillet", "Une base et ses quatre coins R18, tapés "
+        "36 / 2.")}
+"""),
+
+        ("sw-features", "Bossage et enlèvement extrudés", f"""
+<h3>Bossage/Base extrudé</h3>
+<ol>
+<li>Quittez l'esquisse (onglet <b>Fonctions</b>) et cliquez
+<b>Bossage/Base extrudé</b>.</li>
+<li>Une esquisse d'une seule forme fermée s'extrude tout de suite. Quand
+ses formes et le contour de la pièce découpent le plan en
+<b>zones</b>, cliquez les zones en 3D puis <b>Terminé</b> &mdash; ou
+sélectionnez d'abord les formes et appuyez sur Bossage extrudé pour
+prendre toutes les zones qu'elles ferment.</li>
+<li>La fenêtre <b>Extrusion</b> règle la <b>Direction</b> (un côté,
+deux côtés, symétrique), la <b>Condition de fin</b> (Borgne, À travers
+tout), la <b>Distance</b> et <b>Inverser</b> ; la flèche bleue en 3D
+tire la profondeur. <b>OK</b> termine.</li>
+</ol>
+{figure("sw_d_sketch", "Une ligne et un arc ouvert ferment un D.")}
+{figure("sw_d_extruded", "Bossage extrudé sur le D.")}
+
+<h3>Enlèvement de matière extrudé</h3>
+<p>Esquissez sur un plan ou une face, quittez l'esquisse et cliquez
+<b>Enlèvement de matière extrudé</b>. Cliquez les zones à enlever (une
+ligne traversant la pièce coupe son contour en zones), ou sélectionnez
+les formes pour les enlever entières, puis réglez <b>À travers tout</b>
+dans la fenêtre. Un enlèvement prend tout ce qui a été construit
+avant.</p>
+{figure("sw_cut_selected", "Le trou Ø45 : son centre coté depuis "
+        "l'origine (130), puis Enlèvement extrudé, À travers tout.")}
+
+<h3>Modifier plus tard</h3>
+<p>Les cotes de l'esquisse s'affichent sur la pièce en 3D. Cliquez une
+valeur, tapez-en une nouvelle (un calcul marche) et appuyez sur
+Entrée : la fonction est reconstruite depuis son esquisse.</p>
+{figure("sw_extruded", "La plaque extrudée et son trou.")}
+{figure("sw_dimension_in_3d", "Le Ø du trou cliqué en 3D et tapé 30 - 6 : "
+        "le trou passe à 24.")}
+
+<h3>Congé</h3>
+<p><b>Congé</b> sans rien de sélectionné : cliquez la pièce, puis une
+face (tout son bord est arrondi, y compris là où elle rencontre
+d'autres faces) ou une arête ; réglez le rayon dans les Propriétés et
+appuyez sur {K("Esc")} pour finir.</p>
+{figure("sw_bracket_rounds", "Des arrondis R3 sur le bord d'une base et "
+        "là où l'âme la rejoint.")}
+"""),
+
+        ("sw-examples", "Exemples pas à pas, à la souris", f"""
+<p>Quatre pièces d'exercice ont été construites uniquement à la souris,
+comme le décrivent les chapitres précédents. Le guide de pivot, étape
+par étape :</p>
+<ol>
+<li>Plan de face : le contour de la plaque en lignes et un cercle R25 ;
+le milieu de la ligne d'appui coté jusqu'à l'origine (48).
+{figure("sw_pivot_1", "L'esquisse de la plaque.")}</li>
+<li>Bossage extrudé, les trois zones cliquées, Symétrique 40.
+{figure("sw_pivot_2", "La plaque.")}</li>
+<li>Le trou de pivot dessiné Ø10 puis coté Ø12,5, enlevé À travers tout.
+{figure("sw_pivot_3", "Cotation intelligente du trou.")}</li>
+<li>La rainure de 27 : un rectangle entre deux cercles, les trois
+sélectionnés, Enlèvement extrudé.
+{figure("sw_pivot_4", "La rainure enlevée.")}</li>
+<li>Le bras R100 : un cercle R100 dont l'arc rejoint l'appui ; la zone
+dessous ajoutée en bossage.
+{figure("sw_pivot_5", "L'arc R100 sur la plaque.")}</li>
+<li>La patte (sommet R20, 16 d'épaisseur) et son trou Ø16.
+{figure("sw_pivot_6", "La patte.")}</li>
+</ol>
+{figure("sw_pivot_done", "Le guide de pivot terminé.")}
+{figure("sw_pivot_changed", "Plus tard : le Ø du trou de pivot passé à 20 "
+        "depuis la vue 3D.")}
+<p>De la même façon : un palier (coins R18, quatre trous Ø8, âme,
+nervure, bossage Ø46 et son alésage, arrondis R3), une équerre en S (un
+S de congés d'esquisse R25 et R50) et un bloc avec une gorge R50.</p>
+<table><tr>
+<td>{figure("sw_bracket_done", "Palier", 300)}</td>
+<td>{figure("sw_s_bracket", "Équerre en S", 300)}</td>
+<td>{figure("sw_block", "Bloc avec une gorge", 300)}</td>
+</tr></table>
+"""),
+
+        ("options", "Options", f"""
+<p><b>Outils &rsaquo; Options</b> {K("Ctrl+,")} (la roue dentée)
+réunit toutes les préférences, rangées comme les Options de
+SolidWorks : <b>Options du système</b> pour le programme,
+<b>Propriétés du document</b> pour le document ouvert. Un réglage ici
+est la commande même des menus : ils ne peuvent jamais diverger.</p>
+<ul>
+<li><b>Général</b> &mdash; langue, recherche des mises à jour, aide au
+survol des menus, enregistrement des nouveaux Objets dans Ma
+bibliothèque.</li>
+<li><b>Affichage</b> &mdash; <b>Thème</b>, <b>Style d'interface</b>
+(KherveCAD, Fusion, SolidWorks), style d'affichage, fond, ombrage lissé,
+arêtes, ombrage des creux, plateau et ombre, grille au sol, barre
+d'échelle, axes.</li>
+<li><b>Esquisse</b> &mdash; grille, accrochage, pas de grille, affichage
+des cotations intelligentes et des tailles automatiques, mise à
+l'échelle d'une esquisse par sa première cote.</li>
+<li><b>Vue</b> &mdash; perspective ou orthogonale, les poignées de
+déplacement.</li>
+<li><b>Performances</b> &mdash; rendu matériel (OpenGL).</li>
+<li><b>FeatureManager</b> &mdash; l'arbre comme historique des
+fonctions.</li>
+<li><b>Emplacements des fichiers</b> &mdash; OpenSCAD, Ma bibliothèque
+et le cache des pièces exactes.</li>
+<li><b>Unités</b> &mdash; l'unité du document, son échelle (1 : N), les
+décimales des cotes et les zéros finaux.</li>
+<li><b>Qualité d'image</b> &mdash; les segments communs ($fn).</li>
+<li><b>Matériau</b> &mdash; ce dans quoi la masse est pesée.</li>
+</ul>
+{figure("sw_options_display", "Options ▸ Affichage : thème, style "
+        "d'interface et rendu de la vue 3D.")}
+{figure("sw_options_sketch", "Options ▸ Esquisse.")}
+{figure("sw_options_units", "Options ▸ Unités (Propriétés du "
+        "document).")}
+"""),
+
         ("first-part", "Votre première pièce en cinq minutes", f"""
 <p>Ce tutoriel réalise une plaque percée &mdash; les quatre gestes qui
 construisent la plupart des pièces : <i>dessiner, extruder, ajouter,

@@ -19,7 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
                              QDialogButtonBox, QFormLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QListWidget, QPushButton,
+                             QLabel, QLineEdit, QPushButton,
                              QSpinBox, QStackedWidget, QVBoxLayout, QWidget)
 
 from . import language, units
@@ -47,24 +47,69 @@ def save_dimensions(decimals, trailing):
     s.setValue("options/trailing_zeros", bool(trailing))
 
 
+#: SolidWorks' Options tree: (heading, [page names]) — the page builders
+#: are OptionsDialog._page_<name in lower case, spaces as _>
+TREE = [
+    ("System Options", ["General", "Display", "Sketch", "View",
+                        "Performance", "FeatureManager", "File Locations"]),
+    ("Document Properties", ["Units", "Image Quality", "Material"]),
+]
+
+
+def _flat():
+    return [(head, name) for head, names in TREE for name in names]
+
+
 class OptionsDialog(QDialog):
-    PAGES = ("System Options", "Document Properties")
+    """SolidWorks' Options: a tree of pages on the left (System Options
+    for the program, Document Properties for the open document) and the
+    page on the right. A switch here is the SAME action the menus use
+    (found by its menu path, `interface_menus.index`), so the two can
+    never disagree."""
+
+    PAGES = tuple(name for _h, name in _flat())
+    #: the first Document Properties page (open_dialog(win, 1) opens it)
+    DOCUMENT = next(i for i, (h, _n) in enumerate(_flat())
+                    if h == "Document Properties")
 
     def __init__(self, win):
         super().__init__(win)
+        from PyQt5.QtCore import Qt
+        from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
+        from . import interface_menus
         self.win = win
         tr = language.tr
         self.setWindowTitle(tr("Options"))
-        self.pages = QListWidget()
-        self.pages.addItems([tr(p) for p in self.PAGES])
-        self.pages.setFixedWidth(170)
+        try:
+            self._paths = interface_menus.index(win)
+        except Exception:                         # never stop the window
+            self._paths = {}
+        self._checks = []                 # (QCheckBox, action)
+        self._choices = []                # (QComboBox, {data: action})
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)
+        self.tree.setFixedWidth(200)
         self.stack = QStackedWidget()
-        self.stack.addWidget(self._system_page())
-        self.stack.addWidget(self._document_page())
-        self.pages.currentRowChanged.connect(self.stack.setCurrentIndex)
-        self.pages.setCurrentRow(0)
+        self._items = []
+        for head, names in TREE:
+            top = QTreeWidgetItem(self.tree, [tr(head)])
+            top.setFlags(top.flags() & ~Qt.ItemIsSelectable)
+            f = top.font(0)
+            f.setBold(True)
+            top.setFont(0, f)
+            for name in names:
+                item = QTreeWidgetItem(top, [tr(name)])
+                item.setData(0, Qt.UserRole, len(self._items))
+                self._items.append(item)
+                builder = getattr(self, "_page_" + name.lower().replace(
+                    " ", "_"))
+                self.stack.addWidget(builder())
+            top.setExpanded(True)
+        self.tree.currentItemChanged.connect(self._picked)
+        # pages.setCurrentRow(i) kept (older callers, tests)
+        self.pages = self
         body = QHBoxLayout()
-        body.addWidget(self.pages)
+        body.addWidget(self.tree)
         body.addWidget(self.stack, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.Ok
                                    | QDialogButtonBox.Cancel
@@ -75,15 +120,66 @@ class OptionsDialog(QDialog):
         lay = QVBoxLayout(self)
         lay.addLayout(body)
         lay.addWidget(buttons)
-        self.resize(620, 400)
+        self.resize(760, 480)
+        self.setCurrentRow(0)
 
-    # ── pages ──────────────────────────────────────────────────────
-    def _system_page(self):
-        tr = language.tr
-        from . import toolbar_style
-        from .style import THEMES, current_theme
+    def setCurrentRow(self, row):
+        row = max(0, min(int(row), len(self._items) - 1))
+        self.tree.setCurrentItem(self._items[row])
+        self.stack.setCurrentIndex(row)
+
+    def currentRow(self):
+        return self.stack.currentIndex()
+
+    def _picked(self, item, _old=None):
+        from PyQt5.QtCore import Qt
+        row = item.data(0, Qt.UserRole) if item is not None else None
+        if row is not None:
+            self.stack.setCurrentIndex(int(row))
+
+    # ── helpers ────────────────────────────────────────────────────
+    def _form(self, intro=None):
         page = QWidget()
         form = QFormLayout(page)
+        if intro:
+            note = QLabel(language.tr(intro))
+            note.setWordWrap(True)
+            form.addRow(note)
+        return page, form
+
+    def _check(self, form, path, label):
+        """A box bound to the checkable menu action at *path*."""
+        act = self._paths.get(path)
+        box = QCheckBox(language.tr(label))
+        if act is None:
+            box.setEnabled(False)
+        else:
+            box.setChecked(act.isChecked())
+            self._checks.append((box, act))
+        form.addRow("", box)
+        return box
+
+    def _choice(self, form, prefix, label):
+        """A drop-down of the exclusive menu actions under *prefix*."""
+        combo = QComboBox()
+        acts = {}
+        for path, act in sorted(self._paths.items()):
+            if path.startswith(prefix + "/") and act.isCheckable() and \
+                    "/" not in path[len(prefix) + 1:]:
+                text = act.text().replace("&", "")
+                combo.addItem(language.tr(text), path)
+                acts[path] = act
+                if act.isChecked():
+                    combo.setCurrentIndex(combo.count() - 1)
+        combo.setEnabled(bool(acts))
+        self._choices.append((combo, acts))
+        form.addRow(language.tr(label), combo)
+        return combo
+
+    # ── System Options ─────────────────────────────────────────────
+    def _page_general(self):
+        tr = language.tr
+        page, form = self._form()
         self.lang = QComboBox()
         for code, label in language.LANGUAGES.items():
             self.lang.addItem(label, code)
@@ -92,6 +188,22 @@ class OptionsDialog(QDialog):
         form.addRow(tr("Language:"), self.lang)
         form.addRow("", QLabel(tr("(takes effect the next time "
                                   "KherveCAD starts)")))
+        self._check(form, "help/check for updates automatically",
+                    "Check for updates automatically")
+        self._check(form, "help/show help while hovering menus",
+                    "Show help while hovering menus")
+        from . import user_library_dialog
+        self.autosave = QCheckBox(tr("Save new Objects to My Library "
+                                     "automatically"))
+        self.autosave.setChecked(user_library_dialog.autosave_enabled())
+        form.addRow("", self.autosave)
+        return page
+
+    def _page_display(self):
+        tr = language.tr
+        from . import toolbar_style
+        from .style import THEMES, current_theme
+        page, form = self._form()
         self.theme = QComboBox()
         for name in THEMES:
             self.theme.addItem(tr(name), name)
@@ -104,16 +216,87 @@ class OptionsDialog(QDialog):
         self.style.setCurrentIndex(max(0, self.style.findData(
             toolbar_style.current(self.win))))
         form.addRow(tr("Interface style:"), self.style)
-        locate = QPushButton(tr("Locate OpenSCAD…"))
-        locate.clicked.connect(self.win._locate_openscad)
-        form.addRow(tr("OpenSCAD:"), locate)
+        self._choice(form, "view/3d render style", "Display style:")
+        self._choice(form, "view/3d background", "Background:")
+        for path, label in (
+                ("view/3d smooth shading", "Smooth shading"),
+                ("view/3d edge lines", "Edge lines"),
+                ("view/3d cavity shading", "Cavity shading"),
+                ("view/3d platform and shadow", "Platform and shadow"),
+                ("view/3d ground grid", "Ground grid"),
+                ("view/3d scale bar", "Scale bar"),
+                ("view/3d axes (x y z)", "Axes (X Y Z)")):
+            self._check(form, path, label)
         return page
 
-    def _document_page(self):
+    def _page_sketch(self):
+        tr = language.tr
+        from . import sketch_constraints as sc
+        page, form = self._form()
+        self._check(form, "view/grid", "Display grid")
+        self._check(form, "view/snap", "Snap to grid")
+        self.grid = QLineEdit("%g" % self.win.scene.grid_size)
+        form.addRow(tr("Grid spacing (mm):"), self.grid)
+        self._check(form, "view/show smart dimensions",
+                    "Show Smart Dimensions")
+        self._check(form, "view/show dimensions",
+                    "Show automatic sizes on every shape")
+        self.scale_first = QCheckBox(tr("Scale the sketch on its first "
+                                        "dimension"))
+        self.scale_first.setChecked(sc.scale_first_enabled())
+        form.addRow("", self.scale_first)
+        return page
+
+    def _page_view(self):
+        page, form = self._form()
+        self._choice(form, "view/3d projection", "Projection:")
+        self._check(form, "view/gumball (move / turn handles)",
+                    "Move / turn handles (Gumball)")
+        return page
+
+    def _page_performance(self):
+        page, form = self._form(
+            "Hardware rendering draws the 3D view with OpenGL; without "
+            "it a software painter is used. OpenSCAD renders the exact "
+            "parts in the background.")
+        self._check(form, "view/3d hardware rendering (opengl)",
+                    "Hardware rendering (OpenGL)")
+        return page
+
+    def _page_featuremanager(self):
+        from . import tree_history
+        page, form = self._form()
+        self.history = QCheckBox(language.tr(
+            "Show the tree as a feature history (SolidWorks' "
+            "FeatureManager)"))
+        self.history.setChecked(tree_history.enabled())
+        form.addRow("", self.history)
+        return page
+
+    def _page_file_locations(self):
+        tr = language.tr
+        from . import user_library
+        page, form = self._form()
+        locate = QPushButton(tr("Locate OpenSCAD…"))
+        locate.clicked.connect(self.win._locate_openscad)
+        found = getattr(self.win.engine, "binary", None) or tr("not found")
+        form.addRow(tr("OpenSCAD:"), QLabel(str(found)))
+        form.addRow("", locate)
+        try:
+            lib = str(user_library.folder())
+        except Exception:
+            lib = ""
+        form.addRow(tr("My Library:"), QLabel(lib))
+        form.addRow(tr("Exact part cache:"),
+                    QLabel(str(getattr(self.win.engine, "cache_dir", "")
+                               or "")))
+        return page
+
+    # ── Document Properties ────────────────────────────────────────
+    def _page_units(self):
         tr = language.tr
         model = self.win.model
-        page = QWidget()
-        form = QFormLayout(page)
+        page, form = self._form()
         self.unit = QComboBox()
         for code, _label in units.choices():
             self.unit.addItem(f"{units.symbol(code)} — "
@@ -123,13 +306,6 @@ class OptionsDialog(QDialog):
         form.addRow(tr("Units:"), self.unit)
         self.scale = QLineEdit(units.ratio_text(model.real_scale))
         form.addRow(tr("Scale (1 : N):"), self.scale)
-        b = self.win.builder
-        self.fn = QSpinBox()
-        self.fn.setRange(0, 512)
-        self.fn.setSpecialValueText(tr("each object its own"))
-        self.fn.setValue(b.fn_spin.value() if b.fn_check.isChecked()
-                         else 0)
-        form.addRow(tr("Common segments ($fn):"), self.fn)
         self.decimals = QSpinBox()
         self.decimals.setRange(0, 6)
         self.decimals.setValue(units.DIM_DECIMALS)
@@ -143,6 +319,34 @@ class OptionsDialog(QDialog):
         self.zeros.toggled.connect(self._show_example)
         self.unit.currentIndexChanged.connect(self._show_example)
         self._show_example()
+        return page
+
+    def _page_image_quality(self):
+        tr = language.tr
+        b = self.win.builder
+        page, form = self._form(
+            "How round round things are: the segments every circle, "
+            "sphere and cylinder gets (OpenSCAD's $fn).")
+        self.fn = QSpinBox()
+        self.fn.setRange(0, 512)
+        self.fn.setSpecialValueText(tr("each object its own"))
+        self.fn.setValue(b.fn_spin.value() if b.fn_check.isChecked()
+                         else 0)
+        form.addRow(tr("Common segments ($fn):"), self.fn)
+        return page
+
+    def _page_material(self):
+        tr = language.tr
+        from . import analysis, massbar
+        page, form = self._form(
+            "The material the status bar's mass, the Blueprint title "
+            "block and the bill of materials weigh the parts in.")
+        self.material = QComboBox()
+        for name in analysis.MATERIALS:
+            self.material.addItem(tr(name), name)
+        self.material.setCurrentIndex(max(0, self.material.findData(
+            massbar.material_of(self.win.model))))
+        form.addRow(tr("Material:"), self.material)
         return page
 
     def _show_example(self, *_):
@@ -168,6 +372,27 @@ class OptionsDialog(QDialog):
             toolbar_style.restyle(win)
         if self.style.currentData() != toolbar_style.current(win):
             toolbar_style.apply(win, self.style.currentData())
+        for box, act in self._checks:
+            if box.isChecked() != act.isChecked():
+                act.trigger()                # the menu's own command
+        for combo, acts in self._choices:
+            act = acts.get(combo.currentData())
+            if act is not None and not act.isChecked():
+                act.trigger()
+        s = QSettings(*_SETTINGS)
+        from . import user_library_dialog, sketch_constraints as sc
+        s.setValue(user_library_dialog.AUTOSAVE_KEY,
+                   self.autosave.isChecked())
+        s.setValue(sc.SCALE_FIRST, self.scale_first.isChecked())
+        try:
+            grid = float(self.grid.text().replace(",", "."))
+            if grid > 0 and abs(grid - win.scene.grid_size) > 1e-12:
+                win._set_grid_step(grid)
+        except ValueError:
+            self.grid.setText("%g" % win.scene.grid_size)
+        from . import tree_history
+        if self.history.isChecked() != tree_history.enabled():
+            win.builder.set_history(self.history.isChecked())
         model = win.model
         if self.unit.currentData() != units.coerce(model.unit):
             model.set_unit(self.unit.currentData())
@@ -186,6 +411,9 @@ class OptionsDialog(QDialog):
             save_dimensions(self.decimals.value(), self.zeros.isChecked())
             win.view2d.viewport().update()
             win.view3d.update()
+        from . import massbar
+        if self.material.currentData() != massbar.material_of(model):
+            massbar.set_material(win, self.material.currentData())
 
     def accept(self):
         self.apply()
@@ -227,7 +455,14 @@ def add_mac_settings(win, menu):
 
 
 def open_dialog(win, page=0):
+    """*page*: a page name, or 0 (System Options) / 1 (Document
+    Properties) as before."""
     dlg = OptionsDialog(win)
-    dlg.pages.setCurrentRow(page)
+    if isinstance(page, str):
+        row = OptionsDialog.PAGES.index(page) if page in \
+            OptionsDialog.PAGES else 0
+    else:
+        row = OptionsDialog.DOCUMENT if page == 1 else int(page)
+    dlg.setCurrentRow(row)
     dlg.exec_()
     return dlg
