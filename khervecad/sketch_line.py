@@ -322,7 +322,7 @@ def press(scene, event):
         info = {k: v for k, v in info.items() if k != "angle"}
     node = scene._create("line", params)
     if arc:
-        node.name = "Arc"
+        scene.model.rename(node, "Arc")
     scene.node_created.emit(node)
     _relations(scene, node, info, st)
     st["start"], st["prev"] = pt, node
