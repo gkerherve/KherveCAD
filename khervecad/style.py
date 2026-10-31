@@ -59,7 +59,7 @@ THEMES = {
         icon="#000000", gutter="#0000cc", dark=False),
 }
 
-DEFAULT_THEME = "Sand"
+DEFAULT_THEME = "Light"
 _SETTINGS = ("Kherve", "KherveCAD")
 _current = DEFAULT_THEME
 

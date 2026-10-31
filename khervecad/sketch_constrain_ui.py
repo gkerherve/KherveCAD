@@ -281,7 +281,13 @@ def _line_shape_dist(node, p, a, b, d, tol):
             r = float(node.params.get("width", 0)) / 2.0
         except (TypeError, ValueError):
             r = 0.0
-        if abs(d - r) <= tol:
+        # only along the straight sides: a click on a round END is that
+        # end's arc, for its radius (the user could not pick it)
+        ax, ay = a[0], a[1]
+        dx, dy = b[0] - ax, b[1] - ay
+        t = ((p[0] - ax) * dx + (p[1] - ay) * dy) / (dx * dx + dy * dy
+                                                     or 1e-12)
+        if abs(d - r) <= tol and 0.0 <= t <= 1.0:
             return abs(d - r)
     return d
 

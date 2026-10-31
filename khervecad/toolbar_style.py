@@ -38,7 +38,7 @@ STYLES = ("KherveCAD", "Fusion", "SolidWorks")
 CLASSIC = "KherveCAD"
 #: what a new installation starts in (2026-10-19, the user: make the
 #: Fusion look the default)
-DEFAULT = "Fusion"
+DEFAULT = "SolidWorks"
 #: the menu's words for each style
 LABELS = {"KherveCAD": "KherveCAD (classic)", "Fusion": "Fusion",
           "SolidWorks": "SolidWorks"}

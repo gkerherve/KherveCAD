@@ -61,6 +61,12 @@ LIGHT_BACK = 0.34
 RADIUS_FACTOR = 0.7
 THICKNESS_FACTOR = 0.075
 
+#: the platform is an endless floor, not a turntable (2026-10-31, the
+#: user: "an infinite platform, not just a turning disk"): a disc this
+#: many times the model's, fading into the background at the horizon
+INFINITE = True
+FLOOR_FACTOR = 2000.0
+
 #: how dark the shadow is where it is fully in shadow (0..1)
 SHADOW_OPACITY = 0.36
 
@@ -296,6 +302,9 @@ class Stage:
                                         (x, y, z0 - thick)))
         clipped = any(p is None for p in top) \
             or any(p is None for p in bottom)
+        floor = radius
+        if INFINITE:                    # an endless floor: no slab edge
+            clipped, floor = True, radius * FLOOR_FACTOR
 
         painter.save()
         antialias = painter.testRenderHint(QPainter.Antialiasing)
@@ -304,12 +313,18 @@ class Stage:
                             forward, ortho, cx, cy, radius, z0)
         homography = _ground_homography(view, eye, right, up, forward, z0)
         disc = QPainterPath()
-        disc.addEllipse(QPointF(cx, cy), radius, radius)
+        disc.addEllipse(QPointF(cx, cy), floor, floor)
         disc = homography.map(disc)               # near-clipped by Qt
-        grad = self._top_gradient(disc.boundingRect(), top_c)
         painter.setPen(Qt.NoPen)
-        painter.setBrush(grad)
-        painter.drawPath(disc)
+        if INFINITE:
+            painter.setBrush(top_c)
+            painter.drawPath(disc)
+            self._fade_horizon(view, painter, disc, eye, forward, z0,
+                               tokens, ortho)
+        else:
+            painter.setBrush(self._top_gradient(disc.boundingRect(),
+                                                top_c))
+            painter.drawPath(disc)
 
         self._draw_shadow(view, painter, homography, disc,
                           self.shadow_path(light, z0), opacity, antialias)
@@ -323,6 +338,34 @@ class Stage:
                                            for p in top]))
         painter.restore()
         return True
+
+    @staticmethod
+    def _fade_horizon(view, painter, disc, eye, forward, z0, tokens,
+                      ortho):
+        """The far floor melts into the background, as a studio floor
+        does, so the endless plane has no hard horizon line."""
+        if ortho:
+            return
+        fx, fy = forward[0], forward[1]
+        flat = math.hypot(fx, fy)
+        if flat < 1e-6:                          # looking straight down
+            return
+        far = (eye[0] + fx / flat * 1e7, eye[1] + fy / flat * 1e7, z0)
+        _e, right, up, _f = view._camera()
+        p = view._project(eye, right, up, forward, far)
+        rect = disc.boundingRect()
+        horizon = rect.top() if p is None else p[1]
+        from .view3d import BACKGROUNDS
+        pair = BACKGROUNDS.get(view.background)
+        back = QColor(pair[1]) if pair else QColor(tokens["editor"])
+        band = max(view.height() * 0.35, 1.0)
+        grad = QLinearGradient(0, horizon, 0, horizon + band)
+        clear = QColor(back)
+        clear.setAlpha(0)
+        grad.setColorAt(0.0, back)
+        grad.setColorAt(1.0, clear)
+        painter.setBrush(grad)
+        painter.drawPath(disc)
 
     @staticmethod
     def _top_gradient(rect, top_c):

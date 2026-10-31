@@ -749,8 +749,12 @@ def _rgb(style, face_color, base):
         hue, sat, val = max(own.hueF(), 0.0), own.saturationF(), own.valueF()
         alpha = max(min(float(face_color[1]), 1.0), 0.15)
     else:
-        hue = base.hueF() if base.hueF() >= 0 else 0.58
-        sat, val, alpha = base.saturationF() * 0.75, 1.0, 1.0
+        # an uncoloured part is dark grey, as in SolidWorks (2026-10-31,
+        # the user); it used to wear the theme's accent
+        from .view3d import PART_COLOR
+        own = QColor(PART_COLOR)
+        hue, sat, val, alpha = max(own.hueF(), 0.0), own.saturationF(), \
+            own.valueF(), 1.0
     amb, dif, gk, gp, sat_k, _vk = material(style)
     if style == "Clay":
         hue, sat = 0.07, 0.20

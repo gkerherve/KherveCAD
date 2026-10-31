@@ -46,10 +46,11 @@ def _menu_actions(win):
     return acts
 
 
-def test_fusion_is_the_default_style(app, monkeypatch):
+def test_solidworks_is_the_default_style(app, monkeypatch):
+    """2026-10-31, the user's Options picture: SolidWorks by default."""
     monkeypatch.delenv("KHERVECAD_INTERFACE_STYLE", raising=False)
     QSettings("Kherve", "KherveCAD").remove(toolbar_style.SETTING)
-    assert toolbar_style.saved() == "Fusion"
+    assert toolbar_style.saved() == "SolidWorks"
 
 
 def test_fusion_puts_the_3d_nav_bar_bottom_centre(window, app):

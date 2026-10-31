@@ -83,3 +83,39 @@ def test_a_slot_drawn_on_a_rectangles_side_stays_on_it(win):
     assert slot.params["x2"] == pytest.approx(rect.params["x"] + rect.params["width"], abs=0.01)
     assert slot.params["y1"] == pytest.approx(slot.params["y2"], abs=0.01)
     _shot(win, "slot-on-edge")
+
+
+def test_a_click_on_a_slots_round_end_gives_its_radius(win):
+    """2026-10-31, the user could not pick the slot's radius."""
+    slot = _base_and_slot(win)
+    r = slot.params["width"] / 2
+    asked = _dimension(win, (80 + r, 30), (80 + r, 30), value=4)
+    assert asked, win.statusBar().currentMessage()
+    assert slot.params["width"] == pytest.approx(8, abs=0.01)
+    rows = slot.parent.params.get("constraints") or []
+    assert any(r["kind"] == "radius" for r in rows), rows
+
+
+def test_a_dimension_behind_the_part_is_not_drawn_through_it(win):
+    """2026-10-31, the user: dimensions showed through the solid. The
+    slot's sketch lies on the plate's BOTTOM face (z = 0): seen from
+    below its dimension shows, from above the plate hides it."""
+    from PyQt5.QtTest import QTest
+    slot = _base_and_slot(win)
+    assert _dimension(win, (60, 30), (30, 0), value=25)
+    cont = slot.parent
+    i = next(i for i, r in enumerate(cont.params["constraints"])
+             if "value" in r)
+    from khervecad import sketch_mode
+    sketch_mode.finish(win)
+    QTest.qWait(300)
+    v3 = win.view3d
+
+    def drawn(view):
+        v3.set_view(view, animate=False)
+        v3.repaint()
+        QTest.qWait(50)
+        return any(h[1] is cont and h[2] == i for h in win._dims3d_hits)
+
+    assert drawn("Bottom")
+    assert not drawn("Top")

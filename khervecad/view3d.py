@@ -20,7 +20,8 @@ import threading
 
 from PyQt5.QtCore import (QEvent, QPointF, QRectF, QSettings, Qt, QTimer,
                           pyqtSignal)
-from PyQt5.QtGui import (QColor, QImage, QPainter, QPen, QPolygonF)
+from PyQt5.QtGui import (QColor, QImage, QPainter, QPainterPath, QPen,
+                         QPolygonF)
 from PyQt5.QtWidgets import (QGridLayout, QLabel, QSlider, QToolButton,
                              QWidget)
 
@@ -52,6 +53,11 @@ MATERIAL_STYLES = {
 }
 
 SURFACE_STYLES = set(glrender.SURFACES)
+
+#: what a part with no colour of its own wears (2026-10-31, the user:
+#: "the colour of the box usually grey, dark grey")
+PART_COLOR = "#7a7f87"
+
 
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
 #: explicit (top, bottom) pairs painted as a vertical gradient.
@@ -276,7 +282,7 @@ class View3D(QWidget):
         settings = QSettings(*_SETTINGS)
         saved = settings.value("render_style", "Shaded")
         self.style = saved if saved in RENDER_STYLES else "Shaded"
-        bg = settings.value("render_bg", "Slate")
+        bg = settings.value("render_bg", "Studio")
         self.background = bg if bg in BACKGROUNDS else "Slate"
         proj = settings.value("render_projection", "Perspective")
         self.projection = proj if proj in PROJECTIONS else "Perspective"
@@ -306,7 +312,7 @@ class View3D(QWidget):
         self.scale_bar = settings.value("render_scale_bar", True, type=bool)
         #: the ground grid under the model (off by default: the user did
         #: not want square lines in the 3D view)
-        self.grid = settings.value("render_grid", False, type=bool)
+        self.grid = settings.value("render_grid", True, type=bool)
         #: the X / Y / Z axis lines at the origin (View ▸ 3D Axes)
         self.axes = settings.value("render_axes", True, type=bool)
         self.unit = "mm"
@@ -1442,10 +1448,10 @@ class View3D(QWidget):
                 sat = own.saturationF()
                 val = own.valueF()
                 alpha = max(min(face_color[1], 1.0), 0.15)
-            else:
-                hue = base.hueF() if base.hueF() >= 0 else 0.58
-                sat = base.saturationF() * 0.75
-                val = 1.0
+            else:                        # uncoloured: dark grey
+                own = QColor(PART_COLOR)
+                hue = max(own.hueF(), 0.0)
+                sat, val = own.saturationF(), own.valueF()
                 alpha = 1.0
             face_style = style
             if face_color is not None and len(face_color) > 2 \
@@ -1877,18 +1883,47 @@ class View3D(QWidget):
             painter.drawText(rect, Qt.AlignCenter, self._pick_banner)
 
     def _draw_ground(self, painter, t, eye, right, up, forward):
-        pen = QPen(QColor(t["border"]))
-        pen.setWidthF(0.7)
-        painter.setPen(pen)
-        span, step = 100, 10
-        for i in range(-span, span + 1, step):
-            for a, b in (((i, -span, 0), (i, span, 0)),
-                         ((-span, i, 0), (span, i, 0))):
-                pa = self._project(eye, right, up, forward, a)
-                pb = self._project(eye, right, up, forward, b)
-                if pa and pb:
-                    painter.drawLine(QPointF(pa[0], pa[1]),
-                                     QPointF(pb[0], pb[1]))
+        """The ground grid, endless (2026-10-31, the user: "make the grid
+        infinite"): a 1-2-5 step that follows the zoom, centred under
+        the camera's target, every tenth line stronger, out to far beyond
+        the view, and melting into the background at the horizon."""
+        from .stage import Stage, _ground_homography
+        ortho = self.projection == "Orthographic"
+        if not ortho and eye[2] <= 1e-6 or ortho and forward[2] > -1e-3:
+            return                                  # seen from below
+        step = 10.0 ** math.floor(math.log10(max(self.distance / 25.0,
+                                                 1e-9)))
+        for k in (2.0, 5.0):
+            if step * k <= self.distance / 25.0:
+                step *= k
+        hom = _ground_homography(self, eye, right, up, forward, 0.0)
+        base = QColor(t["border"])
+        for spacing, count, width, alpha in ((step, 60, 0.6, 150),
+                                             (step * 10, 60, 1.0, 230)):
+            ox = round(self.target[0] / spacing) * spacing
+            oy = round(self.target[1] / spacing) * spacing
+            span = spacing * count
+            path = QPainterPath()
+            for i in range(-count, count + 1):
+                x, y = ox + i * spacing, oy + i * spacing
+                path.moveTo(x, oy - span)
+                path.lineTo(x, oy + span)
+                path.moveTo(ox - span, y)
+                path.lineTo(ox + span, y)
+            color = QColor(base)
+            color.setAlpha(alpha)
+            pen = QPen(color)
+            pen.setWidthF(width)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawPath(hom.map(path))
+        far = QPainterPath()
+        r = step * 10 * 60
+        far.addEllipse(QPointF(self.target[0], self.target[1]), r, r)
+        painter.setPen(Qt.NoPen)
+        Stage._fade_horizon(self, painter, hom.map(far), eye, forward,
+                            0.0, t, ortho)
 
     def _draw_axes(self, painter, t, eye, right, up, forward):
         origin = self._project(eye, right, up, forward, (0, 0, 0))

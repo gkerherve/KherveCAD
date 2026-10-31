@@ -209,6 +209,133 @@ def _text(row):
     return "%s%s%s" % (prefix, value, unit)
 
 
+def _closed_solids(mesh):
+    """The triangles of *mesh* that belong to CLOSED pieces (every edge
+    shared by two of the piece's faces), as an (n, 3, 3) array: flat
+    sketch faces in the view are not solids and hide nothing."""
+    import numpy as np
+    tris = np.asarray(mesh, dtype=np.float64).reshape(-1, 3, 3)
+    if not len(tris):
+        return tris
+    keys = np.round(tris.reshape(-1, 3) / 1e-4).astype(np.int64)
+    _u, vid = np.unique(keys, axis=0, return_inverse=True)
+    vid = vid.reshape(-1, 3)
+    edges = {}
+    for t, (a, b, c) in enumerate(vid.tolist()):
+        for e in ((a, b), (b, c), (c, a)):
+            edges.setdefault((min(e), max(e)), []).append(t)
+    parent = list(range(len(vid)))
+
+    def root(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+    for faces in edges.values():
+        for f in faces[1:]:
+            parent[root(f)] = root(faces[0])
+    open_ = {root(faces[0]) for faces in edges.values() if len(faces) != 2}
+    keep = [t for t in range(len(vid)) if root(t) not in open_]
+    return tris[keep]
+
+
+def _occluder(window):
+    """seen(world point) -> False when a solid of the 3D view stands
+    between it and the eye (2026-10-31, the user: a dimension showed
+    through the part, "it should not go through the solid"). A ray
+    toward the eye against the view's closed pieces, kept per mesh
+    serial; everything is seen without numpy or a solid."""
+    view = getattr(window, "view3d", None)
+    if view is None or not view.mesh:
+        return lambda p: True
+    try:
+        import numpy as np
+    except ImportError:
+        return lambda p: True
+    serial = getattr(view, "_mesh_serial", None)
+    cache = getattr(view, "_dims_solid", None)
+    if cache is None or cache[0] != serial:
+        try:
+            tris = _closed_solids(view.mesh)
+        except Exception:
+            tris = None
+        cache = view._dims_solid = (serial, tris)
+    tris = cache[1]
+    if tris is None or not len(tris):
+        return lambda p: True
+    v0 = tris[:, 0]
+    e1, e2 = tris[:, 1] - v0, tris[:, 2] - v0
+    eye, _r, _u, forward = view._camera()
+    ortho = view.projection == "Orthographic"
+    size = float(np.ptp(tris.reshape(-1, 3), axis=0).max()) or 1.0
+    eps = size * 1e-4                       # off the face it may lie on
+
+    def seen(p):
+        p = np.asarray(p, dtype=np.float64)
+        if ortho:
+            d = -np.asarray(forward, dtype=np.float64)
+            limit = np.inf
+        else:
+            d = np.asarray(eye, dtype=np.float64) - p
+            limit = float(np.linalg.norm(d))
+            d = d / (limit or 1.0)
+        o = p + d * eps
+        h = np.cross(d, e2)
+        a = np.einsum("ij,ij->i", e1, h)
+        ok = np.abs(a) > 1e-12
+        f = np.where(ok, 1.0 / np.where(ok, a, 1.0), 0.0)
+        s = o - v0
+        u = f * np.einsum("ij,ij->i", s, h)
+        q = np.cross(s, e1)
+        v = f * (q @ d)
+        t = f * np.einsum("ij,ij->i", e2, q)
+        hit = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > eps) & \
+            (t < limit)
+        return not bool(hit.any())
+
+    def inside(p):
+        """Parity of a fixed slanted ray: is *p* within a solid?"""
+        p = np.asarray(p, dtype=np.float64)
+        d = np.array([0.1234, 0.4567, 0.8801])
+        d /= np.linalg.norm(d)
+        h = np.cross(d, e2)
+        a = np.einsum("ij,ij->i", e1, h)
+        ok = np.abs(a) > 1e-12
+        f = np.where(ok, 1.0 / np.where(ok, a, 1.0), 0.0)
+        s = p - v0
+        u = f * np.einsum("ij,ij->i", s, h)
+        q = np.cross(s, e1)
+        v = f * (q @ d)
+        t = f * np.einsum("ij,ij->i", e2, q)
+        n = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)
+        return int(n.sum()) % 2 == 1
+    seen.inside = inside
+    seen.eps = eps
+    return seen
+
+
+def _shown(seen, m, pts):
+    """Is a dimension drawn? Only a sketch lying ON the part's surface
+    (solid on one side of its plane, air on the other: a sketch on a
+    face) is hidden by the part, when most of its points are behind it.
+    A sketch through the part (a mid-plane, a hole cut from inside) is
+    always drawn: hidden, it could never be seen nor edited."""
+    inside = getattr(seen, "inside", None)
+    if inside is not None and pts:
+        e = getattr(seen, "eps", 1e-3) * 5
+        on_face = False
+        for p in pts:
+            up = inside(_apply(m, (p[0], p[1], e)))
+            down = inside(_apply(m, (p[0], p[1], -e)))
+            if up != down:
+                on_face = True
+                break
+        if not on_face:
+            return True
+    got = [seen(_apply(m, (p[0], p[1], 0.0))) for p in pts]
+    return sum(got) * 2 >= len(got)
+
+
 def paint(window, painter, project):
     """Draw every shown sketch's dimensions; *project* maps a world
     point to (x, y, depth) in view pixels or None."""
@@ -263,6 +390,10 @@ def paint(window, painter, project):
         painter.setBrush(Qt.NoBrush)
         painter.drawText(rect, int(Qt.AlignCenter), text)
 
+    try:
+        seen = _occluder(window)
+    except Exception:
+        seen = None
     for cont, m in placed:
         for index, row in enumerate(sc.rows(cont)):
             if "value" not in row:
@@ -271,6 +402,8 @@ def paint(window, painter, project):
                 what, pts = _local(cont, row)
             except (KeyError, ValueError, IndexError, TypeError):
                 continue
+            if seen is not None and not _shown(seen, m, pts):
+                continue                    # behind the part
             if what == "leader":
                 at = row.get("leader_at")
                 if isinstance(at, (list, tuple)) and len(at) == 2:
