@@ -20,7 +20,17 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-NAME = "Part section"
+#: what the kept outline is called (2026-11-01, the user did not know
+#: what "Part section" was): the model's edges the sketch closes with
+NAME = "Model edges"
+NAMES = (NAME, "Part section")          # older files
+
+
+def is_section(node):
+    """The model's outline kept in a sketch (`keep`): not drawn by the
+    user, never moved by hand — it follows the part (model_refs)."""
+    return node is not None and node.type == "polygon" and \
+        node.name in NAMES
 MAX_TRIS = 400000
 #: how far the section is grown past the part's outline (mm): an area cut
 #: exactly along the part's own side faces left them standing as walls

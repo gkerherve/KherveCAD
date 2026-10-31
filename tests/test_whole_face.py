@@ -160,3 +160,21 @@ def test_the_rib_follows_the_block_when_it_changes(win):
     xs = [face_sketch.to_world(g, v[0], v[1])[0]
           for t in mesh.tessellate(ext, {}) for v in t]
     assert min(xs) == pytest.approx(46 - 0.05, abs=0.02)   # the solid too
+
+
+def test_the_model_edges_are_never_picked_or_dragged(win):
+    """The kept outline is "Model edges", locked in the 2D view (the
+    user dragged the "Part section" trying to make a region)."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtWidgets import QGraphicsItem
+    from khervecad import sketch_section
+    m = win.model
+    poly = m.add_node("polygon", dict(points=[[0, 0], [10, 0], [0, 10]]),
+                      name=sketch_section.NAME)
+    assert poly.name == "Model edges" and sketch_section.is_section(poly)
+    scene = win.view2d.scene()
+    scene._rebuild_items()
+    item = next(i for i in scene._items.values() if i.node is poly)
+    assert not item.flags() & QGraphicsItem.ItemIsMovable
+    assert not item.flags() & QGraphicsItem.ItemIsSelectable
+    assert item.acceptedMouseButtons() == Qt.NoButton

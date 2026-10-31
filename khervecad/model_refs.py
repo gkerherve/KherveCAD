@@ -63,8 +63,7 @@ def _has_refs(container):
     if any(r.get("kind") == "on_edge" or
            (r.get("kind") == "fix" and r.get("model")) for r in rows):
         return True
-    return any(n.type == "polygon" and n.name == sketch_section.NAME
-               for n in container.children)
+    return any(sketch_section.is_section(n) for n in container.children)
 
 
 def _own_part(container, root):
@@ -184,7 +183,7 @@ def _update_section(window, container):
     model = window.model
     changed = False
     for node in list(container.children):
-        if node.type != "polygon" or node.name != sketch_section.NAME:
+        if not sketch_section.is_section(node):
             continue
         grow = node.params.get("section_grow", sketch_section.GROW)
         shape = sketch_section.section_shape(window, container, grow)

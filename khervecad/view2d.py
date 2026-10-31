@@ -1382,6 +1382,18 @@ class SketchScene(QGraphicsScene):
                     item.setFlag(QGraphicsItem.ItemIsSelectable, False)
                     item.setFlag(QGraphicsItem.ItemIsMovable, False)
                     item.setCursor(Qt.ArrowCursor)
+        from . import sketch_section
+        for item in list(self._items.values()):
+            # the model's edges a sketch closes with: shown, never picked
+            # or dragged — clicks reach the region under it (the user
+            # moved it, trying to make a region from the line)
+            if sketch_section.is_section(getattr(item, "node", None)):
+                item.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                item.setFlag(QGraphicsItem.ItemIsMovable, False)
+                item.setAcceptedMouseButtons(Qt.NoButton)
+                item.setCursor(Qt.ArrowCursor)
+                for h in getattr(item, "handles", ()):
+                    h.setVisible(False)
 
     def _rebuild_items_now(self):
         self.updating = True
