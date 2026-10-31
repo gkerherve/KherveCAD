@@ -2681,6 +2681,11 @@ class SketchView(QGraphicsView):
         except Exception:               # never raise out of a paint
             pass
         super().drawForeground(painter, rect)
+        try:                            # the face's other sketches' sizes
+            from . import sketch_dims_face
+            sketch_dims_face.paint(self, painter)
+        except Exception:               # never raise out of a paint
+            pass
         self._dim_hits = []           # every clickable value, this paint
         from . import sketch_constrain_ui
         try:

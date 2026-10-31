@@ -296,21 +296,27 @@ def _occluder(window):
     return seen
 
 
-def paint(window, painter, project):
+def paint(window, painter, project, skip=(), hits=True, occlude=True,
+          colour="#1565c0"):
     """Draw every shown sketch's dimensions; *project* maps a world
-    point to (x, y, depth) in view pixels or None."""
+    point to (x, y, depth) in view pixels or None. The 2D view's face
+    sketch reuses it (sketch_dims_face): *skip* the sketch being edited,
+    no clickable *hits*, no 3D occlusion, grey."""
     from PyQt5.QtCore import QPointF, QRectF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen, QPolygonF
-    window._dims3d_hits = []                # (chip rect, sketch, row)
+    if hits:
+        window._dims3d_hits = []            # (chip rect, sketch, row)
     if not getattr(window.scene, "show_sketch_dims", True):
         return
     try:
         placed = placements(window)
     except Exception:                       # never break the paint
         return
+    placed = [(c, m) for c, m in placed
+              if not any(_under(c, s) for s in skip)]
     if not placed:
         return
-    ink = QColor("#1565c0")
+    ink = QColor(colour)
     pen = QPen(ink, 1.4)
     pen.setCosmetic(True)
     thin = QPen(ink, 1.0)
@@ -337,11 +343,14 @@ def paint(window, painter, project):
         return ((ex.x() - o.x(), ex.y() - o.y()),
                 (ey.x() - o.x(), ey.y() - o.y()))
 
+    shown = []
+
     def chip(at, text, cont=None, index=None, drag=None):
+        shown.append(text)
         tw = fm.horizontalAdvance(text)
         rect = QRectF(at.x() - tw / 2 - 5, at.y() - fm.height() / 2 - 2,
                       tw + 10, fm.height() + 4)
-        if cont is not None:
+        if cont is not None and hits:
             window._dims3d_hits.append((QRectF(rect), cont, index, drag))
         painter.setPen(Qt.NoPen)
         painter.setBrush(QBrush(QColor(255, 255, 255, 230)))
@@ -351,7 +360,7 @@ def paint(window, painter, project):
         painter.drawText(rect, int(Qt.AlignCenter), text)
 
     try:
-        seen = _occluder(window)
+        seen = _occluder(window) if occlude else None
     except Exception:
         seen = None
 
@@ -481,6 +490,7 @@ def paint(window, painter, project):
                  dict(kind="linear", jac=jac(m, (ax, ay)), n=(nx, ny),
                       offset=off))
     painter.restore()
+    return shown
 
 
 DRAG_PX = 4
