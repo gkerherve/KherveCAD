@@ -105,6 +105,41 @@ def action(window):
     return act
 
 
+def escape(window):
+    """Esc: stop the tool running; with none, unselect everything
+    (2026-11-01, the user: a part selected in the tree, Esc should clear
+    the selection)."""
+    # an extrude's arrow belongs to the selection: it goes with it
+    tool = getattr(window.view3d, "edit_tool", None)
+    follows = bool(getattr(tool, "auto", False))
+    stopped = stop(window)
+    if not stopped or follows:
+        unselect(window)
+    return stopped
+
+
+def unselect(window):
+    try:
+        tree = window.builder.active_tree()
+        tree.clearSelection()
+        tree.setCurrentItem(None)
+    except Exception:                          # pragma: no cover
+        pass
+    for tree in (getattr(window.builder, "tree", None),
+                 getattr(getattr(window.builder, "object_tab", None),
+                         "tree", None)):
+        if tree is not None:
+            try:
+                tree.clearSelection()
+            except Exception:                  # pragma: no cover
+                pass
+    try:
+        window.view2d.scene().clearSelection()
+    except Exception:                          # pragma: no cover
+        pass
+    window.statusBar().showMessage(language.tr("Nothing selected."), 2000)
+
+
 def install_escape(window):
     """Esc in the main window stops tools, wherever the focus is. A
     view whose own tool is busy gets the key itself (Edit Mode cancels a
@@ -115,6 +150,6 @@ def install_escape(window):
     from PyQt5.QtGui import QKeySequence
     sc = QShortcut(QKeySequence(Qt.Key_Escape), window)
     sc.setContext(Qt.WindowShortcut)
-    sc.activated.connect(lambda: stop(window))
+    sc.activated.connect(lambda: escape(window))
     window._stop_escape = sc
     return sc

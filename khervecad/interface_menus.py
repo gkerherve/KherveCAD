@@ -186,7 +186,6 @@ SOLIDWORKS = [
                           "view/add reference image",
                           "view/clear reference images",
                           "view/compare to reference image (overlay)"]),
-        ("&User Interface", ["edit/options", "view/vibe model"]),
         ("Screen &Capture", ["file/export png",
                              "file/export turntable movie",
                              "file/render photo (blender)"])]),
