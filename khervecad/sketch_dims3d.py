@@ -83,8 +83,7 @@ def placements(window):
     scope = window._render_scope()[0]
     iso = scope if scope is not root else None
     out = []
-    conts = [c for c in sc.containers(model)
-             if any("value" in r for r in sc.rows(c))]
+    conts = [c for c in sc.containers(model) if sc.rows(c)]
     if iso is None and assembly_mode(window):
         # the assembly (Main tab, not sketching): an Object's sketch
         # dimensions stay in its Object tab (the user: none at all here)
@@ -489,8 +488,84 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
                  str(row["value"]), cont, index,
                  dict(kind="linear", jac=jac(m, (ax, ay)), n=(nx, ny),
                       offset=off))
+    if hits:
+        _paint_relations(window, painter, placed, scr, vis, font)
     painter.restore()
     return shown
+
+
+def _related(window, placed):
+    """The sketches belonging to what is highlighted: a selected part,
+    feature or sketch holds them, or a selected shape is in them."""
+    ids = getattr(window, "_selected_ids", set()) or set()
+    if not ids:
+        return []
+    out = []
+    for c, m in placed:
+        probe, hit = c, False
+        while probe is not None and not hit:
+            hit = probe.id in ids
+            probe = probe.parent
+        if not hit:
+            hit = any(n.id in ids for n in c.walk())
+        if hit:
+            out.append((c, m))
+    return out
+
+
+def _spot(cont, ref):
+    """Where a relation's mark sits for one of its entities."""
+    k, g = sc._geom(cont, ref, {})
+    if k == "point":
+        return g
+    if k == "line":
+        (a, b) = g
+        return ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    (c, r) = g
+    return (c[0], c[1] + r)
+
+
+def _paint_relations(window, painter, placed, scr, vis, font):
+    """The relations (H, V, ●, ⊥, 🔒 …) of the highlighted part's
+    sketches, on the 3D view (2026-11-01, the user: when a part is
+    highlighted, show every constraint put on it). Only what is seen."""
+    from PyQt5.QtCore import QPointF, QRectF, Qt
+    from PyQt5.QtGui import QBrush, QColor, QFont, QPen
+    from .sketch_constrain_ui import MARK
+    rel = _related(window, placed)
+    if not rel:
+        return
+    f = QFont(font)
+    f.setPointSize(max(9, f.pointSize()))
+    painter.setFont(f)
+    fm = painter.fontMetrics()
+    taken = {}
+    for cont, m in rel:
+        for row in sc.rows(cont):
+            if "value" in row or row.get("kind") not in MARK:
+                continue
+            for ref in row["refs"][:1] if row["kind"] in (
+                    "coincident", "fix", "on_edge") else row["refs"]:
+                try:
+                    p = _spot(cont, ref)
+                except (KeyError, ValueError, IndexError, TypeError):
+                    continue
+                if not vis(m, p):
+                    continue
+                q = scr(m, p)
+                if q is None:
+                    continue
+                text = MARK[row["kind"]]
+                key = (round(q.x() / 8), round(q.y() / 8))
+                dx = taken.get(key, 0)
+                w = fm.horizontalAdvance(text) + 8
+                taken[key] = dx + w + 3
+                rect = QRectF(q.x() + 6 + dx, q.y() - 8 - fm.height(),
+                              w, fm.height() + 2)
+                painter.setPen(QPen(QColor(30, 110, 60), 1.0))
+                painter.setBrush(QBrush(QColor(235, 250, 238, 235)))
+                painter.drawRoundedRect(rect, 3, 3)
+                painter.drawText(rect, int(Qt.AlignCenter), text)
 
 
 DRAG_PX = 4
