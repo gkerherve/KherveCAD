@@ -268,7 +268,12 @@ def test_the_pivot_guide_by_mouse(win):
     cont = next(n for n in win.model.root.walk()
                 if any(r["kind"] == "diameter" and
                        r.get("value") == 12.5 for r in sc.rows(n)))
+    # its sketch lies on the plate's MIDDLE plane: inside the part, its
+    # dimensions are hidden (never shown through the solid) — Cut Through
+    # opens the part there and shows them
+    win.view3d.set_cut(axis="y", position=0.5)
     _edit_in_3d(win, cont, "diameter", 20)
+    win.view3d.set_cut(enabled=False)
     _shot(win, "p7-pivot-hole-changed-to-20")
     assert _crossings(win, (0, -100, 8), (0, 1, 0)) == []
     assert _crossings(win, (0, -100, 11), (0, 1, 0)) == \

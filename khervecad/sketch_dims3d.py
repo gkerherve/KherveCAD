@@ -293,47 +293,7 @@ def _occluder(window):
             (t < limit)
         return not bool(hit.any())
 
-    def inside(p):
-        """Parity of a fixed slanted ray: is *p* within a solid?"""
-        p = np.asarray(p, dtype=np.float64)
-        d = np.array([0.1234, 0.4567, 0.8801])
-        d /= np.linalg.norm(d)
-        h = np.cross(d, e2)
-        a = np.einsum("ij,ij->i", e1, h)
-        ok = np.abs(a) > 1e-12
-        f = np.where(ok, 1.0 / np.where(ok, a, 1.0), 0.0)
-        s = p - v0
-        u = f * np.einsum("ij,ij->i", s, h)
-        q = np.cross(s, e1)
-        v = f * (q @ d)
-        t = f * np.einsum("ij,ij->i", e2, q)
-        n = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 0)
-        return int(n.sum()) % 2 == 1
-    seen.inside = inside
-    seen.eps = eps
     return seen
-
-
-def _shown(seen, m, pts):
-    """Is a dimension drawn? Only a sketch lying ON the part's surface
-    (solid on one side of its plane, air on the other: a sketch on a
-    face) is hidden by the part, when most of its points are behind it.
-    A sketch through the part (a mid-plane, a hole cut from inside) is
-    always drawn: hidden, it could never be seen nor edited."""
-    inside = getattr(seen, "inside", None)
-    if inside is not None and pts:
-        e = getattr(seen, "eps", 1e-3) * 5
-        on_face = False
-        for p in pts:
-            up = inside(_apply(m, (p[0], p[1], e)))
-            down = inside(_apply(m, (p[0], p[1], -e)))
-            if up != down:
-                on_face = True
-                break
-        if not on_face:
-            return True
-    got = [seen(_apply(m, (p[0], p[1], 0.0))) for p in pts]
-    return sum(got) * 2 >= len(got)
 
 
 def paint(window, painter, project):
@@ -394,6 +354,31 @@ def paint(window, painter, project):
         seen = _occluder(window)
     except Exception:
         seen = None
+
+    def vis(m, p):
+        """Is the sketch point *p* in front of every solid?"""
+        return seen is None or seen(_apply(m, (p[0], p[1], 0.0)))
+
+    def seg(m, a, b):
+        """A line from *a* to *b* (sketch mm), drawn only where no
+        solid stands in front of it (the user: a dimension must never
+        show through the part, whatever plane its sketch is on)."""
+        n = SEG_SAMPLES if seen is not None else 1
+        ps = [(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n)
+              for i in range(n + 1)]
+        ok = [vis(m, p) for p in ps]
+        run = None
+        for i in range(len(ps)):
+            if ok[i] and run is None:
+                run = i
+            if run is not None and (not ok[i] or i == len(ps) - 1):
+                j = i if ok[i] else i - 1
+                if j > run:
+                    qa, qb = scr(m, ps[run]), scr(m, ps[j])
+                    if qa is not None and qb is not None:
+                        painter.drawLine(qa, qb)
+                run = None
+
     for cont, m in placed:
         for index, row in enumerate(sc.rows(cont)):
             if "value" not in row:
@@ -402,8 +387,6 @@ def paint(window, painter, project):
                 what, pts = _local(cont, row)
             except (KeyError, ValueError, IndexError, TypeError):
                 continue
-            if seen is not None and not _shown(seen, m, pts):
-                continue                    # behind the part
             if what == "leader":
                 at = row.get("leader_at")
                 if isinstance(at, (list, tuple)) and len(at) == 2:
@@ -418,24 +401,30 @@ def paint(window, painter, project):
                 pc, pe, po = (scr(m, p) for p in pts)
                 if None not in (pc, pe, po):
                     painter.setPen(pen)
-                    painter.drawLine(pc, po)
+                    seg(m, pts[0], pts[2])
                     painter.setBrush(QBrush(ink))
                     ex, ey = pe.x() - pc.x(), pe.y() - pc.y()
                     el = math.hypot(ex, ey) or 1.0
                     ux, uy = ex / el, ey / el
                     base = QPointF(pe.x() - ux * 8, pe.y() - uy * 8)
-                    painter.drawPolygon(QPolygonF([
-                        pe, QPointF(base.x() - uy * 3.5, base.y() + ux * 3.5),
-                        QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
+                    if vis(m, pts[1]):
+                        painter.drawPolygon(QPolygonF([
+                            pe, QPointF(base.x() - uy * 3.5,
+                                        base.y() + ux * 3.5),
+                            QPointF(base.x() + uy * 3.5,
+                                    base.y() - ux * 3.5)]))
                     painter.setBrush(Qt.NoBrush)
-                    painter.drawEllipse(pc, 2.0, 2.0)
+                    if vis(m, pts[0]):
+                        painter.drawEllipse(pc, 2.0, 2.0)
+                    if not vis(m, pts[2]):
+                        continue
                     chip(po, _text(row), cont, index,
                          dict(kind="leader", jac=jac(m, pts[2]),
                               at=list(pts[2])))
                 continue
             if what == "label":
                 at = scr(m, pts[0])
-                if at is not None:
+                if at is not None and vis(m, pts[0]):
                     chip(QPointF(at.x() + 6, at.y() - 6), _text(row),
                          cont, index)
                 continue
@@ -466,21 +455,27 @@ def paint(window, painter, project):
             ob = scr(m, (bx + nx * off, by + ny * off))
             if None in (pa, pb, oa, ob):
                 continue
+            la = (ax + nx * off, ay + ny * off)
+            lb = (bx + nx * off, by + ny * off)
             painter.setPen(thin)
-            painter.drawLine(pa, oa)
-            painter.drawLine(pb, ob)
+            seg(m, (ax, ay), la)
+            seg(m, (bx, by), lb)
             painter.setPen(pen)
-            painter.drawLine(oa, ob)
+            seg(m, la, lb)
             sx, sy = ob.x() - oa.x(), ob.y() - oa.y()
             sl = math.hypot(sx, sy) or 1.0
             ux, uy = sx / sl, sy / sl
             painter.setBrush(QBrush(ink))
-            for tip, sgn in ((oa, 1.0), (ob, -1.0)):
+            for tip, sgn, lp in ((oa, 1.0, la), (ob, -1.0, lb)):
+                if not vis(m, lp):
+                    continue
                 base = QPointF(tip.x() + sgn * ux * 8, tip.y() + sgn * uy * 8)
                 painter.drawPolygon(QPolygonF([
                     tip, QPointF(base.x() - uy * 3.5, base.y() + ux * 3.5),
                     QPointF(base.x() + uy * 3.5, base.y() - ux * 3.5)]))
             painter.setBrush(Qt.NoBrush)
+            if not vis(m, ((la[0] + lb[0]) / 2, (la[1] + lb[1]) / 2)):
+                continue
             chip(QPointF((oa.x() + ob.x()) / 2, (oa.y() + ob.y()) / 2),
                  str(row["value"]), cont, index,
                  dict(kind="linear", jac=jac(m, (ax, ay)), n=(nx, ny),
@@ -489,6 +484,9 @@ def paint(window, painter, project):
 
 
 DRAG_PX = 4
+
+#: rays along each dimension line: it is drawn in pieces where seen
+SEG_SAMPLES = 16
 
 
 def press(window, pos):
