@@ -114,3 +114,49 @@ def test_extruded_boss_on_a_lone_line_offers_the_area_it_closes(win):
     world = [face_sketch.to_world(g, p[0], p[1]) for p in pts]
     assert min(p[0] for p in world) < 56 - 0.01
     assert min(p[2] for p in world) < 16 - 0.01
+
+
+def test_the_rib_follows_the_block_when_it_changes(win):
+    """2026-11-01, the user: lines drawn to the model's corners and
+    closed with its edges must move with it ("they all move together")
+    — the block made narrower, the rib's corner goes with it."""
+    from khervecad import (cut_feature, face_outline, face_sketch,
+                           sketch_regions, sketch_section)
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code": (
+        "cube([96, 64, 16]); // Plate\n"
+        "translate([16, 22, 16]) cube([40, 42, 28]); // Block\n")})
+    QTest.qWait(50)
+    m = win.model
+    plate = next(n for n in m.root.walk() if "Plate" in n.name)
+    block = next(n for n in m.root.walk() if n.type == "cube"
+                 and "Block" in n.name)
+    g = face_sketch.make(win, plate, (80, 64, 8), (0, 1, 0))
+    g.params[cut_feature.KEY] = "extruded_boss"
+    a = face_sketch.to_local(g, (56, 64, 44))
+    b = face_sketch.to_local(g, (96, 64, 16))
+    line = m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                   width=0.2), parent=g)
+    assert face_outline.pin(win.view2d.scene(), m, line) == 2
+    face_sketch.close(win)
+    QTest.qWait(50)
+    shapes, _ghost = sketch_section.with_section(
+        win, g, sketch_regions.shapes_of(g), cut=False)
+    areas = [f[0].area() for f in sketch_regions.faces(shapes)]
+    i = next(i for i, ar in enumerate(areas) if abs(ar - 560) < 20)
+    win.view3d._pick_cb(dict(kind="face"), i)
+    win.view3d._pick_cb(None, None)
+    # the block 10 narrower: its top corner moves from x 56 to 46
+    m.set_param(block, "width", 30)
+    QTest.qWait(50)
+    p1 = face_sketch.to_world(g, line.params["x1"], line.params["y1"])
+    assert p1[0] == pytest.approx(46, abs=0.01)
+    assert p1[2] == pytest.approx(44, abs=0.01)
+    p2 = face_sketch.to_world(g, line.params["x2"], line.params["y2"])
+    assert (p2[0], p2[2]) == (pytest.approx(96, abs=0.01),
+                              pytest.approx(16, abs=0.01))
+    from khervecad import mesh
+    ext = next(n for n in g.walk() if n.type == "linear_extrude")
+    xs = [face_sketch.to_world(g, v[0], v[1])[0]
+          for t in mesh.tessellate(ext, {}) for v in t]
+    assert min(xs) == pytest.approx(46 - 0.05, abs=0.02)   # the solid too

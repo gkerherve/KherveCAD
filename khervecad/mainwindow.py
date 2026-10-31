@@ -1329,6 +1329,8 @@ class MainWindow(QMainWindow):
         mates.refresh(self.model)
         edited, self._sketch_edited = getattr(self, "_sketch_edited",
                                               set()), set()
+        from . import model_refs           # sketches follow the model
+        model_refs.refresh(self)
         sketch_constraints.refresh(self.model, edited)
         from . import extent, hole_wizard
         extent.refresh(self.model)

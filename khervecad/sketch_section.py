@@ -142,11 +142,13 @@ def with_section(window, container, shapes, cut=True):
     BOSS it is shrunk, so the area overlaps the part it stands on and
     fuses with it (2026-11-01: the user's rib stood 0.05 mm off the
     block and the plate, a separate solid)."""
-    params = section_shape(window, container, GROW if cut else -GROW)
+    grow = GROW if cut else -GROW
+    params = section_shape(window, container, grow)
     if params is None:
         return list(shapes), None
     from .model import CadNode
-    ghost = CadNode("polygon", NAME, dict(params, modifier="%"))
+    ghost = CadNode("polygon", NAME, dict(params, modifier="%",
+                                          section_grow=grow))
     ghost.parent = container
     return list(shapes) + [ghost], ghost
 

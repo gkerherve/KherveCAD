@@ -401,6 +401,16 @@ def pin(scene, model, node):
                     n += 1
                 except (ValueError, KeyError):
                     pass
+                else:
+                    # a corner OF THE MODEL: it follows the model
+                    # (model_refs), found again by its edges' directions
+                    from . import model_refs
+                    dirs = model_refs._corner_dirs(
+                        (info or {}).get("segments", ()), pt)
+                    if dirs:
+                        row = sc.rows(shape.parent)[-1]
+                        row["model"] = True
+                        row["dirs"] = [round(d, 6) for d in dirs]
                 continue
             # ON an edge of the part (not at a corner): it stays on that
             # edge, free to slide along it (SolidWorks' On Edge)
