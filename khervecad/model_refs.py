@@ -22,10 +22,9 @@ sketch onto them and the Regions re-track, so the feature follows.
 
 Matching is by geometry, like the fillet's edges: a change that turns a
 corner into something else entirely leaves that reference where it was.
-Only a boss sketched on a face, standing as its own part (a rib),
-follows so far: a cut's sketch sits inside the body it cuts (`_in_cut`)
-and a sketch sharing a plane's group with other features cannot be told
-apart from them (`_stands_alone`).
+Face sketches follow: a boss standing as its own part (a rib) and a
+cut in its body's Difference (`plan`); a corner, the middle of an edge
+or a point on an edge.
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -45,38 +44,59 @@ SAME = 1e-6
 _BUSY = False
 
 
-def _in_cut(container):
-    """A cut's sketch lives inside the body it cuts: its part cannot be
-    left out of the outline without losing the body (the clevis's
-    pockets went wrong), so cuts keep their references as drawn."""
+def _face_group(container):
+    """The face sketch's Group holding *container* (itself, or the
+    Group round its extrude / Regions), or None."""
+    from . import face_sketch
     node = container
     while node is not None:
-        if node.type == "difference":
-            return True
+        if node.params.get(face_sketch.KEY):
+            return node
         node = node.parent
-    return False
+    return None
 
 
-def _stands_alone(container, root):
-    """The sketch's feature is a part of its own: a face sketch's Group
-    at the scope's top holding this one feature. Only then can it be
-    left out of the outline cleanly — sketches sharing a plane's group
-    (every Front sketch is one "Front sketch" rotate) would take the
-    rest of the model with them (the pivot guide lost its arm)."""
-    from . import face_sketch
+def _own_part(container, root):
+    """The scope child the sketch belongs to."""
+    node = container
+    while node is not None and node.parent is not root:
+        node = node.parent
+    return node
+
+
+def plan(container, root):
+    """What the outline is made of, or None when it cannot be told:
+    (face Group, part to leave out, body to put back). A BOSS sketched
+    on a face stands as its own part (the rib): left out whole. A CUT
+    sketched on a face sits in a Difference with the body it cuts: its
+    part is left out and that body put back — the face as it was before
+    the cut (2026-11-01, the user's circle on the block's top edge). A
+    sketch sharing a plane's group with other features (every Front
+    sketch is one "Front sketch" rotate) cannot be told apart from them
+    (the pivot guide lost its arm) and keeps its references as drawn."""
+    g = _face_group(container)
+    if g is None:
+        return None
     own = _own_part(container, root)
-    if own is None or not own.params.get(face_sketch.KEY):
-        return False
-    feats = [n for n in own.walk()
-             if n.type in ("linear_extrude", "rotate_extrude")]
-    return len(feats) <= 1
+    if own is None:
+        return None
+    if own is g:
+        feats = [n for n in own.walk()
+                 if n.type in ("linear_extrude", "rotate_extrude")]
+        return (g, own, None) if len(feats) <= 1 else None
+    p = g
+    while p.parent is not None and p is not own:
+        d = p.parent
+        if d.type == "difference" and d.children and \
+                d.children[0] is not p:
+            return g, own, d.children[0]
+        p = d
+    return None
 
 
-def _has_refs(container, root=None):
+def _has_refs(container, root):
     from . import sketch_constraints as sc, sketch_section
-    if _in_cut(container):
-        return False
-    if root is not None and not _stands_alone(container, root):
+    if plan(container, root) is None:
         return False
     rows = sc.rows(container)
     if any(r.get("kind") == "on_edge" or
@@ -85,40 +105,25 @@ def _has_refs(container, root=None):
     return any(sketch_section.is_section(n) for n in container.children)
 
 
-def _own_part(container, root):
-    """The scope child the sketch itself builds (left out of the
-    outline: the rib must not close with its own faces)."""
-    node = container
-    while node is not None and node.parent is not root:
-        node = node.parent
-    return node
-
-
 def outline(window, container):
-    """[((x, y), (x, y))] the model's outline at *container*'s plane in
-    its frame, the container's own feature left out; None when unknown."""
-    from . import face_outline, face_sketch, meshedit_ui
+    """[((x, y), (x, y))] the model's face at *container*'s plane in its
+    frame (`plan`), or None when unknown."""
+    from . import face_outline, mesh, meshedit_ui
     root = window._render_scope()[0]
-    own = _own_part(container, root)
-    parts = [(n, t) for n, t in meshedit_ui._parts(window) if n is not own]
-    if not parts:
+    got = plan(container, root)
+    if got is None:
         return None
-    if container.params.get(face_sketch.KEY):
-        tris = [t for _n, ts in parts for t in ts]
-        segs = face_outline.whole_face(container, tris, [])
-        if segs:
-            return segs
-    from . import sketch_section
-    shape = sketch_section.section_shape(window, container, 0.0)
-    if not shape:
+    g, own, body = got
+    tris = [t for n, ts in meshedit_ui._parts(window) if n is not own
+            for t in ts]
+    if body is not None:
+        iso = root if root is not window.model.root else None
+        with window._isolated_frame(iso):
+            tris += mesh.selected_world_tris(
+                root, {body.id}, fn=window.model.effective_fn())
+    if not tris:
         return None
-    pts = shape["points"]
-    segs = []
-    for path in shape["paths"]:
-        for i, a in enumerate(path):
-            b = path[(i + 1) % len(path)]
-            segs.append((tuple(pts[a]), tuple(pts[b])))
-    return segs
+    return face_outline.whole_face(g, tris, [])
 
 
 def _angle(a, b):
@@ -229,7 +234,18 @@ def refresh_container(window, container):
         segs = outline(window, container)
         if segs:
             for r in refs:
-                if r["kind"] == "fix":
+                if r["kind"] == "fix" and r.get("model") == "mid":
+                    # the middle of a model edge: of that edge, now
+                    e = match_edge(segs, r["edge"])
+                    if e is None:
+                        continue
+                    q = ((e[0][0] + e[1][0]) / 2, (e[0][1] + e[1][1]) / 2)
+                    p = tuple(r["at"])
+                    r["edge"] = [round(v, 6) for v in (*e[0], *e[1])]
+                    if math.hypot(q[0] - p[0], q[1] - p[1]) > SAME:
+                        r["at"] = [round(q[0], 6), round(q[1], 6)]
+                        moved = True
+                elif r["kind"] == "fix":
                     p = tuple(r["at"])
                     q = match_corner(segs, p, r.get("dirs"))
                     if q is not None and math.hypot(
@@ -244,8 +260,10 @@ def refresh_container(window, container):
                                for x, y in zip(new, r["edge"])):
                             r["edge"] = new
                             moved = True
-    if _update_section(window, container):
-        moved = True
+    got = plan(container, window._render_scope()[0])
+    if got is not None and got[2] is None and \
+            _update_section(window, container):
+        moved = True                       # (a boss: its own outline)
     if moved:
         try:
             sc.solve(container, rows, env=sc._env(window.model))

@@ -215,3 +215,56 @@ def test_a_face_sketch_shows_the_other_sketches_on_that_face(win):
     face_sketch.make(win, plate, (96, 30, 5), (1, 0, 0))
     QTest.qWait(50)
     assert not any(t.startswith("40") for t in drawn())
+
+
+def test_a_selected_sketch_shape_shows_as_its_outline_in_3d(win):
+    """2026-11-01, the user: each tree step as itself in 3D — a selected
+    rectangle is its outline on its plane, not a filled patch; its
+    extrude is the solid."""
+    m = win.model
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0))
+    ext = m.add_node("linear_extrude", dict(height=10), parent=rot)
+    rect = m.add_node("rect", dict(x=0, y=0, width=30, height=20),
+                      parent=ext)
+    QTest.qWait(50)
+    win.builder.active_tree().select_nodes([rect])
+    QTest.qWait(50)
+    lines = win.view3d.selection_lines
+    assert len(lines) == 1
+    assert all(abs(p[1]) < 1e-6 for p in lines[0])       # on y = 0 (XZ)
+    assert max(p[2] for p in lines[0]) == pytest.approx(20)
+    assert not win._highlight_tris()                     # no fill
+    win.builder.active_tree().select_nodes([ext])
+    QTest.qWait(50)
+    assert win.view3d.selection_lines == [] and win._highlight_tris()
+
+
+def test_a_cut_centred_on_an_edge_middle_stays_centred(win):
+    """2026-11-01, the user: a circle put at the middle of the block's
+    top edge, then cut, must stay in the middle when the block's width
+    changes."""
+    from khervecad import face_outline, face_sketch
+    from khervecad.mcp_tools import McpToolExecutor
+    from khervecad import sketch_constraints as sc
+    McpToolExecutor(win).execute("apply_code", {"code":
+                                 "cube([40, 30, 20]); // Block\n"})
+    QTest.qWait(50)
+    m = win.model
+    block = next(n for n in m.root.walk() if n.type == "cube")
+    g = face_sketch.make(win, block, (20, 15, 20), (0, 0, 1))
+    c = face_sketch.to_local(g, (20, 0, 20))       # the front edge's middle
+    circle = m.add_node("circle", dict(x=c[0], y=c[1], radius=6), parent=g)
+    assert face_outline.pin(win.view2d.scene(), m, circle) == 1
+    row = sc.rows(g)[-1]
+    assert row["model"] == "mid"
+    face_sketch.close(win)
+    m.wrap_nodes([circle], "linear_extrude")
+    top = block
+    while top.parent is not m.root:
+        top = top.parent
+    m.wrap_nodes([top, g], "difference")
+    QTest.qWait(50)
+    m.set_param(block, "width", 60)
+    QTest.qWait(50)
+    w = face_sketch.to_world(g, circle.params["x"], circle.params["y"])
+    assert w[0] == pytest.approx(30, abs=0.01) and w[1] == pytest.approx(0)

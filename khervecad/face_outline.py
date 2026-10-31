@@ -234,8 +234,43 @@ def show(window, group, part):
     except Exception:                        # never stop the sketch
         import traceback
         traceback.print_exc()
-    scene.face_outline = {"segments": segs, "points": points}
+    info = {"segments": segs, "points": points}
+    try:
+        # the whole part cut just behind the face (the user: "a cut of
+        # the whole part through that face"), hatched under the contour
+        cut = cut_behind(window, group)
+        if cut:
+            info["cut"] = cut
+            have = {(round(x, 3), round(y, 3)) for x, y, _k in points}
+            info["points"] = points + [
+                q for q in snap_points(cut)
+                if (round(q[0], 3), round(q[1], 3)) not in have]
+    except Exception:                        # never stop the sketch
+        import traceback
+        traceback.print_exc()
+    scene.face_outline = info
     return segs
+
+
+#: how far behind the face the part is cut for its section (mm)
+CUT_DEPTH = 0.05
+
+
+def cut_behind(window, group):
+    """The parts' section a hair behind *group*'s face, in its frame."""
+    from . import face_sketch, meshedit_ui, section_outline
+    n = face_sketch._normal_of(group)
+    o = face_sketch.to_world(group, 0.0, 0.0)
+    ex = face_sketch.to_world(group, 1.0, 0.0)
+    ey = face_sketch.to_world(group, 0.0, 1.0)
+    r = [ex[i] - o[i] for i in range(3)]
+    u = [ey[i] - o[i] for i in range(3)]
+    o = [o[i] - n[i] * CUT_DEPTH for i in range(3)]
+    tris = [t for node, ts in meshedit_ui._parts(window)
+            if node is not group for t in ts]
+    if not tris or len(tris) > section_outline.MAX_TRIS:
+        return []
+    return section_outline.plane_segments(tris, o, n, r, u)
 
 
 def anchor_points(group, segs):
@@ -368,6 +403,8 @@ def pin(scene, model, node):
     from . import sketch_constraints as sc
     from .sketch_constrain_ui import _entities
     targets = [(x, y) for x, y, _k in info["points"]] if info else []
+    middles = {(round(x, 6), round(y, 6)) for x, y, k in
+               (info["points"] if info else []) if k == "middle"}
     mine = set(id(n) for n in node.walk())
     try:
         # the sketch's own centres and corners too, hidden or not (not
@@ -405,10 +442,20 @@ def pin(scene, model, node):
                     # a corner OF THE MODEL: it follows the model
                     # (model_refs), found again by its edges' directions
                     from . import model_refs
-                    dirs = model_refs._corner_dirs(
-                        (info or {}).get("segments", ()), pt)
-                    if dirs:
-                        row = sc.rows(shape.parent)[-1]
+                    segs = (info or {}).get("segments", ())
+                    row = sc.rows(shape.parent)[-1]
+                    dirs = model_refs._corner_dirs(segs, pt)
+                    mid = next(((a, b) for a, b in segs if
+                                abs((a[0] + b[0]) / 2 - pt[0]) < 1e-6 and
+                                abs((a[1] + b[1]) / 2 - pt[1]) < 1e-6),
+                               None) if (round(pt[0], 6), round(pt[1], 6)) \
+                        in middles or not dirs else None
+                    if mid is not None:
+                        # the MIDDLE of a model edge: stays its middle
+                        row["model"] = "mid"
+                        row["edge"] = [round(v, 6) for v in
+                                       (*mid[0], *mid[1])]
+                    elif dirs:
                         row["model"] = True
                         row["dirs"] = [round(d, 6) for d in dirs]
                 continue
@@ -448,50 +495,13 @@ def paint(scene, painter):
     info = getattr(scene, "face_outline", None)
     if not info:
         return
-    painter.save()
     if info.get("section"):
-        # the part CUT by the sketch plane (section_outline): a light
-        # section fill, drawn UNDER the sketch shapes (drawBackground)
-        from PyQt5.QtCore import Qt
-        from PyQt5.QtGui import QBrush, QPainterPath
-        path = QPainterPath()
-        path.setFillRule(Qt.OddEvenFill)
-        for a, b in info["segments"]:
-            path.moveTo(QPointF(*a))
-            path.lineTo(QPointF(*b))
-        from . import section as _section
-        fill = QPainterPath()
-        fill.setFillRule(Qt.OddEvenFill)
-        for pts, closed in _section.chain(
-                [((a[0], a[1]), (b[0], b[1])) for a, b in
-                 info["segments"]]):
-            if closed and len(pts) >= 3:
-                fill.moveTo(QPointF(*pts[0]))
-                for q in pts[1:]:
-                    fill.lineTo(QPointF(*q))
-                fill.closeSubpath()
-        # blue like the sketch's own shapes, the holes left empty (the
-        # user expected blue where a white veil and brown hatch were)
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor(33, 118, 199, 55))
-        painter.drawPath(fill)
-        hatch = QBrush(QColor(33, 118, 199, 110), Qt.BDiagPattern)
-        views = scene.views()
-        if views:                 # hatch at screen size, not model size
-            from PyQt5.QtGui import QTransform
-            m = views[0].transform()
-            hatch.setTransform(QTransform.fromScale(
-                1 / (abs(m.m11()) or 1), 1 / (abs(m.m22()) or 1)))
-        painter.setBrush(hatch)
-        painter.drawPath(fill)
-        edge = QPen(QColor(30, 60, 120), 0)
-        edge.setCosmetic(True)
-        edge.setWidthF(2.2)
-        painter.setPen(edge)
-        painter.setBrush(Qt.NoBrush)
-        painter.drawPath(path)
-        painter.restore()
+        _paint_section(scene, painter, info["segments"])
         return
+    if info.get("cut"):
+        # the whole part cut just behind the face, under its contour
+        _paint_section(scene, painter, info["cut"], edges=False)
+    painter.save()
     pen = QPen(QColor(110, 120, 135), 0)
     pen.setCosmetic(True)
     pen.setWidthF(1.6)
@@ -679,3 +689,47 @@ def _whole_edge(segs, a, b):
             lo, hi = min(lo, t), max(hi, t)
     return ((a[0] + ux * lo, a[1] + uy * lo),
             (a[0] + ux * hi, a[1] + uy * hi))
+
+
+def _paint_section(scene, painter, segments, edges=True):
+    """The part CUT by the sketch plane (section_outline): a light
+    section fill, drawn UNDER the sketch shapes (drawBackground)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QBrush, QColor, QPainterPath, QPen
+    painter.save()
+    path = QPainterPath()
+    path.setFillRule(Qt.OddEvenFill)
+    for a, b in segments:
+        path.moveTo(QPointF(*a))
+        path.lineTo(QPointF(*b))
+    from . import section as _section
+    fill = QPainterPath()
+    fill.setFillRule(Qt.OddEvenFill)
+    for pts, closed in _section.chain(
+            [((a[0], a[1]), (b[0], b[1])) for a, b in segments]):
+        if closed and len(pts) >= 3:
+            fill.moveTo(QPointF(*pts[0]))
+            for q in pts[1:]:
+                fill.lineTo(QPointF(*q))
+            fill.closeSubpath()
+    # blue like the sketch's own shapes, the holes left empty (the
+    # user expected blue where a white veil and brown hatch were)
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(33, 118, 199, 55))
+    painter.drawPath(fill)
+    hatch = QBrush(QColor(33, 118, 199, 110), Qt.BDiagPattern)
+    views = scene.views()
+    if views:                 # hatch at screen size, not model size
+        from PyQt5.QtGui import QTransform
+        m = views[0].transform()
+        hatch.setTransform(QTransform.fromScale(
+            1 / (abs(m.m11()) or 1), 1 / (abs(m.m22()) or 1)))
+    painter.setBrush(hatch)
+    painter.drawPath(fill)
+    edge = QPen(QColor(30, 60, 120), 0)
+    edge.setCosmetic(True)
+    edge.setWidthF(2.2 if edges else 1.2)
+    painter.setPen(edge)
+    painter.setBrush(Qt.NoBrush)
+    painter.drawPath(path)
+    painter.restore()
