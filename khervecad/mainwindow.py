@@ -546,12 +546,12 @@ class MainWindow(QMainWindow):
                 lambda _, n=name: self.view3d.set_background(n))
             bg_group.addAction(act)
             bg_menu.addAction(act)
-        # the model on a round platform with a soft shadow (stage.py)
-        self._stage_act = QAction(self.tr("3D &Platform and Shadow"), self,
+        # the model on a surface with a soft shadow (stage.py)
+        self._stage_act = QAction(self.tr("3D &Surface and Shadow"), self,
                                   checkable=True)
         self._stage_act.setChecked(self.view3d.stage)
         self._stage_act.setStatusTip(self.tr(
-            "Stand the model on a platform with a soft shadow from a "
+            "Stand the model on a surface with a soft shadow from a "
             "light at the top left, instead of the ground grid"))
         self._stage_act.triggered.connect(self.view3d.set_stage)
         self.view3d.stage_toggled.connect(self._stage_act.setChecked)

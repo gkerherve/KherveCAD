@@ -77,7 +77,7 @@
   "3D &Cavity Shading": "3D कैविटी शेडिंग(&C)",
   "3D &Edge Lines": "3D किनारा रेखाएं(&E)",
   "3D &Hardware Rendering (OpenGL)": "3D हार्डवेयर रेंडरिंग(&H) (OpenGL)",
-  "3D &Platform and Shadow": "3D प्लेटफ़ॉर्म और छाया(&P)",
+  "3D &Surface and Shadow": "3D सतह और छाया(&S)",
   "3D &Projection": "3D प्रक्षेपण(&P)",
   "3D &Render Style": "3D रेंडर शैली(&R)",
   "3D &Smooth Shading": "3D स्मूथ शेडिंग(&S)",
@@ -1689,7 +1689,7 @@
   "Stadiums": "स्टेडियम",
   "Stairs": "सीढ़ियां",
   "Stairwell (open to the floor below)": "सीढ़ी कक्ष (नीचे की मंज़िल के लिए खुला)",
-  "Stand the model on a platform with a soft shadow from a light at the top left, instead of the ground grid": "ग्राउंड ग्रिड के बजाय, ऊपर-बाईं ओर एक लाइट से नरम छाया के साथ एक प्लेटफ़ॉर्म पर मॉडल खड़ा करें",
+  "Stand the model on a surface with a soft shadow from a light at the top left, instead of the ground grid": "ग्राउंड ग्रिड के बजाय, ऊपर-बाईं ओर एक लाइट से नरम छाया के साथ एक प्लेटफ़ॉर्म पर मॉडल खड़ा करें",
   "Start PlanetCraft: it appears near you, joins the wild herds of new worlds, and is in the Creatures book (menu ▸ Creatures).": "PlanetCraft शुरू करें: वह आपके पास दिखेगा, नई दुनियाओं के जंगली झुंडों में मिलेगा, और जीव-पुस्तक (मेनू ▸ Creatures) में होगा।",
   "Start X": "प्रारंभ X",
   "Start Y": "प्रारंभ Y",
@@ -2403,5 +2403,6 @@
   "Smoothness, crease angle and creased edges are in Properties.": "चिकनाई, सिलवट का कोण और सिलवट वाले किनारे गुणों में हैं।",
   "Tick Show the cage too to see it while you work outside Edit Mode.": "एडिट मोड से बाहर भी देखने के लिए पिंजरा भी दिखाएँ चुनें।",
   "Paths": "पथ",
-  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "हर पंक्ति में एक रूपरेखा, बिंदु संख्याओं में (0 से गिनती)। किसी दूसरी रूपरेखा के भीतर की रूपरेखा एक छेद है। खाली: सभी बिंदु, क्रम में।"
+  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "हर पंक्ति में एक रूपरेखा, बिंदु संख्याओं में (0 से गिनती)। किसी दूसरी रूपरेखा के भीतर की रूपरेखा एक छेद है। खाली: सभी बिंदु, क्रम में।",
+  "Surface and shadow": "सतह और छाया"
 }

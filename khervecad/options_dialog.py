@@ -225,7 +225,7 @@ class OptionsDialog(QDialog):
                 ("view/3d smooth shading", "Smooth shading"),
                 ("view/3d edge lines", "Edge lines"),
                 ("view/3d cavity shading", "Cavity shading"),
-                ("view/3d platform and shadow", "Platform and shadow"),
+                ("view/3d surface and shadow", "Surface and shadow"),
                 ("view/3d ground grid", "Ground grid"),
                 ("view/3d scale bar", "Scale bar"),
                 ("view/3d axes (x y z)", "Axes (X Y Z)")):

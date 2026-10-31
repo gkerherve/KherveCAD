@@ -167,16 +167,16 @@ NAV_TIPS = {
         "Good for inspecting a small part inside a big assembly."),
     "nav3d_fit": (
         "Fit all",
-        "Frames the whole model (platform and shadow included when "
+        "Frames the whole model (surface and shadow included when "
         "they are on).",
         ["Click Fit all, press Ctrl+F, or double-click the view."],
         None),
     "nav3d_stage": (
-        "Platform & shadow",
-        "Stands the model on a round platform with a soft shadow, lit "
+        "Surface & shadow",
+        "Stands the model on a surface with a soft shadow, lit "
         "from the far top left — a presentation look. Only the picture "
         "changes.",
-        ["Click to switch it on or off (also View ▸ 3D Platform & "
+        ["Click to switch it on or off (also View ▸ 3D Surface & "
          "Shadow)."],
         "Pictures exported to PNG and Printables use it too."),
     "nav3d_explode": (
@@ -210,7 +210,7 @@ NAV_TIPS = {
         "How the 3D picture is drawn — the same switches as the View "
         "menu. None of them changes the model.",
         ["Click to open the list and tick what you want:",
-         "Platform & shadow, cavity shading (dark creases), edge lines, "
+         "Surface & shadow, cavity shading (dark creases), edge lines, "
          "scale bar, smooth shading, reference-image overlay and "
          "hardware (OpenGL) rendering."],
         "Turn hardware rendering off if the view ever looks wrong on "

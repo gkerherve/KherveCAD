@@ -77,7 +77,7 @@
   "3D &Cavity Shading": "&Sombreado de cavidades 3D",
   "3D &Edge Lines": "&Líneas de aristas 3D",
   "3D &Hardware Rendering (OpenGL)": "Renderizado por &hardware 3D (OpenGL)",
-  "3D &Platform and Shadow": "3D &Plataforma y sombra",
+  "3D &Surface and Shadow": "3D &Superficie y sombra",
   "3D &Projection": "&Proyección 3D",
   "3D &Render Style": "&Estilo de renderizado 3D",
   "3D &Smooth Shading": "&Sombreado suave 3D",
@@ -1689,7 +1689,7 @@
   "Stadiums": "Estadios",
   "Stairs": "Escaleras",
   "Stairwell (open to the floor below)": "Hueco de escalera (abierto a la planta inferior)",
-  "Stand the model on a platform with a soft shadow from a light at the top left, instead of the ground grid": "Coloca el modelo sobre una plataforma con una sombra suave procedente de una luz en la parte superior izquierda, en lugar de la cuadrícula del suelo",
+  "Stand the model on a surface with a soft shadow from a light at the top left, instead of the ground grid": "Coloca el modelo sobre una plataforma con una sombra suave procedente de una luz en la parte superior izquierda, en lugar de la cuadrícula del suelo",
   "Start PlanetCraft: it appears near you, joins the wild herds of new worlds, and is in the Creatures book (menu ▸ Creatures).": "Inicia PlanetCraft: aparece cerca de ti, se une a los rebaños salvajes de los mundos nuevos y está en el libro de Criaturas (menú ▸ Creatures).",
   "Start X": "Inicio X",
   "Start Y": "Inicio Y",
@@ -2403,5 +2403,6 @@
   "Smoothness, crease angle and creased edges are in Properties.": "La suavidad, el ángulo de pliegue y las aristas plegadas están en Propiedades.",
   "Tick Show the cage too to see it while you work outside Edit Mode.": "Marca Mostrar también la jaula para verla fuera del modo Edición.",
   "Paths": "Rutas",
-  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contorno por fila, como números de punto (contados desde 0). Un contorno dentro de otro es un agujero. Vacío: todos los puntos, en orden."
+  "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contorno por fila, como números de punto (contados desde 0). Un contorno dentro de otro es un agujero. Vacío: todos los puntos, en orden.",
+  "Surface and shadow": "Superficie y sombra"
 }

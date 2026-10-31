@@ -255,7 +255,7 @@ here is the very command the menus use, so they never disagree.</p>
 hovering menus, saving new Objects to My Library.</li>
 <li><b>Display</b> &mdash; <b>Theme</b>, <b>Interface style</b>
 (KherveCAD, Fusion, SolidWorks), display style, background, smooth
-shading, edge lines, cavity shading, platform and shadow, ground grid,
+shading, edge lines, cavity shading, surface and shadow, ground grid,
 scale bar, axes.</li>
 <li><b>Sketch</b> &mdash; grid, snap, grid spacing, showing Smart
 Dimensions and automatic sizes, scaling a sketch on its first
@@ -1001,16 +1001,16 @@ Clay, Toon, Brushed metal, Gold, Copper, Wireframe, X-ray);
 orthographic) are next to it. The floating bar sets brightness and
 contrast. None of these change the model.</p>
 {figure("render_styles", "Four of the render styles.")}
-<h3>Platform and shadow</h3>
-<p><b>View &rsaquo; 3D Platform &amp; Shadow</b> (or the platform button on
-the 3D view's bar) stands the model on a round platform and casts a
+<h3>Surface and shadow</h3>
+<p><b>View &rsaquo; 3D Surface &amp; Shadow</b> (or the surface button on
+the 3D view's bar) stands the model on an endless surface and casts a
 soft shadow from a light far away at the top left, the way a product
 photo is lit. The light follows the camera, so the shadow always falls
 towards the bottom right as you turn the model. It is a look only
 &mdash; nothing is added to the model or the exported files &mdash; and
 it is remembered between sessions (it is on until you switch it off).
 Exported pictures (File &rsaquo; Export PNG) include it.</p>
-{figure("stage", "The platform and its shadow.")}
+{figure("stage", "The surface and its shadow.")}
 <h3>Cavity shading and edge lines</h3>
 <p>Two looks borrowed from Blender's solid view, both under the
 <b>View</b> menu: <b>3D Hardware Rendering (OpenGL)</b> (on by default)
@@ -1373,7 +1373,7 @@ files &mdash; and, for an assembly, <b>one STL per Object</b>
 apart; an Object inside a colour or a group counts, and one placed
 several times is written once) &mdash; the .scad and .kcad, a source ZIP, preview pictures
 painted exactly like the 3D view (your colours, materials, lighting,
-platform and shadow) from eight three-quarter angles (the
+surface and shadow) from eight three-quarter angles (the
 front-right isometric first, as the cover), a description and the
 upload form's answers. It then opens the Printables
 upload page; the final upload is yours to click.</p>
