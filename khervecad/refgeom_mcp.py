@@ -91,6 +91,21 @@ def run(ex, params):
         h = extent.set_extent(win.model, node, "up_to_face",
                               face=_vec(params, "face", 6))
         return dict(id=node.id, height=h)
+    if action == "end_condition":
+        kind = str(params.get("condition") or "blind")
+        kind = "" if kind == "blind" else kind
+        kw = {}
+        if kind == "up_to_vertex":
+            kw["point"] = _vec(params, "point")
+        if kind in ("up_to_face", "offset_face"):
+            kw["face"] = _vec(params, "face", 6)
+        if kind == "up_to":
+            kw["up_to"], kw["side"] = str(params.get("body") or ""), "near"
+        if params.get("distance") is not None and kind != "up_to":
+            kw["offset"] = float(params["distance"])
+        h = extent.set_extent(win.model, node, kind, **kw)
+        return dict(id=node.id, height=h, center=bool(node.params.get(
+            "center")), condition=extent.LABELS[kind])
     if action == "two_way":
         node.params["height2"] = float(params.get("depth") or 0.0)
         win.model.node_changed.emit(node)

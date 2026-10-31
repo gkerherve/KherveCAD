@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QApplication
 
 from khervecad import extent
 from khervecad.model import DocumentModel
+from test_lever_by_mouse import win  # noqa: F401
 
 
 @pytest.fixture(scope="module")
@@ -67,3 +68,80 @@ def test_window_keeps_the_depth_live(app):
     finally:
         win._dirty = False
         win.close()
+
+
+# ---- SolidWorks' whole Direction 1 list (2026-10-31, the user)
+def _plate_with_cutter(app):
+    """A 40 x 40 plate z 0..30 and a circle
+    sketched at z = 10 (translate) cutting along +z."""
+    m = DocumentModel()
+    d = m.add_node("difference", {})
+    body = m.add_node("union", {}, parent=d)
+    m.add_node("cube", dict(width=40, depth=40, height=30), parent=body)
+    t = m.add_node("translate", dict(x=20, y=20, z=10), parent=d)
+    ex = m.add_node("linear_extrude", dict(height=7), parent=t)
+    m.add_node("circle", dict(radius=4), parent=ex)
+    return m, ex
+
+
+def test_through_all_one_way(app):
+    m, ex = _plate_with_cutter(app)
+    assert extent.set_extent(m, ex, "through_all_one") == pytest.approx(21)
+    assert ex.params["center"] is False
+
+
+def test_up_to_next_stops_at_the_first_surface(app):
+    m, ex = _plate_with_cutter(app)
+    # from z 10 inside the plate the first surface along +z is its top
+    assert extent.set_extent(m, ex, "up_to_next") == pytest.approx(20)
+
+
+def test_up_to_vertex(app):
+    m, ex = _plate_with_cutter(app)
+    assert extent.set_extent(m, ex, "up_to_vertex",
+                             point=[40, 40, 25]) == pytest.approx(15)
+    with pytest.raises(ValueError):
+        extent.set_extent(m, ex, "up_to_vertex", point=[0, 0, 0])
+
+
+def test_up_to_surface_and_offset_from_it(app):
+    m, ex = _plate_with_cutter(app)
+    top = [5, 5, 30, 0, 0, 1]
+    assert extent.set_extent(m, ex, "up_to_face", face=top) == \
+        pytest.approx(20)
+    assert extent.set_extent(m, ex, "offset_face", face=top,
+                             offset=-5) == pytest.approx(15)
+
+
+def test_mid_plane_keeps_the_distance_centred(app):
+    m, ex = _plate_with_cutter(app)
+    assert extent.set_extent(m, ex, "mid_plane") == pytest.approx(7)
+    assert ex.params["center"] is True
+    m.set_param(ex, "height", 12)            # a typed distance stays
+    assert ex.params["extent"] == "mid_plane"
+    extent.refresh(m)
+    assert ex.params["height"] == 12 and ex.params["center"] is True
+
+
+def test_every_label_is_solidworks(app):
+    assert [extent.LABELS[k] for k in extent.EXTENTS] == [
+        "Blind", "Through All", "Through All - Both", "Up To Next",
+        "Up To Vertex", "Up To Surface", "Offset From Surface",
+        "Up To Body", "Mid Plane"]
+
+
+def test_the_extrude_window_asks_for_the_surface_then_goes_to_it(win):
+    from khervecad import extrude_panel as ep
+    m = win.model
+    d = m.add_node("difference", {})
+    m.add_node("cube", dict(width=40, depth=40, height=30), parent=d)
+    t = m.add_node("translate", dict(x=20, y=20, z=10), parent=d)
+    ex = m.add_node("linear_extrude", dict(height=7), parent=t)
+    m.add_node("circle", dict(radius=4), parent=ex)
+    ep.choose_extent(win, ex, "up_to_face")
+    cb = win.view3d._pick_cb
+    assert cb is not None                     # waiting for the click
+    cube = d.children[0]
+    cb(dict(kind="face", pos=(5, 5, 30), dir=(0, 0, 1)), cube)
+    assert ex.params["extent"] == "up_to_face"
+    assert ex.params["height"] == pytest.approx(20)

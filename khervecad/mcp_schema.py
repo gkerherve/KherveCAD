@@ -1618,12 +1618,24 @@ TOOLS = [
             "(node_id of a linear_extrude + face: [x, y, z, nx, ny, nz] "
             "from probe_surface — the depth then follows that face), "
             "two_way (node_id of a linear_extrude + depth: also extrude "
-            "this far down -Z), list (default)."
+            "this far down -Z), end_condition (node_id of a "
+            "linear_extrude + condition, SolidWorks' list: blind, "
+            "through_all_one (Through All), through_all (Through All - "
+            "Both), up_to_next, up_to_vertex (+ point), up_to_face (Up To "
+            "Surface, + face), offset_face (+ face + distance), up_to (Up "
+            "To Body, + body: a node name), mid_plane), list (default)."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["list", "plane", "axis", "point",
-                                "sketch", "up_to_face", "two_way"]},
+                                "sketch", "up_to_face", "two_way",
+                                "end_condition"]},
+            "condition": {"type": "string",
+                          "enum": ["blind", "through_all_one",
+                                   "through_all", "up_to_next",
+                                   "up_to_vertex", "up_to_face",
+                                   "offset_face", "up_to", "mid_plane"]},
+            "body": {"type": "string"},
             "origin": {"type": "array", "items": {"type": "number"}},
             "normal": {"type": "array", "items": {"type": "number"}},
             "point": {"type": "array", "items": {"type": "number"}},

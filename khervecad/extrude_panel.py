@@ -26,7 +26,79 @@ the Free Software Foundation, either version 3 of the License, or
 ONE, TWO, SYMMETRIC = "one", "two", "symmetric"
 DIRECTIONS = [(ONE, "One side"), (TWO, "Two sides"),
               (SYMMETRIC, "Symmetric")]
-EXTENTS = [("", "Blind"), ("through_all", "Through all")]
+def _extents():
+    from . import extent
+    return [(k, extent.LABELS[k]) for k in extent.EXTENTS]
+
+
+EXTENTS = _extents()
+
+
+def _set_offset(window, ext, value):
+    """Offset From Surface's distance: the depth follows at once."""
+    from . import extent, refgeom_ui
+    ext.params["up_to_offset"] = float(value)
+    try:
+        h, c = extent.height_for(window.model, ext)
+    except ValueError as exc:
+        refgeom_ui._tell(window, str(exc))
+        return
+    window.model.set_param(ext, "center", c)
+    ext.params["height"] = h
+    window.model.node_changed.emit(ext)
+
+
+def choose_extent(window, ext, kind, offset=None):
+    """Set the end condition *kind*. Those that need something in the 3D
+    view (a vertex, a surface, a body) ask for a click first — the rest
+    apply at once. A failure is said in the status bar and the extrude
+    stays as it was."""
+    from . import extent, refgeom_ui
+    model = window.model
+
+    def apply(**kw):
+        try:
+            h = extent.set_extent(model, ext, kind, **kw)
+        except ValueError as exc:
+            refgeom_ui._tell(window, str(exc))
+            refresh(window)
+            return
+        refgeom_ui._tell(window, "%s: %s mm." % (extent.LABELS[kind],
+                                                  "%g" % h))
+        refresh(window)
+
+    if kind == "":
+        ext.params.pop("up_to_offset", None)
+        model.set_param(ext, "extent", "")
+        refresh(window)
+        return
+    what = extent.PICKS.get(kind)
+    if what is None:
+        apply()
+        return
+    off = offset
+    if off is None:
+        off = float(ext.params.get("up_to_offset") or 0.0)
+        if kind == "offset_face" and not off:
+            off = 5.0
+
+    def got(desc, node, _tris):
+        if what == "vertex":
+            p = desc["pos"]
+            seg = desc.get("seg")
+            if seg:                  # an edge: its nearer end, a corner
+                import math
+                p = min(seg, key=lambda e: math.dist(e, desc["pos"]))
+            apply(point=list(p), offset=off if kind != "up_to" else 0.0)
+        elif what == "face":
+            apply(face=list(desc["pos"]) + list(desc["dir"]), offset=off)
+        else:
+            apply(up_to=node.name, side="near")
+    banner = {"vertex": "%s: click the vertex (a corner of an edge)",
+              "face": "%s: click the surface",
+              "body": "%s: click the body"}[what] % extent.LABELS[kind]
+    refgeom_ui._pick(window, banner, got,
+                     ("face",) if what == "face" else ("face", "edge"))
 
 
 def _num(v, default=0.0):
@@ -339,7 +411,11 @@ def show(window, tool):
                  changed(lambda v: set_direction(model, ext, v)))
     panel.choice("extent", "End condition", EXTENTS,
                  ext.params.get("extent") or "",
-                 changed(lambda v: model.set_param(ext, "extent", v)))
+                 changed(lambda v: choose_extent(window, ext, v)))
+    panel.number("offset", "Offset",
+                 _num(ext.params.get("up_to_offset"), 0),
+                 changed(lambda v: _set_offset(window, ext, v)),
+                 minimum=-100000.0)
     panel.number("height", "Distance", _num(ext.params.get("height"), 10),
                  changed(lambda v: model.set_param(ext, "height", v)),
                  minimum=0.01)
@@ -396,8 +472,10 @@ def refresh(window):
     panel.set_value("reverse", is_reversed(ext))
     panel.set_value("twist", _num(ext.params.get("twist"), 0))
     panel.set_value("scale", _num(ext.params.get("scale"), 1))
-    through = (ext.params.get("extent") or "") == "through_all"
-    panel.fields["height"].setEnabled(not through)
+    kind = ext.params.get("extent") or ""
+    panel.fields["height"].setEnabled(kind in ("", "mid_plane"))
+    panel.set_value("offset", _num(ext.params.get("up_to_offset"), 0))
+    panel.show_row("offset", kind == "offset_face")
     panel.show_row("height2", d == TWO)
     panel.adjustSize()
     panel.place()

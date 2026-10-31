@@ -19,8 +19,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 from . import extrude_panel as ep
 
-EXTENTS = [("", "Blind"), ("through_all", "Through all"),
-           ("up_to", "Up to object"), ("up_to_face", "Up to face")]
+EXTENTS = ep.EXTENTS
 #: the extrude's own params shown as they are, after the window's
 KEPT = ("twist", "scale", "segments")
 UP_TO = ("up_to", "up_to_side", "up_to_offset")
@@ -77,7 +76,8 @@ def build(panel, form, node):
     for v, text in EXTENTS:
         extent.addItem(tr(text), v)
     extent.currentIndexChanged.connect(guard(
-        lambda _i: model.set_param(node, "extent", extent.currentData())))
+        lambda _i: ep.choose_extent(panel.window(), node,
+                                    extent.currentData())))
     form.addRow(tr("End condition"), extent)
     st["extent"] = extent
 
@@ -155,7 +155,8 @@ def load(panel):
     kind = node.params.get("extent") or ""
     _row(st, "height2", d == ep.TWO)
     for key in UP_TO:
-        _row(st, key, kind == "up_to")
+        _row(st, key, kind == "up_to" or (
+            key == "up_to_offset" and kind == "offset_face"))
     height = st.get("row:height")
     if height:
         height[1].setEnabled(kind in ("", None))

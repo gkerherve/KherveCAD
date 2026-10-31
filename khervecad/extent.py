@@ -25,7 +25,23 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-EXTENTS = ("", "through_all", "up_to", "up_to_face")
+EXTENTS = ("", "through_all_one", "through_all", "up_to_next",
+           "up_to_vertex", "up_to_face", "offset_face", "up_to",
+           "mid_plane")
+#: SolidWorks' names, in its order (2026-10-31, the user's picture of
+#: the Extruded Cut's Direction 1 list). "through_all" was here first
+#: and reaches BOTH ways, so it keeps that meaning; "through_all_one"
+#: is SolidWorks' plain Through All, one way.
+LABELS = {"": "Blind", "through_all_one": "Through All",
+          "through_all": "Through All - Both", "up_to_next": "Up To Next",
+          "up_to_vertex": "Up To Vertex", "up_to_face": "Up To Surface",
+          "offset_face": "Offset From Surface", "up_to": "Up To Body",
+          "mid_plane": "Mid Plane"}
+#: the ones waiting for a click in 3D: what to click
+PICKS = {"up_to_vertex": "vertex", "up_to_face": "face",
+         "offset_face": "face", "up_to": "body"}
+#: the ones that keep the Distance the user typed
+KEEPS_HEIGHT = ("mid_plane",)
 SIDES = ("far", "near")
 MARGIN = 1.0
 
@@ -34,6 +50,9 @@ SCHEMA = [("extent", "End condition", "choice", EXTENTS, None),
           ("up_to_side", "Up to its", "choice", SIDES, None),
           ("up_to_offset", "Offset beyond (mm)", "float", -1e6, 1e6)]
 TEXT = {"extent", "up_to", "up_to_side"}
+# "up_to_vertex": ``up_to_point`` [x, y, z] world, the depth is where it
+# lies along the extrude. "up_to_next": the first surface every ray from
+# the profile meets. "mid_plane": the Distance as typed, centred.
 # "up_to_face" (2026-10-27, SolidWorks' Up To Surface by a CLICK): the
 # picked face as ``up_to_face`` [x, y, z, nx, ny, nz] in world
 # coordinates; the depth is where the extrude's axis, through its
@@ -98,6 +117,27 @@ def height_for(model, extrude, env=None):
     from .anchors import doc_env
     env = doc_env(model) if env is None else env
     kind = extrude.params.get("extent") or ""
+    if kind == "mid_plane":
+        return float(extrude.params.get("height") or 10.0), True
+    if kind == "through_all_one":
+        pts = _cut_points(model, extrude, env)
+        z = _local_z(extrude, pts, env)
+        if float(z.max()) <= 0.01:
+            raise ValueError("Through all: the part is behind the sketch "
+                             "(try Reverse direction).")
+        return round(float(z.max()) + MARGIN, 4), False
+    if kind == "up_to_vertex":
+        row = extrude.params.get("up_to_point") or []
+        if len(row) < 3:
+            raise ValueError("Up to vertex: no vertex picked.")
+        z = _local_z(extrude, _np().array([row[:3]], float), env)
+        h = float(z[0]) + float(extrude.params.get("up_to_offset") or 0.0)
+        if h <= 0.01:
+            raise ValueError("Up to vertex: the vertex is behind the "
+                             "sketch (try Reverse direction).")
+        return round(h, 4), False
+    if kind == "up_to_next":
+        return _to_next(model, extrude, env), False
     if kind == "through_all":
         body = _body_for(extrude)
         if body is None:
@@ -130,9 +170,95 @@ def height_for(model, extrude, env=None):
             raise ValueError("Up to: %r's %s face is not above the "
                              "sketch." % (name, side))
         return round(h, 4), False
-    if kind == "up_to_face":
+    if kind in ("up_to_face", "offset_face"):
         return _to_face(extrude, env)
     raise ValueError("Blind extrude: no extent to work out.")
+
+
+def _cut_points(model, extrude, env):
+    """World points of what the extrude goes through: the body it is cut
+    from, else everything else in the document."""
+    body = _body_for(extrude)
+    if body is not None:
+        pts = _world_points(body, env)
+        if pts is not None:
+            return pts
+    pts = [_world_points(c, env) for c in model.root.children
+           if not _is_inside(extrude, c)]
+    pts = [p for p in pts if p is not None]
+    if not pts:
+        raise ValueError("Through all: nothing to go through.")
+    return _np().concatenate(pts)
+
+
+def _world_tris(model, extrude, env):
+    from . import mesh
+    np = _np()
+    body = _body_for(extrude)
+    nodes = [body] if body is not None else \
+        [c for c in model.root.children if not _is_inside(extrude, c)]
+    out = []
+    for n in nodes:
+        tris = mesh.tessellate(n, env)
+        if not tris:
+            continue
+        t = np.array(tris, float).reshape(-1, 3)
+        m = np.array(mesh.ancestor_matrix(n, env), float)
+        out.append((t @ m[:3, :3].T + m[:3, 3]).reshape(-1, 3, 3))
+    if not out:
+        raise ValueError("Up to next: nothing in front of the sketch.")
+    return np.concatenate(out)
+
+
+def _first_hit(tris, o, d):
+    """The smallest t > 0 where o + t d meets a triangle, or None."""
+    np = _np()
+    v0 = tris[:, 0]
+    e1, e2 = tris[:, 1] - v0, tris[:, 2] - v0
+    h = np.cross(d, e2)
+    a = np.einsum("ij,ij->i", e1, h)
+    ok = np.abs(a) > 1e-12
+    f = np.where(ok, 1.0 / np.where(ok, a, 1.0), 0.0)
+    s = o - v0
+    u = f * np.einsum("ij,ij->i", s, h)
+    q = np.cross(s, e1)
+    v = f * (q @ d)
+    t = f * np.einsum("ij,ij->i", e2, q)
+    hit = ok & (u >= -1e-9) & (v >= -1e-9) & (u + v <= 1 + 1e-9) & \
+        (t > 1e-4)
+    return float(t[hit].min()) if hit.any() else None
+
+
+def _to_next(model, extrude, env):
+    """Up To Next: rays along the extrude from the profile (its points
+    drawn a little in, and its centre); the depth is where the LAST of
+    them meets its first surface, so the whole profile gets there."""
+    from . import mesh
+    np = _np()
+    tris = _world_tris(model, extrude, env)
+    m = np.array(mesh.ancestor_matrix(extrude, env), float)
+    try:
+        loops = [o for o in mesh.collect_outlines(extrude, env) if o]
+    except Exception:
+        loops = []
+    cx, cy = _sketch_centre(extrude, env)
+    starts = [(cx, cy)]
+    for loop in loops:
+        step = max(1, len(loop) // 12)
+        for x, y in loop[::step]:
+            starts.append((x + (cx - x) * 0.02, y + (cy - y) * 0.02))
+    d = m[:3, 2]                       # one local z, in world
+    depth = None
+    for x, y in starts:
+        o = m[:3, :3] @ np.array([x, y, 0.0]) + m[:3, 3]
+        t = _first_hit(tris, o, d)
+        if t is not None:
+            depth = t if depth is None else max(depth, t)
+    if depth is None:
+        raise ValueError("Up to next: no surface in front of the sketch "
+                         "(try Reverse direction).")
+    return round(depth + float(extrude.params.get("up_to_offset") or 0.0),
+                 4)
 
 
 def _sketch_centre(extrude, env):
@@ -205,13 +331,14 @@ def refresh(model):
 
 
 def set_extent(model, extrude, kind, up_to="", side="far", offset=0.0,
-               face=None):
+               face=None, point=None):
     if kind not in EXTENTS:
         raise ValueError("extent is one of %s." % ", ".join(
             repr(k) for k in EXTENTS))
     p = extrude.params
+    height = p.get("height")
     for k in ("extent", "up_to", "up_to_side", "up_to_offset",
-              "up_to_face"):
+              "up_to_face", "up_to_point"):
         p.pop(k, None)
     if kind:
         p["extent"] = kind
@@ -219,14 +346,30 @@ def set_extent(model, extrude, kind, up_to="", side="far", offset=0.0,
         p["up_to"], p["up_to_side"] = up_to, side
         if offset:
             p["up_to_offset"] = float(offset)
-    if kind == "up_to_face":
+    if kind == "up_to_vertex":
+        if point is None or len(point) < 3:
+            raise ValueError("Up to vertex needs the point: [x, y, z].")
+        p["up_to_point"] = [round(float(v), 6) for v in point[:3]]
+    if kind in ("up_to_face", "offset_face"):
         if face is None or len(face) < 6:
             raise ValueError("Up to face needs the face: [x, y, z, nx, "
                              "ny, nz].")
         p["up_to_face"] = [round(float(v), 6) for v in face[:6]]
         if offset:
             p["up_to_offset"] = float(offset)
+    if kind and offset:
+        p["up_to_offset"] = float(offset)
+    if kind == "offset_face" and not offset:
+        p["up_to_offset"] = 0.0
     if kind:
-        p["height"], p["center"] = height_for(model, extrude)
+        if height is not None:
+            p["height"] = height
+        try:
+            p["height"], p["center"] = height_for(model, extrude)
+        except ValueError:
+            # kept, as the user chose it (red in the tree, like a refresh
+            # that fails); the windows still hear of it
+            model.node_changed.emit(extrude)
+            raise
     model.node_changed.emit(extrude)
     return p["height"]

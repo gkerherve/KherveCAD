@@ -183,7 +183,9 @@ NODE_TYPES = {
                 ("height2", "Direction 2 depth", "float", 0.0, 1e6),
                 # end conditions (extent.py), schema-only
                 ("extent", "End condition", "choice",
-                 ("", "through_all", "up_to", "up_to_face"), None),
+                 ("", "through_all_one", "through_all", "up_to_next",
+                  "up_to_vertex", "up_to_face", "offset_face", "up_to",
+                  "mid_plane"), None),
                 ("up_to", "Up to (object name)", "str", None, None),
                 ("up_to_side", "Up to its", "choice", ("far", "near"),
                  None),
@@ -1626,7 +1628,8 @@ class DocumentModel(QObject):
                 node.params.pop("mate", None)
                 self.mate_released.emit(node)
         if key == "height" and node.type == "linear_extrude" and \
-                node.params.get("extent"):
+                node.params.get("extent") and \
+                node.params.get("extent") != "mid_plane":
             # a depth typed or dragged is a BLIND extrude: Through All /
             # Up To would put its own back at once (the user's cut kept
             # returning to straight through)

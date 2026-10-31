@@ -75,7 +75,7 @@ def test_typing_the_distance_and_choosing_the_direction(win):
     assert extrude_panel._panel(win) is panel          # still open
     QTest.mouseClick(panel.fields["reverse"], Qt.LeftButton)
     assert drag_feature.reversed_of(ext) is None
-    _choose(panel.fields["extent"], "Through all")
+    _choose(panel.fields["extent"], "Through All - Both")
     assert ext.params["extent"] == "through_all"
     assert not panel.fields["height"].isEnabled()
 
