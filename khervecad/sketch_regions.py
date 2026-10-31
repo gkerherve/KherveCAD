@@ -873,7 +873,7 @@ def start_3d(window, container=None, make_only=False, cut=False):
     # lines (the user's line across the lever, "select the top")
     from . import sketch_section
     shapes, ghost = sketch_section.with_section(
-        window, container, shapes_of(container), cut=cut)
+        window, container, shapes_of(container))
     face_list = faces(shapes)
     if not face_list:
         return False
@@ -928,6 +928,14 @@ def start_3d(window, container=None, make_only=False, cut=False):
                 return
             ext = extrude(window.model, container, face_list, picked,
                           hide=shapes) if picked else None
+            if ext is not None and not cut and ghost is not None:
+                # a boss closed with the model's edges FUSES with the part
+                # (regions2d `fuse`: pushed into it along those edges)
+                reg = next((n for n in ext.walk()
+                            if n.type == "regions"), None)
+                if reg is not None:
+                    reg.params["fuse"] = True
+                    window.model.node_changed.emit(reg)
             if ext is not None:
                 window.statusBar().showMessage(
                     "Extruded %d region(s) — drag the arrow or set the "

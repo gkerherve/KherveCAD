@@ -99,7 +99,7 @@ def test_extruded_boss_on_a_lone_line_offers_the_area_it_closes(win):
     cb = win.view3d._pick_cb
     assert cb is not None and line.parent is g        # not extruded
     shapes, _ghost = sketch_section.with_section(
-        win, g, sketch_regions.shapes_of(g), cut=False)
+        win, g, sketch_regions.shapes_of(g))
     areas = [f[0].area() for f in sketch_regions.faces(shapes)]
     i = next(i for i, a in enumerate(areas) if abs(a - 560) < 20)
     cb(dict(kind="face", pos=(0, 0, 0), dir=(0, 0, 1)), i)
@@ -141,7 +141,7 @@ def test_the_rib_follows_the_block_when_it_changes(win):
     face_sketch.close(win)
     QTest.qWait(50)
     shapes, _ghost = sketch_section.with_section(
-        win, g, sketch_regions.shapes_of(g), cut=False)
+        win, g, sketch_regions.shapes_of(g))
     areas = [f[0].area() for f in sketch_regions.faces(shapes)]
     i = next(i for i, ar in enumerate(areas) if abs(ar - 560) < 20)
     win.view3d._pick_cb(dict(kind="face"), i)
@@ -159,7 +159,7 @@ def test_the_rib_follows_the_block_when_it_changes(win):
     ext = next(n for n in g.walk() if n.type == "linear_extrude")
     xs = [face_sketch.to_world(g, v[0], v[1])[0]
           for t in mesh.tessellate(ext, {}) for v in t]
-    assert min(xs) == pytest.approx(46 - 0.05, abs=0.02)   # the solid too
+    assert 45.8 < min(xs) < 46 - 0.01      # the solid too, fused into it
 
 
 def test_the_model_edges_are_never_picked_or_dragged(win):
@@ -178,3 +178,40 @@ def test_the_model_edges_are_never_picked_or_dragged(win):
     assert not item.flags() & QGraphicsItem.ItemIsMovable
     assert not item.flags() & QGraphicsItem.ItemIsSelectable
     assert item.acceptedMouseButtons() == Qt.NoButton
+
+
+def test_a_face_sketch_shows_the_other_sketches_on_that_face(win):
+    """2026-11-01, the user: on any face, see the constraints of what is
+    there — not just its contour. A sketch on the plate's top holding a
+    40 wide rectangle: a new sketch on that face shows the 40, one on
+    the plate's side does not."""
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad import face_sketch, sketch_dims_face
+    from khervecad import sketch_constraints as sc
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code":
+                                 "cube([96, 64, 10]); // Plate\n"})
+    QTest.qWait(50)
+    m = win.model
+    plate = next(n for n in m.root.walk() if "Plate" in n.name)
+    first = face_sketch.make(win, plate, (50, 30, 10), (0, 0, 1))
+    rect = m.add_node("rect", dict(x=10, y=10, width=40, height=20),
+                      parent=first)
+    sc.add(m, first, "length", [sc.ref_of(first, rect, "e0")])
+    face_sketch.close(win)
+    QTest.qWait(50)
+
+    def drawn():
+        img = QImage(800, 600, QImage.Format_ARGB32)
+        p = QPainter(img)
+        try:
+            return sketch_dims_face.paint(win.view2d, p)
+        finally:
+            p.end()
+    face_sketch.make(win, plate, (70, 50, 10), (0, 0, 1))
+    QTest.qWait(50)
+    assert any(t.startswith("40") for t in drawn())
+    face_sketch.close(win)
+    face_sketch.make(win, plate, (96, 30, 5), (1, 0, 0))
+    QTest.qWait(50)
+    assert not any(t.startswith("40") for t in drawn())

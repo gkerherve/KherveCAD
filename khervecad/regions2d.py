@@ -63,7 +63,33 @@ def _cs(node):
         want = insides[k] if k < len(insides) else None
         picked.add(sr._match(face_list, (float(p[0]), float(p[1])), want))
     picked.discard(None)
-    return sr.union_of(face_list, picked), face_list, picked
+    cs = sr.union_of(face_list, picked)
+    if cs is not None and node.params.get("fuse"):
+        cs = _fused(node, cs)
+    return cs, face_list, picked
+
+
+def _fused(node, cs):
+    """A boss closed with the model's edges, pushed into the part along
+    them (2026-11-01: the user's rib stood 0.05 mm off the block and the
+    plate — the section is grown that much — a separate solid). Only
+    where the area meets the kept "Model edges" polygon: its free edges
+    (the user's line) stay where they are."""
+    from . import sketch_section
+    import manifold3d as m
+    loops = []
+    for s in shapes(node):
+        if not sketch_section.is_section(s):
+            continue
+        pts = s.params.get("points") or []
+        paths = s.params.get("paths") or [list(range(len(pts)))]
+        loops += [[(float(pts[i][0]), float(pts[i][1])) for i in path]
+                  for path in paths]
+    if not loops:
+        return cs
+    section = m.CrossSection(loops, m.FillRule.EvenOdd)
+    band = cs.offset(3 * sketch_section.GROW, m.JoinType.Miter) ^ section
+    return cs + band
 
 
 def outlines(node, env=None):

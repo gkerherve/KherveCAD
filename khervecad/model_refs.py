@@ -22,8 +22,10 @@ sketch onto them and the Regions re-track, so the feature follows.
 
 Matching is by geometry, like the fillet's edges: a change that turns a
 corner into something else entirely leaves that reference where it was.
-Only sketches that BUILD something (a boss, a rib) follow so far: a
-cut's sketch sits inside the body it cuts (`_in_cut`).
+Only a boss sketched on a face, standing as its own part (a rib),
+follows so far: a cut's sketch sits inside the body it cuts (`_in_cut`)
+and a sketch sharing a plane's group with other features cannot be told
+apart from them (`_stands_alone`).
 
 Copyright (C) 2026 Gwilherm Kerherve
 
@@ -55,9 +57,26 @@ def _in_cut(container):
     return False
 
 
-def _has_refs(container):
+def _stands_alone(container, root):
+    """The sketch's feature is a part of its own: a face sketch's Group
+    at the scope's top holding this one feature. Only then can it be
+    left out of the outline cleanly — sketches sharing a plane's group
+    (every Front sketch is one "Front sketch" rotate) would take the
+    rest of the model with them (the pivot guide lost its arm)."""
+    from . import face_sketch
+    own = _own_part(container, root)
+    if own is None or not own.params.get(face_sketch.KEY):
+        return False
+    feats = [n for n in own.walk()
+             if n.type in ("linear_extrude", "rotate_extrude")]
+    return len(feats) <= 1
+
+
+def _has_refs(container, root=None):
     from . import sketch_constraints as sc, sketch_section
     if _in_cut(container):
+        return False
+    if root is not None and not _stands_alone(container, root):
         return False
     rows = sc.rows(container)
     if any(r.get("kind") == "on_edge" or
@@ -245,7 +264,7 @@ def refresh(window):
     try:
         root = window._render_scope()[0]
         for node in list(root.walk()):
-            if node.children and _has_refs(node):
+            if node.children and _has_refs(node, root):
                 try:
                     refresh_container(window, node)
                 except Exception:          # never break an edit

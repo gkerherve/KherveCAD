@@ -145,14 +145,14 @@ def _grown(loops, grow=GROW):
         return loops
 
 
-def with_section(window, container, shapes, cut=True):
+def with_section(window, container, shapes):
     """*shapes* plus a transient construction polygon of the section, or
-    *shapes* alone when the plane cuts nothing. For a CUT the section is
-    grown (the area reaches past the part's side, no wall left); for a
-    BOSS it is shrunk, so the area overlaps the part it stands on and
-    fuses with it (2026-11-01: the user's rib stood 0.05 mm off the
-    block and the plate, a separate solid)."""
-    grow = GROW if cut else -GROW
+    *shapes* alone when the plane cuts nothing. The section is grown, so
+    a cut's area reaches past the part's side and leaves no wall; a boss
+    is pushed back into the part afterwards (regions2d `fuse`) — a
+    shrunk section changed which areas there are where a circle met the
+    part's edge exactly (the pivot guide's arm)."""
+    grow = GROW
     params = section_shape(window, container, grow)
     if params is None:
         return list(shapes), None
