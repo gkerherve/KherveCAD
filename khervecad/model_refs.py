@@ -172,13 +172,21 @@ def match_corner(new_segs, p, want=None):
     if not corners:
         return None
     best = None
+    nearest = None
     for q, ds in corners.items():
         d = math.hypot(q[0] - p[0], q[1] - p[1])
+        nearest = d if nearest is None else min(nearest, d)
         ok = not want or _dirs_match(want, ds)
         key = (0 if ok else 1, d)
         if best is None or key < best[0]:
             best = (key, q)
-    return best[1]
+    (miss, d), q = best
+    if miss or (d > 3 * nearest and d > 1.0):
+        # the corner is gone (a cut ate it, the user's block made too
+        # narrow for its pipe): a far corner of the same shape is NOT
+        # it — the reference dangles and stays where it was
+        return None
+    return q
 
 
 def match_edge(new_segs, edge):
@@ -222,6 +230,15 @@ def _update_section(window, container):
     return changed
 
 
+def _dangling(window, container):
+    try:
+        window.statusBar().showMessage(
+            "%s: a corner it was drawn to is gone — that point stays where "
+            "it was (redraw it to another corner)." % container.name, 8000)
+    except Exception:                       # pragma: no cover
+        pass
+
+
 def refresh_container(window, container):
     """Move *container*'s model references onto the model as it is.
     True when anything moved."""
@@ -248,6 +265,9 @@ def refresh_container(window, container):
                 elif r["kind"] == "fix":
                     p = tuple(r["at"])
                     q = match_corner(segs, p, r.get("dirs"))
+                    if q is None:
+                        _dangling(window, container)
+                        continue
                     if q is not None and math.hypot(
                             q[0] - p[0], q[1] - p[1]) > SAME:
                         r["at"] = [round(q[0], 6), round(q[1], 6)]
