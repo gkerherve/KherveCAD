@@ -233,6 +233,12 @@ def _frame_3d(win):
 def tool_chosen(win, tool):
     """A drawing tool picked while the 3D model shows: start sketching."""
     from .view2d import MEASURE, SELECT
+    from . import constrain3d, sketch_constrain_ui
+    constrain3d.end(win)
+    if active(win) and not sketching(win) and \
+            sketch_constrain_ui.handles(tool) and \
+            constrain3d.start(win, tool):
+        return        # constraints work in the 3D view too (the user)
     if active(win) and not sketching(win) and tool not in (SELECT,
                                                            MEASURE):
         enter(win)
