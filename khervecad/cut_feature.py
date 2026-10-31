@@ -162,6 +162,10 @@ def finish(window, group):
     return diff
 
 
+#: a line this thin (mm) is a sketch line; wider it is a band to cut
+THIN_LINE = 0.5
+
+
 def _closes_with_model_edges(window, group, kind):
     """SolidWorks' "close sketch with model edges" (2026-10-31, the
     user's triangle: one line from edge to edge on a face): loose lines
@@ -170,7 +174,14 @@ def _closes_with_model_edges(window, group, kind):
     True when that pick was started."""
     from . import slot2d, sketch_regions
     shapes = _shapes(group)
-    if not any(s.type == "line" and not slot2d.is_slot(s) for s in shapes):
+    def thin(s):
+        # a sketch line (0.2 mm), not a band drawn as a thick line
+        try:
+            return float(s.params.get("width", 0.2) or 0.2) <= THIN_LINE
+        except (TypeError, ValueError):
+            return False
+    if not any(s.type == "line" and not slot2d.is_slot(s) and thin(s)
+               for s in shapes):
         return False
     try:
         if sketch_regions.solid_faces(shapes,
