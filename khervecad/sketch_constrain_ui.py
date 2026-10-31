@@ -260,6 +260,8 @@ def pick(scene, scene_pos, want=None, midpoints=False):
                     c, r = sc._circle(node, name, {})
                     d = abs(math.hypot(p[0] - c[0], p[1] - c[1]) - r)
                     rank = 1
+                    if not _on_end_arc(node, name, p):
+                        continue        # inside the slot, not its end
             except (KeyError, ValueError, IndexError):
                 continue
             if d <= tol and (best is None or (rank, d) < best[0]):
@@ -345,7 +347,31 @@ def _say(hit):
     if k == "point":
         return {"c": "centre", "p1": "line end", "p2": "line end",
                 "m": "midpoint"}.get(name, "corner")
-    return "circle" if k == "circle" else "line"
+    if k == "circle":
+        return "arc" if node.type == "line" else "circle"
+    return "line"
+
+
+def _end_arc(node, name):
+    """(start angle, sweep) in radians of what a circle entity draws: a
+    slot's round END is the half turned away from its other end (the
+    user: hovering the arc should light just that arc), a circle all."""
+    if node.type == "line" and name in ("a1", "a2"):
+        p = sc._point(node, "p" + name[1], {})
+        q = sc._point(node, "p2" if name == "a1" else "p1", {})
+        out = math.atan2(p[1] - q[1], p[0] - q[0])
+        return out - math.pi / 2, math.pi
+    return 0.0, 2 * math.pi
+
+
+def _on_end_arc(node, name, p):
+    """Is *p* on the drawn half of a slot's end (or any circle)?"""
+    a0, sweep = _end_arc(node, name)
+    if sweep >= 2 * math.pi - 1e-9:
+        return True
+    c, _r = sc._circle(node, name, {})
+    t = (math.atan2(p[1] - c[1], p[0] - c[0]) - a0) % (2 * math.pi)
+    return t <= sweep + 1e-6
 
 
 def _paint_entity(view, painter, items, node, name, colour, width):
@@ -368,9 +394,10 @@ def _paint_entity(view, painter, items, node, name, colour, width):
                          _view_point(view, items, node, b))
     else:
         c, r = sc._circle(node, name, {})
+        a0, sweep = _end_arc(node, name)
         pts = [_view_point(view, items, node,
-                           (c[0] + r * math.cos(t * math.pi / 36),
-                            c[1] + r * math.sin(t * math.pi / 36)))
+                           (c[0] + r * math.cos(a0 + sweep * t / 72),
+                            c[1] + r * math.sin(a0 + sweep * t / 72)))
                for t in range(73)]
         for a, b in zip(pts, pts[1:]):
             painter.drawLine(a, b)
@@ -385,6 +412,10 @@ def _paint_dimension_picks(view, painter):
     scene = view.scene()
     items = {it.node.id: it for it in _shape_items(scene)}
     painter.save()
+    # entities come in VIEW pixels (_view_point): without this they were
+    # drawn in scene millimetres, off the sketch, and nothing lit up
+    painter.resetTransform()
+    painter.setRenderHint(painter.Antialiasing, True)
     try:
         for node, name, _k in _state(scene):
             _paint_entity(view, painter, items, node, name,
@@ -392,9 +423,12 @@ def _paint_dimension_picks(view, painter):
         hot = getattr(scene, "_con_hover", None)
         if hot is not None:
             node, name, k = hot
+            # bright cyan, wider than a selected shape's blue outline,
+            # so the arc / line a click would take stands out (the user)
             colour = QColor(230, 120, 20) if k == "point" else \
-                QColor(33, 118, 199, 220)
-            _paint_entity(view, painter, items, node, name, colour, 4.0)
+                QColor(0, 190, 255, 235)
+            _paint_entity(view, painter, items, node, name, colour,
+                          4.0 if k == "point" else 6.0)
             if k == "point":
                 p = _view_point(view, items, node,
                                 sc._point(node, name, {}))

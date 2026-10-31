@@ -119,3 +119,30 @@ def test_a_dimension_behind_the_part_is_not_drawn_through_it(win):
 
     assert drawn("Bottom")
     assert not drawn("Top")
+
+
+def test_hovering_a_slots_end_lights_that_arc_then_gives_its_radius(win):
+    """2026-10-31, the user: hover the arc, it lights up, click it, then
+    the radius — as for any arc."""
+    from PyQt5.QtTest import QTest
+    from test_smart_dimension_by_mouse import _at, _move
+    slot = _base_and_slot(win)
+    r = slot.params["width"] / 2
+    v2 = win.view2d
+    v2.set_tool("con_dimension")
+    _move(v2.viewport(), _at(win, 80 + r * 0.7071, 30 + r * 0.7071))
+    QTest.qWait(30)
+    hot = v2.scene()._con_hover
+    assert hot is not None and hot[0] is slot and hot[1] == "a2", hot
+    v2.viewport().repaint()
+    _shot(win, "slot-arc-hover")
+    # inside the slot, near its end: not the end's arc
+    _move(v2.viewport(), _at(win, 80 - r * 0.9, 30 + r * 0.43))
+    QTest.qWait(30)
+    hot = v2.scene()._con_hover
+    assert hot is None or hot[1] != "a2", hot
+    v2.set_tool("select")
+    asked = _dimension(win, (80 + r * 0.7071, 30 + r * 0.7071), (95, 55),
+                       value=3)
+    assert asked and asked[0][0] == "radius", asked
+    assert slot.params["width"] == pytest.approx(6, abs=0.01)
