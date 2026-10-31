@@ -873,7 +873,7 @@ def start_3d(window, container=None, make_only=False, cut=False):
     # lines (the user's line across the lever, "select the top")
     from . import sketch_section
     shapes, ghost = sketch_section.with_section(
-        window, container, shapes_of(container))
+        window, container, shapes_of(container), cut=cut)
     face_list = faces(shapes)
     if not face_list:
         return False

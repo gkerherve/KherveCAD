@@ -81,7 +81,8 @@ def test_extruded_boss_on_a_lone_line_offers_the_area_it_closes(win):
     the block's corner to the plate's corner, leave the sketch. It used
     to extrude the line itself (a 0.2 mm strip); now the triangle it
     closes with the model edges is offered, and extruded when picked."""
-    from khervecad import cut_feature, sketch_regions, sketch_section
+    from khervecad import cut_feature, face_sketch, sketch_regions, \
+        sketch_section
     from khervecad.mcp_tools import McpToolExecutor
     McpToolExecutor(win).execute("apply_code", {"code": (
         "cube([96, 64, 16]); // Plate\n"
@@ -98,7 +99,7 @@ def test_extruded_boss_on_a_lone_line_offers_the_area_it_closes(win):
     cb = win.view3d._pick_cb
     assert cb is not None and line.parent is g        # not extruded
     shapes, _ghost = sketch_section.with_section(
-        win, g, sketch_regions.shapes_of(g))
+        win, g, sketch_regions.shapes_of(g), cut=False)
     areas = [f[0].area() for f in sketch_regions.faces(shapes)]
     i = next(i for i, a in enumerate(areas) if abs(a - 560) < 20)
     cb(dict(kind="face", pos=(0, 0, 0), dir=(0, 0, 1)), i)
@@ -106,3 +107,10 @@ def test_extruded_boss_on_a_lone_line_offers_the_area_it_closes(win):
     ext = next(n for n in g.walk() if n.type == "linear_extrude")
     reg = next(n for n in ext.walk() if n.type == "regions")
     assert line in list(reg.walk())
+    # it FUSES with the block and the plate (it once stood 0.05 mm off
+    # both, a separate solid the face then left out)
+    from khervecad import mesh
+    pts = [v for t in mesh.tessellate(ext, {}) for v in t]
+    world = [face_sketch.to_world(g, p[0], p[1]) for p in pts]
+    assert min(p[0] for p in world) < 56 - 0.01
+    assert min(p[2] for p in world) < 16 - 0.01

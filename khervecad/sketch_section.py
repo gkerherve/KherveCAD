@@ -54,7 +54,7 @@ def _inside(node, ancestor):
     return False
 
 
-def section_shape(window, container):
+def section_shape(window, container, grow=GROW):
     """{points, paths} of the parts' section at *container*'s plane (the
     part the sketch itself builds left out), or None."""
     from . import meshedit_ui, section, section_outline
@@ -78,7 +78,7 @@ def section_shape(window, container):
         return None
     loops = [pts for pts, closed in section.chain(segs)
              if closed and len(pts) >= 3]
-    loops = _grown(loops)
+    loops = _grown(loops, grow)
     points, paths = [], []
     for pts in loops:
         paths.append(list(range(len(points), len(points) + len(pts))))
@@ -120,24 +120,29 @@ def _beside(window, part, container):
         return []
 
 
-def _grown(loops):
-    """*loops* (outlines CCW, holes CW) grown GROW outward, holes shrunk
-    by as much; as they are without Manifold."""
+def _grown(loops, grow=GROW):
+    """*loops* (outlines CCW, holes CW) grown *grow* outward, holes
+    shrunk by as much (a negative *grow* shrinks); as they are without
+    Manifold."""
     try:
         import manifold3d as m
         cs = m.CrossSection([[(float(p[0]), float(p[1])) for p in lp]
                              for lp in loops], m.FillRule.Positive)
         out = [list(lp) for lp in
-               cs.offset(GROW, m.JoinType.Miter).to_polygons()]
+               cs.offset(grow, m.JoinType.Miter).to_polygons()]
         return [lp for lp in out if len(lp) >= 3] or loops
     except Exception:
         return loops
 
 
-def with_section(window, container, shapes):
+def with_section(window, container, shapes, cut=True):
     """*shapes* plus a transient construction polygon of the section, or
-    *shapes* alone when the plane cuts nothing."""
-    params = section_shape(window, container)
+    *shapes* alone when the plane cuts nothing. For a CUT the section is
+    grown (the area reaches past the part's side, no wall left); for a
+    BOSS it is shrunk, so the area overlaps the part it stands on and
+    fuses with it (2026-11-01: the user's rib stood 0.05 mm off the
+    block and the plate, a separate solid)."""
+    params = section_shape(window, container, GROW if cut else -GROW)
     if params is None:
         return list(shapes), None
     from .model import CadNode
