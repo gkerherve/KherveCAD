@@ -121,8 +121,38 @@ def start(window, only=None):
     window.view3d.start_pick(
         picked, groups=parts,
         banner=language.tr("Click the face to sketch on · Esc cancels"),
-        labeler=lambda desc, node: getattr(node, "name", ""))
+        labeler=lambda desc, node: getattr(node, "name", ""),
+        extend=lambda desc, node: _whole_face_desc(desc, parts))
     return True
+
+
+def _whole_face_desc(desc, parts):
+    """The hovered face lit over every part lying in its plane (the
+    user: only one part's share of the face lit up)."""
+    if desc.get("kind") != "face" or not desc.get("tris"):
+        return desc
+    from . import face_outline as fo
+    n = _unit(desc["dir"])
+    p = desc["pos"]
+    d0 = n[0] * p[0] + n[1] * p[1] + n[2] * p[2]
+    have = {id(t) for t in desc["tris"]}
+    more = []
+    for _node, tris in parts:
+        for t in tris:
+            if id(t) in have:
+                continue
+            tn = fo._unit(fo._cross(fo._sub(t[1], t[0]),
+                                    fo._sub(t[2], t[0])))
+            if tn[0] * n[0] + tn[1] * n[1] + tn[2] * n[2] < fo.FACING:
+                continue
+            if all(abs(v[0] * n[0] + v[1] * n[1] + v[2] * n[2] - d0)
+                   < 1e-3 for v in t):
+                more.append(t)
+    if not more:
+        return desc
+    out = dict(desc)
+    out["tris"] = list(desc["tris"]) + more
+    return out
 
 
 def make(window, part, point, normal):

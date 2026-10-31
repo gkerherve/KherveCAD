@@ -142,19 +142,92 @@ def snap_points(segs):
 
 
 # =================================================================== Qt
+def _face_triangles(group, tris):
+    """The triangles of *tris* lying on *group*'s face, in its 2D frame,
+    each counter-clockwise."""
+    from . import face_sketch
+    point = face_sketch.to_world(group, 0.0, 0.0)
+    n = _unit(face_sketch._normal_of(group))
+    d0 = n[0] * point[0] + n[1] * point[1] + n[2] * point[2]
+    size = 1.0
+    for t in tris[:2000]:
+        for v in t:
+            size = max(size, abs(v[0]), abs(v[1]), abs(v[2]))
+    tol = PLANE_TOL * size
+    out = []
+    for t in tris:
+        tn = _unit(_cross(_sub(t[1], t[0]), _sub(t[2], t[0])))
+        if tn[0] * n[0] + tn[1] * n[1] + tn[2] * n[2] < FACING:
+            continue
+        if any(abs(v[0] * n[0] + v[1] * n[1] + v[2] * n[2] - d0) > tol
+               for v in t):
+            continue
+        q = [face_sketch.to_local(group, v) for v in t]
+        area = (q[1][0] - q[0][0]) * (q[2][1] - q[0][1]) - \
+            (q[1][1] - q[0][1]) * (q[2][0] - q[0][0])
+        if abs(area) < 1e-12:
+            continue
+        out.append(q if area > 0 else q[::-1])
+    return out
+
+
+def whole_face(group, own, others):
+    """The face as SolidWorks sees it (2026-10-31, the user: the face of
+    one part showed alone, not the part beside it on the same face): the
+    clicked part's face (*own* triangles) joined with every other part's
+    triangles in that plane touching it — one region, outline segments
+    in the sketch's frame. None without Manifold."""
+    try:
+        import manifold3d as m
+    except ImportError:                              # pragma: no cover
+        return None
+    mine = _face_triangles(group, own)
+    if not mine:
+        return None
+    rest = _face_triangles(group, others) if others else []
+    try:
+        cs = m.CrossSection([[tuple(p) for p in t] for t in mine + rest],
+                            m.FillRule.Positive).simplify(1e-4)
+        seed = m.CrossSection([[tuple(p) for p in t] for t in mine],
+                              m.FillRule.Positive).simplify(1e-4)
+        keep = [c for c in cs.decompose()
+                if not (c ^ seed).is_empty()]
+        polys = [p for c in keep for p in c.to_polygons()]
+    except Exception:
+        return None
+    segs = []
+    for poly in polys:
+        pts = [(round(float(x), 4) + 0.0, round(float(y), 4) + 0.0)
+               for x, y in poly]
+        for i, a in enumerate(pts):
+            b = pts[(i + 1) % len(pts)]
+            if a != b:
+                segs.append((a, b))
+    return segs or None
+
+
 def show(window, group, part):
-    """Hand the face's outline to the 2D view for *group*'s sketch."""
+    """Hand the face's outline to the 2D view for *group*'s sketch: the
+    whole face, every part lying in it (`whole_face`)."""
     from . import meshedit_ui
-    tris = None
+    tris, others = None, []
     for node, t in meshedit_ui._parts(window):
-        if node is part or _inside(part, node):
+        if tris is None and (node is part or _inside(part, node)):
             tris = t
-            break
+        else:
+            others.extend(t)
     scene = window.view2d.scene()
     if not tris:
         scene.face_outline = None
         return []
-    segs = for_group(group, tris)
+    segs = None
+    try:
+        segs = whole_face(group, tris, others)
+    except Exception:                        # never stop the sketch
+        import traceback
+        traceback.print_exc()
+    if not segs:
+        segs = for_group(group, tris)
     points = snap_points(segs) + anchor_points(group, segs)
     try:
         points += sketch_points(group, part)

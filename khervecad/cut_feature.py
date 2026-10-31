@@ -140,6 +140,9 @@ def finish(window, group):
     if part is None:                     # (after a restart: the face's part)
         from . import face_sketch
         part = face_sketch.part_of(group)
+    if kind in ("extruded_boss", "extruded_cut") and \
+            _closes_with_model_edges(window, group, kind):
+        return None
     diff = apply(window.model, group, part, kind)
     label = ALL[kind][0]
     if diff is None:
@@ -157,6 +160,37 @@ def finish(window, group):
             except Exception:
                 pass
     return diff
+
+
+def _closes_with_model_edges(window, group, kind):
+    """SolidWorks' "close sketch with model edges" (2026-10-31, the
+    user's triangle: one line from edge to edge on a face): loose lines
+    that close nothing by themselves are not extruded as thin strips —
+    the areas they make WITH the face's edges are offered in 3D instead.
+    True when that pick was started."""
+    from . import slot2d, sketch_regions
+    shapes = _shapes(group)
+    if not any(s.type == "line" and not slot2d.is_slot(s) for s in shapes):
+        return False
+    try:
+        if sketch_regions.solid_faces(shapes,
+                                      sketch_regions.faces(shapes)):
+            return False                  # they close an area themselves
+    except Exception:
+        pass
+    group.params.pop(KEY, None)
+    try:
+        started = sketch_regions.start_3d(window, group,
+                                          cut=kind == "extruded_cut")
+    except Exception:
+        started = False
+    if started:
+        window.statusBar().showMessage(
+            "Click the area(s) your lines close with the part's edges, "
+            "then Done (or Enter).", 8000)
+    else:
+        group.params[KEY] = kind
+    return bool(started)
 
 
 def start(window, kind):

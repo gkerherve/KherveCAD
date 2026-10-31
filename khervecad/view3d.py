@@ -868,7 +868,7 @@ class View3D(QWidget):
         event.accept()
 
     def start_pick(self, callback, groups=None, banner="",
-                   labeler=None):
+                   labeler=None, extend=None):
         """Enter pick mode: the next left click on the model picks a
         face or edge and *callback* receives its description (world
         coordinates); right click or Esc cancels. While armed, the
@@ -888,6 +888,10 @@ class View3D(QWidget):
         self._pick_banner = banner
         self.pick_lines = getattr(self, "pick_lines", None) or []
         self._pick_labeler = labeler
+        # extend(desc, key) -> desc: the hover may light more than the
+        # clicked part's face (a face sketch: the whole face, every part
+        # lying in it)
+        self._pick_extend = extend
         self._pick_hover = None
         self.lighting_bar.hide()             # nothing between you and the pick
         if getattr(self, "nav_bar", None) is not None:
@@ -1029,6 +1033,12 @@ class View3D(QWidget):
             changed = self._pick_hover is not None
             self._pick_hover = None
         else:
+            extend = getattr(self, "_pick_extend", None)
+            if extend is not None:
+                try:
+                    desc = extend(desc, key) or desc
+                except Exception:          # never break the hover
+                    pass
             if self._pick_labeler is not None:
                 label = self._pick_labeler(desc, key)
             else:
