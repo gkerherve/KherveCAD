@@ -145,3 +145,26 @@ def test_the_extrude_window_asks_for_the_surface_then_goes_to_it(win):
     cb(dict(kind="face", pos=(5, 5, 30), dir=(0, 0, 1)), cube)
     assert ex.params["extent"] == "up_to_face"
     assert ex.params["height"] == pytest.approx(20)
+
+
+def test_the_direction_and_the_end_condition_agree(app):
+    """2026-10-31, the user: Direction would not leave Symmetric on a
+    Through All - Both cut. One side makes it Through All from the face,
+    Symmetric makes it Through All - Both again."""
+    from khervecad import extrude_panel as ep
+    m, ex = _plate_with_cutter(app)
+    extent.set_extent(m, ex, "through_all")
+    assert ep.direction_of(ex) == ep.SYMMETRIC
+    ep.set_direction(m, ex, ep.ONE)
+    extent.refresh(m)
+    assert ex.params["extent"] == "through_all_one"
+    assert ep.direction_of(ex) == ep.ONE
+    assert ex.params["height"] == pytest.approx(21)
+    ep.set_direction(m, ex, ep.SYMMETRIC)
+    extent.refresh(m)
+    assert ex.params["extent"] == "through_all"
+    assert ep.direction_of(ex) == ep.SYMMETRIC
+    extent.set_extent(m, ex, "up_to_next")
+    ep.set_direction(m, ex, ep.SYMMETRIC)     # up to next has no both
+    extent.refresh(m)
+    assert not ex.params.get("extent") and ex.params["center"] is True

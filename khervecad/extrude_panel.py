@@ -146,8 +146,38 @@ def profiles_text(ext):
     return ", ".join(names) if names else "Nothing — draw a 2D shape."
 
 
+def _match_extent(model, ext, which):
+    """The end condition agreeing with the direction (2026-10-31, the
+    user: Direction kept jumping back to Symmetric — Through All - Both
+    centres the extrude itself, and each refresh put it back). One side
+    or Two sides from Through All - Both is Through All (one way) from
+    the face; Symmetric from a one-way condition is its two-way twin
+    (Through All -> Through All - Both, the others -> Blind, centred)."""
+    from . import extent
+    p = ext.params
+    kind = p.get("extent") or ""
+    if which != SYMMETRIC:
+        new = {"through_all": "through_all_one", "mid_plane": ""}.get(
+            kind, kind)
+    else:
+        new = "through_all" if kind == "through_all_one" else (
+            kind if kind in ("", "through_all", "mid_plane") else "")
+    if new == kind:
+        return
+    if new:
+        p["extent"] = new
+    else:
+        p.pop("extent", None)
+    if new:
+        try:
+            p["height"], p["center"] = extent.height_for(model, ext)
+        except ValueError:
+            pass
+
+
 def set_direction(model, ext, which):
     p = ext.params
+    _match_extent(model, ext, which)
     if which == SYMMETRIC:
         model.set_param(ext, "height2", 0.0)
         model.set_param(ext, "center", True)
