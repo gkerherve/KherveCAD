@@ -57,6 +57,8 @@ SURFACE_STYLES = set(glrender.SURFACES)
 #: what a part with no colour of its own wears (2026-10-31, the user:
 #: "the colour of the box usually grey, dark grey")
 PART_COLOR = "#7a7f87"
+#: the edge lines (creases and outlines) on the model
+EDGE_COLOR = "#000000"
 
 
 #: 3D viewport backgrounds. "Theme" tracks the app theme; the rest are
@@ -1222,12 +1224,12 @@ class View3D(QWidget):
             # nothing to draw but still collects the selection outline
             info = self._mesh_info() if (self.cavity or self.edges) \
                 else None
-            edge_color = QColor(t["border"]).darker(260) if self.edges \
-                else None
+            # black (2026-11-01, the user: darker lines, black)
+            edge_color = QColor(EDGE_COLOR) if self.edges else None
             # the selection is tinted INSIDE the GL pass, depth-tested
             # (glrender._draw_highlight): the flat mask below tinted a
             # part's hidden faces through whatever stood in front
-            gl_hi = self.highlight_mesh if self.edit_tool is None else None
+            gl_hi = self.highlight_mesh if self._tints() else None
             image = glrender.renderer().render(
                 self, self.mesh, self.colors, info, eye, right, up,
                 forward, light, edge_color, highlight=gl_hi,
@@ -1417,7 +1419,7 @@ class View3D(QWidget):
             for _d, _p, _s, _sp, _c, idx in faces:
                 front[parents[idx] if parents else idx] = True
             sil = shading.silhouette(info, front)
-            line = QColor(t["border"]).darker(260)
+            line = QColor(EDGE_COLOR)
             line_pen = QPen(line)
             line_pen.setWidthF(1.2)
 
@@ -1505,7 +1507,7 @@ class View3D(QWidget):
             if sil is not None and self.edges and info is not None:
                 draw_edges(parent, mesh[index])
 
-        if hi_polys and self.edit_tool is None:   # Edit Mode draws its own
+        if hi_polys and self._tints():   # Edit Mode draws its own
             self._tint_selection(painter, hi_polys)
         if self.overlay and self.reference_images:
             # the photo over the model: where the outline leaves the
@@ -1854,6 +1856,7 @@ class View3D(QWidget):
     def _draw_selection_lines(self, painter, eye, right, up, forward):
         """A selected 2D sketch shape: its outline on its plane, bold
         (MainWindow._selection_outlines), not a filled patch."""
+        self._draw_selection_labels(painter, eye, right, up, forward)
         lines = getattr(self, "selection_lines", None)
         if not lines or self._clean:
             return
@@ -1869,6 +1872,39 @@ class View3D(QWidget):
                 if a is not None and b is not None:
                     painter.drawLine(QPointF(a[0], a[1]),
                                      QPointF(b[0], b[1]))
+        painter.restore()
+
+    def _tints(self):
+        """Is the selection tinted? Not under a tool drawing its own
+        (Edit Mode) — but an extrude's arrow follows the selection and
+        its solid stays lit (2026-11-01, the user saw nothing)."""
+        tool = self.edit_tool
+        return tool is None or bool(getattr(tool, "auto", False))
+
+    def _draw_selection_labels(self, painter, eye, right, up, forward):
+        """What a selected feature was made with, on the model: a
+        fillet's R48 on each edge it rounds."""
+        labels = getattr(self, "selection_labels", None)
+        if not labels or self._clean:
+            return
+        from PyQt5.QtCore import QPointF, QRectF
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        font = painter.font()
+        font.setBold(True)
+        painter.setFont(font)
+        fm = painter.fontMetrics()
+        for p, text in labels:
+            q = self._project(eye, right, up, forward, p)
+            if q is None:
+                continue
+            w = fm.horizontalAdvance(text) + 10
+            rect = QRectF(q[0] - w / 2, q[1] - fm.height() / 2 - 2, w,
+                          fm.height() + 4)
+            painter.setPen(QPen(QColor(21, 101, 192), 1.2))
+            painter.setBrush(QColor(255, 255, 255, 235))
+            painter.drawRoundedRect(rect, 4, 4)
+            painter.drawText(rect, Qt.AlignCenter, text)
         painter.restore()
 
     def _draw_pick_lines(self, painter, eye, right, up, forward):

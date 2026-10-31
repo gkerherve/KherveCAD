@@ -23,6 +23,7 @@ import sys
 from pathlib import Path
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
                              QDockWidget, QFileDialog, QLabel,
                              QMainWindow, QMessageBox, QSplitter)
@@ -494,10 +495,14 @@ class MainWindow(QMainWindow):
                                 self.tr("Reference images removed."),
                                 self.tr("No reference images to clear.")))
         view_menu.addSeparator()
-        view_menu.addAction(self.tr("Zoom &In"),
-                            lambda: self.view2d.zoom(1.25), "Ctrl++")
-        view_menu.addAction(self.tr("Zoom &Out"),
-                            lambda: self.view2d.zoom(1 / 1.25), "Ctrl+-")
+        # Cmd + / Cmd - zoom the view you are working in, 3D or 2D
+        # (2026-11-01, the user); Cmd = too, the + key unshifted
+        zin = view_menu.addAction(self.tr("Zoom &In"),
+                                  lambda: self._zoom(1.25))
+        zin.setShortcuts([QKeySequence("Ctrl++"), QKeySequence("Ctrl+=")])
+        zout = view_menu.addAction(self.tr("Zoom &Out"),
+                                   lambda: self._zoom(1 / 1.25))
+        zout.setShortcuts([QKeySequence("Ctrl+-")])
         view_menu.addAction(self.tr("&Reset 2D Zoom"), self.view2d.zoom_reset,
                             "Ctrl+0")
         view_menu.addAction(self.tr("Fit &Sketch"), self.view2d.fit_content,
@@ -892,6 +897,28 @@ class MainWindow(QMainWindow):
                 "(Edit > Locate OpenSCAD)"))
 
     # ---------------------------------------------------------- editing
+    def _zoom(self, factor):
+        """Zoom the view being worked in: the 3D model unless sketching
+        (SolidWorks / Fusion: one canvas), else the one under the mouse
+        or with the focus — the 2D sketch otherwise."""
+        from PyQt5.QtGui import QCursor
+        from . import sketch_mode, viewnav
+        v3, v2 = self.view3d, self.view2d
+        if sketch_mode.active(self) and not sketch_mode.sketching(self) \
+                and v3.isVisible():
+            target = v3
+        elif v3.isVisible() and (v3.hasFocus() or v3.rect().contains(
+                v3.mapFromGlobal(QCursor.pos()))):
+            target = v3
+        elif not v2.isVisible() and v3.isVisible():
+            target = v3
+        else:
+            target = v2
+        if target is v3:
+            viewnav.zoom_3d(v3, factor)
+        else:
+            v2.zoom(factor)
+
     def _set_tool(self, tool):
         self.view2d.set_tool(tool)
         from . import sketch_mode         # Fusion: drawing = sketching
@@ -1751,6 +1778,7 @@ class MainWindow(QMainWindow):
         ids = getattr(self, "_selected_ids", set())
         if not ids:
             self.view3d.selection_lines = []
+            self.view3d.selection_labels = []
             return []
         from . import part_collections
         with part_collections.hiding(self.model):
@@ -1792,6 +1820,7 @@ class MainWindow(QMainWindow):
         self.view3d.selection_lines = self._selection_outlines(flat) \
             if flat else []
         ids = set(ids) - flat
+        self.view3d.selection_labels = []
         if not ids:
             return []
         # a cut's tool is empty space: the red ghost (cut_ghost) shows
@@ -1815,8 +1844,61 @@ class MainWindow(QMainWindow):
                 from . import explode
                 return explode.highlight(root, ids, plan,
                                          fn=self.model.effective_fn())
-            return mesh.selected_world_tris(
+            tris = mesh.selected_world_tris(
                 root, ids, fn=self.model.effective_fn())
+            self.view3d.selection_labels = self._selection_labels(ids, iso)
+            if tris:
+                return tris
+            # inside a baked node (a fillet rebuilds the extrude's mesh,
+            # the selection flag does not survive): the node's OWN solid,
+            # placed (2026-11-01, the user selected the Extruded Boss
+            # under its fillet and saw nothing)
+            from . import anchors
+            env = anchors.doc_env(self.model)
+            out = []
+            for nid in ids:
+                node = self.model.find(nid)
+                if node is None:
+                    continue
+                try:
+                    own = mesh.tessellate(node, env)
+                    m = mesh.ancestor_matrix(node, env, stop=iso)
+                except Exception:
+                    continue
+                out += [tuple(tuple(m[i][0] * v[0] + m[i][1] * v[1] +
+                                    m[i][2] * v[2] + m[i][3]
+                                    for i in range(3)) for v in t)
+                        for t in own]
+            return out
+
+    def _selection_labels(self, ids, iso):
+        """[(world point, text)] a selected feature shows in 3D: a
+        fillet its radius on each of its edges (the user: "the fillet
+        should show the 48 we created it with")."""
+        from . import anchors
+        env = anchors.doc_env(self.model)
+        out = []
+        for nid in ids:
+            node = self.model.find(nid)
+            if node is None or node.type != "fillet":
+                continue
+            r = node.params.get("radius", 0)
+            text = ("C%g" if node.params.get("kind") == "chamfer"
+                    else "R%g") % float(r or 0)
+            try:
+                m = mesh.ancestor_matrix(node, env, stop=iso)
+            except Exception:
+                continue
+            spots = [((e[0] + e[3]) / 2, (e[1] + e[4]) / 2,
+                      (e[2] + e[5]) / 2)
+                     for e in node.params.get("edges") or [] if len(e) >= 6]
+            spots += [tuple(f[:3]) for f in node.params.get("faces") or []
+                      if len(f) >= 3]
+            for p in spots:
+                out.append((tuple(m[i][0] * p[0] + m[i][1] * p[1] +
+                                  m[i][2] * p[2] + m[i][3]
+                                  for i in range(3)), text))
+        return out
 
     def _queue_part_renders(self, root):
         """Ask OpenSCAD for an exact mesh of every part in view that

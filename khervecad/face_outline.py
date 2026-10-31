@@ -717,7 +717,8 @@ def _paint_section(scene, painter, segments, edges=True):
     painter.setPen(Qt.NoPen)
     painter.setBrush(QColor(33, 118, 199, 55))
     painter.drawPath(fill)
-    hatch = QBrush(QColor(33, 118, 199, 110), Qt.BDiagPattern)
+    # black hatch lines (2026-11-01, the user: darker, black)
+    hatch = QBrush(QColor(0, 0, 0, 170), Qt.BDiagPattern)
     views = scene.views()
     if views:                 # hatch at screen size, not model size
         from PyQt5.QtGui import QTransform
