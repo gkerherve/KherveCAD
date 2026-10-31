@@ -1515,6 +1515,7 @@ class View3D(QWidget):
                              lambda v: self._project(eye, right, up,
                                                      forward, v))
         self._draw_anchors(painter, eye, right, up, forward)
+        self._draw_selection_lines(painter, eye, right, up, forward)
         self._draw_pick_overlays(painter, eye, right, up, forward)
         if not self._clean:
             # others' drawings over the model (sketch dimensions)
@@ -1849,6 +1850,26 @@ class View3D(QWidget):
         painter.setPen(QColor("#fff6ee"))
         painter.drawText(rect, Qt.AlignCenter, metrics.elidedText(
             self._flash_text, Qt.ElideRight, int(w - 16)))
+
+    def _draw_selection_lines(self, painter, eye, right, up, forward):
+        """A selected 2D sketch shape: its outline on its plane, bold
+        (MainWindow._selection_outlines), not a filled patch."""
+        lines = getattr(self, "selection_lines", None)
+        if not lines or self._clean:
+            return
+        from PyQt5.QtCore import QPointF
+        pen = QPen(QColor(255, 120, 0), 3.0)
+        pen.setCosmetic(True)
+        painter.save()
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(pen)
+        for line in lines:
+            pts = [self._project(eye, right, up, forward, v) for v in line]
+            for a, b in zip(pts, pts[1:]):
+                if a is not None and b is not None:
+                    painter.drawLine(QPointF(a[0], a[1]),
+                                     QPointF(b[0], b[1]))
+        painter.restore()
 
     def _draw_pick_lines(self, painter, eye, right, up, forward):
         """Lines a pick wants seen while it is armed — the edges between

@@ -1750,12 +1750,50 @@ class MainWindow(QMainWindow):
         view: the Object tab would show geometry that belongs to Main."""
         ids = getattr(self, "_selected_ids", set())
         if not ids:
+            self.view3d.selection_lines = []
             return []
         from . import part_collections
         with part_collections.hiding(self.model):
             return self._highlight_tris_now(ids)
 
+    def _selection_outlines(self, ids):
+        """World loops of the selected 2D SHAPES: a sketch shape is shown
+        in 3D as itself — its outline on its plane — not filled like a
+        face of the solid (2026-11-01, the user: each tree step as
+        itself: the rectangle, then the extrusion, then the fillet)."""
+        from .model import SHAPE_2D
+        from . import anchors
+        root = self._render_scope()[0]
+        iso = root if root is not self.model.root else None
+        env = anchors.doc_env(self.model)
+        loops = []
+        with self._isolated_frame(iso):
+            for nid in ids:
+                node = self.model.find(nid)
+                if node is None or node.category != SHAPE_2D:
+                    continue
+                try:
+                    outs = mesh.node_outlines(node, env)
+                    m = mesh.ancestor_matrix(node, env, stop=iso)
+                except Exception:
+                    continue
+                for loop in outs or []:
+                    pts = [tuple(m[i][0] * x + m[i][1] * y + m[i][3]
+                                 for i in range(3)) for x, y in loop]
+                    if len(pts) >= 2:
+                        loops.append(pts + pts[:1])
+        return loops
+
     def _highlight_tris_now(self, ids):
+        from .model import SHAPE_2D
+        flat = {i for i in ids if (lambda n: n is not None and
+                                   n.category == SHAPE_2D)(
+                                       self.model.find(i))}
+        self.view3d.selection_lines = self._selection_outlines(flat) \
+            if flat else []
+        ids = set(ids) - flat
+        if not ids:
+            return []
         # a cut's tool is empty space: the red ghost (cut_ghost) shows
         # it, the solid selection tint would paint a block standing up
         from . import cut_ghost

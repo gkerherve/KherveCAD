@@ -196,8 +196,10 @@ def test_vibe_model_folds_the_panels_away_and_back(app):
         # the main toolbar keeps file, undo and the toggle itself
         shown = {a.text() for a in win._options_bar.actions()
                  if a.isVisible() and not a.isSeparator()}
+        # (and the Options gear, which sits before Vibe Model in every
+        # style since 2026-10-29)
         assert shown == {"New", "Open", "Save", "Undo", "Redo",
-                         "Vibe Model"}
+                         "&Options...", "Vibe Model"}
         win._vibe_act.trigger()
         assert not win._left_column.isHidden()
         assert not win.view2d.isHidden() and not win._tools_bar.isHidden()

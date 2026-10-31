@@ -118,7 +118,10 @@ def test_styles_render_distinctly(app):
     # the user's saved Bright/Contrast sliders must not decide this
     view.brightness = view.contrast = 0.0
     view.resize(300, 300)
-    view.set_mesh(_cube(), "test")
+    # a coloured part: an uncoloured one is a neutral grey since
+    # 2026-10-31, and the styles' saturation rules have nothing to change
+    tris = _cube()
+    view.set_mesh(tris, "test", [("#3d7fd0", 1.0)] * len(tris))
     view.fit()
     avgs = {}
     for style in RENDER_STYLES:
