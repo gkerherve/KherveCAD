@@ -60,3 +60,26 @@ def test_a_click_on_the_slots_outline_takes_its_centre_line(win):
     asked = _dimension(win, (70, 30 - r), (30, 0), value=15)
     assert asked, win.statusBar().currentMessage()
     assert slot.params["y1"] == pytest.approx(15, abs=0.01)
+
+
+def test_a_slot_drawn_on_a_rectangles_side_stays_on_it(win):
+    """2026-10-31, the user: a slot's end drawn on the rectangle's side
+    should be related to it (SolidWorks' On Edge), so a dimension keeps
+    it there."""
+    _sketch(win, "Top (XY)")
+    _snap(win)
+    _frame(win, -10, -10, 130, 90)
+    _rect(win, (0, 0), (100, 60))
+    before = _ids(win)
+    _clicks(win, "slot", (60, 30), (100, 30), (80, 35))
+    slot = _lines_of(win, before)[-1]
+    rows = slot.parent.params.get("constraints") or []
+    on = [r for r in rows if r["kind"] == "point_on"]
+    assert on, rows
+    # widen the rectangle: the slot's end goes with its side
+    asked = _dimension(win, (50, 0), (50, -6), value=120)
+    assert asked, win.statusBar().currentMessage()
+    rect = [n for n in slot.parent.children if n.type == "rect"][0]
+    assert slot.params["x2"] == pytest.approx(rect.params["x"] + rect.params["width"], abs=0.01)
+    assert slot.params["y1"] == pytest.approx(slot.params["y2"], abs=0.01)
+    _shot(win, "slot-on-edge")

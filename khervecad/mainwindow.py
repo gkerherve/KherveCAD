@@ -1309,6 +1309,12 @@ class MainWindow(QMainWindow):
         except Exception:
             import traceback
             traceback.print_exc()
+        from . import sketch_touch          # drawn on a shape: related
+        try:
+            sketch_touch.relate(self.model, node)
+        except Exception:
+            import traceback
+            traceback.print_exc()
         if self.builder.isolated_component() is None \
                 and node.parent is self.model.root:
             self._geometry_created_in_main(node)   # drawn in Main
