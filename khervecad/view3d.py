@@ -1670,6 +1670,9 @@ class View3D(QWidget):
         painter.setPen(QPen(QColor(color)))
         painter.drawText(QPointF(x, y), text)
 
+    #: how near the cursor an automatic anchor must be to show
+    ANCHOR_SHOW_PX = 40
+
     def _draw_anchors(self, painter, eye, right, up, forward):
         """The selected Object's attachment points. Automatic anchors
         are small uniform dots; the origin is an RGB triad; the user's
@@ -1686,16 +1689,23 @@ class View3D(QWidget):
         def project(p):
             return self._project(eye, right, up, forward, p)
 
-        # 1. automatic bbox anchors: quiet, identical dots
+        # 1. automatic bbox anchors: shown only while snapping, and only
+        #    those near the cursor (2026-10-31, the user: "only visible
+        #    when we are going to snap, not all the time")
         auto = QColor(self.AUTO_ANCHOR_COLOR)
         auto.setAlpha(170)
         painter.setPen(QPen(auto, 1.0))
         painter.setBrush(auto)
+        near = self._hover_pos if self._pick_cb is not None else None
         for marker in self.anchor_markers:
+            if near is None:
+                break
             if marker.get("kind") not in ("face", "edge", "corner"):
                 continue
             head = project(marker["pos"])
-            if head is not None:
+            if head is not None and math.hypot(
+                    head[0] - near.x(), head[1] - near.y()) \
+                    <= self.ANCHOR_SHOW_PX:
                 r = 2.6 if marker["kind"] == "face" else 1.8
                 painter.drawEllipse(QPointF(head[0], head[1]), r, r)
 
