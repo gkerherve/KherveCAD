@@ -401,7 +401,9 @@ def follow(window, group):
     if centre is None:
         return False
     same = sum(a * b for a, b in zip(n1, n0)) > 1 - 1e-9 and \
-        math.dist(centre, seed) < 1e-5
+        math.dist(centre, seed) < 1e-5 and \
+        abs(sum((float(group.params.get(k, 0.0)) - centre[i]) * n1[i]
+                for i, k in enumerate(("x", "y", "z")))) < 1e-4
     if same:
         return False
     was = fs.to_local(group, seed)
