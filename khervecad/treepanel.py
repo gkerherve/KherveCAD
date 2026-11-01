@@ -465,6 +465,7 @@ class ObjectTree(QTreeWidget):
         item.setFont(0, font)
         error = self.errors.get(node.id)
         label = language.tr(NODE_TYPES[node.type]["label"])
+        from . import sketch_section
         if error:
             color = ERROR_COLOR_DARK if dark else ERROR_COLOR
             item.setForeground(0, QBrush(QColor(color)))
@@ -478,6 +479,13 @@ class ObjectTree(QTreeWidget):
                             else language.tr(
                                 "{label} — hidden by a parent").format(
                                 label=label))
+        elif sketch_section.is_section(node):
+            # generated construction, not drawn by the user: greyed, and
+            # the tooltip says what it is (the user asked)
+            color = HIDDEN_COLOR_DARK if dark else HIDDEN_COLOR
+            item.setForeground(0, QBrush(QColor(color)))
+            item.setToolTip(0, language.tr(sketch_section.LABEL) + "\n\n"
+                            + language.tr(sketch_section.EXPLAIN))
         elif node.type == "assign":
             color = VAR_COLOR_DARK if dark else VAR_COLOR
             item.setForeground(0, QBrush(QColor(color)))

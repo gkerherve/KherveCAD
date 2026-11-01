@@ -185,9 +185,9 @@ class MainWindow(QMainWindow):
         self.model.node_changed.connect(self._note_sketch_edit)
         from . import stop_tool
         stop_tool.install_escape(self)
-        from . import round_ui
+        from . import view3d_menu
         self.view3d.context_requested.connect(
-            lambda pos: round_ui.context_menu(self, pos))
+            lambda pos: view3d_menu.context_menu(self, pos))
         self.model.node_changed.connect(lambda _n: self._model_edited())
         self.model.references_changed.connect(self._model_edited)
         self.model.drawing_changed.connect(self._drawing_edited)
@@ -1793,7 +1793,7 @@ class MainWindow(QMainWindow):
         face of the solid (2026-11-01, the user: each tree step as
         itself: the rectangle, then the extrusion, then the fillet)."""
         from .model import SHAPE_2D
-        from . import anchors
+        from . import anchors, sketch_section
         root = self._render_scope()[0]
         iso = root if root is not self.model.root else None
         env = anchors.doc_env(self.model)
@@ -1804,7 +1804,11 @@ class MainWindow(QMainWindow):
                 if node is None or node.category != SHAPE_2D:
                     continue
                 try:
-                    outs = mesh.node_outlines(node, env)
+                    # the kept model edges are construction (%), which
+                    # outlines skip: drawn here anyway, so selecting
+                    # them shows what they are
+                    with sketch_section.drawn(node):
+                        outs = mesh.node_outlines(node, env)
                     m = mesh.ancestor_matrix(node, env, stop=iso)
                 except Exception:
                     continue
@@ -1824,8 +1828,16 @@ class MainWindow(QMainWindow):
             if flat else []
         ids = set(ids) - flat
         self.view3d.selection_labels = []
+        from . import sketch_section
+        for nid in flat:
+            if sketch_section.is_section(self.model.find(nid)) and \
+                    self.view3d.selection_lines:
+                loop = max(self.view3d.selection_lines, key=len)
+                self.view3d.selection_labels.append(
+                    (loop[0], language.tr(sketch_section.LABEL)))
         if not ids:
             return []
+        labels = list(self.view3d.selection_labels)
         # a cut's tool is empty space: the red ghost (cut_ghost) shows
         # it, the solid selection tint would paint a block standing up
         from . import cut_ghost
@@ -1849,7 +1861,8 @@ class MainWindow(QMainWindow):
                                          fn=self.model.effective_fn())
             tris = mesh.selected_world_tris(
                 root, ids, fn=self.model.effective_fn())
-            self.view3d.selection_labels = self._selection_labels(ids, iso)
+            self.view3d.selection_labels = labels + \
+                self._selection_labels(ids, iso)
             if tris:
                 return tris
             # inside a baked node (a fillet rebuilds the extrude's mesh,

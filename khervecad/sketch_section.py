@@ -25,6 +25,37 @@ the Free Software Foundation, either version 3 of the License, or
 NAME = "Model edges"
 NAMES = (NAME, "Part section")          # older files
 
+#: what selecting it says, in 3D and in Properties (2026-11-01, the
+#: user: "it needs to be extra clear what it is")
+LABEL = "Model edges: the part's outline on this sketch plane"
+EXPLAIN = (
+    "The outline of the part where this sketch's plane cuts it, kept so "
+    "your lines can close an area against the model (a line alone "
+    "encloses nothing). The Regions beside it keeps the area between "
+    "your lines and these edges — that area is what is extruded.\n\n"
+    "It is construction geometry: never part of the solid, never edited "
+    "by hand. It is rebuilt from the model, so the feature follows when "
+    "the part changes. Deleting it leaves the Regions nothing to close "
+    "its area with.")
+
+
+class drawn:
+    """``with drawn(node):`` the construction mark is lifted for the
+    block, so the outline code sees the shape (no signal, no undo)."""
+
+    def __init__(self, node):
+        self.node = node
+
+    def __enter__(self):
+        self.mod = self.node.params.pop("modifier", None) \
+            if is_section(self.node) else None
+        return self.node
+
+    def __exit__(self, *exc):
+        if self.mod is not None:
+            self.node.params["modifier"] = self.mod
+        return False
+
 
 def is_section(node):
     """The model's outline kept in a sketch (`keep`): not drawn by the

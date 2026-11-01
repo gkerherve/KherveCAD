@@ -313,6 +313,17 @@ class PropertiesPanel(QScrollArea):
             self._layout.addStretch()
             return
 
+        from . import sketch_section
+        if sketch_section.is_section(node):
+            # generated, not drawn: say what it is instead of editors
+            # that would break its link to the model
+            title = QLabel("<b>%s</b>" % language.tr(sketch_section.NAME))
+            self._layout.addWidget(title)
+            text = QLabel(language.tr(sketch_section.EXPLAIN))
+            text.setWordWrap(True)
+            self._layout.addWidget(text)
+            self._layout.addStretch()
+            return
         spec = NODE_TYPES[node.type]
         from . import slot2d
         slot = slot2d.is_slot(node)

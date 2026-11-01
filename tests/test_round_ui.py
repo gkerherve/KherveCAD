@@ -186,3 +186,73 @@ def test_plus_in_the_fillet_table_picks_on_the_model(window):
     eds[0]._add_row()
     assert window.view3d._pick_cb is not None
     window.view3d.cancel_pick()
+
+
+def _menus(monkeypatch):
+    shown = []
+    monkeypatch.setattr(QMenu, "exec_", lambda self, *a: shown.append(
+        [a.text() for a in self.actions() if a.text()]))
+    return shown
+
+
+def test_a_right_click_opens_the_menu_and_a_right_drag_pans(window,
+                                                            monkeypatch):
+    """SolidWorks: the middle drag pans, a right CLICK is the menu."""
+    shown = _menus(monkeypatch)
+    view = window.view3d
+    view.resize(400, 300)
+    p = view.rect().center()
+    QTest.mousePress(view, Qt.RightButton, Qt.NoModifier, p)
+    QTest.mouseRelease(view, Qt.RightButton, Qt.NoModifier, p)
+    assert len(shown) == 1
+    assert "Zoom to Fit" in shown[0]
+    target = list(view.target)
+    QTest.mousePress(view, Qt.RightButton, Qt.NoModifier, p)
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtCore import QEvent, QPoint
+    q = p + QPoint(40, 0)
+    view.mouseMoveEvent(QMouseEvent(QEvent.MouseMove, q, Qt.RightButton,
+                                    Qt.RightButton, Qt.NoModifier))
+    QTest.mouseRelease(view, Qt.RightButton, Qt.NoModifier, q)
+    assert len(shown) == 1                       # a drag: no menu
+    assert list(view.target) != target           # it panned
+
+
+def test_a_smart_dimension_is_deleted_from_the_3d_menu(window,
+                                                       monkeypatch):
+    from PyQt5.QtCore import QPoint, QRectF
+    from khervecad import sketch_constraints as sc, view3d_menu
+    m = window.model
+    g = m.add_node("union", {})
+    m.add_node("line", dict(x1=0, y1=0, x2=10, y2=0), parent=g)
+    sc.add(m, g, "length", ["0.l"], 12)
+    assert len(sc.rows(g)) == 1
+    window._dims3d_hits = [(QRectF(5, 5, 30, 14), g, 0)]
+    menus = []
+    monkeypatch.setattr(QMenu, "exec_", lambda self, *a: menus.append(self))
+    view3d_menu.context_menu(window, QPoint(10, 10))
+    acts = {a.text(): a for a in menus[0].actions()}
+    assert "Edit value…" in acts
+    acts["Delete dimension"].trigger()
+    assert sc.rows(g) == []
+
+
+def test_model_edges_explain_themselves_and_light_up(window):
+    """The user found "Model edges" with no properties and nothing drawn."""
+    from khervecad import sketch_section
+    m = window.model
+    g = m.add_node("union", {})
+    poly = m.add_node("polygon", dict(points=[[0, 0], [30, 0], [30, 20]],
+                                      modifier="%"), parent=g)
+    poly.name = sketch_section.NAME
+    QApplication.processEvents()
+    window.builder.active_tree().select_nodes([poly])
+    window._tree_selected([poly])
+    QApplication.processEvents()
+    texts = [w.text() for w in window.properties.findChildren(
+        __import__("PyQt5.QtWidgets", fromlist=["QLabel"]).QLabel)]
+    assert any("construction" in t for t in texts)
+    window._highlight_tris_now({poly.id})
+    assert window.view3d.selection_lines            # drawn on the model
+    assert window.view3d.selection_labels
+    assert poly.params["modifier"] == "%"           # mark put back

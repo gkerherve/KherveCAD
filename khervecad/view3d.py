@@ -866,7 +866,8 @@ class View3D(QWidget):
 
     # ------------------------------------------------------- anchor pick
     def contextMenuEvent(self, event):
-        # no menu on the 3D view (the user): the right button pans
+        # the menu opens on the right button's RELEASE without a drag
+        # (mouseReleaseEvent), so a right drag can still pan
         event.accept()
 
     def start_pick(self, callback, groups=None, banner="",
@@ -2065,6 +2066,8 @@ class View3D(QWidget):
             self._pick_down = (event.pos(), event.button())
         else:
             self._pick_down = None
+        self._right_down = event.pos() \
+            if event.button() == Qt.RightButton else None
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
         self._begin_fast()
@@ -2094,6 +2097,18 @@ class View3D(QWidget):
             self._mode = None
             self._fast = False
             self._run_pick(event.pos().x(), event.pos().y())
+            return
+        right = getattr(self, "_right_down", None)
+        self._right_down = None
+        if right is not None and event.button() == Qt.RightButton and \
+                self._pick_cb is None and \
+                (event.pos() - right).manhattanLength() <= 4:
+            # SolidWorks: a right CLICK is the menu, the middle drag pans
+            self._last = None
+            self._mode = None
+            self._fast = False
+            self.update()
+            self.context_requested.emit(event.pos())
             return
         self._last = None
         self._mode = None
