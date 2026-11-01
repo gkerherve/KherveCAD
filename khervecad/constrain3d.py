@@ -228,9 +228,13 @@ class Constrain3D:
 
     def exit(self):
         tool = getattr(self.window, "_sketch3d_tool", None)
+        from PyQt5.QtCore import QTimer
         if tool is not None:      # back to the 3D sketch it came from
-            from PyQt5.QtCore import QTimer
             QTimer.singleShot(0, tool.resume)
+        elif getattr(self.window, "_drag_paused", None) is not None:
+            from . import drag_feature      # or to the Extrude window
+            QTimer.singleShot(0, lambda: drag_feature.resume_paused(
+                self.window))
         self.picks = []
         self.hover = None
 

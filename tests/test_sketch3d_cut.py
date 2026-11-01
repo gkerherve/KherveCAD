@@ -54,8 +54,7 @@ def test_a_slot_drawn_in_3d_is_cut_on_done(win, monkeypatch):
     tool.place((30, 10.5))                            # snaps level
     slot = tool.place((20, 13))
     assert slot.params["slot"] and slot.params["y2"] == slot.params["y1"]
-    tool.finish()
-    assert win.view3d.edit_tool is None
+    assert win.view3d.edit_tool is not tool           # the feature is made
     assert any(n.type == "difference" for n in m.root.walk())
     QApplication.processEvents()
     left = analysis.mass_properties(mesh.tessellate(m.root))["volume"]
@@ -101,29 +100,42 @@ def test_snaps_to_a_middle_and_lights_the_edge(win, monkeypatch):
 
 def test_what_was_drawn_can_be_seen(win, monkeypatch):
     tool = _on_face(win, monkeypatch)
+    tool.set_mode("line")
     tool.place((5, 5))
     tool.place((15, 12))
-    assert len(tool._own()[0]) >= 4          # the rectangle's sides
+    assert len(tool._own()[0]) >= 2          # the line stays drawn
     tool.finish()
 
 
-def test_the_cut_window_opens_and_dimensions_return(win, monkeypatch):
+def test_the_extrude_window_opens_on_the_first_shape(win, monkeypatch):
+    """The window the user already knows, not another one."""
+    from khervecad import drag_feature, extrude_panel
     from khervecad import sketch_constrain_ui as ui
     tool = _on_face(win, monkeypatch)
-    assert tool.panel is not None and not tool.panel.isHidden()
     tool.place((5, 5))
     tool.place((15, 12))
-    win._set_tool(ui.PREFIX + "dimension")
-    assert win.view3d.edit_tool is not tool          # measuring
+    drag = win.view3d.edit_tool
+    assert isinstance(drag, drag_feature.DragFeature)
+    panel = extrude_panel._panel(win)
+    assert panel is not None and not panel.isHidden()
+    ext = drag.target()
+    assert ext.params.get("extent") == "through_all"
+    # Smart Dimension with the window open, and back
+    win._set_tool(ui.DIMENSION)
+    assert win.view3d.edit_tool is not drag
+    assert extrude_panel._panel(win) is panel
+    # another shape joins the same extrude
     win._set_tool("circle")
-    assert win.view3d.edit_tool is tool and tool.mode == "circle"
-    tool._set_end("blind")
-    tool._set_depth(3.0)
-    tool.panel.ok.click()
-    assert win.view3d.edit_tool is None and tool.panel is None
-    ext = next(n for n in win.model.root.walk()
-               if n.type == "linear_extrude" and n.params.get("reverse"))
-    assert ext.params["height"] == 3.0 and not ext.params.get("extent")
+    sk = win.view3d.edit_tool
+    assert isinstance(sk, sketch3d.Sketch3DTool) and sk.holder is ext
+    sk.place((20, 5))
+    sk.place((22, 5))
+    assert len(ext.children) == 2
+    sk.finish()
+    assert win.view3d.edit_tool is drag
+    drag.cancel()                                    # all of it goes
+    assert not any(n.type == "difference" for n in win.model.root.walk())
+    assert win.view3d.edit_tool is None
 
 
 def test_a_circle_at_a_sloped_faces_centre_follows_it(win, monkeypatch):
@@ -155,3 +167,11 @@ def test_a_circle_at_a_sloped_faces_centre_follows_it(win, monkeypatch):
     assert w[0] == pytest.approx(30, abs=0.01)
     assert w[1] == pytest.approx(-5, abs=0.01)
     assert w[2] == pytest.approx(15, abs=0.01)
+
+
+def test_choosing_a_face_turns_the_camera_to_it(win, monkeypatch):
+    from khervecad import face_sketch
+    tool = _on_face(win, monkeypatch)
+    assert (win.view3d.yaw, win.view3d.pitch) == pytest.approx(
+        face_sketch.camera_for((0, 0, 1)))
+    tool.finish()

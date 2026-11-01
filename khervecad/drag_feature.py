@@ -197,6 +197,55 @@ def step_aside(view):
         tool.exit()
 
 
+def pause_for(window, tool):
+    """A Sketch tab icon while the Extrude window is open: the window
+    stays, the icon's tool runs, then the arrow is back. True when it
+    took the icon."""
+    from . import constrain3d, sketch3d, sketch_constrain_ui as ui
+    from .view2d import CIRCLE, LINE, RECT
+    from . import face_sketch, sketch_tools
+    view = window.view3d
+    drag = view.edit_tool
+    paused = getattr(window, "_drag_paused", None)
+    if isinstance(drag, DragFeature) and drag.created_on_face():
+        pass
+    elif paused is not None:
+        drag = paused
+    else:
+        return False
+    constrain3d.end(window)
+    ext = drag.target()
+    modes = {RECT: "rect", CIRCLE: "circle", LINE: "line",
+             sketch_tools.SLOT: "slot"}
+    if ui.handles(tool):
+        window._drag_paused = drag
+        view.edit_tool = None
+        constrain3d.start(window, tool)
+        return True
+    if tool in modes and ext is not None:
+        window._drag_paused = drag
+        view.edit_tool = None
+        sk = sketch3d.Sketch3DTool(window, modes[tool])
+        sk.use_group(face_sketch.group_of(ext))
+        sk.holder = ext
+        view.edit_tool = sk
+        sk.begin()
+        return True
+    return False
+
+
+def resume_paused(window):
+    """The Extrude window's arrow again, once the icon's tool is done."""
+    drag = getattr(window, "_drag_paused", None)
+    view = window.view3d
+    if drag is not None and view.edit_tool is None and \
+            getattr(window, "_sketch3d_tool", None) is None:
+        window._drag_paused = None
+        view.edit_tool = drag
+        view.setMouseTracking(True)
+        view.update()
+
+
 def follow_selection(window, nodes):
     """Selecting an extrude shows its arrow (the user: "clicking on the
     linear extrude should show us this Z"); selecting something else
@@ -401,6 +450,12 @@ class DragFeature:
         """Take it back: a new extrude goes, an old one gets its height
         and direction back."""
         model = self.window.model
+        undo = getattr(self, "on_cancel", None)
+        if undo is not None:         # a cut just made on a face: it goes
+            self.drag = None
+            self.exit()
+            undo()
+            return
         if self.original is not None:
             ext, value = self.original
             if ext.type == "linear_extrude":
@@ -517,7 +572,20 @@ class DragFeature:
         self.view.update()
         return True
 
+    def created_on_face(self):
+        return getattr(self, "on_cancel", None) is not None or \
+            bool(self.created)
+
     def exit(self):
+        # OK / Cancel while the window's icon tool runs: that ends too
+        window = self.window
+        if getattr(window, "_drag_paused", None) is self:
+            window._drag_paused = None
+            from . import constrain3d
+            constrain3d.end(window)
+            sk = getattr(window, "_sketch3d_tool", None)
+            if sk is not None:
+                sk._end()
         try:
             from . import extrude_panel
             extrude_panel.close(self.window, self)

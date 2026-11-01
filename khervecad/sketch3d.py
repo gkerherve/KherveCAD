@@ -113,8 +113,7 @@ class Sketch3DTool:
         self.hover = None             # local point under the cursor
         self.target = None            # plane / face under the cursor
         self._press = None
-        self.panel = None             # the cut's window
-        self.depth = None             # blind depth; None = through all
+        self.holder = None            # the extrude shapes join, if made
         self.snapped = None           # (x, y, kind) under the cursor
         self.lit = []                 # model / sketch edges lit up
         self.info = {}                # the face's segments and points
@@ -160,7 +159,8 @@ class Sketch3DTool:
         from . import anchors, face_outline, mesh
         segs, pts = [], []
         env = anchors.doc_env(self.window.model)
-        for shape in self.group.children if self.group else ():
+        for shape in (self.holder or self.group).children \
+                if self.group else ():
             try:
                 loops = mesh.node_outlines(shape, env) or []
             except Exception:
@@ -252,40 +252,30 @@ class Sketch3DTool:
             self.view.setMouseTracking(True)
             self.view.update()
 
-    def discard(self):
-        """Cancel in the window: the sketch goes."""
+    def make_feature(self):
+        """The sketch's first closed shape: the feature is made and THE
+        Extrude window opens on it (the arrow, every option, OK / Cancel);
+        the Sketch tab still dimensions it and adds shapes from there."""
+        from . import cut_feature, drag_feature
         g = self.group
+        kind = g.params.get(cut_feature.KEY)
         self._end()
-        if g is not None and g.parent is not None:
-            self.window.model.remove_node(g)
+        made = cut_feature.finish(self.window, g)
+        if made is None or kind in cut_feature.BOSS:
+            return made          # (a boss opens the window itself)
+        ext = next((n for n in g.walk() if n.type == "linear_extrude"), None)
+        if ext is None:
+            return made
+        drag = drag_feature.start(self.window, ext, quiet=True, panel=True)
+        if drag is not None:
+            model = self.window.model
 
-    def open_panel(self, label, cut=True):
-        """The feature's window, while it is being sketched: what to do,
-        how deep, OK makes it."""
-        from . import tool_panel
-        tr = language.tr
-        p = self.panel = tool_panel.ToolPanel(
-            self.view, tr(label), on_ok=lambda: self.finish(),
-            on_cancel=lambda: self.discard())
-        p.hint(tr("1. Choose a shape on the Sketch tab and draw it on the "
-                  "face.\n2. Smart Dimension sizes and places it.\n"
-                  "3. OK makes the feature."))
-        if cut:
-            p.choice("end", tr("End condition"),
-                     [("through", tr("Through all")), ("blind", tr("Blind"))],
-                     "through", self._set_end)
-            p.number("depth", tr("Depth"), 10.0, self._set_depth)
-            p.show_row("depth", False)
-        p.finish()
-        p.open()
-
-    def _set_end(self, value):
-        blind = value == "blind"
-        self.panel.show_row("depth", blind)
-        self.depth = self.panel.fields["depth"].value() if blind else None
-
-    def _set_depth(self, value):
-        self.depth = float(value)
+            def undo():
+                model.remove_node(g)
+                if made.parent is not None and len(made.children) == 1:
+                    model.ungroup(made)
+            drag.on_cancel = undo
+        return made
 
     def tool_icon(self, tool):
         """A drawing icon of the Sketch tab was clicked."""
@@ -340,15 +330,13 @@ class Sketch3DTool:
         from . import constrain3d
         constrain3d.end(self.window)
         v = self.view
-        panel, self.panel = self.panel, None
-        if panel is not None:
-            panel.hide()
-            panel.deleteLater()
         if v.edit_tool is self:
             v.edit_tool = None
         v.setMouseTracking(False)
         v.unsetCursor()
         self._sync_button()
+        from . import drag_feature
+        drag_feature.resume_paused(self.window)
         try:
             from . import face_outline
             face_outline.clear(self.window)
@@ -362,18 +350,13 @@ class Sketch3DTool:
     def finish(self):
         """End the tool; an empty sketch goes, a full one is selected."""
         self._end()
+        if self.holder is not None:      # more shapes: back to its window
+            return None
         g = self.group
         from . import cut_feature
         if g is not None and g.parent is not None and g.children and \
                 g.params.get(cut_feature.KEY):
-            made = cut_feature.finish(self.window, g)    # cut it now
-            if self.depth is not None:
-                for ext in g.walk():
-                    if ext.type == "linear_extrude":
-                        self.window.model.set_param(ext, "extent", "")
-                        self.window.model.set_param(ext, "height",
-                                                    self.depth)
-            return made
+            return cut_feature.finish(self.window, g)
         if g is None or g.parent is None:
             self.message(language.tr("Sketch in 3D ended."), 4000)
             return None
@@ -493,7 +476,7 @@ class Sketch3DTool:
             self.points = []
             if spec:
                 node = model.add_node(spec[0][0], spec[0][1],
-                                      parent=self.group)
+                                      parent=self.holder or self.group)
                 slot2d.mark(model, node)
                 par = node.params
                 kind = "horizontal" if abs(par["y1"] - par["y2"]) < 1e-9 \
@@ -501,26 +484,26 @@ class Sketch3DTool:
                     else None
                 if kind:
                     try:
-                        sc.add(model, self.group, kind,
-                               [sc.ref_of(self.group, node, "l")])
+                        sc.add(model, node.parent, kind,
+                               [sc.ref_of(node.parent, node, "l")])
                     except (ValueError, KeyError):
                         pass
         if self.mode == "rect" and len(self.points) == 2:
             par = rect_params(*self.points)
             if par["width"] > 0 and par["height"] > 0:
-                node = model.add_node("rect", par, parent=self.group)
+                node = model.add_node("rect", par, parent=self.holder or self.group)
             self.points = []
         elif self.mode == "circle" and len(self.points) == 2:
             par = circle_params(*self.points)
             if par["radius"] > 0:
-                node = model.add_node("circle", par, parent=self.group)
+                node = model.add_node("circle", par, parent=self.holder or self.group)
             self.points = []
         elif self.mode == "line" and len(self.points) >= 2:
             a, b = self.points[-2], self.points[-1]
             if a != b:
                 node = model.add_node("line", dict(
                     x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=1.0),
-                    parent=self.group)
+                    parent=self.holder or self.group)
             else:
                 self.points = []
         if node is not None:
@@ -530,6 +513,11 @@ class Sketch3DTool:
                 face_outline.pin(self.window.view2d.scene(), model, node)
             except Exception:
                 pass
+            from . import cut_feature
+            if self.mode != "line" and self.holder is None and \
+                    self.group.params.get(cut_feature.KEY):
+                self.make_feature()
+                return node
         self.view.update()
         return node
 

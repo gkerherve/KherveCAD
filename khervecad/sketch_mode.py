@@ -247,6 +247,9 @@ def tool_chosen(win, tool):
         # the sketch icons drive the sketch being drawn in 3D
         win._sketch3d_tool.tool_icon(tool)
         return
+    from . import drag_feature
+    if drag_feature.pause_for(win, tool):
+        return
     constrain3d.end(win)
     if active(win) and not sketching(win) and \
             sketch_constrain_ui.handles(tool) and \

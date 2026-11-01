@@ -269,11 +269,14 @@ def start(window, kind):
             # drawn ON the face, where the user is looking (2026-11-01,
             # the user: going to the 2D view and back loses them)
             from . import sketch3d
+            view = window.view3d          # looking straight at the face
+            view.yaw, view.pitch = face_sketch.camera_for(desc["dir"])
+            view.user_moved = True
+            view.update()
             tool = sketch3d.Sketch3DTool(window, "rect")
             tool.use_group(group)
             window.view3d.edit_tool = tool
             tool.begin()
-            tool.open_panel(label, cut=kind not in BOSS)
             ribbon = getattr(window, "ribbon", None)
             if ribbon is not None:
                 ribbon.show_tab("sketch")
