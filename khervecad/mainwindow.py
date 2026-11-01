@@ -1363,7 +1363,9 @@ class MainWindow(QMainWindow):
         model_refs.refresh(self)
         sketch_constraints.refresh(self.model, edited)
         from . import extent, hole_wizard
-        extent.refresh(self.model)
+        failed = extent.refresh(self.model)
+        if failed:                   # the depth kept is out of date: say so
+            self.statusBar().showMessage(next(iter(failed.values())), 8000)
         hole_wizard.refresh(self.model)     # holes follow their faces
         from . import sketch_regions
         sketch_regions.refresh(self.model)  # region extrudes follow sketches

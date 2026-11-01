@@ -75,13 +75,42 @@ def _world_points(node, env):
     return pts @ m[:3, :3].T + m[:3, 3]
 
 
-def _local_z(extrude, pts, env):
-    """z of world points in the extrude's own frame."""
+def _frame(extrude, env):
+    """4x4 of the extrude's own frame, +Z the way it GOES: its Reverse
+    direction param (every cut's) flips it — the end conditions looked
+    out of the part, away from the cut (2026-11-01, the user)."""
     from . import mesh
     np = _np()
     m = np.array(mesh.ancestor_matrix(extrude, env), float)
-    inv = np.linalg.inv(m)
+    if extrude.params.get("reverse"):
+        m = m @ np.diag([1.0, 1.0, -1.0, 1.0])
+    return m
+
+
+def _local_z(extrude, pts, env):
+    """z of world points along the way the extrude goes."""
+    np = _np()
+    inv = np.linalg.inv(_frame(extrude, env))
     return pts @ inv[2, :3] + inv[2, 3]
+
+
+def _before(model, extrude):
+    """What the extrude meets when it cuts nothing: what was built before
+    it in its Object (or the document), visible; else what comes after.
+    The whole document's top level left out its own Object and took the
+    other Objects, hidden ones too."""
+    earlier, later = [], []
+    probe = extrude
+    while probe.parent is not None:
+        kids = probe.parent.children
+        i = kids.index(probe)
+        earlier += kids[:i]
+        later += kids[i + 1:]
+        if probe.parent.type == "component":
+            break
+        probe = probe.parent
+    keep = [n for n in earlier if n.visible]
+    return keep or [n for n in later if n.visible]
 
 
 def _body_for(extrude):
@@ -141,8 +170,7 @@ def height_for(model, extrude, env=None):
     if kind == "through_all":
         body = _body_for(extrude)
         if body is None:
-            pts = [_world_points(c, env) for c in model.root.children
-                   if not _is_inside(extrude, c)]
+            pts = [_world_points(c, env) for c in _before(model, extrude)]
             pts = [p for p in pts if p is not None]
             if not pts:
                 raise ValueError("Through all: nothing to cut through.")
@@ -183,8 +211,7 @@ def _cut_points(model, extrude, env):
         pts = _world_points(body, env)
         if pts is not None:
             return pts
-    pts = [_world_points(c, env) for c in model.root.children
-           if not _is_inside(extrude, c)]
+    pts = [_world_points(c, env) for c in _before(model, extrude)]
     pts = [p for p in pts if p is not None]
     if not pts:
         raise ValueError("Through all: nothing to go through.")
@@ -195,8 +222,7 @@ def _world_tris(model, extrude, env):
     from . import mesh
     np = _np()
     body = _body_for(extrude)
-    nodes = [body] if body is not None else \
-        [c for c in model.root.children if not _is_inside(extrude, c)]
+    nodes = [body] if body is not None else _before(model, extrude)
     out = []
     for n in nodes:
         tris = mesh.tessellate(n, env)
@@ -236,7 +262,7 @@ def _to_next(model, extrude, env):
     from . import mesh
     np = _np()
     tris = _world_tris(model, extrude, env)
-    m = np.array(mesh.ancestor_matrix(extrude, env), float)
+    m = _frame(extrude, env)
     try:
         loops = [o for o in mesh.collect_outlines(extrude, env) if o]
     except Exception:
@@ -282,7 +308,7 @@ def _to_face(extrude, env):
     if len(row) < 6:
         raise ValueError("Up to face: no face picked.")
     q, n = np.array(row[:3], float), np.array(row[3:6], float)
-    m = np.array(mesh.ancestor_matrix(extrude, env), float)
+    m = _frame(extrude, env)
     cx, cy = _sketch_centre(extrude, env)
     o = m[:3, :3] @ np.array([cx, cy, 0.0]) + m[:3, 3]
     a = m[:3, 2]                       # world step for one local z
@@ -296,6 +322,42 @@ def _to_face(extrude, env):
         raise ValueError("Up to face: the face is behind the sketch "
                          "(try Reverse direction).")
     return round(h, 4), False
+
+
+def _track(model, extrude, env):
+    """The picked vertex or surface as the model is NOW: they were kept
+    as fixed coordinates, so a changed dimension left the extrude going
+    to where the surface used to be (2026-11-01, the user)."""
+    np = _np()
+    p = extrude.params
+    kind = p.get("extent")
+    if kind == "up_to_vertex" and len(p.get("up_to_point") or []) >= 3:
+        tris = _world_tris(model, extrude, env).reshape(-1, 3)
+        q = np.array(p["up_to_point"][:3], float)
+        best = tris[np.argmin(((tris - q) ** 2).sum(axis=1))]
+        p["up_to_point"] = [round(float(v), 6) for v in best]
+    elif kind in ("up_to_face", "offset_face") and \
+            len(p.get("up_to_face") or []) >= 6:
+        tris = _world_tris(model, extrude, env)
+        q = np.array(p["up_to_face"][:3], float)
+        n0 = np.array(p["up_to_face"][3:6], float)
+        c = np.cross(tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0])
+        size = np.linalg.norm(c, axis=1)
+        big = size > 1e-12
+        if not big.any():
+            return
+        tris, n = tris[big], c[big] / size[big][:, None]
+        ok = n @ n0 > 0.7
+        if not ok.any():
+            return               # the surface has gone: said by the depth
+        tris, n = tris[ok], n[ok]
+        # nearest: its plane first, then along it
+        off = np.abs(((q - tris[:, 0]) * n).sum(axis=1))
+        along = np.linalg.norm(tris.mean(axis=1) - q, axis=1)
+        i = int(np.argmin(off * 5.0 + along))
+        # the same point, carried onto that plane
+        moved = q + n[i] * float(n[i] @ (tris[i, 0] - q))
+        p["up_to_face"] = [round(float(v), 6) for v in (*moved, *n[i])]
 
 
 _BUSY = False
@@ -317,6 +379,7 @@ def refresh(model):
                     not node.params.get("extent"):
                 continue
             try:
+                _track(model, node, env)
                 h, centre = height_for(model, node, env)
             except (ValueError, ImportError) as exc:
                 errors[node.id] = str(exc)

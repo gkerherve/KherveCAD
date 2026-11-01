@@ -279,3 +279,45 @@ def test_smart_dimension_with_the_window_open(win, monkeypatch, kind):
     tool.click(*screen(0, 0))
     assert any(n.name == "Reference point" for n in circle.parent.children)
     drag.cancel()
+
+
+def _block_with_cut(win, height=20):
+    """A block and a reversed cut going down from its top."""
+    m = win.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    block = m.add_node("cube", dict(width=40, depth=30, height=height),
+                         parent=obj)
+    shelf = m.add_node("translate", dict(x=0, y=0, z=-20), parent=obj)
+    m.add_node("cube", dict(width=40, depth=30, height=5), parent=shelf)
+    g = m.add_node("translate", dict(x=0, y=0, z=height), parent=obj)
+    ext = m.add_node("linear_extrude", dict(height=10), parent=g)
+    ext.params["reverse"] = True
+    m.add_node("circle", dict(x=20, y=15, radius=3), parent=ext)
+    return block, g, ext
+
+
+def test_up_to_next_goes_the_way_a_reversed_cut_goes(win):
+    from khervecad import extent
+    block, g, ext = _block_with_cut(win)
+    extent.set_extent(win.model, ext, "up_to_next")
+    assert ext.params["height"] == pytest.approx(20)   # the block's bottom
+    extent.set_extent(win.model, ext, "through_all_one")
+    assert ext.params["height"] > 20
+
+
+def test_a_picked_surface_and_vertex_follow_a_changed_size(win):
+    from khervecad import extent
+    block, g, ext = _block_with_cut(win)
+    extent.set_extent(win.model, ext, "up_to_face",
+                      face=[5, 5, -15, 0, 0, 1])       # the shelf's top
+    assert ext.params["height"] == pytest.approx(35)
+    shelf = g.parent.children[1]
+    win.model.set_param(shelf, "z", -30)               # moved down 10
+    extent.refresh(win.model)
+    assert ext.params["height"] == pytest.approx(45)
+    extent.set_extent(win.model, ext, "up_to_vertex", point=[0, 0, -25])
+    win.model.set_param(shelf, "z", -40)
+    extent.refresh(win.model)
+    assert ext.params["up_to_point"][2] == pytest.approx(-35)
+    assert ext.params["height"] == pytest.approx(55)
