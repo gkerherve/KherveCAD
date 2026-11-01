@@ -97,7 +97,11 @@ def plan(container, root):
                 d.children[0] is not p:
             return g, own, d.children[0]
         p = d
-    return None
+    # a boss standing in a Body a later cut wrapped: the rib once that
+    # slot had been cut in it
+    feats = [n for n in g.walk()
+             if n.type in ("linear_extrude", "rotate_extrude")]
+    return (g, own, None) if len(feats) <= 1 else None
 
 
 def _has_refs(container, root):
@@ -114,28 +118,14 @@ def _has_refs(container, root):
 def outline(window, container):
     """[((x, y), (x, y))] the model's face at *container*'s plane in its
     frame (`plan`), or None when unknown."""
-    from . import face_outline, mesh, meshedit_ui
+    from . import face_outline, sketch_section
     root = window._render_scope()[0]
     got = plan(container, root)
     if got is None:
         return None
-    g, own, body = got
-    # only what was built BEFORE this feature: a slot cut later across
-    # the rib went into its outline as a hole, and the rib kept a notch
-    # (and two lines on its face) after the slot was deleted
-    kids = list(root.children)
-    upto = kids.index(own) if own in kids else len(kids)
-    tris = [t for n, ts in meshedit_ui._parts(window) if n is not own
-            and (n not in kids or kids.index(n) < upto) for t in ts]
-    if body is not None:
-        iso = root if root is not window.model.root else None
-        # the body ALONE, uncut: picked out of its Difference by a
-        # selection pass it came back with the cut already in it, so the
-        # middle of the block's top edge was not on the outline
-        fn = window.model.effective_fn()
-        with window._isolated_frame(iso):
-            m4 = mesh.ancestor_matrix(body, stop=iso)
-            tris += mesh.transform_mesh(m4, mesh.tessellate(body, fn=fn))
+    g = got[0]
+    # only what was built BEFORE this feature, the body of a cut uncut
+    tris = sketch_section.built_before(window, container)
     if not tris:
         return None
     return face_outline.whole_face(g, tris, [])

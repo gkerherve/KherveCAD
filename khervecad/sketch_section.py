@@ -98,19 +98,11 @@ def _inside(node, ancestor):
 def section_shape(window, container, grow=GROW):
     """{points, paths} of the parts' section at *container*'s plane (the
     part the sketch itself builds left out), or None."""
-    from . import meshedit_ui, section, section_outline
+    from . import section, section_outline
     try:
-        parts = meshedit_ui._parts(window)
+        tris = built_before(window, container)
     except Exception:
         return None
-    tris = [t for node, ts in parts if not _inside(container, node)
-            for t in ts]
-    for node, _ts in parts:
-        if _inside(container, node):
-            # the sketch shares its plane's group with features made
-            # before (every Front sketch is one "Front sketch" rotate):
-            # those are part of the section, only its own shapes are not
-            tris += _beside(window, node, container)
     if not tris or len(tris) > MAX_TRIS:
         return None
     o, r, u, n = _frame(container)
@@ -129,36 +121,32 @@ def section_shape(window, container, grow=GROW):
     return {"points": points, "paths": paths}
 
 
-def _beside(window, part, container):
-    """World triangles of what *part* holds besides *container*'s own 2D
-    shapes and the chain down to it."""
-    from . import mesh
+def built_before(window, container):
+    """World triangles of what was built BEFORE *container*'s feature:
+    the earlier siblings at every level up to the scope, each whole and
+    alone. A later feature is never in it (2026-11-01, the user: a slot
+    cut in the rib afterwards came back in the rib's own section and cut
+    a rectangle right through it), nor is a Difference's later cut."""
+    from . import anchors, mesh
     from .model import SHAPE_2D
-    chain = []
-    probe = container
-    while probe is not None:
-        chain.append(probe)
-        if probe is part:
-            break
-        probe = probe.parent
-    ids = set()
-    for holder in chain:
-        for child in holder.children:
-            if child in chain or not child.visible:
-                continue
-            if holder is container and child.category == SHAPE_2D:
-                continue
-            ids.add(child.id)
-    if not ids:
-        return []
     root = window._render_scope()[0]
     iso = root if root is not window.model.root else None
-    try:
-        with window._isolated_frame(iso):
-            return mesh.selected_world_tris(
-                root, ids, fn=window.model.effective_fn())
-    except Exception:
-        return []
+    env = anchors.doc_env(window.model)
+    fn = window.model.effective_fn()
+    nodes = [c for c in container.children if c.category != SHAPE_2D]
+    probe = container
+    while probe is not root and probe.parent is not None:
+        kids = probe.parent.children
+        nodes += kids[:kids.index(probe)]
+        probe = probe.parent
+    tris = []
+    with window._isolated_frame(iso):
+        for node in nodes:
+            if not node.visible or node.type in ("assign", "variables"):
+                continue
+            m = mesh.ancestor_matrix(node, env, stop=iso)
+            tris += mesh.transform_mesh(m, mesh.tessellate(node, env, fn=fn))
+    return tris
 
 
 def _grown(loops, grow=GROW):

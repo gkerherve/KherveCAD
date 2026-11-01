@@ -420,3 +420,22 @@ def test_deleting_a_cuts_sketch_unwraps_its_difference(win):
     assert not any(n.type == "difference" or n.name == "Body"
                    for n in m.root.walk())
     assert block.parent is not None
+
+
+def test_a_later_cut_stays_out_of_an_earlier_features_section(win):
+    """The user's slot cut in the rib: the rib's Model edges took the
+    slot's tool in as well and the rib lost a rectangle right through."""
+    from khervecad import sketch_section
+    m = win.model
+    block = m.add_node("cube", dict(size=[40, 30, 20]))
+    sketch = m.add_node("union", {})
+    tool = m.add_node("cube", dict(size=[4, 4, 60]))
+    QTest.qWait(30)
+    before = sketch_section.built_before(win, sketch)
+    assert before
+    body = m.wrap_nodes([block, sketch], "union")
+    body = body if body is not None else block.parent
+    d = m.wrap_nodes([body, tool], "difference")
+    assert d is not None or body.parent.type == "difference"
+    after = sketch_section.built_before(win, sketch)
+    assert sorted(map(str, after)) == sorted(map(str, before))
