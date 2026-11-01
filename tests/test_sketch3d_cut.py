@@ -103,8 +103,27 @@ def test_what_was_drawn_can_be_seen(win, monkeypatch):
     tool.set_mode("line")
     tool.place((5, 5))
     tool.place((15, 12))
-    assert len(tool._own()[0]) >= 2          # the line stays drawn
+    assert len(tool._own()[0]) == 1          # one line, not a band's sides
     tool.finish()
+
+
+def test_a_3d_line_is_a_sketch_line_that_closes_with_the_edges(win,
+                                                               monkeypatch):
+    """Thin and joined, like the 2D Line, and left open it asks which area
+    it closes with the model's edges (the user)."""
+    from khervecad import sketch_constraints as sc, sketch_regions
+    tool = _on_face(win, monkeypatch)
+    asked = []
+    monkeypatch.setattr(sketch_regions, "start_3d",
+                        lambda w, g, cut=False: asked.append(cut) or True)
+    tool.set_mode("line")
+    for p in ((5, 5), (15, 5), (15, 12)):
+        tool.place(p)
+    lines = [n for n in tool.group.children if n.type == "line"]
+    assert [n.params["width"] for n in lines] == [0.2, 0.2]
+    assert [r["kind"] for r in sc.rows(tool.group)].count("coincident") == 1
+    tool.finish()
+    assert asked == [True]
 
 
 def test_the_extrude_window_opens_on_the_first_shape(win, monkeypatch):

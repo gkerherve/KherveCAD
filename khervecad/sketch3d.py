@@ -156,11 +156,23 @@ class Sketch3DTool:
 
     def _own(self):
         """(segments, points) of the shapes drawn in this sketch."""
-        from . import anchors, face_outline, mesh
+        from . import anchors, face_outline, mesh, slot2d
         segs, pts = [], []
         env = anchors.doc_env(self.window.model)
         for shape in (self.holder or self.group).children \
                 if self.group else ():
+            if shape.type == "line" and not slot2d.is_slot(shape):
+                p = shape.params        # one line, not a band's two sides
+                try:
+                    ends = [(float(p[a]), float(p[b])) for a, b in
+                            (("x1", "y1"), ("x2", "y2"))]
+                except (KeyError, TypeError, ValueError):
+                    continue
+                segs.append(tuple(ends))
+                pts += [(*ends[0], "end"), (*ends[1], "end"),
+                        ((ends[0][0] + ends[1][0]) / 2,
+                         (ends[0][1] + ends[1][1]) / 2, "middle")]
+                continue
             try:
                 loops = mesh.node_outlines(shape, env) or []
             except Exception:
@@ -182,6 +194,21 @@ class Sketch3DTool:
                 pts += [(x1, y1, "end"), (x2, y2, "end"),
                         ((x1 + x2) / 2, (y1 + y2) / 2, "middle")]
         return segs, pts
+
+    def _join(self, last, node):
+        """A chain's lines stay joined, as the 2D Line tool's."""
+        from . import sketch_constraints as sc
+        if last is None or last.type != "line" or \
+                last.parent is not node.parent or \
+                (last.params["x2"], last.params["y2"]) != \
+                (node.params["x1"], node.params["y1"]):
+            return
+        try:
+            sc.add(self.window.model, node.parent, "coincident",
+                   [sc.ref_of(node.parent, last, "p2"),
+                    sc.ref_of(node.parent, node, "p1")])
+        except ValueError:
+            pass
 
     def _mm_per_px(self, lx, ly):
         from .face_sketch import to_world
@@ -512,9 +539,13 @@ class Sketch3DTool:
         elif self.mode == "line" and len(self.points) >= 2:
             a, b = self.points[-2], self.points[-1]
             if a != b:
+                # a sketch line, as in the 2D view: a 1 mm line was a band
+                # with two sides, and closed nothing with the model's edges
+                last = self.made[-1] if self.made else None
                 node = model.add_node("line", dict(
-                    x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=1.0),
+                    x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=0.2),
                     parent=self.holder or self.group)
+                self._join(last, node)
             else:
                 self.points = []
         if node is not None:
