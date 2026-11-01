@@ -321,3 +321,39 @@ def test_a_picked_surface_and_vertex_follow_a_changed_size(win):
     extent.refresh(win.model)
     assert ext.params["up_to_point"][2] == pytest.approx(-35)
     assert ext.params["height"] == pytest.approx(55)
+
+
+def test_up_to_next_cuts_from_a_sketch_a_hair_off_its_face(win):
+    """Circle 13: the face had moved 0.02 mm from the sketch's plane and
+    the cut stopped at it, cutting nothing."""
+    from khervecad import extent
+    m = win.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    block = m.add_node("cube", dict(width=40, depth=30, height=20), parent=obj)
+    g = m.add_node("translate", dict(z=20.02), parent=obj)
+    ext = m.add_node("linear_extrude", dict(height=10), parent=g)
+    ext.params["reverse"] = True
+    m.add_node("circle", dict(x=20, y=15, radius=3), parent=ext)
+    assert m.wrap_nodes([block, g], "difference") is not None
+    extent.set_extent(m, ext, "up_to_next")
+    assert ext.params["height"] == pytest.approx(20.02)
+
+
+def test_an_older_face_sketch_takes_up_its_face(win):
+    from khervecad import face_sketch as fs, model_refs
+    m = win.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    m.add_node("cube", dict(width=40, depth=30, height=20), parent=obj)
+    near = m.add_node("union", dict(z=20.02), parent=obj)
+    near.params[fs.KEY] = True
+    far = m.add_node("union", dict(z=30.0), parent=obj)
+    far.params[fs.KEY] = True
+    win.builder.open_component(obj)
+    QApplication.processEvents()
+    model_refs.adopt(win)
+    assert near.params.get(fs.FACE_REF)
+    assert not far.params.get(fs.FACE_REF)
+    model_refs.refresh(win)
+    assert near.params["z"] == pytest.approx(20.0)     # back on the face

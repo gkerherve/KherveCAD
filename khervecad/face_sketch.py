@@ -196,6 +196,20 @@ def remember_face(window, group, point, normal):
                                   (*centre, *normal)]
 
 
+#: an old sketch's plane this near a face (mm) stands on that face
+ADOPT_GAP = 0.5
+
+
+def adopt_face(window, group):
+    """An older sketch's face, found from where its plane stands."""
+    o = [float(group.params.get(k, 0.0)) for k in ("x", "y", "z")]
+    n = _normal_of(group)
+    remember_face(window, group, o, n)
+    row = group.params.get(FACE_REF)
+    if row and abs(sum((row[i] - o[i]) * n[i] for i in range(3))) > ADOPT_GAP:
+        group.params.pop(FACE_REF, None)
+
+
 def origin_on_plane(point, normal):
     """The scope's 0, 0, 0 projected onto the plane through *point*."""
     n = _unit(normal)

@@ -236,8 +236,9 @@ def _world_tris(model, extrude, env):
     return np.concatenate(out)
 
 
-def _first_hit(tris, o, d):
-    """The smallest t > 0 where o + t d meets a triangle, or None."""
+def _first_hit(tris, o, d, leaving=False):
+    """The smallest t > 0 where o + t d meets a triangle, or None;
+    *leaving*: only a surface the ray comes OUT of."""
     np = _np()
     v0 = tris[:, 0]
     e1, e2 = tris[:, 1] - v0, tris[:, 2] - v0
@@ -252,6 +253,8 @@ def _first_hit(tris, o, d):
     t = f * np.einsum("ij,ij->i", e2, q)
     hit = ok & (u >= -1e-9) & (v >= -1e-9) & (u + v <= 1 + 1e-9) & \
         (t > 1e-4)
+    if leaving:
+        hit = hit & (a < 0)         # a = -(normal . d): it faces along d
     return float(t[hit].min()) if hit.any() else None
 
 
@@ -277,7 +280,10 @@ def _to_next(model, extrude, env):
     depth = None
     for x, y in starts:
         o = m[:3, :3] @ np.array([x, y, 0.0]) + m[:3, 3]
-        t = _first_hit(tris, o, d)
+        # a cut goes on to where the solid ENDS. Stopping at the first
+        # surface met, a sketch standing a hair off its face cut nothing
+        # (the user's Circle 13: 0.02 mm of air, a depth of 0.02)
+        t = _first_hit(tris, o, d, leaving=_body_for(extrude) is not None)
         if t is not None:
             depth = t if depth is None else max(depth, t)
     if depth is None:

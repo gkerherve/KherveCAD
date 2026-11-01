@@ -500,6 +500,16 @@ def adopt(window):
     n = 0
     try:
         root = window._render_scope()[0]
+        from . import face_sketch
+        for node in list(root.walk()):
+            # a sketch made before they followed their face takes it up
+            if node.params.get(face_sketch.KEY) and \
+                    not node.params.get(face_sketch.FACE_REF):
+                try:
+                    face_sketch.adopt_face(window, node)
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
         for node in list(root.walk()):
             if node.children and node.params.get("constraints"):
                 if plan(node, root) is None:
