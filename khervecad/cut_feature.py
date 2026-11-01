@@ -273,6 +273,9 @@ def start(window, kind):
             tool.use_group(group)
             window.view3d.edit_tool = tool
             tool.begin()
+            ribbon = getattr(window, "ribbon", None)
+            if ribbon is not None:
+                ribbon.show_tab("sketch")
             return
         window.statusBar().showMessage(
             "%s: draw the shape (circle, slot, rectangle…), dimension "

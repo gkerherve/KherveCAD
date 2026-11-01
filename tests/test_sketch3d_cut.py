@@ -60,3 +60,48 @@ def test_a_slot_drawn_in_3d_is_cut_on_done(win, monkeypatch):
     QApplication.processEvents()
     left = analysis.mass_properties(mesh.tessellate(m.root))["volume"]
     assert left < full - 100
+
+
+def _on_face(win, monkeypatch):
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    McpToolExecutor(win).execute("apply_code",
+                                 {"code": "cube([40, 30, 20]); // Block\n"})
+    QApplication.processEvents()
+    part = next(c for c in win.model.root.children
+                if c.visible and c.type != "assign")
+    cut_feature.start(win, "extruded_cut")
+    win.view3d._pick_cb(dict(kind="face", pos=(20, 15, 20),
+                             dir=(0, 0, 1)), part)
+    return win.view3d.edit_tool
+
+
+def test_the_sketch_icons_drive_it_and_no_bar_shows(win, monkeypatch):
+    from PyQt5.QtWidgets import QPushButton
+    from khervecad import sketch_tools
+    tool = _on_face(win, monkeypatch)
+    assert not win.view3d.findChildren(QPushButton, "sketch3d_bar")
+    win._set_tool(sketch_tools.SLOT)
+    assert tool.mode == "slot" and win.view3d.edit_tool is tool
+    win._set_tool("circle")
+    assert tool.mode == "circle"
+    tool.finish()
+
+
+def test_snaps_to_a_middle_and_lights_the_edge(win, monkeypatch):
+    tool = _on_face(win, monkeypatch)
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    mids = [p for p in tool.info["points"] if p[2] == "middle"]
+    assert mids
+    x, y, _k = mids[0]
+    got = tool.snap_local(x + 0.05, y + 0.05)
+    assert got == (x, y) and tool.snapped[2] == "middle" and tool.lit
+    tool.finish()
+
+
+def test_what_was_drawn_can_be_seen(win, monkeypatch):
+    tool = _on_face(win, monkeypatch)
+    tool.place((5, 5))
+    tool.place((15, 12))
+    assert len(tool._own()[0]) >= 4          # the rectangle's sides
+    tool.finish()

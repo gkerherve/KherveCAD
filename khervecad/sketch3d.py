@@ -34,6 +34,9 @@ MODES = ("rect", "circle", "line", "slot")
 MODE_KEYS = {"R": "rect", "C": "circle", "L": "line", "S": "slot"}
 #: a line or slot this near level or upright (degrees) snaps to it
 ANGLE_SNAP = 5.0
+#: how near the cursor (pixels) a point or an edge takes it
+SNAP_PX = 10.0
+EDGE_PX = 7.0
 
 
 def straighten(a, b, tol=ANGLE_SNAP):
@@ -110,7 +113,9 @@ class Sketch3DTool:
         self.hover = None             # local point under the cursor
         self.target = None            # plane / face under the cursor
         self._press = None
-        self._bar = None
+        self.snapped = None           # (x, y, kind) under the cursor
+        self.lit = []                 # model / sketch edges lit up
+        self.info = {}                # the face's segments and points
         self._drag = None             # (node, role) of a dragged point
         self.made = []
 
@@ -121,43 +126,137 @@ class Sketch3DTool:
         v.setMouseTracking(True)
         v.setCursor(Qt.CrossCursor)
         v.setFocus(Qt.OtherFocusReason)
-        self._make_bar()
+        self._sync_button()
         self._say()
         v.update()
 
-    def _make_bar(self):
-        from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QWidget
-        bar = self._bar = QWidget(self.view)
-        bar.setObjectName("sketch3d_bar")
-        bar.setStyleSheet(
-            "#sketch3d_bar { background: rgba(255,255,255,235); border: "
-            "1px solid #8a8a8a; border-radius: 5px; } QPushButton "
-            "{ padding: 3px 9px; } QPushButton:checked { background: "
-            "#3c78dc; color: white; }")
-        lay = QHBoxLayout(bar)
-        lay.setContentsMargins(6, 4, 6, 4)
-        self._buttons = {}
-        for mode, text in (("rect", "Rectangle (R)"),
-                           ("circle", "Circle (C)"), ("line", "Line (L)"),
-                           ("slot", "Slot (S)")):
-            b = QPushButton(language.tr(text), bar)
-            b.setCheckable(True)
-            b.setChecked(mode == self.mode)
-            b.clicked.connect(lambda _=False, m=mode: self.set_mode(m))
-            lay.addWidget(b)
-            self._buttons[mode] = b
-        done = QPushButton(language.tr("Done"), bar)
-        done.clicked.connect(lambda _=False: self.finish())
-        lay.addWidget(done)
-        bar.adjustSize()
-        bar.move(12, max(8, self.view.height() - bar.height() - 70))
-        bar.show()
+    def _sync_button(self):
+        try:
+            from . import sketch_mode
+            sketch_mode.sync_create(self.window)
+        except Exception:                           # pragma: no cover
+            pass
+
+    def _load_face(self):
+        """The face's edges, corners, middles and centres to snap to."""
+        from . import face_outline, face_sketch
+        self.info = {}
+        try:
+            part = getattr(self.window, "_cut_parts", {}).get(id(self.group)) \
+                or face_sketch.part_of(self.group)
+            if part is not None:
+                face_outline.show(self.window, self.group, part)
+            self.info = getattr(self.window.view2d.scene(),
+                                "face_outline", None) or {}
+        except Exception:                           # never stop a sketch
+            import traceback
+            traceback.print_exc()
+
+    def _own(self):
+        """(segments, points) of the shapes drawn in this sketch."""
+        from . import anchors, face_outline, mesh
+        segs, pts = [], []
+        env = anchors.doc_env(self.window.model)
+        for shape in self.group.children if self.group else ():
+            try:
+                loops = mesh.node_outlines(shape, env) or []
+            except Exception:
+                continue
+            for loop in loops:
+                segs += [(loop[i], loop[(i + 1) % len(loop)])
+                         for i in range(len(loop))]
+            if shape.type == "circle":
+                pts.append((shape.params.get("x", 0), shape.params.get("y", 0),
+                            "centre"))
+            elif shape.type == "rect":
+                pts += face_outline.snap_points(
+                    [(loop[i], loop[(i + 1) % len(loop)]) for loop in loops
+                     for i in range(len(loop))])
+            elif shape.type == "line":
+                p = shape.params
+                x1, y1, x2, y2 = (p.get(k, 0) for k in
+                                  ("x1", "y1", "x2", "y2"))
+                pts += [(x1, y1, "end"), (x2, y2, "end"),
+                        ((x1 + x2) / 2, (y1 + y2) / 2, "middle")]
+        return segs, pts
+
+    def _mm_per_px(self, lx, ly):
+        from .face_sketch import to_world
+        view = self.view
+        eye, right, up, forward = view._camera()
+        a = view._project(eye, right, up, forward,
+                          to_world(self.group, lx, ly))
+        b = view._project(eye, right, up, forward,
+                          to_world(self.group, lx + 1.0, ly))
+        c = view._project(eye, right, up, forward,
+                          to_world(self.group, lx, ly + 1.0))
+        if a is None or b is None or c is None:
+            return None
+        px = max(math.hypot(b[0] - a[0], b[1] - a[1]),
+                 math.hypot(c[0] - a[0], c[1] - a[1]))
+        return 1.0 / px if px > 1e-9 else None
+
+    def _light(self, segs, a, b):
+        """Every piece of the edge a-b belongs to: the whole straight
+        side, or the whole circle."""
+        from . import face_outline
+        for (cx, cy), r in face_outline.arcs(segs):
+            tol = max(r * 0.02, 1e-3)
+            if abs(math.hypot(a[0] - cx, a[1] - cy) - r) < tol and \
+                    abs(math.hypot(b[0] - cx, b[1] - cy) - r) < tol:
+                return [(p, q) for p, q in segs
+                        if abs(math.hypot(p[0] - cx, p[1] - cy) - r) < tol
+                        and abs(math.hypot(q[0] - cx, q[1] - cy) - r) < tol]
+        return [face_outline._whole_edge(segs, a, b)]
+
+    def snap_local(self, lx, ly):
+        """(x, y) snapped to a point or edge near the cursor, else None;
+        sets `snapped` and `lit` for the paint."""
+        from . import face_outline
+        self.snapped, self.lit = None, []
+        mm = self._mm_per_px(lx, ly)
+        if mm is None:
+            return None
+        own_segs, own_pts = self._own()
+        segs = list(self.info.get("segments") or []) + own_segs
+        pts = list(self.info.get("points") or []) + own_pts
+        best = None
+        for x, y, kind in pts:
+            d = math.hypot(x - lx, y - ly)
+            if d <= SNAP_PX * mm and (best is None or d < best[0]):
+                best = (d, x, y, kind)
+        near = None
+        for a, b in segs:
+            ex, ey = face_outline._on_segment(lx, ly, a, b)
+            d = math.hypot(ex - lx, ey - ly)
+            if near is None or d < near[0]:
+                near = (d, ex, ey, a, b)
+        if near is not None and near[0] <= EDGE_PX * mm:
+            self.lit = self._light(segs, near[3], near[4])
+        if best is not None:
+            self.snapped = (best[1], best[2], best[3])
+            return best[1], best[2]
+        if self.lit:
+            self.snapped = (near[1], near[2], "edge")
+            return near[1], near[2]
+        return None
+
+    def tool_icon(self, tool):
+        """A drawing icon of the Sketch tab was clicked."""
+        from . import sketch_tools
+        from .view2d import CIRCLE, LINE, RECT, SELECT
+        mode = {RECT: "rect", CIRCLE: "circle", LINE: "line",
+                sketch_tools.SLOT: "slot"}.get(tool)
+        if mode:
+            self.set_mode(mode)
+        elif tool != SELECT:
+            self.message(language.tr(
+                "Not on the 3D sketch yet: rectangle, circle, line and "
+                "slot are. Exit Sketch Mode, then dimension it."), 6000)
 
     def set_mode(self, mode):
         self.mode = mode
         self.points = []
-        for m, b in getattr(self, "_buttons", {}).items():
-            b.setChecked(m == mode)
         self._say()
         self.view.update()
 
@@ -186,12 +285,14 @@ class Sketch3DTool:
         v = self.view
         if v.edit_tool is self:
             v.edit_tool = None
-        if self._bar is not None:
-            self._bar.hide()
-            self._bar.deleteLater()
-            self._bar = None
         v.setMouseTracking(False)
         v.unsetCursor()
+        self._sync_button()
+        try:
+            from . import face_outline
+            face_outline.clear(self.window)
+        except Exception:
+            pass
         v.update()
 
     def cancel(self):
@@ -227,6 +328,7 @@ class Sketch3DTool:
         self.window._ref_force_planes = False     # picked: hide again
         self.group = group
         self.points = []
+        self._load_face()
         self._say()
 
     def plane_hit(self, x, y):
@@ -300,7 +402,11 @@ class Sketch3DTool:
         if p is None:
             return None
         lx, ly = to_local(g, p)
+        self.snapped, self.lit = None, []
         if not free:
+            got = self.snap_local(lx, ly)
+            if got is not None:
+                return (tidy(got[0]), tidy(got[1]))
             step = self._grid()
             lx, ly = snap(lx, step), snap(ly, step)
         return (tidy(lx), tidy(ly))
@@ -351,6 +457,11 @@ class Sketch3DTool:
                 self.points = []
         if node is not None:
             self.made.append(node)
+            try:                 # tied to what it was drawn on
+                from . import face_outline
+                face_outline.pin(self.window.view2d.scene(), model, node)
+            except Exception:
+                pass
         self.view.update()
         return node
 
@@ -539,6 +650,26 @@ class Sketch3DTool:
         def scr(lp):
             p = project(to_world(g, lp[0], lp[1]))
             return QPointF(p[0], p[1]) if p is not None and p[2] > 0 else None
+        # what has been drawn, on the face
+        painter.setPen(QPen(QColor(33, 118, 199), 2))
+        for a, b in self._own()[0]:
+            qa, qb = scr(a), scr(b)
+            if qa and qb:
+                painter.drawLine(qa, qb)
+        # the edge the cursor is on lights up, whole
+        painter.setPen(QPen(QColor(240, 140, 30), 3))
+        for a, b in self.lit:
+            qa, qb = scr(a), scr(b)
+            if qa and qb:
+                painter.drawLine(qa, qb)
+        if self.snapped is not None:
+            q = scr(self.snapped[:2])
+            if q is not None:
+                painter.setPen(QPen(QColor(240, 140, 30), 2))
+                painter.setBrush(QColor(255, 200, 60))
+                painter.drawRect(int(q.x()) - 4, int(q.y()) - 4, 8, 8)
+                painter.drawText(q + QPointF(10, 16), language.tr(
+                    self.snapped[2].capitalize()))
         pen = QPen(QColor(240, 140, 30), 2)
         pen.setStyle(Qt.DashLine)
         painter.setPen(pen)
