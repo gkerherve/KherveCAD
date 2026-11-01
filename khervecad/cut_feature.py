@@ -215,13 +215,14 @@ def _closes_with_model_edges(window, group, kind):
     group.params.pop(KEY, None)
     try:
         started = sketch_regions.start_3d(window, group,
-                                          cut=kind == "extruded_cut")
+                                          cut=kind == "extruded_cut",
+                                          window_at_once=True)
     except Exception:
         started = False
     if started:
         window.statusBar().showMessage(
-            "Click the area(s) your lines close with the part's edges, "
-            "then Done (or Enter).", 8000)
+            "Click the area your lines close with the part's edges: its "
+            "window opens (Shift+click to take several, then Done).", 8000)
     else:
         group.params[KEY] = kind
     return bool(started)

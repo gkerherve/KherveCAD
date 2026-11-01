@@ -874,10 +874,14 @@ def overlap_container(window, nodes):
     return None
 
 
-def start_3d(window, container=None, make_only=False, cut=False):
+def start_3d(window, container=None, make_only=False, cut=False,
+             window_at_once=False):
     """Pick regions on the 3D view: the region under the mouse lights
     up, a click keeps it (again drops it), Esc or right-click extrudes
-    what was picked. False when no sketch has regions."""
+    what was picked. False when no sketch has regions. *window_at_once*:
+    the first click makes the feature and opens its window, where the
+    direction and depth are set (the user had nowhere to reverse it);
+    Shift+click collects several areas first."""
     from . import mesh
     container = container or sketch_container(window)
     if container is None:
@@ -956,27 +960,17 @@ def start_3d(window, container=None, make_only=False, cut=False):
                 window.statusBar().showMessage(
                     "Extruded %d region(s) — drag the arrow or set the "
                     "height in Properties." % len(picked), 6000)
-                try:
-                    from . import drag_feature
-                    drag_feature.start(window, ext, quiet=True,
-                                       created=True)
-                except Exception:              # pragma: no cover
-                    pass
-                if cut:
-                    # what the window's Operation ▸ Cut does
-                    from . import extrude_panel
-                    panel = extrude_panel._panel(window)
-                    box = panel.fields.get("operation") if panel else None
-                    if box is not None:
-                        box.setCurrentIndex(box.findData("cut"))
-                    else:
-                        extrude_panel.set_operation(window.model, ext,
-                                                    "cut")
+                _open_window(window, ext, cut)
             return
         picked.symmetric_difference_update({key})
         view.set_highlight_mesh([t for i in sorted(picked)
                                  for t in tris[i]])
         arm()
+        if window_at_once and picked:
+            from PyQt5.QtCore import Qt, QTimer
+            from PyQt5.QtWidgets import QApplication
+            if not QApplication.keyboardModifiers() & Qt.ShiftModifier:
+                QTimer.singleShot(0, view.cancel_pick)
 
     def arm():
         view.pick_lines = lines        # every region's edges, seen
@@ -985,6 +979,36 @@ def start_3d(window, container=None, make_only=False, cut=False):
                             "drop" if k in picked else "keep"))
     arm()
     return True
+
+
+def _open_window(window, ext, cut):
+    """The new feature's Extrude window. A cut is one first — one side,
+    blind, as every cut starts — so the window is titled and set for it."""
+    from . import drag_feature, extrude_panel
+    model = window.model
+    try:
+        if not cut:
+            drag_feature.start(window, ext, quiet=True, created=True)
+            return
+        if not extrude_panel.set_operation(model, ext, "cut"):
+            drag_feature.start(window, ext, quiet=True, created=True)
+            return
+        model.set_param(ext, "extent", "")
+        model.set_param(ext, "center", False)
+        model.set_param(ext, "reverse", True)
+        model.set_param(ext, "height", HEIGHT)
+        holder = extrude_panel._holder(ext)
+        drag = drag_feature.start(window, ext, quiet=True, panel=True)
+        if drag is not None:
+            def undo():
+                diff = holder.parent
+                model.remove_node(holder)
+                if diff is not None and len(diff.children) == 1:
+                    model.ungroup(diff)
+            drag.on_cancel = undo
+    except Exception:                      # pragma: no cover
+        import traceback
+        traceback.print_exc()
 
 
 def _shape_section(s):

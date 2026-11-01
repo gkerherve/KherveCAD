@@ -115,7 +115,7 @@ def test_a_3d_line_is_a_sketch_line_that_closes_with_the_edges(win,
     tool = _on_face(win, monkeypatch)
     asked = []
     monkeypatch.setattr(sketch_regions, "start_3d",
-                        lambda w, g, cut=False: asked.append(cut) or True)
+                        lambda w, g, cut=False, **k: asked.append(cut) or True)
     tool.set_mode("line")
     for p in ((5, 5), (15, 5), (15, 12)):
         tool.place(p)
@@ -128,7 +128,8 @@ def test_a_3d_line_is_a_sketch_line_that_closes_with_the_edges(win,
 
 def test_lines_ending_on_the_edge_close_an_area_with_it(win, monkeypatch):
     """Three lines from the block's edge and back cut out exactly that."""
-    from khervecad import face_sketch as fs, sketch_regions as sr
+    from PyQt5.QtTest import QTest
+    from khervecad import extrude_panel, face_sketch as fs
     tool = _on_face(win, monkeypatch)
     g = tool.group
     tool.set_mode("line")
@@ -140,7 +141,17 @@ def test_lines_ending_on_the_edge_close_an_area_with_it(win, monkeypatch):
     cb = win.view3d._pick_cb
     area = [k for k, t in keys if max(v[1] for f in t for v in f) < 13][0]
     cb({"kind": "face"}, area)
-    cb(None, None)
+    QTest.qWait(50)                      # one click: the window, for a cut
+    panel = extrude_panel._panel(win)
+    assert panel is not None and not panel.isHidden()
+    ext = panel.ext
+    assert extrude_panel.is_cut(ext) and ext.params["reverse"]
+    assert ext.params["height"] == 10 and not ext.params.get("extent")
+    # its direction can be turned round there
+    panel.fields["reverse"].click()
+    QApplication.processEvents()
+    assert not ext.params.get("reverse")
+    panel.fields["reverse"].click()
     QApplication.processEvents()
     hits = McpToolExecutor(win).execute("probe_surface", {
         "from": [20, 6, 50], "direction": [0, 0, -1]})["hits"]
