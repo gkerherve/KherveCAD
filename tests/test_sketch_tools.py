@@ -476,7 +476,7 @@ def test_extruded_cut_cuts_a_face_sketch_into_its_part(window):
     assert diff.children[0] is block and diff.children[1] is group
     ext = [n for n in group.walk() if n.type == "linear_extrude"][0]
     assert ext.parent is group and ext.params.get("reverse")
-    assert ext.params.get("extent") == "through_all"   # the default
+    assert not ext.params.get("extent")   # blind, the default
     assert group.name == "Cut sketch"
     # a depth typed stays; one typed under Through All switches it off
     m.set_param(ext, "height", 6.0)

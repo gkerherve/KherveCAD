@@ -261,6 +261,8 @@ class Sketch3DTool:
         kind = g.params.get(cut_feature.KEY)
         self._end()
         made = cut_feature.finish(self.window, g)
+        if made is None:
+            cut_feature.clear_chosen_face(self.window)
         if made is None or kind in cut_feature.BOSS:
             return made          # (a boss opens the window itself)
         ext = next((n for n in g.walk() if n.type == "linear_extrude"), None)
@@ -356,7 +358,10 @@ class Sketch3DTool:
         from . import cut_feature
         if g is not None and g.parent is not None and g.children and \
                 g.params.get(cut_feature.KEY):
-            return cut_feature.finish(self.window, g)
+            made = cut_feature.finish(self.window, g)
+            cut_feature.clear_chosen_face(self.window)   # (no window)
+            return made
+        cut_feature.clear_chosen_face(self.window)
         if g is None or g.parent is None:
             self.message(language.tr("Sketch in 3D ended."), 4000)
             return None

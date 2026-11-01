@@ -577,6 +577,8 @@ class DragFeature:
             bool(self.created)
 
     def exit(self):
+        from . import cut_feature
+        cut_feature.clear_chosen_face(self.window)
         # OK / Cancel while the window's icon tool runs: that ends too
         window = self.window
         if getattr(window, "_drag_paused", None) is self:

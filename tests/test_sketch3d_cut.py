@@ -119,7 +119,8 @@ def test_the_extrude_window_opens_on_the_first_shape(win, monkeypatch):
     panel = extrude_panel._panel(win)
     assert panel is not None and not panel.isHidden()
     ext = drag.target()
-    assert ext.params.get("extent") == "through_all"
+    assert not ext.params.get("extent")          # one side, blind
+    assert ext.params["height"] == 10 and ext.params["reverse"]
     # Smart Dimension with the window open, and back
     win._set_tool(ui.DIMENSION)
     assert win.view3d.edit_tool is not drag
@@ -181,3 +182,23 @@ def test_choosing_a_face_turns_the_camera_to_it(win, monkeypatch):
     assert len(goals) == 1                      # it glides, not jumps
     assert (goals[0]["yaw"], goals[0]["pitch"]) == pytest.approx(want)
     tool.finish()
+
+
+def test_the_chosen_face_is_green_until_the_window_closes(win, monkeypatch):
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    McpToolExecutor(win).execute("apply_code", {"code": "cube(20);\n"})
+    QApplication.processEvents()
+    part = next(c for c in win.model.root.children
+                if c.visible and c.type != "assign")
+    cut_feature.start(win, "extruded_cut")
+    face = [((0, 0, 20), (20, 0, 20), (20, 20, 20))]
+    win.view3d._pick_cb(dict(kind="face", pos=(10, 10, 20), dir=(0, 0, 1),
+                             tris=face), part)
+    tool = win.view3d.edit_tool
+    assert win._chosen_face == face
+    tool.place((5, 5))
+    tool.place((15, 12))
+    drag = win.view3d.edit_tool
+    assert win._chosen_face == face              # still, with the window
+    drag.ok()
+    assert not win._chosen_face

@@ -76,11 +76,9 @@ def apply(model, group, part, kind):
         # blind, DEPTH into the face (Reverse Direction: down -Z); one
         # node, no mirror (a simpler tree). Its depth is the user's to
         # set — Through All is a choice in Properties (End condition)
-        # Through All by default (the user) — a depth typed or dragged
-        # turns it blind (model.set_param), into the face either way
+        # (2026-11-01, the user: one side, blind, 10 mm by default)
         tool.params["height"] = DEPTH
         tool.params["reverse"] = True
-        tool.params["extent"] = "through_all"
     elif op == "rotate_extrude":
         outer = model.wrap_nodes([tool], "rotate")     # about sketch Y
         outer.params.update(x=-90.0, y=0.0, z=0.0)
@@ -160,6 +158,28 @@ def finish(window, group):
             except Exception:
                 pass
     return diff
+
+
+def paint_chosen_face(window, painter, project):
+    """The face chosen for a cut or boss, in green, while it is worked
+    on (2026-11-01, the user)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QPolygonF
+    tris = getattr(window, "_chosen_face", None)
+    if not tris:
+        return
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(60, 190, 80, 110))
+    for t in tris:
+        pts = [project(v) for v in t[:3]]
+        if all(p is not None and p[2] > 0 for p in pts):
+            painter.drawPolygon(QPolygonF(
+                [QPointF(p[0], p[1]) for p in pts]))
+
+
+def clear_chosen_face(window):
+    window._chosen_face = None
+    window.view3d.update()
 
 
 #: a face sketch for a cut or boss is drawn in the 3D view
@@ -269,6 +289,7 @@ def start(window, kind):
             # drawn ON the face, where the user is looking (2026-11-01,
             # the user: going to the 2D view and back loses them)
             from . import sketch3d
+            window._chosen_face = list(desc.get("tris") or [])
             view = window.view3d          # looking straight at the face
             yaw, pitch = face_sketch.camera_for(desc["dir"])
             view.user_moved = True

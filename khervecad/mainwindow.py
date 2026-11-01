@@ -87,6 +87,9 @@ class MainWindow(QMainWindow):
         self.view3d.overlay_painters = [
             lambda painter, project: cut_ghost.paint(self, painter,
                                                      project),
+            lambda painter, project: __import__(
+                "khervecad.cut_feature", fromlist=["x"]).paint_chosen_face(
+                    self, painter, project),
             lambda painter, project: sketch_dims3d.paint(self, painter,
                                                          project),
             lambda painter, project: plane_pick.paint(self, painter,
