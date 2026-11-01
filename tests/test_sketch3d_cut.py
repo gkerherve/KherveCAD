@@ -105,3 +105,53 @@ def test_what_was_drawn_can_be_seen(win, monkeypatch):
     tool.place((15, 12))
     assert len(tool._own()[0]) >= 4          # the rectangle's sides
     tool.finish()
+
+
+def test_the_cut_window_opens_and_dimensions_return(win, monkeypatch):
+    from khervecad import sketch_constrain_ui as ui
+    tool = _on_face(win, monkeypatch)
+    assert tool.panel is not None and not tool.panel.isHidden()
+    tool.place((5, 5))
+    tool.place((15, 12))
+    win._set_tool(ui.PREFIX + "dimension")
+    assert win.view3d.edit_tool is not tool          # measuring
+    win._set_tool("circle")
+    assert win.view3d.edit_tool is tool and tool.mode == "circle"
+    tool._set_end("blind")
+    tool._set_depth(3.0)
+    tool.panel.ok.click()
+    assert win.view3d.edit_tool is None and tool.panel is None
+    ext = next(n for n in win.model.root.walk()
+               if n.type == "linear_extrude" and n.params.get("reverse"))
+    assert ext.params["height"] == 3.0 and not ext.params.get("extent")
+
+
+def test_a_circle_at_a_sloped_faces_centre_follows_it(win, monkeypatch):
+    """The user's circle on the rib's slope: 40 -> 45 left it behind."""
+    from khervecad import face_outline, face_sketch, model_refs
+    tool = None
+    McpToolExecutor(win).execute("apply_code", {"code":
+        "rotate([90, 0, 0]) linear_extrude(height=10) "
+        "polygon(points=[[0, 0], [40, 0], [0, 30]]); // Rib\n"})
+    QApplication.processEvents()
+    m = win.model
+    part = next(c for c in m.root.children if c.visible and c.type != "assign")
+    poly = next(n for n in m.root.walk() if n.type == "polygon")
+    n = (30 / 50, 0.0, 40 / 50)                      # the slope's normal
+    g = face_sketch.make(win, part, (20, -5, 15), n, open_2d=False)
+    assert g.params.get(face_sketch.FACE_REF)
+    tool = sketch3d.Sketch3DTool(win, "circle")
+    tool.use_group(g)
+    cx, cy, kind = next(p for p in tool.info["points"]
+                        if p[2] == "face centre")
+    tool.place((cx, cy))
+    circle = tool.place((cx + 3, cy)) or g.children[0]
+    tool._end()
+    m.set_param(poly, "points", [[0, 0], [60, 0], [0, 30]])
+    QApplication.processEvents()
+    model_refs.refresh(win)
+    p = circle.params
+    w = face_sketch.to_world(g, float(p["x"]), float(p["y"]))
+    assert w[0] == pytest.approx(30, abs=0.01)
+    assert w[1] == pytest.approx(-5, abs=0.01)
+    assert w[2] == pytest.approx(15, abs=0.01)

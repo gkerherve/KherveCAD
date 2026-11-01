@@ -113,6 +113,8 @@ class Sketch3DTool:
         self.hover = None             # local point under the cursor
         self.target = None            # plane / face under the cursor
         self._press = None
+        self.panel = None             # the cut's window
+        self.depth = None             # blind depth; None = through all
         self.snapped = None           # (x, y, kind) under the cursor
         self.lit = []                 # model / sketch edges lit up
         self.info = {}                # the face's segments and points
@@ -126,6 +128,7 @@ class Sketch3DTool:
         v.setMouseTracking(True)
         v.setCursor(Qt.CrossCursor)
         v.setFocus(Qt.OtherFocusReason)
+        self.window._sketch3d_tool = self
         self._sync_button()
         self._say()
         v.update()
@@ -241,18 +244,69 @@ class Sketch3DTool:
             return near[1], near[2]
         return None
 
+    def resume(self):
+        """A dimension or relation finished: drawing again."""
+        if self.window._sketch3d_tool is self and \
+                self.view.edit_tool is None:
+            self.view.edit_tool = self
+            self.view.setMouseTracking(True)
+            self.view.update()
+
+    def discard(self):
+        """Cancel in the window: the sketch goes."""
+        g = self.group
+        self._end()
+        if g is not None and g.parent is not None:
+            self.window.model.remove_node(g)
+
+    def open_panel(self, label, cut=True):
+        """The feature's window, while it is being sketched: what to do,
+        how deep, OK makes it."""
+        from . import tool_panel
+        tr = language.tr
+        p = self.panel = tool_panel.ToolPanel(
+            self.view, tr(label), on_ok=lambda: self.finish(),
+            on_cancel=lambda: self.discard())
+        p.hint(tr("1. Choose a shape on the Sketch tab and draw it on the "
+                  "face.\n2. Smart Dimension sizes and places it.\n"
+                  "3. OK makes the feature."))
+        if cut:
+            p.choice("end", tr("End condition"),
+                     [("through", tr("Through all")), ("blind", tr("Blind"))],
+                     "through", self._set_end)
+            p.number("depth", tr("Depth"), 10.0, self._set_depth)
+            p.show_row("depth", False)
+        p.finish()
+        p.open()
+
+    def _set_end(self, value):
+        blind = value == "blind"
+        self.panel.show_row("depth", blind)
+        self.depth = self.panel.fields["depth"].value() if blind else None
+
+    def _set_depth(self, value):
+        self.depth = float(value)
+
     def tool_icon(self, tool):
         """A drawing icon of the Sketch tab was clicked."""
-        from . import sketch_tools
+        from . import constrain3d, sketch_constrain_ui, sketch_tools
         from .view2d import CIRCLE, LINE, RECT, SELECT
+        constrain3d.end(self.window)
+        self.resume()
+        if sketch_constrain_ui.handles(tool):
+            # Smart Dimension and the relations, on this sketch, in 3D
+            self.view.edit_tool = None
+            if constrain3d.start(self.window, tool):
+                return
+            self.view.edit_tool = self
         mode = {RECT: "rect", CIRCLE: "circle", LINE: "line",
                 sketch_tools.SLOT: "slot"}.get(tool)
         if mode:
             self.set_mode(mode)
         elif tool != SELECT:
             self.message(language.tr(
-                "Not on the 3D sketch yet: rectangle, circle, line and "
-                "slot are. Exit Sketch Mode, then dimension it."), 6000)
+                "Not on the 3D sketch yet: rectangle, circle, line, slot "
+                "and the dimensions and relations are."), 6000)
 
     def set_mode(self, mode):
         self.mode = mode
@@ -282,7 +336,14 @@ class Sketch3DTool:
 
     def _end(self):
         self.window._ref_force_planes = False
+        self.window._sketch3d_tool = None
+        from . import constrain3d
+        constrain3d.end(self.window)
         v = self.view
+        panel, self.panel = self.panel, None
+        if panel is not None:
+            panel.hide()
+            panel.deleteLater()
         if v.edit_tool is self:
             v.edit_tool = None
         v.setMouseTracking(False)
@@ -305,7 +366,14 @@ class Sketch3DTool:
         from . import cut_feature
         if g is not None and g.parent is not None and g.children and \
                 g.params.get(cut_feature.KEY):
-            return cut_feature.finish(self.window, g)    # cut it now
+            made = cut_feature.finish(self.window, g)    # cut it now
+            if self.depth is not None:
+                for ext in g.walk():
+                    if ext.type == "linear_extrude":
+                        self.window.model.set_param(ext, "extent", "")
+                        self.window.model.set_param(ext, "height",
+                                                    self.depth)
+            return made
         if g is None or g.parent is None:
             self.message(language.tr("Sketch in 3D ended."), 4000)
             return None

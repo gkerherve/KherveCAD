@@ -72,7 +72,7 @@ def _create_or_edit(win):
         finish(win)
         return
     if _in_3d(win):
-        win.view3d.edit_tool.finish()
+        win._sketch3d_tool.finish()
         return
     from . import normal_to
     if active(win):
@@ -83,9 +83,7 @@ def _create_or_edit(win):
 
 def _in_3d(win):
     """The tool drawing a sketch on a face in the 3D view, if running."""
-    from . import sketch3d
-    return isinstance(getattr(win.view3d, "edit_tool", None),
-                      sketch3d.Sketch3DTool)
+    return getattr(win, "_sketch3d_tool", None) is not None
 
 
 def sync_create(win):
@@ -247,8 +245,7 @@ def tool_chosen(win, tool):
     from . import constrain3d, sketch_constrain_ui
     if _in_3d(win):
         # the sketch icons drive the sketch being drawn in 3D
-        from . import sketch3d
-        win.view3d.edit_tool.tool_icon(tool)
+        win._sketch3d_tool.tool_icon(tool)
         return
     constrain3d.end(win)
     if active(win) and not sketching(win) and \

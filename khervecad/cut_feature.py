@@ -273,6 +273,7 @@ def start(window, kind):
             tool.use_group(group)
             window.view3d.edit_tool = tool
             tool.begin()
+            tool.open_panel(label, cut=kind not in BOSS)
             ribbon = getattr(window, "ribbon", None)
             if ribbon is not None:
                 ribbon.show_tab("sketch")

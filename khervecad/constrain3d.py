@@ -227,6 +227,10 @@ class Constrain3D:
         self._say(self._prompt())
 
     def exit(self):
+        tool = getattr(self.window, "_sketch3d_tool", None)
+        if tool is not None:      # back to the 3D sketch it came from
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(0, tool.resume)
         self.picks = []
         self.hover = None
 

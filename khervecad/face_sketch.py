@@ -29,6 +29,10 @@ import math
 KEY = "face_sketch"
 
 
+#: [x, y, z, nx, ny, nz]: the centre and normal of the face sketched on
+FACE_REF = "face_ref"
+
+
 def _unit(v):
     n = math.sqrt(sum(c * c for c in v)) or 1.0
     return [c / n for c in v]
@@ -164,6 +168,7 @@ def make(window, part, point, normal, open_2d=True):
     # the sketch's 0, 0 is the part's origin seen on the face (SolidWorks),
     # not where the face was clicked: its Position then says where things
     # really are, and dimensions to the origin read as the numbers shown
+    raw = point
     point = origin_on_plane(point, normal)
     group = model.add_node("union", dict(
         x=round(float(point[0]), 4), y=round(float(point[1]), 4),
@@ -171,9 +176,24 @@ def make(window, part, point, normal, open_2d=True):
     group.params[KEY] = True
     model.rename(group, "Sketch on " + getattr(part, "name", "face"))
     group._outline_part = part
+    remember_face(window, group, raw, normal)
     if open_2d:
         open_sketch(window, group)
     return group
+
+
+def remember_face(window, group, point, normal):
+    """The face this sketch stands on, by its centre and normal, so the
+    sketch can follow it when the model changes (model_refs.follow)."""
+    from . import anchors, sketch_section
+    try:
+        tris = sketch_section.built_before(window, group)
+        centre = anchors.face_centre(tris, point, normal)
+    except Exception:
+        centre = None
+    if centre is not None:
+        group.params[FACE_REF] = [round(float(v), 6) for v in
+                                  (*centre, *normal)]
 
 
 def origin_on_plane(point, normal):
@@ -202,6 +222,16 @@ def rebase(group):
     dx, dy = to_local(group, target)
     if abs(dx) < 1e-6 and abs(dy) < 1e-6:
         return False
+    if not shift(group, dx, dy):
+        return False
+    for i, k in enumerate(("x", "y", "z")):
+        group.params[k] = target[i]
+    return True
+
+
+def shift(group, dx, dy):
+    """Move the sketch's shapes and constraint points by (-dx, -dy) in
+    its frame. False, untouched, when a shape holds an expression."""
     shapes, conts = [], []
 
     def walk(node):
@@ -242,8 +272,6 @@ def rebase(group):
                 if isinstance(c.params.get(k), list):
                     c.params[k] = [[sh(v, i) for i, v in enumerate(pt)]
                                    for pt in c.params[k]]
-    for i, k in enumerate(("x", "y", "z")):
-        group.params[k] = target[i]
     return True
 
 

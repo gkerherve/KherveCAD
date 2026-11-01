@@ -309,7 +309,15 @@ def refresh_container(window, container):
             _LAST[container.id] = segs
         if segs:
             for r in refs:
-                if r["kind"] == "fix" and r.get("model") == "mid":
+                if r["kind"] == "fix" and r.get("model") == "centre":
+                    # the middle of the face: of that face, now
+                    from . import face_outline
+                    q = face_outline.centre_of(segs)
+                    p = tuple(r["at"])
+                    if q and math.hypot(q[0] - p[0], q[1] - p[1]) > SAME:
+                        r["at"] = [q[0], q[1]]
+                        moved = True
+                elif r["kind"] == "fix" and r.get("model") == "mid":
                     # the middle of a model edge: of that edge, now
                     e = match_edge(segs, r["edge"])
                     if e is None:
@@ -353,6 +361,63 @@ def refresh_container(window, container):
     return moved
 
 
+def follow(window, group):
+    """A face sketch stays on its face: the model changed, so the plane
+    is put back on it and its shapes keep their place from the face's
+    centre (2026-11-01, the user: a circle on the rib's slope stayed in
+    the air when the block was widened and the slope changed). True when
+    it moved. A sketch whose frame is under a transform stays as drawn."""
+    from . import anchors, face_sketch as fs, mesh, sketch_section
+    ref = group.params.get(fs.FACE_REF)
+    root = window._render_scope()[0]
+    iso = root if root is not window.model.root else None
+    m = mesh.ancestor_matrix(group, {}, stop=iso)
+    if any(abs(m[i][j] - (i == j)) > 1e-9 for i in range(4) for j in range(4)):
+        return False
+    tris = sketch_section.built_before(window, group)
+    seed, n0 = list(ref[:3]), list(ref[3:6])
+
+    def normal(t):
+        u = [t[1][i] - t[0][i] for i in range(3)]
+        v = [t[2][i] - t[0][i] for i in range(3)]
+        c = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
+             u[0] * v[1] - u[1] * v[0]]
+        L = math.sqrt(sum(x * x for x in c))
+        return [x / L for x in c] if L > 1e-12 else None
+    best = None
+    for t in tris:
+        nt = normal(t)
+        if nt is None or sum(a * b for a, b in zip(nt, n0)) < 0.7:
+            continue
+        mid = [sum(v[i] for v in t) / 3.0 for i in range(3)]
+        off = abs(sum((seed[i] - t[0][i]) * nt[i] for i in range(3)))
+        d = off * 5.0 + math.dist(mid, seed)
+        if best is None or d < best[0]:
+            best = (d, nt)
+    if best is None:
+        return False
+    n1 = best[1]
+    centre = anchors.face_centre(tris, seed, n1)
+    if centre is None:
+        return False
+    same = sum(a * b for a, b in zip(n1, n0)) > 1 - 1e-9 and \
+        math.dist(centre, seed) < 1e-5
+    if same:
+        return False
+    was = fs.to_local(group, seed)
+    group.params[fs.FACE_REF] = [round(float(v), 6) for v in (*centre, *n1)]
+    target = fs.origin_on_plane(centre, n1)
+    group.params.update(zip(("rx", "ry", "rz"), fs.euler_for(n1)))
+    group.params.update(zip(("x", "y", "z"),
+                            (round(float(v), 4) for v in target)))
+    now = fs.to_local(group, centre)
+    fs.shift(group, was[0] - now[0], was[1] - now[1])
+    for node in group.walk():
+        _LAST.pop(node.id, None)
+    window.model.node_changed.emit(group)
+    return True
+
+
 def refresh(window):
     """Every sketch's model references, after a model edit."""
     global _BUSY
@@ -361,6 +426,14 @@ def refresh(window):
     _BUSY = True
     try:
         root = window._render_scope()[0]
+        from . import face_sketch
+        for node in list(root.walk()):
+            if node.params.get(face_sketch.FACE_REF):
+                try:
+                    follow(window, node)
+                except Exception:          # never break an edit
+                    import traceback
+                    traceback.print_exc()
         for node in list(root.walk()):
             if node.children and _has_refs(node, root):
                 try:

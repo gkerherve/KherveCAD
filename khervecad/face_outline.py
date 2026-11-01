@@ -141,6 +141,25 @@ def snap_points(segs):
     return out
 
 
+def centre_of(segs):
+    """Area centre of the largest closed loop of the outline, or None."""
+    from . import drawing
+    best = None
+    for points, _s, closed in drawing._chains(list(segs)):
+        if not closed or len(points) < 3:
+            continue
+        a = cx = cy = 0.0
+        for i, p in enumerate(points):
+            q = points[(i + 1) % len(points)]
+            c = p[0] * q[1] - q[0] * p[1]
+            a += c
+            cx += (p[0] + q[0]) * c
+            cy += (p[1] + q[1]) * c
+        if abs(a) > 1e-9 and (best is None or abs(a) > best[0]):
+            best = (abs(a), cx / (3 * a), cy / (3 * a))
+    return (round(best[1], 6), round(best[2], 6)) if best else None
+
+
 # =================================================================== Qt
 def _face_triangles(group, tris):
     """The triangles of *tris* lying on *group*'s face, in its 2D frame,
@@ -229,6 +248,9 @@ def show(window, group, part):
     if not segs:
         segs = for_group(group, tris)
     points = snap_points(segs) + anchor_points(group, segs)
+    middle = centre_of(segs)
+    if middle is not None:
+        points.append((middle[0], middle[1], "face centre"))
     try:
         points += sketch_points(group, part)
     except Exception:                        # never stop the sketch
@@ -450,7 +472,12 @@ def pin(scene, model, node):
                                 abs((a[1] + b[1]) / 2 - pt[1]) < 1e-6),
                                None) if (round(pt[0], 6), round(pt[1], 6)) \
                         in middles or not dirs else None
-                    if mid is not None:
+                    centre = centre_of(segs) if segs else None
+                    if centre is not None and \
+                            abs(centre[0] - pt[0]) < 1e-5 and \
+                            abs(centre[1] - pt[1]) < 1e-5:
+                        row["model"] = "centre"
+                    elif mid is not None:
                         # the MIDDLE of a model edge: stays its middle
                         row["model"] = "mid"
                         row["edge"] = [round(v, 6) for v in
