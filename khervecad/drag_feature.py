@@ -71,9 +71,12 @@ def signed_height(ext):
 
 
 def _goes_down(ext):
-    """A cut (the extrude's own Reverse direction): its arrow points
-    INTO the part and pulling it that way deepens the cut (the user)."""
-    return ext.type == "linear_extrude" and bool(ext.params.get(REVERSE))
+    """Reversed, by its own Reverse direction or the mirror round it: the
+    arrow points the way it goes and pulling it that way goes deeper
+    (the user). A mirror's height was dragged from -h against +Z, so any
+    pull collapsed it to nothing."""
+    return ext.type == "linear_extrude" and \
+        (bool(ext.params.get(REVERSE)) or reversed_of(ext) is not None)
 
 
 def _num(v, default):

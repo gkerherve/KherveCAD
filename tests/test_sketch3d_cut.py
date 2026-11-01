@@ -202,3 +202,37 @@ def test_the_chosen_face_is_green_until_the_window_closes(win, monkeypatch):
     assert win._chosen_face == face              # still, with the window
     drag.ok()
     assert not win._chosen_face
+
+
+@pytest.mark.parametrize("how", ["param", "mirror"])
+def test_a_reversed_extrude_is_pulled_along_its_arrow(win, how):
+    from PyQt5.QtCore import QEvent, QPoint, QPointF, Qt
+    from PyQt5.QtGui import QMouseEvent
+    from khervecad import drag_feature
+    m = win.model
+    ext = m.add_node("linear_extrude", dict(height=10))
+    m.add_node("rect", dict(width=20, height=20), parent=ext)
+    if how == "param":
+        ext.params["reverse"] = True
+    else:
+        drag_feature.set_direction(m, ext, True)
+    QApplication.processEvents()
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    tool = drag_feature.DragFeature(win, ext)
+    scr = tool._screen()
+
+    def event(kind, x, y):
+        return QMouseEvent(kind, QPointF(x, y), Qt.LeftButton, Qt.LeftButton,
+                           Qt.NoModifier)
+    ax, ay = scr["a"][:2]
+    bx, by = scr["b"][:2]
+    assert tool.mouse_press(event(QEvent.MouseButtonPress, ax, ay))
+    tool.mouse_move(event(QEvent.MouseMove, ax + (bx - ax),
+                          ay + (by - ay)))           # along the arrow
+    deeper = tool.drag["value"]
+    assert deeper > 10
+    tool.mouse_move(event(QEvent.MouseMove, ax - (bx - ax) * 0.2,
+                          ay - (by - ay) * 0.2))     # back against it
+    assert tool.drag["value"] < 10
+    tool.drag = None
