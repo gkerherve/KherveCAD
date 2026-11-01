@@ -846,8 +846,23 @@ def overlap_container(window, nodes):
             # rectangle — the parts' outline closes into areas (a shape
             # SELECTED is extruded whole)
             shapes = shapes_of(c)
-            if any(n.type == "line" for n in shapes) or \
-                    (shapes and not nodes):
+            # a SLOT is a closed contour (the user's slot on the rib's
+            # slope, drawn from the face's edge: clipped to the face, its
+            # round end was never cut into the block) — only thin sketch
+            # lines need the model's edges to close
+            from . import cut_feature, slot2d
+
+            def loose(n):
+                try:
+                    return n.type == "line" and not slot2d.is_slot(n) and \
+                        float(n.params.get("width", 0.2) or 0.2) <= \
+                        cut_feature.THIN_LINE
+                except (TypeError, ValueError):
+                    return False
+            closed = [n for n in shapes if not loose(n)]
+            if any(loose(n) for n in shapes) or \
+                    (shapes and not nodes and not all(
+                        n.type == "line" for n in closed)):
                 from . import sketch_section
                 more, ghost = sketch_section.with_section(window, c,
                                                           shapes)

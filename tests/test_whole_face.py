@@ -374,3 +374,22 @@ def test_on_outline_needs_the_edge_on_the_model():
             ((0, 64), (0, 0))]
     assert model_refs._on_outline(segs, [0, 64, 0, 0])
     assert not model_refs._on_outline(segs, [16, 0, 16, 64])
+
+
+def test_a_slot_on_a_face_is_cut_whole_not_clipped_to_the_face(win):
+    """2026-11-01, the user's slot on the rib's slope, drawn from the
+    face's edge: it was split by the model's edges and its round end,
+    outside the face, never cut. A slot is a closed contour: no regions."""
+    from khervecad import face_sketch, sketch_regions
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code":
+                                 "cube([40, 30, 20]); // Block\n"})
+    QTest.qWait(50)
+    m = win.model
+    block = next(n for n in m.root.walk() if n.type == "cube")
+    g = face_sketch.make(win, block, (20, 15, 20), (0, 0, 1))
+    a = face_sketch.to_local(g, (40, 15, 20))
+    b = face_sketch.to_local(g, (30, 15, 20))
+    m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=6,
+                            slot=True), parent=g)
+    assert sketch_regions.overlap_container(win, []) is None
