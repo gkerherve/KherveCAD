@@ -371,7 +371,11 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
         """A line from *a* to *b* (sketch mm), drawn only where no
         solid stands in front of it (the user: a dimension must never
         show through the part, whatever plane its sketch is on)."""
-        n = SEG_SAMPLES if seen is not None else 1
+        # fewer rays while the view is being turned: they were the
+        # largest cost of a frame; the still picture gets them all
+        moving = getattr(window.view3d, "_mode", None) is not None
+        n = (MOVING_SAMPLES if moving else SEG_SAMPLES) \
+            if seen is not None else 1
         ps = [(a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n)
               for i in range(n + 1)]
         ok = [vis(m, p) for p in ps]
@@ -572,6 +576,7 @@ DRAG_PX = 4
 
 #: rays along each dimension line: it is drawn in pieces where seen
 SEG_SAMPLES = 16
+MOVING_SAMPLES = 3
 
 
 def press(window, pos):
