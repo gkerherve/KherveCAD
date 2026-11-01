@@ -172,7 +172,7 @@ def test_first_open_lays_out_dimensions_and_fills_the_title(bp):
     marks = [n for n in scene.notes() if n.KIND == "centre_mark"]
     assert len(marks) == 4
     shown = scene.display_fields()
-    assert shown["material"] == "PLA" and shown["mass"].endswith(" g")
+    assert shown["material"] == "Undefined" and not shown["mass"]
     assert bp.model.drawing and bp.model.drawing["views"]   # saved
 
 
@@ -310,6 +310,7 @@ def test_sections_details_pictures_and_the_parts_list(bp):
 
 def test_the_material_sets_the_mass(bp):
     title = bp.scene.title
+    bp.set_field(title, "material", "PLA")
     pla = bp.scene.display_fields()["mass"]
     bp.set_field(title, "material", "Aluminium")
     alu = bp.scene.display_fields()["mass"]

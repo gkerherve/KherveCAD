@@ -151,7 +151,7 @@ def test_mass_readout_follows_material(window, app):
     ex.execute("apply_code", {"code": "cube(10);"})
     app.processEvents()
     text = massbar.update(window)
-    assert "1.24 g" in text and "PLA" in text
+    assert "1 cm³" in text and "undefined" in text and " g " not in text
     massbar.set_material(window, "Steel")
     assert "7.85 g" in massbar.update(window)
     assert window.model.root.params["mass_material"] == "Steel"
@@ -175,7 +175,7 @@ def test_a_flat_sketch_adds_no_mass(window, app):
           if n.params.get("face_sketch")][0]
     window.model.add_node("rect", dict(width=30, height=30), parent=sk)
     app.processEvents()
-    assert "1.24 g" in massbar.update(window)
+    assert "Volume 1 cm³" in massbar.update(window)
 
 
 def test_mcp_reference_geometry(window, app):

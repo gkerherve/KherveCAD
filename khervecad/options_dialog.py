@@ -345,7 +345,7 @@ class OptionsDialog(QDialog):
             "The material the status bar's mass, the Blueprint title "
             "block and the bill of materials weigh the parts in.")
         self.material = QComboBox()
-        for name in analysis.MATERIALS:
+        for name in analysis.choices():
             self.material.addItem(tr(name), name)
         self.material.setCurrentIndex(max(0, self.material.findData(
             massbar.material_of(self.win.model))))

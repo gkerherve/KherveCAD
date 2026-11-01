@@ -3678,9 +3678,12 @@ TOOLS = [
         "input_schema": _obj({
             "node_ids": _IDS,
             "material": {"type": "string",
-                         "description": "PLA (default), PETG, ABS, ASA, "
-                                        "TPU, Nylon, Resin, Aluminium, "
-                                        "Steel, Brass, Titanium."},
+                         "description": "Undefined (default: no mass), or "
+                                        "e.g. Steel, Stainless steel (304), "
+                                        "Aluminium 6061, Copper, Bronze, "
+                                        "Iron, Titanium, Brick, Cement, "
+                                        "Wood, PLA, ABS. An unknown name "
+                                        "is answered with the full list."},
             "price_per_kg": {"type": "number",
                              "description": "Default 20."},
         }),

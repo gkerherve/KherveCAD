@@ -79,9 +79,10 @@ def mass_html(props, material, price, currency, unit="mm") -> str:
          f"{[round(v, 2) for v in props['min']]} to "
          f"{[round(v, 2) for v in props['max']]} {u}"),
         (language.tr("Mass ({material}, solid)").format(material=material),
-         f"{_fmt(grams, 1)} g"),
+         f"{_fmt(grams, 1)} g" if material in analysis.MATERIALS
+         else language.tr("choose a material")),
     ]
-    if units.printable(unit):
+    if units.printable(unit) and material in analysis.MATERIALS:
         rows += [
             (language.tr("Material cost"),
              language.tr("{currency}{cost} at {currency}{price:g}/kg").format(
@@ -180,7 +181,7 @@ class AnalysisDialog(QDialog):
         if kind == "mass":
             form = QFormLayout()
             self.material = QComboBox()
-            self.material.addItems(list(analysis.MATERIALS))
+            self.material.addItems(analysis.choices())
             self.material.setCurrentText(str(settings.value(
                 "analysis/material", analysis.DEFAULT_MATERIAL)))
             self.price = QDoubleSpinBox()

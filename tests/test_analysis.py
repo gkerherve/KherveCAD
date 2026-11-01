@@ -234,3 +234,14 @@ def test_surface_samples_respect_a_box_and_a_spacing():
                                     max_angle=10,
                                     within=([0, 0, 0], [5, 5, 5])) == []
     assert analysis.surface_samples([], 10) == []
+
+
+def test_engineering_materials_and_undefined():
+    assert analysis.DEFAULT_MATERIAL == analysis.UNDEFINED
+    assert analysis.mass(1000.0, analysis.UNDEFINED) == 0.0
+    for name in ("Stainless steel", "Steel", "Bronze", "Copper", "Iron",
+                 "Cement", "Brick", "Wood", "Titanium", "Aluminium 6061"):
+        assert analysis.MATERIALS[name] > 0
+    assert analysis.appearance_of("Stainless steel") == "Metal"
+    assert analysis.appearance_of("Brick") == "Brick"
+    assert analysis.appearance_of(analysis.UNDEFINED) is None

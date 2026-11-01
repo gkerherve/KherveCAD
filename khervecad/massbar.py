@@ -27,10 +27,10 @@ DELAY_MS = 500
 def material_of(model):
     from . import analysis
     m = model.root.params.get(KEY) or analysis.DEFAULT_MATERIAL
-    return m if m in analysis.MATERIALS else analysis.DEFAULT_MATERIAL
+    return m if m in analysis.MATERIALS else analysis.UNDEFINED
 
 
-def readout(tris, unit="mm", material="PLA"):
+def readout(tris, unit="mm", material=None):
     """(text, grams, cm³) for a closed world mesh in document units."""
     from . import analysis, units
     if not tris:
@@ -42,6 +42,9 @@ def readout(tris, unit="mm", material="PLA"):
     mm3 = vol * units.to_mm(unit) ** 3
     grams = analysis.mass(mm3, material)
     cm3 = mm3 / 1000.0
+    if material not in analysis.MATERIALS:
+        return (f"{language.tr('Volume')} {cm3:.3g} cm³ · "
+                f"{language.tr('Material undefined')}", 0.0, cm3)
     if grams >= 1000:
         mass = f"{grams / 1000:.3g} kg"
     elif grams >= 0.01:
@@ -134,16 +137,27 @@ def set_material(window, material):
     update(window)
 
 
+def fill_menu(menu, now, pick):
+    """Undefined, then a submenu per family with the densities."""
+    from . import analysis
+
+    def add(where, name, text):
+        act = where.addAction(text)
+        act.setCheckable(True)
+        act.setChecked(name == now)
+        act.triggered.connect(lambda _=False, n=name: pick(n))
+    add(menu, analysis.UNDEFINED, language.tr(analysis.UNDEFINED))
+    menu.addSeparator()
+    for group, names in analysis.GROUPS.items():
+        sub = menu.addMenu(language.tr(group))
+        for name, density in names.items():
+            add(sub, name, f"{language.tr(name)}  ({density:g} g/cm³)")
+
+
 def choose(window):
     from PyQt5.QtGui import QCursor
     from PyQt5.QtWidgets import QMenu
-    from . import analysis
     menu = QMenu(window)
-    now = material_of(window.model)
-    for name, density in analysis.MATERIALS.items():
-        act = menu.addAction(f"{language.tr(name)}  ({density:g} g/cm³)")
-        act.setCheckable(True)
-        act.setChecked(name == now)
-        act.triggered.connect(lambda _=False, n=name:
-                              set_material(window, n))
+    fill_menu(menu, material_of(window.model),
+              lambda n: set_material(window, n))
     menu.exec_(QCursor.pos())

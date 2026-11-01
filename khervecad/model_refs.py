@@ -381,6 +381,10 @@ def adopt_container(window, container):
     The number of rows adopted."""
     from . import sketch_constraints as sc
     n = _repair(container)
+    # an outline saved with a later cut in it heals when the sketch opens
+    got = plan(container, window._render_scope()[0])
+    if got is not None and got[2] is None:
+        _update_section(window, container)
     try:
         segs0 = outline(window, container)
     except Exception:

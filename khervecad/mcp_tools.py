@@ -3291,9 +3291,9 @@ class McpToolExecutor:
         from . import analysis
         nodes, tris, approx = self._check_nodes(params)
         material = str(params.get("material") or analysis.DEFAULT_MATERIAL)
-        if material not in analysis.MATERIALS:
+        if material not in analysis.choices():
             raise ToolError("Unknown material. Choose one of: "
-                            + ", ".join(analysis.MATERIALS))
+                            + ", ".join(analysis.choices()))
         price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
         p = analysis.mass_properties(tris)
         unit = self._unit()
@@ -3309,7 +3309,8 @@ class McpToolExecutor:
                "max": [round(v, 3) for v in p["max"]],
                "size": [round(v, 3) for v in p["size"]],
                "material": material,
-               "mass_g": (round(grams, 2) if abs(grams) >= 0.01
+               "mass_g": (None if material == analysis.UNDEFINED
+                          else round(grams, 2) if abs(grams) >= 0.01
                           else units.significant(grams)),
                "price_per_kg": price,
                "approximate": approx}

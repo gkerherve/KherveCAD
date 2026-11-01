@@ -119,6 +119,10 @@ def _parts(tree):
 
 
 def material_text(tree):
+    from . import analysis, massbar
+    chosen = tree.model.root.params.get(massbar.KEY)
+    if chosen in analysis.MATERIALS:
+        return language.tr(chosen)
     found = set()
     for n in _parts(tree):
         found.add(n.params.get("material") if n.type == "color"
@@ -139,10 +143,15 @@ def fixed_menu(tree, item, pos):
     from PyQt5.QtWidgets import QMenu
     menu = QMenu(tree)
     if role == "material":
+        from . import massbar
         from .model import MATERIALS
+        massbar.fill_menu(menu, massbar.material_of(tree.model),
+                          lambda m: set_physical(tree, m))
+        menu.addSeparator()
+        looks = menu.addMenu(language.tr("Appearance only"))
         for m in MATERIALS:
-            menu.addAction(language.tr(m),
-                           lambda _=False, m=m: set_material(tree, m))
+            looks.addAction(language.tr(m),
+                            lambda _=False, m=m: set_material(tree, m))
     elif role.startswith("plane:"):
         menu.addAction(language.tr("Sketch on this plane"),
                        lambda: sketch_on(tree, role[6:]))
@@ -158,6 +167,23 @@ def fixed_menu(tree, item, pos):
         return True
     menu.exec_(tree.viewport().mapToGlobal(pos))
     return True
+
+
+def set_physical(tree, material):
+    """What the part IS made of: its mass, and the look that goes with
+    it (its colour kept). Undefined leaves the look alone."""
+    from . import analysis, massbar
+    root = tree.model.root
+    if material in analysis.MATERIALS:
+        root.params[massbar.KEY] = material
+    else:
+        root.params.pop(massbar.KEY, None)
+    tree.model.node_changed.emit(root)
+    look = analysis.appearance_of(material)
+    if look:
+        set_material(tree, look)
+    else:
+        tree.rebuild()
 
 
 def set_material(tree, material):

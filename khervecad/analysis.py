@@ -28,12 +28,98 @@ import math
 from collections import Counter
 
 #: g/cm³
-MATERIALS = {
-    "PLA": 1.24, "PETG": 1.27, "ABS": 1.04, "ASA": 1.07, "TPU": 1.21,
-    "Nylon": 1.14, "Resin": 1.10, "Aluminium": 2.70, "Steel": 7.85,
-    "Brass": 8.40, "Titanium": 4.43,
+#: engineering materials, g/cm³ (2026-11-01, the user: SolidWorks' kinds,
+#: not only print plastics). Not the surfaces of model.MATERIALS, which
+#: are how a part LOOKS.
+GROUPS = {
+    "Steel": {
+        "Steel": 7.85, "Plain carbon steel": 7.80, "Mild steel (AISI 1020)": 7.90,
+        "Medium carbon steel (AISI 1045)": 7.85, "Alloy steel": 7.70,
+        "Alloy steel (AISI 4340)": 7.85, "Cast carbon steel": 7.80,
+        "Tool steel": 7.80, "Galvanised steel": 7.85,
+        "Stainless steel": 8.00, "Stainless steel (304)": 8.00,
+        "Stainless steel (316)": 8.00, "Stainless steel (430)": 7.70,
+    },
+    "Iron": {
+        "Iron": 7.87, "Cast iron": 7.20, "Grey cast iron": 7.20,
+        "Ductile iron": 7.10, "Malleable iron": 7.30, "Wrought iron": 7.70,
+    },
+    "Aluminium": {
+        "Aluminium": 2.70, "Aluminium 1060": 2.70, "Aluminium 2024": 2.78,
+        "Aluminium 5052": 2.68, "Aluminium 6061": 2.70,
+        "Aluminium 6063": 2.70, "Aluminium 7075": 2.81,
+        "Cast aluminium (A356)": 2.68,
+    },
+    "Copper alloys": {
+        "Copper": 8.96, "Brass": 8.40, "Bronze": 8.80,
+        "Tin bearing bronze": 8.80, "Aluminium bronze": 7.80,
+        "Phosphor bronze": 8.80, "Beryllium copper": 8.25,
+    },
+    "Other metals": {
+        "Titanium": 4.51, "Titanium Ti-6Al-4V": 4.43, "Nickel": 8.90,
+        "Inconel 718": 8.19, "Monel 400": 8.80, "Magnesium": 1.74,
+        "Zinc": 7.13, "Lead": 11.34, "Tin": 7.30, "Tungsten": 19.30,
+        "Molybdenum": 10.28, "Cobalt": 8.90, "Gold": 19.30, "Silver": 10.50,
+        "Platinum": 21.45,
+    },
+    "Plastics": {
+        "ABS": 1.04, "ABS/PC": 1.07, "Acrylic (PMMA)": 1.18,
+        "Polycarbonate": 1.20, "Nylon": 1.14, "Nylon 6/6": 1.14,
+        "Acetal (POM)": 1.41, "PBT": 1.31, "HDPE": 0.95, "LDPE": 0.92,
+        "Polypropylene": 0.91, "Polystyrene": 1.05, "PVC": 1.38,
+        "PTFE": 2.20, "PEEK": 1.32, "Epoxy": 1.20, "GFRP (fibreglass)": 1.85,
+        "CFRP (carbon fibre)": 1.60,
+    },
+    "3D printing": {
+        "PLA": 1.24, "PETG": 1.27, "ASA": 1.07, "TPU": 1.21, "Resin": 1.10,
+    },
+    "Rubber & foam": {
+        "Rubber": 1.10, "Silicone": 1.10, "EPDM rubber": 1.15,
+        "PU foam": 0.04, "Elastomeric foam": 0.065,
+    },
+    "Building": {
+        "Cement": 1.50, "Concrete": 2.40, "Brick": 1.90, "Mortar": 2.10,
+        "Plaster": 1.10, "Stone": 2.60, "Granite": 2.70, "Marble": 2.70,
+        "Limestone": 2.50, "Sandstone": 2.30, "Slate": 2.80,
+    },
+    "Wood": {
+        "Wood": 0.60, "Balsa": 0.16, "Beech": 0.72, "Cedar": 0.38,
+        "Mahogany": 0.55, "Maple": 0.65, "Oak": 0.75, "Pine": 0.50,
+        "Teak": 0.65, "Plywood": 0.60, "MDF": 0.75,
+    },
+    "Glass & ceramic": {
+        "Glass": 2.50, "Borosilicate glass": 2.23, "Fused silica": 2.20,
+        "Ceramic": 2.40, "Porcelain": 2.40, "Alumina": 3.90,
+    },
 }
-DEFAULT_MATERIAL = "PLA"
+MATERIALS = {name: d for group in GROUPS.values()
+             for name, d in group.items()}
+#: no material chosen: the volume is known, the mass is not
+UNDEFINED = "Undefined"
+DEFAULT_MATERIAL = UNDEFINED
+
+
+def choices():
+    """Every name a material may be given, Undefined first."""
+    return [UNDEFINED] + list(MATERIALS)
+
+
+def appearance_of(material):
+    """How a part of *material* looks (model.MATERIALS), or None."""
+    group = next((g for g, names in GROUPS.items() if material in names),
+                 None)
+    if material in ("Gold", "Copper", "Brick", "Concrete", "Stone",
+                    "Marble", "Slate", "Plaster", "Glass", "Rubber"):
+        return material
+    if material == "Cement":
+        return "Concrete"
+    return {"Steel": "Metal", "Iron": "Metal", "Aluminium": "Metal",
+            "Copper alloys": "Metal", "Other metals": "Metal",
+            "Plastics": "Plastic", "3D printing": "Plastic",
+            "Rubber & foam": "Rubber", "Building": "Stone",
+            "Wood": "Matte", "Glass & ceramic": "Clay"}.get(group)
+
+
 DEFAULT_PRICE = 20.0                     # per kg
 DEFAULT_CURRENCY = "€"
 
@@ -120,8 +206,9 @@ def mass_properties(tris) -> dict:
 
 
 def mass(volume_mm3: float, material: str = DEFAULT_MATERIAL) -> float:
-    """Grams, solid (a print with infill weighs less)."""
-    return volume_mm3 / 1000.0 * MATERIALS.get(material, MATERIALS["PLA"])
+    """Grams, solid (a print with infill weighs less); 0 for a material
+    with no density (Undefined)."""
+    return volume_mm3 / 1000.0 * MATERIALS.get(material, 0.0)
 
 
 def cost(grams: float, price_per_kg: float = DEFAULT_PRICE) -> float:

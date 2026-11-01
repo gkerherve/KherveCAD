@@ -344,7 +344,7 @@ class PropertiesPanel(QWidget):
         if kind == "material":
             combo = QComboBox()
             combo.setEditable(True)
-            combo.addItems(list(analysis.MATERIALS))
+            combo.addItems(analysis.choices())
             combo.setCurrentText(str(value or ""))
             combo.lineEdit().editingFinished.connect(
                 lambda: commit(combo.currentText()))
@@ -1148,7 +1148,7 @@ class BlueprintWindow(QMainWindow):
             f = self.scene.fields
             if total and not str(f.get("mass") or "").strip():
                 f["mass"] = f"{total:.3g} kg"
-            if f.get("material") in (None, "", "PLA"):
+            if f.get("material") in (None, "", "PLA", analysis.UNDEFINED):
                 f["material"] = "As parts list"
             self.scene.refresh_title()
         self.commit("Add parts list")
