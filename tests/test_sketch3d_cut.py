@@ -126,6 +126,27 @@ def test_a_3d_line_is_a_sketch_line_that_closes_with_the_edges(win,
     assert asked == [True]
 
 
+def test_lines_ending_on_the_edge_close_an_area_with_it(win, monkeypatch):
+    """Three lines from the block's edge and back cut out exactly that."""
+    from khervecad import face_sketch as fs, sketch_regions as sr
+    tool = _on_face(win, monkeypatch)
+    g = tool.group
+    tool.set_mode("line")
+    for p in ((25, 0), (25, 12), (15, 12), (15, 0)):
+        tool.place(fs.to_local(g, (p[0], p[1], 20)))
+    tool.finish()
+    keys = win.view3d._pick_groups
+    assert len(keys) == 2
+    cb = win.view3d._pick_cb
+    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 13][0]
+    cb({"kind": "face"}, area)
+    cb(None, None)
+    QApplication.processEvents()
+    hits = McpToolExecutor(win).execute("probe_surface", {
+        "from": [20, 6, 50], "direction": [0, 0, -1]})["hits"]
+    assert not any(abs(h["point"][2] - 20) < 1e-3 for h in hits)
+
+
 def test_the_extrude_window_opens_on_the_first_shape(win, monkeypatch):
     """The window the user already knows, not another one."""
     from khervecad import drag_feature, extrude_panel

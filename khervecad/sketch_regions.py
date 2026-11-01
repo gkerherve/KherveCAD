@@ -237,6 +237,7 @@ def line_loops(lines):
 
 
 REST = 0.5            # mm: a line end this near a shape rests on it
+ON_EDGE = 0.1         # mm: the same from inside: past sketch_section.GROW
 
 
 def _chains(lines):
@@ -1204,11 +1205,14 @@ def arrangement(segs, loose, inside=None):
             continue
         for k in (0, 1):
             p, o = ends[i][k], ends[i][1 - k]
-            if inside is not None and inside(p):
-                continue
+            within = inside is not None and inside(p)
             ln = math.dist(p, o)
             d = ((p[0] - o[0]) / ln, (p[1] - o[1]) / ln)
-            ray = (p, (p[0] + d[0] * REST, p[1] + d[1] * REST))
+            # (inside: only straight on, and only over the part's outline
+            # being grown: a line drawn ON the part's edge is 0.05 inside
+            # it, and with its stub dropped closed nothing, the user's)
+            reach = ON_EDGE if within else REST
+            ray = (p, (p[0] + d[0] * reach, p[1] + d[1] * reach))
             best = None
             for j in range(n):
                 if j == i:
@@ -1218,10 +1222,12 @@ def arrangement(segs, loose, inside=None):
                     best = (hit[0], j, hit[1])
             if best is not None:
                 t, j, u = best
-                q = (p[0] + d[0] * REST * t, p[1] + d[1] * REST * t)
+                q = (p[0] + d[0] * reach * t, p[1] + d[1] * reach * t)
                 if math.dist(p, q) > SNAP:
                     ends[i][k] = q
                     cuts[j].append(u)
+                continue
+            if within:
                 continue
             near = None
             for j in range(n):
