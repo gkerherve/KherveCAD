@@ -393,3 +393,30 @@ def test_a_slot_on_a_face_is_cut_whole_not_clipped_to_the_face(win):
     m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=6,
                             slot=True), parent=g)
     assert sketch_regions.overlap_container(win, []) is None
+
+
+def test_deleting_a_cuts_sketch_unwraps_its_difference(win):
+    """The user's slot sketch deleted: the Difference and Body the cut
+    made went too, so nothing is left cutting nothing."""
+    from khervecad import delete_ui
+    from khervecad.extrude_panel import CUT_KEY
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code":
+                                 "cube([40, 30, 20]); // Block\n"})
+    QTest.qWait(50)
+    m = win.model
+    block = next(n for n in m.root.walk() if n.type == "cube")
+    top = block
+    while top.parent is not m.root:
+        top = top.parent
+    body = m.wrap_nodes([top], "union")
+    body = body if body is not None else top.parent
+    m.rename(body, "Body")
+    sk = m.add_node("cube", dict(size=5), parent=m.root)
+    d = m.wrap_nodes([body, sk], "difference")
+    d = d if d is not None else body.parent
+    d.params[CUT_KEY] = True
+    delete_ui.delete_nodes(None, m, [sk])
+    assert not any(n.type == "difference" or n.name == "Body"
+                   for n in m.root.walk())
+    assert block.parent is not None

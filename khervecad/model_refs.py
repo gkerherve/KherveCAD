@@ -120,8 +120,13 @@ def outline(window, container):
     if got is None:
         return None
     g, own, body = got
+    # only what was built BEFORE this feature: a slot cut later across
+    # the rib went into its outline as a hole, and the rib kept a notch
+    # (and two lines on its face) after the slot was deleted
+    kids = list(root.children)
+    upto = kids.index(own) if own in kids else len(kids)
     tris = [t for n, ts in meshedit_ui._parts(window) if n is not own
-            for t in ts]
+            and (n not in kids or kids.index(n) < upto) for t in ts]
     if body is not None:
         iso = root if root is not window.model.root else None
         # the body ALONE, uncut: picked out of its Difference by a

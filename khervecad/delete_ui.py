@@ -72,8 +72,31 @@ def delete_nodes(parent, model, nodes):
     if choice == CANCEL:
         return choice
     for node in nodes:
+        holders = []
+        probe = node.parent
+        while probe is not None:
+            holders.append(probe)
+            probe = probe.parent
         if choice == KEEP and node.is_container() and node.children:
             model.ungroup(node)
         else:
             model.remove_node(node)
+        _drop_empty_cuts(model, holders)
     return choice
+
+
+def _drop_empty_cuts(model, holders):
+    """A cut's sketch deleted: the Difference the cut made (and the
+    "Body" group it put round the part) is unwrapped, so the part is as
+    before the cut — left behind, it cut nothing and stopped the sketches
+    following the model (the user's rib kept the slot's notch)."""
+    from .extrude_panel import CUT_KEY
+    for d in holders:
+        if d.parent is None or d.type != "difference" or \
+                not d.params.get(CUT_KEY) or len(d.children) != 1:
+            continue
+        body = d.children[0]
+        model.ungroup(d)
+        if body.type == "union" and body.name == "Body" and \
+                body.parent is not None:
+            model.ungroup(body)
