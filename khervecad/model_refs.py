@@ -361,6 +361,93 @@ def refresh_container(window, container):
     return moved
 
 
+def sketch_matrix(window, cont):
+    """numpy 4x4: *cont*'s sketch frame to the scope's world."""
+    import numpy as np
+    from . import mesh
+    root = window._render_scope()[0]
+    iso = root if root is not window.model.root else None
+    with window._isolated_frame(iso):
+        a = np.array(mesh.ancestor_matrix(cont, {}, stop=iso), float)
+        b = np.array(mesh.node_matrix(cont, {}), float)
+    return a @ b
+
+
+def _source_world(window, source):
+    """World points of a reference's source: a shape of another sketch."""
+    import numpy as np
+    from . import sketch_constraints as sc
+    name, entity = source
+    node = next((n for n in window.model.root.walk() if n.name == name), None)
+    if node is None or node.parent is None:
+        return None
+    try:
+        got = sc._line(node, entity, {}) if entity[0] in "le" and \
+            entity != "c" else [sc._point(node, entity, {})]
+    except (KeyError, ValueError, IndexError):
+        return None
+    m = sketch_matrix(window, node.parent)
+    return [(m @ np.array([p[0], p[1], 0.0, 1.0]))[:3].tolist() for p in got]
+
+
+def follow_references(window, cont):
+    """Reference points and edges copied from elsewhere stay on what they
+    were copied from (2026-11-01, the user: a dimension to the plate's top
+    must move with the top): another sketch's shape by its name, a model
+    corner as the nearest vertex of what was built before. True if moved."""
+    import numpy as np
+    from . import sketch_constraints as sc, sketch_section
+    refs = [c for c in cont.children
+            if c.params.get("ref_source") or c.params.get("ref_world")]
+    if not refs:
+        return False
+    inv = np.linalg.inv(sketch_matrix(window, cont))
+    verts = None
+    rows = sc.rows(cont)
+    moved = False
+    for node in refs:
+        world = None
+        if node.params.get("ref_source"):
+            world = _source_world(window, node.params["ref_source"])
+        else:
+            if verts is None:
+                tris = sketch_section.built_before(window, cont)
+                verts = np.array(tris, float).reshape(-1, 3) if tris else None
+            if verts is not None and len(verts):
+                world = [verts[np.argmin(((verts - np.array(p)) ** 2)
+                                         .sum(axis=1))].tolist()
+                         for p in node.params["ref_world"]]
+                node.params["ref_world"] = [[round(v, 6) for v in p]
+                                            for p in world]
+        if not world:
+            continue
+        loc = [tuple(round(float(v), 6) for v in
+                     (inv @ np.array([*p, 1.0]))[:2]) for p in world]
+        if node.type == "circle":
+            pairs = [("c", ("x", "y"), loc[0])]
+        else:
+            pairs = [("p1", ("x1", "y1"), loc[0]),
+                     ("p2", ("x2", "y2"), loc[-1])]
+        for end, keys, q in pairs:
+            old = (float(node.params[keys[0]]), float(node.params[keys[1]]))
+            if math.hypot(q[0] - old[0], q[1] - old[1]) <= SAME:
+                continue
+            node.params[keys[0]], node.params[keys[1]] = q
+            ref = sc.ref_of(cont, node, end)
+            for r in rows:
+                if r.get("kind") == "fix" and r.get("refs") == [ref]:
+                    r["at"] = [q[0], q[1]]
+            moved = True
+    if moved:
+        cont.params[sc.KEY] = rows
+        try:
+            sc.solve(cont, rows, env=sc._env(window.model))
+        except Exception:
+            pass
+        window.model.node_changed.emit(cont)
+    return moved
+
+
 def follow(window, group):
     """A face sketch stays on its face: the model changed, so the plane
     is put back on it and its shapes keep their place from the face's
@@ -412,8 +499,13 @@ def follow(window, group):
     group.params.update(zip(("rx", "ry", "rz"), fs.euler_for(n1)))
     group.params.update(zip(("x", "y", "z"),
                             (round(float(v), 4) for v in target)))
-    now = fs.to_local(group, centre)
-    fs.shift(group, was[0] - now[0], was[1] - now[1])
+    if sum(a * b for a, b in zip(n1, n0)) <= 1 - 1e-9:
+        # the plane TURNED: shapes keep their place from the face's centre.
+        # A face that only grew or shrank moves nothing: shifting by its
+        # centre threw every square on it (the user: 64 -> 60 moved one
+        # 8.8 mm, not the 4 of its dimension)
+        now = fs.to_local(group, centre)
+        fs.shift(group, was[0] - now[0], was[1] - now[1])
     for node in group.walk():
         _LAST.pop(node.id, None)
     window.model.node_changed.emit(group)
@@ -433,6 +525,14 @@ def refresh(window):
             if node.params.get(face_sketch.FACE_REF):
                 try:
                     follow(window, node)
+                except Exception:          # never break an edit
+                    import traceback
+                    traceback.print_exc()
+        for node in list(root.walk()):
+            if any(c.params.get("ref_source") or c.params.get("ref_world")
+                   for c in node.children):
+                try:
+                    follow_references(window, node)
                 except Exception:          # never break an edit
                     import traceback
                     traceback.print_exc()

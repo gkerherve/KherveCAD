@@ -391,3 +391,47 @@ def test_the_tool_window_is_a_real_window(win):
     p = tool_panel.ToolPanel(win.view3d, "Test")
     assert p.isWindow() and p.windowFlags() & Qt.Tool
     p.deleteLater()
+
+
+def test_a_square_dimensioned_to_a_moved_top_moves_with_it(win):
+    """64 -> 60 must move the square 4 mm, and resizing the face under
+    it must not throw it (the user)."""
+    from khervecad import (constrain3d, face_sketch, model_refs,
+                           sketch_constraints as sc)
+    m = win.model
+    obj = m.add_node("component", {})
+    obj.visible = True
+    plate = m.add_node("cube", dict(width=64, depth=16, height=64), parent=obj)
+    win.builder.open_component(obj)
+    QApplication.processEvents()
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    g = face_sketch.make(win, plate, (32, 0, 32), (0, -1, 0), open_2d=False)
+    ext = m.add_node("linear_extrude", dict(height=5), parent=g)
+    was = g.params["y"]
+    # local coords of the top corner, and a square 10 below it
+    lx, ly = face_sketch.to_local(g, (64, 0, 64))
+    sq = m.add_node("rect", dict(x=lx - 10, y=ly - 20, width=10, height=10),
+                    parent=ext)
+    QApplication.processEvents()
+    win.view2d.scene().ask_value = lambda k, v: "10"
+    assert constrain3d.start(win, "con_dimension")
+    tool = win.view3d.edit_tool
+    ref = tool._add_reference(ext, "point", [(lx, ly)],
+                              dict(ref_world=[[64.0, 0.0, 64.0]]))
+    sc.add(m, ext, "distance", [sc.ref_of(ext, sq, "v2"),
+                                sc.ref_of(ext, ref[0], "c")], 14.1421)
+    before = face_sketch.to_world(g, sq.params["x"], sq.params["y"])
+    constrain3d.end(win)
+    plate.params["height"] = 60
+    m.node_changed.emit(plate)
+    QApplication.processEvents()
+    model_refs.refresh(win)
+    after = face_sketch.to_world(g, sq.params["x"], sq.params["y"])
+    assert g.params["y"] == pytest.approx(was)
+    assert ref[0].params["ref_world"][0][2] == pytest.approx(60)
+    # it keeps its distance to the corner that came 4 lower
+    refs = [sc.ref_of(ext, sq, "v2"), sc.ref_of(ext, ref[0], "c")]
+    assert sc.measure(ext, "distance", refs) == pytest.approx(14.1421,
+                                                              abs=0.01)
+    assert after != before

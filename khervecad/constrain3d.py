@@ -211,18 +211,21 @@ class Constrain3D:
     def _in_sketch(self, cont, world):
         """World point -> (x, y) in *cont*'s sketch, along its normal."""
         import numpy as np
-        from . import mesh
-        root = self.window._render_scope()[0]
-        iso = root if root is not self.window.model.root else None
-        with self.window._isolated_frame(iso):
-            m = _mul(mesh.ancestor_matrix(cont, {}, stop=iso),
-                     mesh.node_matrix(cont, {}))
-        p = np.linalg.inv(np.array(m, float)) @ np.array([*world, 1.0])
+        from . import model_refs
+        p = np.linalg.inv(model_refs.sketch_matrix(self.window, cont)) @ \
+            np.array([*world, 1.0])
         return round(float(p[0]), 6), round(float(p[1]), 6)
 
-    def _add_reference(self, cont, kind, pts):
-        """A fixed construction copy in *cont*: a pick, as the 2D view's."""
+    def _add_reference(self, cont, kind, pts, tag=None):
+        """A fixed construction copy in *cont*: a pick, as the 2D view's.
+        *tag* {param: value} says what it follows (model_refs)."""
         model = self.window.model
+        made = self._make_reference(model, cont, kind, pts)
+        if tag:
+            made[0].params.update(tag)
+        return made
+
+    def _make_reference(self, model, cont, kind, pts):
         if kind == "point":
             x, y = pts[0]
             node = model.add_node("circle", dict(x=x, y=y, radius=0.25),
@@ -232,7 +235,7 @@ class Constrain3D:
             return node, "c", "point"
         (ax, ay), (bx, by) = pts
         if math.hypot(bx - ax, by - ay) < 1e-6:     # seen end on: a point
-            return self._add_reference(cont, "point", [(ax, ay)])
+            return self._make_reference(model, cont, "point", [(ax, ay)])
         node = model.add_node("line", dict(x1=ax, y1=ay, x2=bx, y2=by,
                                            width=0.2), parent=cont,
                               name="Reference edge")
@@ -247,16 +250,19 @@ class Constrain3D:
         g = geo.get((id(pick[0]), pick[1]))
         if g is None:
             return None
+        tag = dict(ref_source=[pick[0].name, pick[1]])
         if pick[2] == "point":
             return self._add_reference(cont, "point",
-                                       [self._in_sketch(cont, g)])
+                                       [self._in_sketch(cont, g)], tag)
         if pick[2] == "line":
             return self._add_reference(cont, "line",
-                                       [self._in_sketch(cont, p) for p in g])
+                                       [self._in_sketch(cont, p) for p in g],
+                                       tag)
         n = len(g) - 1                    # a circle: its centre
         c = [sum(p[i] for p in g[:n]) / n for i in range(3)]
-        return self._add_reference(cont, "point",
-                                   [self._in_sketch(cont, c)])
+        return self._add_reference(
+            cont, "point", [self._in_sketch(cont, c)],
+            dict(ref_source=[pick[0].name, "c"]))
 
     def model_edge(self, x, y):
         """The model's corner or edge under the screen point, anywhere on
@@ -471,7 +477,8 @@ class Constrain3D:
                     pts = [where] if kind == "point" else list(where)
                     hit = self._add_reference(
                         parent, kind,
-                        [self._in_sketch(parent, p) for p in pts])
+                        [self._in_sketch(parent, p) for p in pts],
+                        dict(ref_world=[list(p) for p in pts]))
             except (ValueError, KeyError):
                 hit = None
         if not self.picks:
