@@ -156,11 +156,15 @@ class Sketch3DTool:
 
     def _own(self):
         """(segments, points) of the shapes drawn in this sketch."""
-        from . import anchors, face_outline, mesh, slot2d
+        from . import anchors, face_outline, mesh, sketch_arc, slot2d
         segs, pts = [], []
         env = anchors.doc_env(self.window.model)
-        for shape in (self.holder or self.group).children \
-                if self.group else ():
+        shapes = list((self.holder or self.group).children) \
+            if self.group else []
+        while any(n.type == "union" for n in shapes):   # a Polyline's group
+            shapes = [k for n in shapes for k in (
+                n.children if n.type == "union" else [n])]
+        for shape in shapes:
             if shape.type == "line" and not slot2d.is_slot(shape):
                 p = shape.params        # one line, not a band's two sides
                 try:
@@ -168,13 +172,19 @@ class Sketch3DTool:
                             (("x1", "y1"), ("x2", "y2"))]
                 except (KeyError, TypeError, ValueError):
                     continue
-                segs.append(tuple(ends))
+                if sketch_arc.is_arc(shape):
+                    run = sketch_arc.points(*ends[0], *ends[1],
+                                            sketch_arc.bulge_of(p))
+                    segs += list(zip(run, run[1:]))
+                else:
+                    segs.append(tuple(ends))
                 pts += [(*ends[0], "end"), (*ends[1], "end"),
                         ((ends[0][0] + ends[1][0]) / 2,
                          (ends[0][1] + ends[1][1]) / 2, "middle")]
                 continue
             try:
-                loops = mesh.node_outlines(shape, env) or []
+                loops = mesh.node_outlines(shape, env) or \
+                    mesh.collect_outlines(shape, env) or []
             except Exception:
                 continue
             for loop in loops:
@@ -324,22 +334,35 @@ class Sketch3DTool:
             if constrain3d.start(self.window, tool):
                 return
             self.view.edit_tool = self
+        from . import sketch3d_tools as more
         mode = {RECT: "rect", CIRCLE: "circle", LINE: "line",
                 sketch_tools.SLOT: "slot"}.get(tool)
         if mode:
             self.set_mode(mode)
+        elif tool in more.MODIFY:
+            self.view.edit_tool = None
+            more.start_modify(self.window, tool)
+        elif tool in more.REGIONS:
+            self.view.edit_tool = None
+            more.start_regions(self.window, tool, self.holder or self.group)
+        elif more.draws(tool):
+            more.use(self, tool)
         elif tool != SELECT:
             self.message(language.tr(
-                "Not on the 3D sketch yet: rectangle, circle, line, slot "
-                "and the dimensions and relations are."), 6000)
+                "That tool does not work on the 3D sketch yet."), 6000)
 
     def set_mode(self, mode):
+        self.scene_tool = None
         self.mode = mode
         self.points = []
         self._say()
         self.view.update()
 
     def _say(self):
+        if getattr(self, "scene_tool", None) and self.group is not None:
+            from . import sketch3d_tools
+            sketch3d_tools.say(self)
+            return
         if self.group is None:
             text = ("Sketch in 3D: click a plane (Front, Top, Right or "
                     "your own) or a flat face of a part to draw on.")
@@ -502,6 +525,9 @@ class Sketch3DTool:
 
     def place(self, pt):
         """A click at sketch point *pt*."""
+        if getattr(self, "scene_tool", None):
+            from . import sketch3d_tools
+            return sketch3d_tools.place(self, pt)
         model = self.window.model
         if self.points and self.mode == "line" or \
                 self.mode == "slot" and len(self.points) == 1:
@@ -639,6 +665,15 @@ class Sketch3DTool:
     def key_press(self, event):
         from PyQt5.QtCore import Qt
         key = event.key()
+        if getattr(self, "scene_tool", None) and self.points:
+            from . import sketch3d_tools as more
+            if key in (Qt.Key_Return, Qt.Key_Enter) and more.can_end(self):
+                more.finish(self)
+                return True
+            if key == Qt.Key_Backspace:
+                self.points.pop()
+                self.view.update()
+                return True
         if key == Qt.Key_Escape:
             if self.points:
                 self.points = []
@@ -660,6 +695,11 @@ class Sketch3DTool:
     def mouse_press(self, event):
         from PyQt5.QtCore import Qt
         if event.button() == Qt.RightButton:
+            if getattr(self, "scene_tool", None) and self.points:
+                from . import sketch3d_tools as more
+                if more.can_end(self):
+                    more.finish(self)
+                    return True
             if self.points:
                 self.points = []
                 self.view.update()
@@ -773,7 +813,13 @@ class Sketch3DTool:
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
         h = self.hover
-        if self.points and h is not None:
+        if self.points and getattr(self, "scene_tool", None):
+            from . import sketch3d_tools
+            qs = [scr(p) for p in sketch3d_tools.preview(self, h)]
+            for qa, qb in zip(qs, qs[1:]):
+                if qa and qb:
+                    painter.drawLine(qa, qb)
+        elif self.points and h is not None:
             a = self.points[-1]
             if self.mode == "rect":
                 corners = [a, (h[0], a[1]), h, (a[0], h[1]), a]

@@ -292,8 +292,13 @@ def _line_near(scene, xy):
     return hit[0], ((p["x1"], p["y1"]), (p["x2"], p["y2"]))
 
 
+def _near_hook(scene, p):
+    hook = getattr(scene, "line_near", None)
+    return hook(p) if hook is not None else _line_near(scene, p)
+
+
 def build_tangent_arc(scene, start_click, end):
-    found = _line_near(scene, start_click)
+    found = _near_hook(scene, start_click)
     if found is None:
         scene.status.emit("Tangent arc: start on a line's end.")
         return None
@@ -311,7 +316,7 @@ def build_tangent_arc(scene, start_click, end):
 
 
 def build_tangent_circle(scene, c1, c2, c3):
-    lines = [_line_near(scene, c) for c in (c1, c2, c3)]
+    lines = [_near_hook(scene, c) for c in (c1, c2, c3)]
     if any(x is None for x in lines):
         scene.status.emit("Tangent circle: click three lines.")
         return None
@@ -371,7 +376,9 @@ def build_perimeter(scene, a, b, c):
     from PyQt5.QtCore import QPointF
     from . import sketch_constraints as sc
     from . import sketch_constrain_ui as scu
-    hits = [scu.pick(scene, QPointF(*p), "line") for p in (a, b, c)]
+    hook = getattr(scene, "pick_line", None)
+    hits = [hook(p) if hook is not None else
+            scu.pick(scene, QPointF(*p), "line") for p in (a, b, c)]
     scene._pending_tangents = []
     if all(hits):
         try:

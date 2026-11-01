@@ -236,6 +236,22 @@ def pause_for(window, tool):
         view.edit_tool = sk
         sk.begin()
         return True
+    from . import sketch3d_tools as more
+    if tool in more.MODIFY:
+        window._drag_paused = drag
+        view.edit_tool = None
+        more.start_modify(window, tool)
+        return True
+    if more.draws(tool) and ext is not None:
+        window._drag_paused = drag
+        view.edit_tool = None
+        sk = sketch3d.Sketch3DTool(window, "rect")
+        sk.use_group(face_sketch.group_of(ext))
+        sk.holder = ext
+        view.edit_tool = sk
+        sk.begin()
+        more.use(sk, tool)
+        return True
     return False
 
 

@@ -257,6 +257,19 @@ def tool_chosen(win, tool):
         return        # constraints work in the 3D view too (the user)
     if active(win) and not sketching(win) and tool not in (SELECT,
                                                            MEASURE):
+        from . import cut_feature, sketch3d, sketch3d_tools as more
+        from .view2d import CIRCLE, LINE, RECT
+        if cut_feature.IN_3D and tool in more.MODIFY:
+            more.start_modify(win, tool)
+            return
+        if cut_feature.IN_3D and tool in more.REGIONS:
+            more.start_regions(win, tool)
+            return
+        if cut_feature.IN_3D and (more.draws(tool) or
+                                  tool in (CIRCLE, LINE, RECT)):
+            # drawn in 3D: first a plane or a face to draw on
+            sketch3d.start(win).tool_icon(tool)
+            return
         enter(win)
 
 

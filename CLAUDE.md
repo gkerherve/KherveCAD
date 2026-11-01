@@ -3151,6 +3151,13 @@ into a new module and import.
                        line + empty click → length, two lines → angle, two
                        points → distance, point + line); a selected
                        polygon shows every side's length.
+  - `sketch3d_tools.py` — the rest of the Sketch tab in the 3D view
+                       (2026-11-02): the 2D drawing tools' builders run on
+                       `Bench`, a scene stand-in, with Sketch3DTool's snapped
+                       clicks as their points; `Modify3D` (a Constrain3D) is
+                       trim, extend, sketch fillet / chamfer, mirror and
+                       construction. A drawing tool with no sketch open asks
+                       for a plane or face first (`sketch_mode.tool_chosen`).
   - `sketch_arc.py` — **open arcs** (2026-10-29, the user: arcs must be
                        "incomplete", showing their 3 points; spline, conic,
                        tangent arc open like a line). An arc is a `line`
