@@ -306,39 +306,10 @@ def test_the_wireframe_icon_shows_edges_and_sketch_lines(win):
     del drawn, orig
 
 
-def test_the_extrude_window_moves_the_sketch_to_another_plane(win):
-    """Sketch plane box: click it, click a plane in 3D, the sketch (and
-    its extrude) lies there."""
-    from khervecad import plane_pick
-    panel, ext = _rect_extrude(win)                 # on Top
-    assert extrude_panel.plane_of(ext) == "Top (XY)"
-    assert "Top" in panel.boxes["plane"].body.text()
-    QTest.mouseClick(panel.boxes["plane"], Qt.LeftButton)
-    QTest.qWait(50)
-    assert plane_pick.active(win)
-    view = win.view3d
-    h = win._plane_pick["half"]
-    cam = view._camera()
-    spot = None
-    for fx in (0.8, 0.6, -0.6, -0.8):
-        for fz in (0.8, -0.8, 0.6, -0.6):
-            q = view._project(*cam, (h * fx, 0.0, h * fz))
-            cand = QPoint(int(q[0]), int(q[1]))
-            if plane_pick.hit(win, cand) == "Front (XZ)":
-                spot = cand
-                break
-        if spot:
-            break
-    assert spot is not None
-    QTest.mouseClick(view, Qt.LeftButton, Qt.NoModifier, spot)
-    QTest.qWait(80)
-    assert extrude_panel.plane_of(ext) == "Front (XZ)"
-    assert "Front" in panel.boxes["plane"].body.text()
-    from khervecad import mesh
-    pts = [p for t in mesh.tessellate(win.model.root) for p in t]
-    ys = [p[1] for p in pts]
-    assert max(ys) - min(ys) == pytest.approx(ext.params["height"],
-                                              abs=1e-6)  # up along -Y now
+def test_the_extrude_window_has_no_sketch_plane_row(win):
+    """The plane was chosen before the window opened (the user)."""
+    panel, _ext = _rect_extrude(win)
+    assert "plane" not in panel.boxes
 
 
 def test_the_sketch_plane_is_read_from_the_turn_not_the_name(app=None):

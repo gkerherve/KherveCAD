@@ -4,6 +4,8 @@ Extruded Boss / Cut, or an extrude selected — a `tool_panel.ToolPanel`
 shows what it extrudes and every option the extrude really has:
 
 - Profiles — what is extruded (the regions, the shapes);
+- (no Sketch plane row: the plane was chosen before the window opened,
+  2026-11-01, the user);
 - Direction — One side (`height`), Two sides (`height2`), Symmetric
   (`center`);
 - End condition — Blind, Through all (`extent`, extent.py);
@@ -398,23 +400,6 @@ def show(window, tool):
                "here; every change shows at once. OK keeps it.")
     panel.selection("profiles", "Profiles", profiles_text(ext))
     panel.set_active("profiles")
-
-    def pick_plane(_key):
-        # the planes in 3D; the one clicked takes the sketch
-        from . import plane_pick
-        panel.set_active("plane")
-
-        def chosen(plane):
-            panel.busy = True
-            try:
-                set_plane(model, ext, plane)
-            finally:
-                panel.busy = False
-            refresh(window)
-            panel.set_active("profiles")
-        plane_pick.start(window, on_plane=chosen)
-    panel.selection("plane", "Sketch plane", plane_text(ext),
-                    on_activate=pick_plane)
 
     def changed(fn):
         def run(value):
