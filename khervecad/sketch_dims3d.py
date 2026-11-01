@@ -209,9 +209,8 @@ def _text(row):
 
 
 def _closed_solids(mesh):
-    """The triangles of *mesh* that belong to CLOSED pieces (every edge
-    shared by two of the piece's faces), as an (n, 3, 3) array: flat
-    sketch faces in the view are not solids and hide nothing."""
+    """The triangles of *mesh* in pieces with thickness, as an (n, 3, 3)
+    array: flat sketch faces in the view are not solids and hide nothing."""
     import numpy as np
     tris = np.asarray(mesh, dtype=np.float64).reshape(-1, 3, 3)
     if not len(tris):
@@ -233,8 +232,18 @@ def _closed_solids(mesh):
     for faces in edges.values():
         for f in faces[1:]:
             parent[root(f)] = root(faces[0])
-    open_ = {root(faces[0]) for faces in edges.values() if len(faces) != 2}
-    keep = [t for t in range(len(vid)) if root(t) not in open_]
+    # Only a FLAT piece is not a solid. Asking every edge to have exactly
+    # two faces let one sliver, or two parts touching along an edge, take
+    # the whole model out: dimensions then showed through it (the user)
+    pieces = {}
+    for t in range(len(vid)):
+        pieces.setdefault(root(t), []).append(t)
+    keep = []
+    for faces in pieces.values():
+        pts = tris[faces].reshape(-1, 3)
+        pts = pts - pts.mean(axis=0)
+        if np.linalg.svd(pts, compute_uv=False)[-1] > 1e-3:
+            keep.extend(faces)
     return tris[keep]
 
 

@@ -231,3 +231,41 @@ def test_a_cut_opens_a_sloped_face(win):
             < 2.5]
     assert not near
     assert "lead=0.01" in m.to_scad().replace(" ", "")
+
+
+def test_a_part_with_a_stray_edge_still_hides_dimensions():
+    """One non-manifold edge must not make the whole model see-through."""
+    from khervecad import sketch_dims3d
+    a, b, c, d = (0, 0, 0), (10, 0, 0), (0, 10, 0), (0, 0, 10)
+    tet = [(a, c, b), (a, b, d), (b, c, d), (c, a, d)]
+    fin = [(a, b, (5, -5, 0))]               # a third face on edge a-b
+    flat = [((50, 0, 0), (60, 0, 0), (50, 10, 0))]
+    assert len(sketch_dims3d._closed_solids(tet + fin + flat)) == 5
+
+
+def test_a_forward_cut_really_cuts_in_openscad(win):
+    """The cut's lead called a helper the program did not define, so
+    OpenSCAD left the part uncut (the user's arc and slot)."""
+    import os
+    import subprocess
+    import tempfile
+    from khervecad import analysis, engine
+    m = win.model
+    d = m.add_node("difference", {})
+    m.add_node("cube", dict(width=20, depth=20, height=20), parent=d)
+    e = m.add_node("linear_extrude", dict(height=30), parent=d)
+    m.add_node("rect", dict(x=5, y=5, width=10, height=10), parent=e)
+    code = m.to_scad()
+    assert "module kcad_extrude_two" in code
+    binary = engine.find_openscad()
+    if not binary:
+        pytest.skip("no OpenSCAD")
+    with tempfile.TemporaryDirectory() as t:
+        src, out = os.path.join(t, "a.scad"), os.path.join(t, "a.stl")
+        with open(src, "w") as fh:
+            fh.write(code)
+        subprocess.run([binary, "-o", out, src], capture_output=True,
+                       timeout=120)
+        tris = engine.parse_mesh(out)
+    assert analysis.mass_properties(tris)["volume"] == pytest.approx(
+        6000, abs=1)

@@ -258,8 +258,10 @@ def preamble(root) -> list:
     if any(n.type == "linear_extrude" and n.params.get("reverse")
            for n in root.walk()):
         lines.extend(HELPERS["extrude_reverse"].split("\n"))
-    from .model import _two_way
-    if any(n.type == "linear_extrude" and _two_way(n.params)
+    from .model import _two_way, cut_lead
+    if any(n.type == "linear_extrude" and
+           (_two_way(n.params) or
+            (cut_lead(n) and not n.params.get("reverse")))
            for n in root.walk()):
         lines.extend(HELPERS["extrude_two"].split("\n"))
     if any(n.type == "color" and
