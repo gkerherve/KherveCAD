@@ -651,6 +651,9 @@ def _chamfer_section(kind, radius, detail):
     return lambda edge: bevel.section(edge, radius, max(detail, 1), e)
 
 
+WELD_MAX = 0.05      # mm
+
+
 def _weld_slivers(rows, tol=2e-3):
     """Merge vertices closer than *tol* (mm) in a boolean's coloured
     rows and drop what collapses: where a corner piece meets the strips
@@ -921,7 +924,10 @@ def tess(node, env, color, sel, selected):
             csg.FAILED.discard(node.id)
             size = abs(float(_num(node.params.get("radius", 2.0), env,
                                   2.0)))
-            out = _weld_slivers(cut, max(2e-3, size * 0.025))
+            # capped: 2.5 % of a 48 mm radius merged corners 0.9 mm apart,
+            # and the plate under the fillet lost a long thin wedge of its
+            # top (the user's cut left a strip along that edge)
+            out = _weld_slivers(cut, max(2e-3, min(size * 0.025, WELD_MAX)))
     for body in result["adds"]:
         out.extend(mesh._emit(body, color, selected))
     return out

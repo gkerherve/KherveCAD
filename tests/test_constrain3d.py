@@ -269,3 +269,23 @@ def test_a_forward_cut_really_cuts_in_openscad(win):
         tris = engine.parse_mesh(out)
     assert analysis.mass_properties(tris)["volume"] == pytest.approx(
         6000, abs=1)
+
+
+def test_a_big_fillet_leaves_the_part_below_it_square():
+    """Radius 48 must not weld the plate's corner away, 0.9 mm off."""
+    from khervecad import fillet, mesh
+    from khervecad.model import CadNode
+    f = CadNode("fillet", "F", dict(radius=48, kind="round", detail=12,
+                                    edges=[[0, 0, 55, 16, 0, 55]]))
+    plate = CadNode("cube", "P", dict(width=96, depth=64, height=16))
+    up = CadNode("cube", "U", dict(width=16, depth=64, height=39, z=16))
+    for c in (plate, up):
+        c.parent = f
+        f.children.append(c)
+    if not fillet.compute:
+        return
+    pts = {tuple(round(c, 3) for c in v)
+           for t in mesh.tessellate(f, {}) for v in t[:3]}
+    assert (96, 0, 16) in pts and (0, 0, 0) in pts
+    tops = [p for p in pts if p[2] == 16 and p[1] < 2]
+    assert all(p[1] == 0 or p[0] <= 16 for p in tops)
