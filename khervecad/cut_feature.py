@@ -162,6 +162,9 @@ def finish(window, group):
     return diff
 
 
+#: a face sketch for a cut or boss is drawn in the 3D view
+IN_3D = True
+
 #: a line this thin (mm) is a sketch line; wider it is a band to cut
 THIN_LINE = 0.5
 
@@ -258,9 +261,19 @@ def start(window, kind):
                 "%s: click a flat FACE to sketch on." % label, 5000)
             start(window, kind)
             return
-        group = face_sketch.make(window, node, desc["pos"], desc["dir"])
+        group = face_sketch.make(window, node, desc["pos"], desc["dir"],
+                                 open_2d=not IN_3D)
         group.params[KEY] = kind
         window.__dict__.setdefault("_cut_parts", {})[id(group)] = node
+        if IN_3D:
+            # drawn ON the face, where the user is looking (2026-11-01,
+            # the user: going to the 2D view and back loses them)
+            from . import sketch3d
+            tool = sketch3d.Sketch3DTool(window, "rect")
+            tool.use_group(group)
+            window.view3d.edit_tool = tool
+            tool.begin()
+            return
         window.statusBar().showMessage(
             "%s: draw the shape (circle, slot, rectangle…), dimension "
             "it, then leave the sketch %s." % (label, end), 10000)

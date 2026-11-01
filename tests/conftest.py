@@ -142,6 +142,14 @@ def _neutral_view_settings():
 
 
 @pytest.fixture(autouse=True)
+def _cuts_sketch_in_2d(monkeypatch):
+    """The mouse tests drive a cut's sketch in the 2D view, which Edit
+    Sketch still opens (test_sketch3d_cut turns the 3D way back on)."""
+    from khervecad import cut_feature
+    monkeypatch.setattr(cut_feature, "IN_3D", False)
+
+
+@pytest.fixture(autouse=True)
 def _delete_asks_nothing(monkeypatch):
     """Deleting a container asks keep-or-all in a modal box, which would
     hang an offscreen test: answer 'delete everything', the old

@@ -155,9 +155,9 @@ def _whole_face_desc(desc, parts):
     return out
 
 
-def make(window, part, point, normal):
+def make(window, part, point, normal, open_2d=True):
     """The face sketch Group at *point* on a face of *part*, then open
-    it. Returns the Group."""
+    it (unless it is drawn in 3D). Returns the Group."""
     model = window.model
     scope = window.builder.isolated_component() or model.root
     rx, ry, rz = euler_for(normal)
@@ -171,7 +171,8 @@ def make(window, part, point, normal):
     group.params[KEY] = True
     model.rename(group, "Sketch on " + getattr(part, "name", "face"))
     group._outline_part = part
-    open_sketch(window, group)
+    if open_2d:
+        open_sketch(window, group)
     return group
 
 

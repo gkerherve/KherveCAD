@@ -30,8 +30,21 @@ import math
 
 from . import language, refgeom
 
-MODES = ("rect", "circle", "line")
-MODE_KEYS = {"R": "rect", "C": "circle", "L": "line"}
+MODES = ("rect", "circle", "line", "slot")
+MODE_KEYS = {"R": "rect", "C": "circle", "L": "line", "S": "slot"}
+#: a line or slot this near level or upright (degrees) snaps to it
+ANGLE_SNAP = 5.0
+
+
+def straighten(a, b, tol=ANGLE_SNAP):
+    """*b* moved to lie level or upright from *a* when it nearly does."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    ang = abs(math.degrees(math.atan2(dy, dx))) % 180.0
+    if min(ang, 180.0 - ang) < tol:
+        return (b[0], a[1])
+    if abs(ang - 90.0) < tol:
+        return (a[0], b[1])
+    return b
 
 
 def start(window, mode="rect"):
@@ -125,7 +138,8 @@ class Sketch3DTool:
         lay.setContentsMargins(6, 4, 6, 4)
         self._buttons = {}
         for mode, text in (("rect", "Rectangle (R)"),
-                           ("circle", "Circle (C)"), ("line", "Line (L)")):
+                           ("circle", "Circle (C)"), ("line", "Line (L)"),
+                           ("slot", "Slot (S)")):
             b = QPushButton(language.tr(text), bar)
             b.setCheckable(True)
             b.setChecked(mode == self.mode)
@@ -155,8 +169,10 @@ class Sketch3DTool:
             text = {"rect": "Rectangle: click two corners on the plane.",
                     "circle": "Circle: click the centre, then the rim.",
                     "line": "Line: click point to point; right-click or "
-                            "Enter ends the chain."}[self.mode] + \
-                " R / C / L switch, Alt draws off the grid, Esc ends."
+                            "Enter ends the chain.",
+                    "slot": "Slot: click one end, the other end, then "
+                            "the width."}[self.mode] + \
+                " R / C / L / S switch, Alt draws off the grid, Esc ends."
         self.message(language.tr(text))
 
     def message(self, text, ms=0):
@@ -185,6 +201,10 @@ class Sketch3DTool:
         """End the tool; an empty sketch goes, a full one is selected."""
         self._end()
         g = self.group
+        from . import cut_feature
+        if g is not None and g.parent is not None and g.children and \
+                g.params.get(cut_feature.KEY):
+            return cut_feature.finish(self.window, g)    # cut it now
         if g is None or g.parent is None:
             self.message(language.tr("Sketch in 3D ended."), 4000)
             return None
@@ -288,8 +308,29 @@ class Sketch3DTool:
     def place(self, pt):
         """A click at sketch point *pt*."""
         model = self.window.model
+        if self.points and self.mode == "line" or \
+                self.mode == "slot" and len(self.points) == 1:
+            pt = straighten(self.points[-1], pt)
         self.points.append(pt)
         node = None
+        if self.mode == "slot" and len(self.points) == 3:
+            from . import sketch_constraints as sc, slot2d, sketch_tools
+            spec = sketch_tools.slot(*self.points)
+            self.points = []
+            if spec:
+                node = model.add_node(spec[0][0], spec[0][1],
+                                      parent=self.group)
+                slot2d.mark(model, node)
+                par = node.params
+                kind = "horizontal" if abs(par["y1"] - par["y2"]) < 1e-9 \
+                    else "vertical" if abs(par["x1"] - par["x2"]) < 1e-9 \
+                    else None
+                if kind:
+                    try:
+                        sc.add(model, self.group, kind,
+                               [sc.ref_of(self.group, node, "l")])
+                    except (ValueError, KeyError):
+                        pass
         if self.mode == "rect" and len(self.points) == 2:
             par = rect_params(*self.points)
             if par["width"] > 0 and par["height"] > 0:
@@ -384,7 +425,7 @@ class Sketch3DTool:
         if event.modifiers() & (Qt.ControlModifier | Qt.MetaModifier):
             return False
         return event.key() in (Qt.Key_Escape, Qt.Key_Return, Qt.Key_Enter,
-                               Qt.Key_R, Qt.Key_C, Qt.Key_L)
+                               Qt.Key_R, Qt.Key_C, Qt.Key_L, Qt.Key_S)
 
     def key_press(self, event):
         from PyQt5.QtCore import Qt
@@ -526,7 +567,30 @@ class Sketch3DTool:
                 q = scr(h)
                 if q is not None:
                     painter.drawText(q + QPointF(8, -8), f"Ø{2 * r:g}")
+            elif self.mode == "slot" and len(self.points) == 2:
+                # the two ends fixed: the width follows the cursor
+                c1, c2 = self.points
+                dx, dy = c2[0] - c1[0], c2[1] - c1[1]
+                L = math.hypot(dx, dy) or 1.0
+                r = abs(dx * (h[1] - c1[1]) - dy * (h[0] - c1[0])) / L
+                ux, uy = dx / L, dy / L
+                base = math.atan2(uy, ux)
+                ring = [(c2[0] + r * math.cos(base - math.pi / 2 + math.pi * i / 12),
+                         c2[1] + r * math.sin(base - math.pi / 2 + math.pi * i / 12))
+                        for i in range(13)]
+                ring += [(c1[0] + r * math.cos(base + math.pi / 2 + math.pi * i / 12),
+                          c1[1] + r * math.sin(base + math.pi / 2 + math.pi * i / 12))
+                         for i in range(13)]
+                qs = [scr(c) for c in ring + ring[:1]]
+                if all(qs):
+                    for i in range(len(qs) - 1):
+                        painter.drawLine(qs[i], qs[i + 1])
+                q = scr(h)
+                if q is not None:
+                    painter.drawText(q + QPointF(8, -8), f"{2 * r:g}")
             else:
+                if self.mode == "slot" or self.points:
+                    h = straighten(a, h)
                 qa, qh = scr(a), scr(h)
                 if qa and qh:
                     painter.drawLine(qa, qh)
