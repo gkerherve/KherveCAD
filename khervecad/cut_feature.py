@@ -270,9 +270,12 @@ def start(window, kind):
             # the user: going to the 2D view and back loses them)
             from . import sketch3d
             view = window.view3d          # looking straight at the face
-            view.yaw, view.pitch = face_sketch.camera_for(desc["dir"])
+            yaw, pitch = face_sketch.camera_for(desc["dir"])
             view.user_moved = True
-            view.update()
+            from . import view_anim
+            view_anim.glide_3d(view, dict(
+                yaw=yaw, pitch=pitch, target=list(view.target),
+                distance=view.distance))
             tool = sketch3d.Sketch3DTool(window, "rect")
             tool.use_group(group)
             window.view3d.edit_tool = tool

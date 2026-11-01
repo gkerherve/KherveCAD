@@ -171,7 +171,13 @@ def test_a_circle_at_a_sloped_faces_centre_follows_it(win, monkeypatch):
 
 def test_choosing_a_face_turns_the_camera_to_it(win, monkeypatch):
     from khervecad import face_sketch
+    from khervecad import view_anim
+    goals = []
+    glide = view_anim.glide_3d
+    monkeypatch.setattr(view_anim, "glide_3d", lambda view, goal, **kw: (
+        goals.append(goal), glide(view, goal, **kw)))
     tool = _on_face(win, monkeypatch)
-    assert (win.view3d.yaw, win.view3d.pitch) == pytest.approx(
-        face_sketch.camera_for((0, 0, 1)))
+    want = face_sketch.camera_for((0, 0, 1))
+    assert len(goals) == 1                      # it glides, not jumps
+    assert (goals[0]["yaw"], goals[0]["pitch"]) == pytest.approx(want)
     tool.finish()
