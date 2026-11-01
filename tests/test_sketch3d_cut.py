@@ -236,3 +236,46 @@ def test_a_reversed_extrude_is_pulled_along_its_arrow(win, how):
                           ay - (by - ay) * 0.2))     # back against it
     assert tool.drag["value"] < 10
     tool.drag = None
+
+
+@pytest.mark.parametrize("kind", ["extruded_cut", "extruded_boss"])
+def test_smart_dimension_with_the_window_open(win, monkeypatch, kind):
+    """A size, and a distance to the model's edge, while extruding."""
+    from khervecad import drag_feature, extrude_panel, face_sketch
+    from khervecad import sketch_constrain_ui as ui
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    McpToolExecutor(win).execute("apply_code",
+                                 {"code": "cube([40, 30, 20]); // Block\n"})
+    QApplication.processEvents()
+    part = next(c for c in win.model.root.children
+                if c.visible and c.type != "assign")
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    cut_feature.start(win, kind)
+    win.view3d._pick_cb(dict(kind="face", pos=(20, 15, 20),
+                             dir=(0, 0, 1)), part)
+    sk = win.view3d.edit_tool
+    sk.set_mode("circle")
+    sk.place((20, 15))
+    circle = sk.place((23, 15))
+    drag = win.view3d.edit_tool
+    assert isinstance(drag, drag_feature.DragFeature)
+    assert extrude_panel._panel(win) is not None
+    win.view2d.scene().ask_value = lambda k, m: "8"
+    win._set_tool(ui.DIMENSION)
+    tool = win.view3d.edit_tool
+    g = face_sketch.group_of(circle)
+
+    def screen(lx, ly):
+        q = tool._project()(face_sketch.to_world(g, lx, ly))
+        return q[0], q[1]
+    x, y = screen(circle.params["x"] + 3, circle.params["y"])
+    tool.click(x, y)
+    tool.click(3, 3)                             # empty: its size
+    assert circle.params["radius"] == pytest.approx(4)
+    # the circle's centre to the block's corner
+    assert tool.model_near(*screen(0, 0), circle.parent) is not None
+    tool.click(*screen(circle.params["x"], circle.params["y"]))
+    tool.click(*screen(0, 0))
+    assert any(n.name == "Reference point" for n in circle.parent.children)
+    drag.cancel()

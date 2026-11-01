@@ -263,8 +263,14 @@ class Sketch3DTool:
         made = cut_feature.finish(self.window, g)
         if made is None:
             cut_feature.clear_chosen_face(self.window)
-        if made is None or kind in cut_feature.BOSS:
-            return made          # (a boss opens the window itself)
+        if made is None:
+            return made
+        if kind in cut_feature.BOSS:     # (a boss opens the window itself)
+            drag = self.view.edit_tool
+            if isinstance(drag, drag_feature.DragFeature):
+                model = self.window.model
+                drag.on_cancel = lambda: model.remove_node(g)
+            return made
         ext = next((n for n in g.walk() if n.type == "linear_extrude"), None)
         if ext is None:
             return made

@@ -139,13 +139,89 @@ class Constrain3D:
             return ("line", "circle")
         return (want,)
 
+    def _working_on(self):
+        """The container of the sketch being drawn or extruded, if any."""
+        w = self.window
+        sk = getattr(w, "_sketch3d_tool", None)
+        if sk is not None:
+            return sk.holder or sk.group
+        drag = getattr(w, "_drag_paused", None)
+        return drag.target() if drag is not None else None
+
+    def _face_info(self, parent):
+        """The face's outline for *parent*'s sketch: (group, info)."""
+        from . import face_outline, face_sketch
+        group = face_sketch.group_of(parent) if parent is not None else None
+        if group is None or group.parent is None:
+            return None, {}
+        scene = self.window.view2d.scene()
+        if getattr(self, "_face_for", None) is not group:
+            self._face_for = group
+            part = face_sketch.part_of(group)
+            if part is not None:
+                face_outline.show(self.window, group, part)
+        return group, getattr(scene, "face_outline", None) or {}
+
+    def model_near(self, x, y, parent):
+        """The face's corner, centre or edge under the screen point:
+        ("point", (x, y)) or ("line", (a, b)) in the sketch, or None."""
+        from . import face_sketch
+        group, info = self._face_info(parent)
+        if group is None:
+            return None
+        project = self._project()
+
+        def scr(p):
+            return project(face_sketch.to_world(group, p[0], p[1]))
+        best = None
+        for px, py, kind in list(info.get("points") or []) + \
+                [(0.0, 0.0, "origin")]:
+            if kind == "middle":
+                continue               # mid-edge: the EDGE is meant
+            q = scr((px, py))
+            if q is not None:
+                d = math.hypot(q[0] - x, q[1] - y)
+                if d <= PICK_PX and (best is None or d < best[0]):
+                    best = (d, "point", (px, py))
+        if best is not None:
+            return best[1:]
+        for a, b in info.get("segments") or ():
+            qa, qb = scr(a), scr(b)
+            if qa is None or qb is None:
+                continue
+            d, _t = _seg_px((x, y), qa, qb)
+            if d <= PICK_PX and (best is None or d < best[0]):
+                best = (d, "line", (a, b))
+        return best[1:] if best else None
+
+    def model_pick(self, x, y, parent):
+        """A click on the face: a fixed construction copy in the sketch,
+        as the 2D view makes, returned as a pick."""
+        from PyQt5.QtCore import QPointF
+        from . import face_outline
+        near = self.model_near(x, y, parent)
+        if near is None:
+            return None
+        kind, where = near
+        pos = where if kind == "point" else where[0]
+        return face_outline.reference(
+            self.window.view2d.scene(), QPointF(pos[0], pos[1]), kind,
+            parent=parent)
+
     def pick_at(self, x, y):
         """The entity under the screen point (x, y), or None."""
         project = self._project()
-        seen = self._occluder()
+        solid = self._occluder()
+        working = self._working_on()
+        current = None
+
+        def seen(p):
+            # the sketch being extruded lies under its own boss: offered
+            return current is working or solid(p)
         allowed = self._allowed()
         best = None
         for node, name, kind, g in self.entities():
+            current = node.parent
             if kind not in allowed:
                 continue
             if kind == "point":
@@ -195,9 +271,16 @@ class Constrain3D:
         return False                # the view may still orbit on a drag
 
     def mouse_move(self, event):
-        hit = self.pick_at(event.pos().x(), event.pos().y())
-        if hit != self.hover:
+        x, y = event.pos().x(), event.pos().y()
+        hit = self.pick_at(x, y)
+        near = None
+        if hit is None and self.kind == "dimension":
+            parent = self.picks[0][0].parent if self.picks \
+                else self._working_on()
+            near = (self.model_near(x, y, parent), parent)
+        if hit != self.hover or near != getattr(self, "model_hover", None):
             self.hover = hit
+            self.model_hover = near
             self.view.update()
         return False
 
@@ -254,7 +337,7 @@ class Constrain3D:
     def click(self, x, y):
         hit = self.pick_at(x, y)
         if self.kind == "dimension":
-            return self._dimension_click(hit)
+            return self._dimension_click(hit, x, y)
         if hit is None:
             self._say(self._prompt())
             return None
@@ -305,8 +388,16 @@ class Constrain3D:
                                      sc.status_text(report)))
         return report
 
-    def _dimension_click(self, hit):
+    def _dimension_click(self, hit, x=None, y=None):
         from . import sketch_constrain_ui as ui
+        if hit is None and x is not None:
+            # the model's corner, centre or edge (SolidWorks)
+            parent = self.picks[0][0].parent if self.picks \
+                else self._working_on()
+            try:
+                hit = self.model_pick(x, y, parent)
+            except (ValueError, KeyError):
+                hit = None
         if not self.picks:
             if hit is None:
                 self._say(self._prompt())
@@ -362,6 +453,20 @@ class Constrain3D:
         from PyQt5.QtCore import QPointF
         from PyQt5.QtGui import QColor, QPen
         geo = {(id(n), e): g for n, e, _k, g in self.entities()}
+        near = getattr(self, "model_hover", None)
+        if near and near[0]:
+            from . import face_sketch
+            group = face_sketch.group_of(near[1])
+            kind, where = near[0]
+            pts = [project(face_sketch.to_world(group, p[0], p[1])) for p in
+                   ([where] if kind == "point" else where)]
+            if all(pts):
+                painter.setPen(QPen(QColor(240, 140, 30), 3))
+                if kind == "point":
+                    painter.drawEllipse(QPointF(pts[0][0], pts[0][1]), 5, 5)
+                else:
+                    painter.drawLine(QPointF(pts[0][0], pts[0][1]),
+                                     QPointF(pts[1][0], pts[1][1]))
 
         def draw(item, colour, width):
             g = geo.get((id(item[0]), item[1]))

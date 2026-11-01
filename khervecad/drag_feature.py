@@ -210,8 +210,10 @@ def pause_for(window, tool):
     view = window.view3d
     drag = view.edit_tool
     paused = getattr(window, "_drag_paused", None)
-    if isinstance(drag, DragFeature) and drag.created_on_face():
-        pass
+    from . import extrude_panel
+    panel = extrude_panel._panel(window)
+    if isinstance(drag, DragFeature) and panel is not None:
+        pass                       # its window is open
     elif paused is not None:
         drag = paused
     else:
@@ -574,10 +576,6 @@ class DragFeature:
             self.cancel()
         self.view.update()
         return True
-
-    def created_on_face(self):
-        return getattr(self, "on_cancel", None) is not None or \
-            bool(self.created)
 
     def exit(self):
         from . import cut_feature
