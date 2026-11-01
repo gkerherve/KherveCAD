@@ -29,6 +29,7 @@ from . import sketch_constraints as sc
 PICK_PX = 9.0
 #: a point beats a curve this close to it
 POINT_PX = 7.0
+LINE_FIRST_PX = 2.5
 #: how far a press may move and still be a click (px)
 CLICK_PX = 4
 
@@ -142,11 +143,18 @@ class Constrain3D:
         end of its extrude — the top of a cube IS its sketch's outline,
         and that is the edge one sees and clicks (the plane's far side
         lies hidden under the cube)."""
+        from . import extrude_panel
         out = [m]
-        height = cont.params.get("height")
-        if cont.type == "linear_extrude" and \
-                isinstance(height, (int, float)) and height and \
-                not cont.params.get("center"):
+        ext = cont.parent if cont.type == "regions" else cont
+        if ext is None or ext.type != "linear_extrude":
+            return out
+        height = ext.params.get("height")
+        # (a boss's: the far end of a cut is inside the part, and offering
+        # it put phantom circles in the air beyond a hole)
+        if isinstance(height, (int, float)) and height and \
+                not ext.params.get("center") and \
+                not ext.params.get("reverse") and \
+                not extrude_panel.is_cut(ext):
             out.append([[r[0], r[1], r[2], r[3] + r[2] * float(height)]
                         for r in m])
         return out
@@ -382,7 +390,11 @@ class Constrain3D:
                 if q is None or not seen(g):
                     continue
                 d = math.hypot(q[0] - x, q[1] - y)
-                rank = 0 if d <= POINT_PX else 2
+                # Horizontal / Vertical mean the line, unless a point
+                # is really aimed at (a short line was all ends)
+                near = LINE_FIRST_PX if self.kind in sc.TWO_POINT and \
+                    not self.picks else POINT_PX
+                rank = 0 if d <= near else 2
             elif kind == "line":
                 qa, qb = project(g[0]), project(g[1])
                 if qa is None or qb is None:
@@ -538,9 +550,9 @@ class Constrain3D:
             return None
         self.picks.append(hit)
         wants = sc.KINDS[self.kind][1]
-        done = len(self.picks) == len(wants) or (
-            self.kind in sc.TWO_POINT and hit[2] == "line"
-            and len(self.picks) == 1)
+        done = len(self.picks) == len(wants)
+        if self.kind in sc.TWO_POINT:     # a line, or two points
+            done = hit[2] == "line" or len(self.picks) == 2
         if not done:
             self.view.update()
             self._say(self._prompt())

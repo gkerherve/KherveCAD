@@ -289,3 +289,18 @@ def test_a_big_fillet_leaves_the_part_below_it_square():
     assert (96, 0, 16) in pts and (0, 0, 0) in pts
     tops = [p for p in pts if p[2] == 16 and p[1] < 2]
     assert all(p[1] == 0 or p[0] <= 16 for p in tops)
+
+
+def test_horizontal_takes_a_line_or_two_points(win):
+    from khervecad import constrain3d
+    g, line = _setup(win)
+    constrain3d.start(win, "con_horizontal")
+    tool = win.view3d.edit_tool
+    x, y = _screen(tool, (0, 0, 0))
+    assert tool.pick_at(x, y)[1] == "p1"
+    assert tool.pick_at(x + 5, y)[1] == "l"     # beside the end: the line
+    tool.click(x, y)
+    assert not g.params.get("constraints") and tool.picks
+    tool.click(*_screen(tool, (40, 6, 0)))
+    assert not win.view3d._flash_text
+    assert any(r["kind"] == "horizontal" for r in g.params["constraints"])
