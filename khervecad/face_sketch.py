@@ -389,6 +389,8 @@ def close(window):
     elif group is not None and group.params.get("cut"):
         from . import cut_feature          # a cut's sketch: cut it now
         cut_feature.finish(window, group)
+    from . import model_refs               # its fixes on the model follow
+    model_refs.adopt(window)
     return group
 
 

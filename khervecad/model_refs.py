@@ -118,9 +118,13 @@ def outline(window, container):
             for t in ts]
     if body is not None:
         iso = root if root is not window.model.root else None
+        # the body ALONE, uncut: picked out of its Difference by a
+        # selection pass it came back with the cut already in it, so the
+        # middle of the block's top edge was not on the outline
+        fn = window.model.effective_fn()
         with window._isolated_frame(iso):
-            tris += mesh.selected_world_tris(
-                root, {body.id}, fn=window.model.effective_fn())
+            m4 = mesh.ancestor_matrix(body, stop=iso)
+            tris += mesh.transform_mesh(m4, mesh.tessellate(body, fn=fn))
     if not tris:
         return None
     return face_outline.whole_face(g, tris, [])
@@ -310,3 +314,61 @@ def refresh(window):
                     traceback.print_exc()
     finally:
         _BUSY = False
+
+
+def adopt_container(window, container):
+    """Plain fixes sitting on the model become model references: a point
+    fixed where a model corner or the middle of a model edge is (drawn
+    before sketches followed the model, or snapped without the pin) is
+    taken to be tied to it — the user's circle at the middle of the
+    block's top edge kept its place when the block narrowed.
+    The number of rows adopted."""
+    from . import sketch_constraints as sc
+    rows = sc.rows(container)
+    plain = [r for r in rows if r.get("kind") == "fix" and
+             not r.get("model") and r.get("at")]
+    if not plain:
+        return 0
+    segs = outline(window, container)
+    if not segs:
+        return 0
+    n = 0
+    for r in plain:
+        p = tuple(r["at"])
+        mid = next(((a, b) for a, b in segs if
+                    abs((a[0] + b[0]) / 2 - p[0]) < 1e-4 and
+                    abs((a[1] + b[1]) / 2 - p[1]) < 1e-4), None)
+        dirs = _corner_dirs(segs, p)
+        if dirs:
+            r["model"] = True
+            r["dirs"] = [round(d, 6) for d in dirs]
+            n += 1
+        elif mid is not None:
+            r["model"] = "mid"
+            r["edge"] = [round(v, 6) for v in (*mid[0], *mid[1])]
+            n += 1
+    return n
+
+
+
+def adopt(window):
+    """`adopt_container` over every sketch of the current scope (when
+    the scope opens, and when a face sketch is left)."""
+    global _BUSY
+    if _BUSY:
+        return 0
+    _BUSY = True
+    n = 0
+    try:
+        root = window._render_scope()[0]
+        for node in list(root.walk()):
+            if node.children and node.params.get("constraints") and \
+                    plan(node, root) is not None:
+                try:
+                    n += adopt_container(window, node)
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
+    finally:
+        _BUSY = False
+    return n

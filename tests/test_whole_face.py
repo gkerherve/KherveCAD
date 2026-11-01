@@ -315,3 +315,36 @@ def test_a_corner_a_cut_eats_leaves_the_point_where_it_was(win):
     m.set_param(block, "width", 35)
     QTest.qWait(50)
     assert end()[0] == pytest.approx(51, abs=0.01)     # the corner again
+
+
+def test_a_plain_fix_on_an_edge_middle_follows_the_model(win):
+    """2026-11-01, the user's own file: the circle at the middle of the
+    block's top edge carried a plain Fix (drawn before sketches followed
+    the model), so narrowing the block left it behind. A fix sitting on
+    a model corner or edge middle is adopted as a model reference, and
+    the outline is the body UNCUT (the cut used to take the middle away)."""
+    from khervecad import face_sketch, model_refs
+    from khervecad.mcp_tools import McpToolExecutor
+    from khervecad import sketch_constraints as sc
+    McpToolExecutor(win).execute("apply_code", {"code":
+                                 "cube([40, 30, 20]); // Block\n"})
+    QTest.qWait(50)
+    m = win.model
+    block = next(n for n in m.root.walk() if n.type == "cube")
+    g = face_sketch.make(win, block, (20, 15, 20), (0, 0, 1))
+    c = face_sketch.to_local(g, (20, 0, 20))
+    circle = m.add_node("circle", dict(x=c[0], y=c[1], radius=6), parent=g)
+    sc.add(m, g, "fix", [sc.ref_of(g, circle, "c")])   # plain, as drawn
+    face_sketch.close(win)
+    m.wrap_nodes([circle], "linear_extrude")
+    top = block
+    while top.parent is not m.root:
+        top = top.parent
+    m.wrap_nodes([top, g], "difference")
+    QTest.qWait(50)
+    model_refs.adopt(win)
+    assert any(r.get("model") == "mid" for n in g.walk() for r in sc.rows(n))
+    m.set_param(block, "width", 60)
+    QTest.qWait(50)
+    w = face_sketch.to_world(g, circle.params["x"], circle.params["y"])
+    assert w[0] == pytest.approx(30, abs=0.01) and w[1] == pytest.approx(0)

@@ -1382,6 +1382,9 @@ class MainWindow(QMainWindow):
     def _isolation_changed(self):
         """The Object tab took or released the viewers: re-render both
         for the (un)isolated scope."""
+        from PyQt5.QtCore import QTimer
+        from . import model_refs           # fixes on the model follow it
+        QTimer.singleShot(0, lambda: model_refs.adopt(self))
         self.scene.rebuild()
         self._refresh_preview()
         self._refresh_anchor_markers()
