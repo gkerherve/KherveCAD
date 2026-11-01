@@ -174,7 +174,12 @@ def _corner_dirs(segs, p, tol=1e-4):
             if math.hypot(q[0] - p[0], q[1] - p[1]) < tol for d in ds]
 
 
-def match_corner(new_segs, p, want=None):
+def _same_kind(segs, want):
+    return sum(1 for ds in _corners(segs).values()
+               if not want or _dirs_match(want, ds))
+
+
+def match_corner(new_segs, p, want=None, prev=None):
     """Where the corner at *p*, whose edges leave it in the directions
     *want*, is in *new_segs*: the nearest corner with the same edge
     directions, else the nearest."""
@@ -191,7 +196,13 @@ def match_corner(new_segs, p, want=None):
         if best is None or key < best[0]:
             best = (key, q)
     (miss, d), q = best
-    if miss or (d > 3 * nearest and d > 1.0):
+    if miss:
+        return None
+    if d > 3 * nearest and d > 1.0 and not (
+            prev and _same_kind(new_segs, want) >= _same_kind(prev, want)):
+        # (as many such corners as before the edit: it only moved far —
+        # the block made 30 -> 40 again, its corner 10 mm off and the
+        # arc's end 2 mm off)
         # the corner is gone (a cut ate it, the user's block made too
         # narrow for its pipe): a far corner of the same shape is NOT
         # it — the reference dangles and stays where it was
@@ -316,7 +327,7 @@ def refresh_container(window, container):
                         moved = True
                 elif r["kind"] == "fix":
                     p = tuple(r["at"])
-                    q = match_corner(segs, p, r.get("dirs"))
+                    q = match_corner(segs, p, r.get("dirs"), prev)
                     if q is None:
                         _dangling(window, container)
                         continue
