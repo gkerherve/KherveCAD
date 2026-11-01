@@ -193,6 +193,44 @@ def palette(view, tokens):
             SHADOW_OPACITY)
 
 
+#: sin(elevation) of the default key light: the floor keeps its own
+#: colour there
+DEFAULT_LIGHT_Z = 1.0 / math.sqrt(1.0 + LIGHT_LEFT ** 2 + LIGHT_BACK ** 2)
+
+
+def bar_light(view, light):
+    """The stage's camera-tied *light* turned about z by the bar's
+    Light ↻ and raised or lowered by its Height, as the model's key
+    light is (view3d.light_vector): the defaults leave it as it was."""
+    turn = getattr(view, "light_turn", 0.0) or 0.0
+    h = getattr(view, "light_height", 0.0) or 0.0
+    if not turn and not h:
+        return light
+    lx, ly, lz = light
+    az = math.atan2(ly, lx) + turn * math.pi
+    base = math.asin(max(-1.0, min(1.0, lz)))
+    el = base + h * ((math.radians(85) - base) if h > 0
+                     else (base - math.radians(5)))
+    return (math.cos(el) * math.cos(az), math.cos(el) * math.sin(az),
+            math.sin(el))
+
+
+def lit_colour(view, colour, light):
+    """*colour* lit like a face of the model: by the light's height
+    (a flat floor faces straight up, so n . l = l_z), then the lighting
+    bar's Bright / Contrast."""
+    k = (0.55 + 0.45 * max(light[2], 0.0)) / \
+        (0.55 + 0.45 * DEFAULT_LIGHT_Z)
+    hue, sat, val, alpha = colour.getHsvF()
+    out = QColor.fromHsvF(max(hue, 0.0), sat, min(max(val * k, 0.0), 1.0))
+    out.setAlphaF(alpha)
+    adjust = getattr(view, "_light", None)
+    params = adjust() if callable(adjust) else None
+    if params is not None:
+        out = view._adjust(out, *params)
+    return out
+
+
 class Stage:
     """The platform and its shadow for one View3D, with the per-mesh
     and per-yaw caches that keep it cheap to repaint.
@@ -290,7 +328,12 @@ class Stage:
         if (forward[2] > -1e-3) if ortho else (eye[2] <= z0 + 1e-6):
             return False
         top_c, side_c, rim_c, opacity = palette(view, tokens)
-        light = light_dir(right, forward)
+        # the lighting bar's light (2026-11-01, the user: turning or
+        # raising the light must light the floor too) — the shadow falls
+        # away from it and the floor brightens or dims with it
+        light = bar_light(view, light_dir(right, forward))
+        top_c = lit_colour(view, top_c, light)
+        side_c = lit_colour(view, side_c, light)
 
         # rim points, top and bottom (None = behind the near plane)
         top, bottom = [], []
@@ -317,7 +360,10 @@ class Stage:
         disc = homography.map(disc)               # near-clipped by Qt
         painter.setPen(Qt.NoPen)
         if INFINITE:
-            painter.setBrush(top_c)
+            painter.setBrush(self._light_gradient(view, eye, right, up,
+                                                  forward, cx, cy, z0,
+                                                  radius * 2.0, light,
+                                                  top_c))
             painter.drawPath(disc)
             self._fade_horizon(view, painter, disc, eye, forward, z0,
                                tokens, ortho)
@@ -366,6 +412,29 @@ class Stage:
         grad.setColorAt(1.0, clear)
         painter.setBrush(grad)
         painter.drawPath(disc)
+
+    @staticmethod
+    def _light_gradient(view, eye, right, up, forward, cx, cy, z0, reach,
+                        light, top_c):
+        """The floor a touch brighter on the light's side and darker
+        on the far side, along where the light stands on screen."""
+        lx, ly = light[0], light[1]
+        flat = math.hypot(lx, ly)
+        if flat < 1e-6:
+            return top_c
+        lx, ly = lx / flat, ly / flat
+        r = reach * 0.5
+        near = view._project(eye, right, up, forward,
+                             (cx + lx * r, cy + ly * r, z0))
+        far = view._project(eye, right, up, forward,
+                            (cx - lx * r, cy - ly * r, z0))
+        if near is None or far is None:
+            return top_c
+        grad = QLinearGradient(QPointF(near[0], near[1]),
+                               QPointF(far[0], far[1]))
+        grad.setColorAt(0.0, top_c.lighter(106))
+        grad.setColorAt(1.0, top_c.darker(110))
+        return grad
 
     @staticmethod
     def _top_gradient(rect, top_c):

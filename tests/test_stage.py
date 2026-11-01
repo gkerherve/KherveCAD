@@ -193,3 +193,24 @@ def test_cluster_decimates_without_losing_the_outline(app):
     (x0, _y0, _z0), (x1, _y1, _z1) = stage.bounds(small)
     assert x0 == pytest.approx(-10, abs=1.0) and x1 == pytest.approx(10,
                                                                      abs=1.0)
+
+
+def test_the_lighting_bar_lights_the_floor(app):
+    """The user: changing the light must change the floor too — lower
+    it and the floor dims, turn it and the shadow swings round."""
+    view = _view(_box(-10, -10, 20, 20), True)
+    eye, right, up, forward = view._camera()
+    spot = (20, 190)                  # bare floor, bottom-left
+    base = _image(view)
+    view.light_height = -1.0
+    low = _image(view)
+    view.light_height = 1.0
+    high = _image(view)
+    assert _lum(low, *spot) < _lum(base, *spot) - 60
+    assert _lum(high, *spot) > _lum(base, *spot)
+    view.light_height = 0.0
+    lit = stage.bar_light(view, stage.light_dir(right, forward))
+    view.light_turn = 0.5
+    turned = stage.bar_light(view, stage.light_dir(right, forward))
+    assert abs(lit[0] * turned[0] + lit[1] * turned[1]) < 0.05  # 90°
+    assert _image(view) != base                    # the shadow moved
