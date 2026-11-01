@@ -378,6 +378,7 @@ def _source_world(window, source):
     import numpy as np
     from . import sketch_constraints as sc
     name, entity = source
+    entity = {"o": "c", "a1": "p1", "a2": "p2"}.get(entity, entity)
     node = next((n for n in window.model.root.walk() if n.name == name), None)
     if node is None or node.parent is None:
         return None
@@ -388,6 +389,18 @@ def _source_world(window, source):
         return None
     m = sketch_matrix(window, node.parent)
     return [(m @ np.array([p[0], p[1], 0.0, 1.0]))[:3].tolist() for p in got]
+
+
+def _follow_radius(window, node):
+    """A reference circle keeps its source's radius."""
+    from . import sketch_constraints as sc
+    name, entity = node.params["ref_source"]
+    source = next((n for n in window.model.root.walk() if n.name == name),
+                  None)
+    try:
+        node.params["radius"] = str(sc._circle(source, entity, {})[1])
+    except (AttributeError, KeyError, ValueError):
+        pass
 
 
 def follow_references(window, cont):
@@ -423,6 +436,8 @@ def follow_references(window, cont):
             continue
         loc = [tuple(round(float(v), 6) for v in
                      (inv @ np.array([*p, 1.0]))[:2]) for p in world]
+        if node.name.startswith("Reference circle"):
+            _follow_radius(window, node)
         if node.type == "circle":
             pairs = [("c", ("x", "y"), loc[0])]
         else:

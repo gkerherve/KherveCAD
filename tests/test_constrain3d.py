@@ -79,3 +79,55 @@ def test_command_plus_and_minus_zoom_the_3d_view(win):
     assert v.distance < before
     win._zoom(1 / 1.25)
     assert v.distance == __import__("pytest").approx(before, rel=0.01)
+
+
+def _two_sketches(win):
+    m = win.model
+    g, line = _setup(win)
+    other = m.add_node("union", {}, name="Other sketch")
+    far = m.add_node("line", dict(x1=0, y1=30, x2=40, y2=30, width=0.2),
+                     parent=other)
+    round_ = m.add_node("circle", dict(x=70, y=30, radius=6), parent=other)
+    mine = m.add_node("circle", dict(x=70, y=0, radius=3), parent=g)
+    QTest.qWait(50)
+    win.view3d.fit()
+    return g, line, other, far, round_, mine
+
+
+def test_a_relation_crosses_sketches_through_a_reference(win):
+    from khervecad import constrain3d
+    g, line, other, far, _r, _m = _two_sketches(win)
+    constrain3d.start(win, "con_parallel")
+    tool = win.view3d.edit_tool
+    tool.click(*_screen(tool, (20, 3, 0)))
+    tool.click(*_screen(tool, (20, 30, 0)))
+    assert line.params["y1"] == pytest.approx(line.params["y2"], abs=1e-3)
+    assert far.params["y1"] == 30 and "constraints" not in other.params
+    assert [c.name for c in g.children if c.params.get("ref_source")] == [
+        "Reference edge"]
+    assert any(r["kind"] == "parallel" for r in g.params["constraints"])
+
+
+def test_equal_circles_across_sketches_leaves_no_dimension(win):
+    from khervecad import constrain3d
+    g, _l, _o, _f, round_, mine = _two_sketches(win)
+    constrain3d.start(win, "con_equal")
+    tool = win.view3d.edit_tool
+    tool.click(*_screen(tool, (73, 0, 0)))
+    tool.click(*_screen(tool, (76, 30, 0)))
+    assert float(mine.params["radius"]) == pytest.approx(6, abs=1e-3)
+    assert round_.params["radius"] == 6
+    assert not [r for r in g.params["constraints"] if "value" in r]
+
+
+def test_a_refused_relation_leaves_no_reference(win):
+    from khervecad import constrain3d, sketch_constraints as sc
+    g, line, _o, _f, _r, _m = _two_sketches(win)
+    sc.add(win.model, g, "vertical", [sc.ref_of(g, line, "l")])
+    constrain3d.start(win, "con_parallel")
+    tool = win.view3d.edit_tool
+    x = line.params["x1"]
+    tool.click(*_screen(tool, (x, (line.params["y1"] + line.params["y2"]) / 2,
+                               0)))
+    tool.click(*_screen(tool, (20, 30, 0)))
+    assert not [c for c in g.children if c.params.get("ref_source")]

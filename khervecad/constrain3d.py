@@ -6,8 +6,9 @@ A constraint tool chosen while the 3D model shows (not sketching) runs
 here as a `View3D.edit_tool`: every sketch's points, lines, rectangle
 sides, circles and slot ends are projected onto the screen; the one
 under the mouse lights up (what a click would take), clicks collect the
-picks the relation needs — from one sketch, like the 2D tool — and the
-relation or dimension is added with the 2D tool's own rules
+picks the relation needs — a pick from another sketch comes in as a
+fixed reference that follows its source — and the relation or dimension
+is added with the 2D tool's own rules
 (sketch_constrain_ui: `_wants`, `finish`'s adjustments, `_smart`). What
 a solid hides is not offered. A drag still turns the view; Esc / a
 right click drops the picks, a second Esc ends the tool.
@@ -68,6 +69,13 @@ def _seg_px(p, a, b):
     t = 0.0 if n2 < 1e-12 else max(0.0, min(1.0, (
         (p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / n2))
     return math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy), t
+
+
+def sc_entity(node, kind):
+    """(entity, kind) of a reference node already in a sketch."""
+    if node.type == "line":
+        return "l", "line"
+    return ("o", "circle") if kind == "circle" else ("c", "point")
 
 
 class Constrain3D:
@@ -244,8 +252,14 @@ class Constrain3D:
             sc.add(model, cont, "fix", [sc.ref_of(cont, node, end)])
         return node, "l", "line"
 
-    def _copy_in(self, pick, cont):
-        """*pick*, of another sketch, as a reference in *cont*."""
+    def _copy_in(self, pick, cont, whole=False):
+        """*pick*, of another sketch, as a reference in *cont*; a circle
+        is its centre, or with *whole* the circle itself. One already
+        copied in is used again."""
+        wanted = [pick[0].name, pick[1]]
+        for n in cont.children:
+            if n.params.get("ref_source") == wanted:
+                return n, *sc_entity(n, pick[2])
         geo = {(id(n), e): g for n, e, _k, g in self.entities()}
         g = geo.get((id(pick[0]), pick[1]))
         if g is None:
@@ -260,9 +274,50 @@ class Constrain3D:
                                        tag)
         n = len(g) - 1                    # a circle: its centre
         c = [sum(p[i] for p in g[:n]) / n for i in range(3)]
+        if whole:
+            return self._add_circle(cont, self._in_sketch(cont, c), pick)
         return self._add_reference(
             cont, "point", [self._in_sketch(cont, c)],
             dict(ref_source=[pick[0].name, "c"]))
+
+    def _add_circle(self, cont, centre, pick):
+        """A fixed construction copy of another sketch's circle. Its
+        radius is written as text, an expression: the solver takes that
+        as given, so no dimension shows on a reference."""
+        model = self.window.model
+        radius = sc._circle(pick[0], pick[1], {})[1]
+        node = model.add_node(
+            "circle", dict(x=centre[0], y=centre[1], radius=str(radius)),
+            parent=cont, name="Reference circle")
+        model.set_modifier(node, "%")
+        sc.add(model, cont, "fix", [sc.ref_of(cont, node, "c")])
+        node.params["ref_source"] = [pick[0].name, pick[1]]
+        return node, "o", "circle"
+
+    def _home(self, picks):
+        """The sketch a relation between *picks* belongs to: the one
+        being worked on if it has a pick, else the first pick's."""
+        working = self._working_on()
+        if any(p[0].parent is working for p in picks):
+            return working
+        return picks[0][0].parent
+
+    def _bring_in(self, picks):
+        """(picks all in one sketch, the reference nodes made for it)."""
+        home = self._home(picks)
+        before = set(map(id, home.children))
+        out = []
+        for p in picks:
+            q = p if p[0].parent is home else self._copy_in(p, home, True)
+            if q is None:
+                raise ValueError("That shape cannot be brought into the "
+                                 "sketch.")
+            out.append(q)
+        return out, [n for n in home.children if id(n) not in before]
+
+    def _discard(self, made):
+        for node in reversed(made):
+            self.window.model.remove_node(node)
 
     def model_edge(self, x, y):
         """The model's corner or edge under the screen point, anywhere on
@@ -445,10 +500,6 @@ class Constrain3D:
         if hit is None:
             self._say(self._prompt())
             return None
-        if self.picks and hit[0].parent is not self.picks[0][0].parent:
-            self._say("Constraints join shapes of one sketch: pick a "
-                      "shape beside the first.")
-            return None
         if self.picks and hit[:2] == self.picks[0][:2]:
             self._say("That is the first pick — click something else.")
             return None
@@ -467,6 +518,11 @@ class Constrain3D:
         from . import sketch_constrain_ui as ui
         picks, self.picks = list(self.picks), []
         kind = self.kind
+        try:
+            picks, made = self._bring_in(picks)
+        except (ValueError, KeyError) as exc:
+            self._say(str(exc))
+            return None
         if kind == "coincident" and any(k != "point" for _n, _e, k in picks):
             kind = "point_on"
         if kind == "point_on" and picks[0][2] != "point":
@@ -480,11 +536,13 @@ class Constrain3D:
             text = ui._ask_value(self.window.view2d.scene(), kind,
                                  sc.measure(container, kind, refs))
             if text is None:
+                self._discard(made)
                 return None
             value = ui._value(text)
         try:
             report = sc.add(self.window.model, container, kind, refs, value)
         except ValueError as exc:
+            self._discard(made)
             self._say(str(exc))
             return None
         self.view.update()

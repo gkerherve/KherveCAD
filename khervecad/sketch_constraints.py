@@ -144,7 +144,12 @@ def _f(node, key, vals, default=0.0):
     if k in vals:
         return vals[k]
     v = node.params.get(key, default)
-    return float(v) if _num(v) else default
+    if _num(v):
+        return float(v)
+    try:                         # a number written as text: a given size
+        return float(v)
+    except (TypeError, ValueError):
+        return default
 
 
 # ------------------------------------------------------------- entities
@@ -556,7 +561,8 @@ def add(model, container, kind, refs, value=None, edge=None):
     # — and so does everything else in the sketch (earlier relations
     # would otherwise nudge a circle while the new one is met)
     shapes = [entity(container, r)[0] for r in refs]
-    moving = {n.id for n in shapes if n.type == "line"}
+    moving = {n.id for n in shapes if n.type == "line"
+              and not n.params.get("ref_source")}
     keep = ([(n.id, path) for n in container.children
              if n.id not in moving and n.type in SHAPES
              for path, _v in _vars(n, False)] if moving else [])
