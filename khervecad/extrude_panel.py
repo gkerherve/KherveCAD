@@ -114,7 +114,7 @@ def direction_of(ext):
     p = ext.params
     if p.get("center"):
         return SYMMETRIC
-    if _num(p.get("height2")) > 0:
+    if _num(p.get("height2")) > 0.02:      # (0.01: a cut's lead, re-imported)
         return TWO
     return ONE
 

@@ -187,10 +187,11 @@ module kcad_symmetry(n = [1, 0, 0], c = [0, 0, 0]) {
     # a linear extrude turned to go down -Z (its `reverse` param)
     "extrude_reverse": """\
 module kcad_extrude_reverse(height = 10, twist = 0, scale = 1,
-                            center = false, slices = undef) {
-    mirror([0, 0, 1]) linear_extrude(height = height, twist = twist,
-                                     scale = scale, center = center,
-                                     slices = slices) children();
+                            center = false, slices = undef, lead = 0) {
+    mirror([0, 0, 1]) translate([0, 0, -lead])
+        linear_extrude(height = height + lead, twist = twist,
+                       scale = scale, center = center,
+                       slices = slices) children();
 }""",
     # a linear extrude going both ways (its `height2`, Direction 2)
     "extrude_two": """\

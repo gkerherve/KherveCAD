@@ -56,6 +56,9 @@ KEY = "constraints"
 SHAPES = ("line", "rect", "circle", "polygon")
 TOL = 1e-6
 MAX_ITER = 60
+#: a shape pulled by a relation MOVES before it resizes (the user: a
+#: square dimensioned from the plate's top was squashed, not moved)
+SIZE_WEIGHT = 1e-5
 
 #: kind -> (label, what to pick, takes a value)
 KINDS = {
@@ -431,7 +434,9 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
             # moves: the rest follows it), the rest of an edited shape
             # moves less than the shapes not touched
             w.append(1e-6 if (node.id, path) in held else
-                     0.05 if node.id in prefer else 1.0)
+                     0.05 if node.id in prefer else
+                     SIZE_WEIGHT if path in ("width", "height", "radius")
+                     else 1.0)
     x0 = np.array(x0, float)
     W = np.array(w, float)
     by_id = {n.id: n for n in nodes}

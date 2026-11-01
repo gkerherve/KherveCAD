@@ -1006,6 +1006,11 @@ def linear_extrude_mesh(node: CadNode, env=None):
     if _two_way(p):                   # Direction 2: down -Z as well
         h2 = float(p.get("height2") or 0.0)
         height, z0 = height + h2, -h2
+    else:
+        from .model import cut_lead
+        lead = cut_lead(node)
+        if lead:                      # a cut starts just outside its face
+            height, z0 = height + lead, z0 - lead
     slices = max(int(p.get("segments") or 0), 1)
     if twist and slices == 1:
         slices = max(int(abs(twist) / 6), 8)

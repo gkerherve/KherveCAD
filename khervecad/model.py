@@ -549,6 +549,26 @@ def keeps_segments(segments) -> bool:
         not isinstance(segments, bool) and 0 < segments <= POLYGON_SEGMENTS
 
 
+#: a cutting extrude starts this far (mm) outside the face it is sketched
+#: on: tool and face in one plane left a skin over the cut (the user's hole
+#: in a sloped face, closed by a film however deep it went)
+CUT_LEAD = 0.01
+
+
+def cut_lead(node):
+    """How far an uncentred extrude that CUTS starts behind its sketch
+    plane: it is in a difference, past the first child. Else 0."""
+    if node.params.get("center"):
+        return 0.0
+    child, parent = node, node.parent
+    while parent is not None:
+        if parent.type == "difference" and parent.children and \
+                parent.children[0] is not child:
+            return CUT_LEAD
+        child, parent = parent, parent.parent
+    return 0.0
+
+
 def _two_way(p):
     """A linear extrude going both ways (Direction 2): a positive depth
     on an uncentred, forward extrude."""
@@ -1120,12 +1140,18 @@ class CadNode:
                 args.append("center=true")
             if p["segments"]:
                 args.append(f"slices={fmt(p['segments'])}")
+            lead = cut_lead(self)
             if p.get("reverse"):
                 # down -Z: OpenSCAD's mirror in a helper, so it re-imports
                 # as this one node (organic HELPERS "extrude_reverse")
+                if lead:
+                    args.append(f"lead={fmt(lead)}")
                 return f"kcad_extrude_reverse({', '.join(args)})"
             if _two_way(p):
                 args.insert(1, f"height2={fmt(p['height2'])}")
+                return f"kcad_extrude_two({', '.join(args)})"
+            if lead:
+                args.insert(1, f"height2={fmt(lead)}")
                 return f"kcad_extrude_two({', '.join(args)})"
             return f"linear_extrude({', '.join(args)})"
         if t == "rotate_extrude":

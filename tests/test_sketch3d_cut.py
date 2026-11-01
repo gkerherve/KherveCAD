@@ -367,7 +367,7 @@ def test_smart_dimension_between_two_sketches(win):
     a = m.add_node("union", {})
     ra = m.add_node("rect", dict(x=0, y=0, width=10, height=10), parent=a)
     b = m.add_node("union", {})
-    m.add_node("rect", dict(x=30, y=0, width=10, height=10), parent=b)
+    rb = m.add_node("rect", dict(x=30, y=0, width=10, height=10), parent=b)
     QApplication.processEvents()
     win.view3d.resize(800, 600)
     win.view3d.fit()
@@ -380,9 +380,11 @@ def test_smart_dimension_between_two_sketches(win):
         return q[0], q[1]
     tool.click(*at((10, 0, 0)))                      # a corner of a
     tool.click(*at((30, 0, 0)))                      # a corner of b
-    assert any(r["kind"] == "distance" for r in sc.rows(a))
-    assert any(n.name == "Reference point" for n in a.children)
-    assert ra.params["x"] + ra.params["width"] == pytest.approx(-20, abs=.01)
+    assert any(r["kind"] == "distance" for r in sc.rows(b))
+    assert any(n.name == "Reference point" for n in b.children)
+    # the newer sketch moves; the older one is what it is measured from
+    assert ra.params["x"] + ra.params["width"] == pytest.approx(10)
+    assert rb.params["x"] == pytest.approx(60, abs=.01)
 
 
 def test_the_tool_window_is_a_real_window(win):

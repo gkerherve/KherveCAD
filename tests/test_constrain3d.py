@@ -101,33 +101,133 @@ def test_a_relation_crosses_sketches_through_a_reference(win):
     tool = win.view3d.edit_tool
     tool.click(*_screen(tool, (20, 3, 0)))
     tool.click(*_screen(tool, (20, 30, 0)))
-    assert line.params["y1"] == pytest.approx(line.params["y2"], abs=1e-3)
-    assert far.params["y1"] == 30 and "constraints" not in other.params
-    assert [c.name for c in g.children if c.params.get("ref_source")] == [
+    # the newer sketch hangs on the older: its line tilts, the first stays
+    assert (line.params["y1"], line.params["y2"]) == (0, 6)
+    assert far.params["y2"] - far.params["y1"] == pytest.approx(
+        (far.params["x2"] - far.params["x1"]) * 6 / 40, abs=1e-3)
+    assert "constraints" not in g.params
+    assert [c.name for c in other.children if c.params.get("ref_source")] == [
         "Reference edge"]
-    assert any(r["kind"] == "parallel" for r in g.params["constraints"])
+    assert any(r["kind"] == "parallel" for r in other.params["constraints"])
 
 
 def test_equal_circles_across_sketches_leaves_no_dimension(win):
     from khervecad import constrain3d
-    g, _l, _o, _f, round_, mine = _two_sketches(win)
+    _g, _l, other, _f, round_, mine = _two_sketches(win)
     constrain3d.start(win, "con_equal")
     tool = win.view3d.edit_tool
     tool.click(*_screen(tool, (73, 0, 0)))
     tool.click(*_screen(tool, (76, 30, 0)))
-    assert float(mine.params["radius"]) == pytest.approx(6, abs=1e-3)
-    assert round_.params["radius"] == 6
-    assert not [r for r in g.params["constraints"] if "value" in r]
+    assert float(round_.params["radius"]) == pytest.approx(3, abs=1e-3)
+    assert mine.params["radius"] == 3
+    assert not [r for r in other.params["constraints"] if "value" in r]
 
 
 def test_a_refused_relation_leaves_no_reference(win):
     from khervecad import constrain3d, sketch_constraints as sc
-    g, line, _o, _f, _r, _m = _two_sketches(win)
-    sc.add(win.model, g, "vertical", [sc.ref_of(g, line, "l")])
+    g, line, other, far, _r, _m = _two_sketches(win)
+    # the newer sketch's line cannot be both horizontal and along a slope
+    sc.add(win.model, other, "horizontal", [sc.ref_of(other, far, "l")])
     constrain3d.start(win, "con_parallel")
     tool = win.view3d.edit_tool
-    x = line.params["x1"]
+    x = line.params["x1"] + 20
     tool.click(*_screen(tool, (x, (line.params["y1"] + line.params["y2"]) / 2,
                                0)))
     tool.click(*_screen(tool, (20, 30, 0)))
-    assert not [c for c in g.children if c.params.get("ref_source")]
+    assert not [c for c in other.children if c.params.get("ref_source")]
+
+
+def test_two_cubes_follow_the_plate_top_and_keep_their_size(win):
+    """Dimension from the plate's top line to a cube, and from that cube
+    to a second one: 64 -> 60 takes both down 4 (the user)."""
+    from khervecad import constrain3d, face_sketch as fs, sketch_constraints as sc
+    m = win.model
+    obj = m.add_node("component", {}, name="Part")
+    obj.visible = True
+    win.builder.open_component(obj)
+    QTest.qWait(50)
+    g = m.add_node("union", {}, parent=obj)
+    ext = m.add_node("linear_extrude", dict(height=16), parent=g)
+    plate = m.add_node("rect", dict(x=0, y=0, width=64, height=64), parent=ext)
+    sc.add(m, ext, "fix", [sc.ref_of(ext, plate, "v0")])
+    sc.add(m, ext, "length", [sc.ref_of(ext, plate, "e1")], 64.0)
+    QTest.qWait(100)
+    v = win.view3d
+    v.resize(800, 600)
+    v.set_view("Top", animate=False)
+    v.fit()
+
+    def cube(part, z, h, at, size):
+        gr = fs.make(win, part, (*at, z), (0, 0, 1), open_2d=False)
+        e = m.add_node("linear_extrude", dict(height=h), parent=gr)
+        lx, ly = fs.to_local(gr, (*at, z))
+        return gr, e, m.add_node("rect", dict(x=lx, y=ly, width=size,
+                                              height=size), parent=e)
+
+    def dim(a, b, value):
+        win.view2d.scene().ask_value = lambda k, x: str(value)
+        constrain3d.start(win, "con_dimension")
+        t = v.edit_tool
+        t.click(*_screen(t, a))        # the model's line first
+        t.click(*_screen(t, b))
+        constrain3d.end(win)
+        QTest.qWait(50)
+
+    def tops(gr, n):
+        return [round(fs.to_world(gr, *sc._point(n, i, {}))[1], 2)
+                for i in ("v0", "v2")]
+    ga, ea, a = cube(g, 16, 5, (30, 50), 10)
+    QTest.qWait(100)
+    dim((20, 64, 16), (35, 60, 21), 10)
+    assert tops(ga, a) == [44, 54]
+    gb, eb, b = cube(ga, 21, 4, (32, 38), 4)
+    QTest.qWait(100)
+    dim((34, 54, 21), (34, 42, 25), 8)
+    assert tops(gb, b) == [42, 46]
+    assert not [c for c in ea.children if c is not a and "Reference edge"
+                not in c.name]
+    row = [i for i, r in enumerate(sc.rows(ext)) if r.get("value") == 64.0][0]
+    sc.set_value(m, ext, row, 60.0)
+    QTest.qWait(300)
+    assert tops(ga, a) == [40, 50]
+    assert tops(gb, b) == [38, 42]
+
+
+def test_a_refused_relation_says_so_on_the_view(win):
+    from khervecad import constrain3d, sketch_constraints as sc
+    g, line, other, far, _r, _m = _two_sketches(win)
+    sc.add(win.model, other, "horizontal", [sc.ref_of(other, far, "l")])
+    constrain3d.start(win, "con_parallel")
+    tool = win.view3d.edit_tool
+    tool.click(*_screen(tool, (20, 3, 0)))
+    tool.click(*_screen(tool, (20, 30, 0)))
+    assert "refused" in win.view3d._flash_text
+
+
+def test_a_cut_opens_a_sloped_face(win):
+    """No skin over the hole on the triangle's slope (the user)."""
+    import math
+    from khervecad import cut_feature, face_sketch as fs
+    m = win.model
+    obj = m.add_node("component", {}, name="Rib")
+    obj.visible = True
+    win.builder.open_component(obj)
+    r = m.add_node("rotate", dict(x=90, y=0, z=0), parent=obj)
+    e = m.add_node("linear_extrude", dict(height=12), parent=r)
+    m.add_node("polygon", dict(points=[[0, 0], [64, 0], [0, 48]]), parent=e)
+    QTest.qWait(200)
+    L = math.hypot(64, 48)
+    n = (48 / L, 0, 64 / L)
+    P = (32, -6, 24)
+    g = fs.make(win, r, P, n, open_2d=False)
+    g.params["cut"] = "extruded_cut"
+    lx, ly = fs.to_local(g, P)
+    m.add_node("circle", dict(x=lx, y=ly, radius=3), parent=g)
+    QTest.qWait(50)
+    cut_feature.finish(win, g)
+    QTest.qWait(400)
+    near = [t for t in win.view3d.model_mesh
+            if math.dist([sum(v[i] for v in t[:3]) / 3 for i in range(3)], P)
+            < 2.5]
+    assert not near
+    assert "lead=0.01" in m.to_scad().replace(" ", "")

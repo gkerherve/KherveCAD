@@ -675,6 +675,7 @@ def edit(window, rect, cont, index):
             sc.set_value(window.model, cont, index, value)
         except (ValueError, KeyError, IndexError) as exc:
             window.statusBar().showMessage(str(exc), 5000)
+            view.flash("Dimension refused: %s" % exc, 8000)
         view.update()
     box.editingFinished.connect(done)
     return box

@@ -115,8 +115,9 @@ class Constrain3D:
         """[(node, entity, kind, world geometry)] of every sketch."""
         from . import sketch_constrain_ui as ui
         out = []
-        for cont, m in sketches(self.window):
-            for node in self._shapes(cont):
+        for cont, m0 in sketches(self.window):
+            for m, node in [(m, n) for m in self._levels(cont, m0)
+                            for n in self._shapes(cont)]:
                 for name, kind in ui._entities(node):
                     try:
                         if kind == "point":
@@ -133,6 +134,21 @@ class Constrain3D:
                     except (KeyError, ValueError, IndexError, TypeError):
                         continue
                     out.append((node, name, kind, g))
+        return out
+
+    @staticmethod
+    def _levels(cont, m):
+        """The frames a sketch's shapes show at: its plane, and the far
+        end of its extrude — the top of a cube IS its sketch's outline,
+        and that is the edge one sees and clicks (the plane's far side
+        lies hidden under the cube)."""
+        out = [m]
+        height = cont.params.get("height")
+        if cont.type == "linear_extrude" and \
+                isinstance(height, (int, float)) and height and \
+                not cont.params.get("center"):
+            out.append([[r[0], r[1], r[2], r[3] + r[2] * float(height)]
+                        for r in m])
         return out
 
     def _allowed(self):
@@ -296,11 +312,15 @@ class Constrain3D:
 
     def _home(self, picks):
         """The sketch a relation between *picks* belongs to: the one
-        being worked on if it has a pick, else the first pick's."""
+        being worked on if it has a pick, else the latest in the tree: the
+        newer sketch is the one that hangs on the older."""
         working = self._working_on()
         if any(p[0].parent is working for p in picks):
             return working
-        return picks[0][0].parent
+        order = {id(n): i for i, n in
+                 enumerate(self.window.model.root.walk())}
+        return max((p[0].parent for p in picks),
+                   key=lambda c: order.get(id(c), -1))
 
     def _bring_in(self, picks):
         """(picks all in one sketch, the reference nodes made for it)."""
@@ -414,10 +434,16 @@ class Constrain3D:
         x, y = event.pos().x(), event.pos().y()
         hit = self.pick_at(x, y)
         near = None
+        edge = None
         if hit is None and self.kind == "dimension":
             parent = self.picks[0][0].parent if self.picks \
                 else self._working_on()
             near = (self.model_near(x, y, parent), parent)
+            if not near[0]:
+                edge = self.model_edge(x, y)
+        if edge != getattr(self, "edge_hover", None):
+            self.edge_hover = edge
+            self.view.update()
         if hit != self.hover or near != getattr(self, "model_hover", None):
             self.hover = hit
             self.model_hover = near
@@ -446,6 +472,7 @@ class Constrain3D:
 
     def drop(self):
         self.picks = []
+        self.model_first = None
         self.view.update()
         self._say(self._prompt())
 
@@ -464,6 +491,12 @@ class Constrain3D:
     # ---------------------------------------------------------- logic
     def _say(self, text):
         self.window.statusBar().showMessage(text, 8000)
+
+    def _refuse(self, text):
+        """Said where the user is looking: across the 3D view, and why
+        (the status bar alone goes unseen)."""
+        self._say(text)
+        self.view.flash(text, 8000)
 
     def _prompt(self):
         from . import sketch_constrain_ui as ui
@@ -521,7 +554,7 @@ class Constrain3D:
         try:
             picks, made = self._bring_in(picks)
         except (ValueError, KeyError) as exc:
-            self._say(str(exc))
+            self._refuse("Relation refused: %s" % exc)
             return None
         if kind == "coincident" and any(k != "point" for _n, _e, k in picks):
             kind = "point_on"
@@ -543,7 +576,7 @@ class Constrain3D:
             report = sc.add(self.window.model, container, kind, refs, value)
         except ValueError as exc:
             self._discard(made)
-            self._say(str(exc))
+            self._refuse("Relation refused: %s" % exc)
             return None
         self.view.update()
         self._say("%s added — %s" % (sc.KINDS[kind][0],
@@ -552,6 +585,7 @@ class Constrain3D:
 
     def _dimension_click(self, hit, x=None, y=None):
         from . import sketch_constrain_ui as ui
+        parent = None
         if hit is None and x is not None:
             # the model's corner, centre or edge (SolidWorks)
             parent = self.picks[0][0].parent if self.picks \
@@ -569,7 +603,27 @@ class Constrain3D:
                         dict(ref_world=[list(p) for p in pts]))
             except (ValueError, KeyError):
                 hit = None
+        waiting = getattr(self, "model_first", None)
+        if waiting is not None and hit is not None and not self.picks:
+            # the model's line clicked first: it comes into this sketch
+            self.model_first = None
+            kind, pts = waiting
+            parent = hit[0].parent
+            self.picks.append(self._add_reference(
+                parent, kind, [self._in_sketch(parent, p) for p in pts],
+                dict(ref_world=[list(p) for p in pts])))
         if not self.picks:
+            if hit is None and x is not None and parent is None:
+                # no sketch yet: the model's edge waits for the shape
+                edge = self.model_edge(x, y)
+                if edge is not None:
+                    kind, where = edge
+                    self.model_first = (kind, [where] if kind == "point"
+                                        else list(where))
+                    self.view.update()
+                    self._say("Smart Dimension (3D): now click the shape in "
+                              "the sketch to dimension from this edge.")
+                    return None
             if hit is None:
                 self._say(self._prompt())
                 return None
@@ -590,22 +644,20 @@ class Constrain3D:
             # another sketch's point or line: copied, fixed, into the
             # sketch being worked on, as the 2D view does (2026-11-01, the
             # user: nothing happened)
-            working = self._working_on()
-            home = working if hit[0].parent is working or \
-                first[0].parent is working else first[0].parent
+            home = self._home([first, hit])
             if hit[0].parent is not home:
                 hit = self._copy_in(hit, home)
             if first[0].parent is not home:
                 first = self._copy_in(first, home)
             if hit is None or first is None:
                 self.picks = []
-                self._say("Those two cannot be dimensioned together.")
+                self._refuse("Those two cannot be dimensioned together.")
                 return None
         self.picks = []
         made = ui._smart(first, hit)
         self.view.update()
         if made is None:
-            self._say("Those two cannot be dimensioned together.")
+            self._refuse("Those two cannot be dimensioned together.")
             return None
         kind, chosen = made
         container = chosen[0][0].parent
@@ -625,7 +677,7 @@ class Constrain3D:
                 report, _scaled = sc.add_dimension(model, container, kind,
                                                    refs, ui._value(text))
         except ValueError as exc:
-            self._say(str(exc))
+            self._refuse("Dimension refused: %s" % exc)
             return None
         self._say("%s %s — %s" % (sc.KINDS[kind][0], text,
                                   sc.status_text(report)))
@@ -650,6 +702,25 @@ class Constrain3D:
                 else:
                     painter.drawLine(QPointF(pts[0][0], pts[0][1]),
                                      QPointF(pts[1][0], pts[1][1]))
+
+        for where, colour in (
+                (getattr(self, "edge_hover", None), QColor(0, 190, 255, 235)),
+                (getattr(self, "model_first", None), QColor(230, 120, 20))):
+            if not where:
+                continue
+            kind, got = where
+            pts = [project(p) for p in
+                   ([got] if kind == "point" and getattr(got[0], "__len__",
+                                                         None) is None
+                    else got)]
+            if not all(pts):
+                continue
+            painter.setPen(QPen(colour, 4))
+            if len(pts) == 1:
+                painter.drawEllipse(QPointF(pts[0][0], pts[0][1]), 5, 5)
+            else:
+                painter.drawLine(QPointF(pts[0][0], pts[0][1]),
+                                 QPointF(pts[1][0], pts[1][1]))
 
         def draw(item, colour, width):
             g = geo.get((id(item[0]), item[1]))
