@@ -348,3 +348,29 @@ def test_a_plain_fix_on_an_edge_middle_follows_the_model(win):
     QTest.qWait(50)
     w = face_sketch.to_world(g, circle.params["x"], circle.params["y"])
     assert w[0] == pytest.approx(30, abs=0.01) and w[1] == pytest.approx(0)
+
+
+def test_an_on_edge_row_off_its_edge_is_repaired():
+    """The user's block corner had its On Edge moved onto the plate's
+    edge 16 mm away, so every dimension "could not hold": the edge is put
+    back through the point, same direction."""
+    from khervecad.model import CadNode
+    from khervecad import model_refs
+    cont = CadNode("linear_extrude", "E")
+    rect = CadNode("rect", "R")
+    rect.params.update(x=16.0, y=22.0, width=40.0, height=42.0)
+    cont.add_child(rect) if hasattr(cont, "add_child") else (
+        cont.children.append(rect), setattr(rect, "parent", cont))
+    cont.params["constraints"] = [{"kind": "on_edge", "refs": ["0.v0"],
+                                   "edge": [0.0, 64.0, 0.0, 0.0]}]
+    assert model_refs._repair(cont) == 1
+    e = cont.params["constraints"][0]["edge"]
+    assert e[0] == pytest.approx(16) and e[2] == pytest.approx(16)
+
+
+def test_on_outline_needs_the_edge_on_the_model():
+    from khervecad import model_refs
+    segs = [((0, 0), (96, 0)), ((96, 0), (96, 64)), ((96, 64), (0, 64)),
+            ((0, 64), (0, 0))]
+    assert model_refs._on_outline(segs, [0, 64, 0, 0])
+    assert not model_refs._on_outline(segs, [16, 0, 16, 64])

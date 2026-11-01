@@ -42,6 +42,12 @@ ANGLE_TOL = math.radians(1.0)
 SAME = 1e-6
 
 _BUSY = False
+#: {container id: the outline last seen} — an on-edge reference follows
+#: only an edge that WAS on the model's outline (the user's block corner,
+#: drawn on a line 16 mm in from the plate's edge, was moved onto the
+#: plate's edge — the nearest parallel one — and every dimension after
+#: that "could not hold")
+_LAST = {}
 
 
 def _face_group(container):
@@ -213,6 +219,45 @@ def match_edge(new_segs, edge):
     return best[1] if best else None
 
 
+def _on_outline(segs, edge, tol=1e-3):
+    """True when the line of *edge* (ax, ay, bx, by) carries one of the
+    outline's segments."""
+    a, b = (edge[0], edge[1]), (edge[2], edge[3])
+    L = math.hypot(b[0] - a[0], b[1] - a[1]) or 1e-12
+
+    def off(p):
+        return abs((b[0] - a[0]) * (p[1] - a[1]) -
+                   (b[1] - a[1]) * (p[0] - a[0])) / L
+    return any(off(p) < tol and off(q) < tol for p, q in segs)
+
+
+def _repair(container):
+    """An on-edge row whose point is OFF its edge (moved by the bug
+    above) gets its edge back through the point, same direction — the
+    relation holds again and dimensions can change. Rows repaired."""
+    from . import sketch_constraints as sc
+    n = 0
+    for r in sc.rows(container):
+        if r.get("kind") != "on_edge" or not r.get("edge"):
+            continue
+        try:
+            idx, name = r["refs"][0].split(".", 1)
+            shape = container.children[int(idx)]
+            p = sc._point(shape, name, {})
+        except Exception:
+            continue
+        e = r["edge"]
+        dx, dy = e[2] - e[0], e[3] - e[1]
+        L = math.hypot(dx, dy) or 1e-12
+        off = (dx * (p[1] - e[1]) - dy * (p[0] - e[0])) / L
+        if abs(off) > 1e-3:
+            nx, ny = -dy / L * off, dx / L * off
+            r["edge"] = [round(e[0] + nx, 6), round(e[1] + ny, 6),
+                         round(e[2] + nx, 6), round(e[3] + ny, 6)]
+            n += 1
+    return n
+
+
 def _update_section(window, container):
     """The kept "Part section" polygons redrawn from the part now."""
     from . import sketch_section
@@ -253,6 +298,9 @@ def refresh_container(window, container):
     moved = False
     if refs:
         segs = outline(window, container)
+        prev = _LAST.get(container.id)
+        if segs:
+            _LAST[container.id] = segs
         if segs:
             for r in refs:
                 if r["kind"] == "fix" and r.get("model") == "mid":
@@ -277,6 +325,8 @@ def refresh_container(window, container):
                         r["at"] = [round(q[0], 6), round(q[1], 6)]
                         moved = True
                 else:
+                    if prev is None or not _on_outline(prev, r["edge"]):
+                        continue           # not an edge of the model
                     e = match_edge(segs, r["edge"])
                     if e is not None:
                         new = [round(v, 6) for v in (*e[0], *e[1])]
@@ -324,15 +374,21 @@ def adopt_container(window, container):
     block's top edge kept its place when the block narrowed.
     The number of rows adopted."""
     from . import sketch_constraints as sc
+    n = _repair(container)
+    try:
+        segs0 = outline(window, container)
+    except Exception:
+        segs0 = None
+    if segs0:
+        _LAST[container.id] = segs0        # what later edits follow from
     rows = sc.rows(container)
     plain = [r for r in rows if r.get("kind") == "fix" and
              not r.get("model") and r.get("at")]
     if not plain:
-        return 0
-    segs = outline(window, container)
+        return n
+    segs = segs0
     if not segs:
-        return 0
-    n = 0
+        return n
     for r in plain:
         p = tuple(r["at"])
         mid = next(((a, b) for a, b in segs if
@@ -362,8 +418,10 @@ def adopt(window):
     try:
         root = window._render_scope()[0]
         for node in list(root.walk()):
-            if node.children and node.params.get("constraints") and \
-                    plan(node, root) is not None:
+            if node.children and node.params.get("constraints"):
+                if plan(node, root) is None:
+                    n += _repair(node)
+                    continue
                 try:
                     n += adopt_container(window, node)
                 except Exception:
