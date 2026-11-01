@@ -493,7 +493,8 @@ def refresh(window):
     panel.show_row("offset", kind == "offset_face")
     panel.show_row("height2", d == TWO)
     panel.adjustSize()
-    panel.place()
+    if not panel._beside:
+        panel.place()
 
 
 def close(window, tool=None):

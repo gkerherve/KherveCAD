@@ -357,3 +357,37 @@ def test_an_older_face_sketch_takes_up_its_face(win):
     assert not far.params.get(fs.FACE_REF)
     model_refs.refresh(win)
     assert near.params["z"] == pytest.approx(20.0)     # back on the face
+
+
+def test_smart_dimension_between_two_sketches(win):
+    """The user's top of a rectangle to the extruded rectangle: another
+    sketch's point is copied in and the dimension is made."""
+    from khervecad import constrain3d, sketch_constraints as sc
+    m = win.model
+    a = m.add_node("union", {})
+    ra = m.add_node("rect", dict(x=0, y=0, width=10, height=10), parent=a)
+    b = m.add_node("union", {})
+    m.add_node("rect", dict(x=30, y=0, width=10, height=10), parent=b)
+    QApplication.processEvents()
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    win.view2d.scene().ask_value = lambda k, v: "50"
+    assert constrain3d.start(win, "con_dimension")
+    tool = win.view3d.edit_tool
+
+    def at(p):
+        q = tool._project()(p)
+        return q[0], q[1]
+    tool.click(*at((10, 0, 0)))                      # a corner of a
+    tool.click(*at((30, 0, 0)))                      # a corner of b
+    assert any(r["kind"] == "distance" for r in sc.rows(a))
+    assert any(n.name == "Reference point" for n in a.children)
+    assert ra.params["x"] + ra.params["width"] == pytest.approx(-20, abs=.01)
+
+
+def test_the_tool_window_is_a_real_window(win):
+    from PyQt5.QtCore import Qt
+    from khervecad import tool_panel
+    p = tool_panel.ToolPanel(win.view3d, "Test")
+    assert p.isWindow() and p.windowFlags() & Qt.Tool
+    p.deleteLater()

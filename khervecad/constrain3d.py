@@ -208,6 +208,74 @@ class Constrain3D:
             self.window.view2d.scene(), QPointF(pos[0], pos[1]), kind,
             parent=parent)
 
+    def _in_sketch(self, cont, world):
+        """World point -> (x, y) in *cont*'s sketch, along its normal."""
+        import numpy as np
+        from . import mesh
+        root = self.window._render_scope()[0]
+        iso = root if root is not self.window.model.root else None
+        with self.window._isolated_frame(iso):
+            m = _mul(mesh.ancestor_matrix(cont, {}, stop=iso),
+                     mesh.node_matrix(cont, {}))
+        p = np.linalg.inv(np.array(m, float)) @ np.array([*world, 1.0])
+        return round(float(p[0]), 6), round(float(p[1]), 6)
+
+    def _add_reference(self, cont, kind, pts):
+        """A fixed construction copy in *cont*: a pick, as the 2D view's."""
+        model = self.window.model
+        if kind == "point":
+            x, y = pts[0]
+            node = model.add_node("circle", dict(x=x, y=y, radius=0.25),
+                                  parent=cont, name="Reference point")
+            model.set_modifier(node, "%")
+            sc.add(model, cont, "fix", [sc.ref_of(cont, node, "c")])
+            return node, "c", "point"
+        (ax, ay), (bx, by) = pts
+        if math.hypot(bx - ax, by - ay) < 1e-6:     # seen end on: a point
+            return self._add_reference(cont, "point", [(ax, ay)])
+        node = model.add_node("line", dict(x1=ax, y1=ay, x2=bx, y2=by,
+                                           width=0.2), parent=cont,
+                              name="Reference edge")
+        model.set_modifier(node, "%")
+        for end in ("p1", "p2"):
+            sc.add(model, cont, "fix", [sc.ref_of(cont, node, end)])
+        return node, "l", "line"
+
+    def _copy_in(self, pick, cont):
+        """*pick*, of another sketch, as a reference in *cont*."""
+        geo = {(id(n), e): g for n, e, _k, g in self.entities()}
+        g = geo.get((id(pick[0]), pick[1]))
+        if g is None:
+            return None
+        if pick[2] == "point":
+            return self._add_reference(cont, "point",
+                                       [self._in_sketch(cont, g)])
+        if pick[2] == "line":
+            return self._add_reference(cont, "line",
+                                       [self._in_sketch(cont, p) for p in g])
+        n = len(g) - 1                    # a circle: its centre
+        c = [sum(p[i] for p in g[:n]) / n for i in range(3)]
+        return self._add_reference(cont, "point",
+                                   [self._in_sketch(cont, c)])
+
+    def model_edge(self, x, y):
+        """The model's corner or edge under the screen point, anywhere on
+        the part: ("point", p) or ("line", (a, b)) in world, or None."""
+        view = self.view
+        try:
+            desc, _key = view._pick_at(x, y)
+        except Exception:
+            return None
+        if not desc or desc.get("kind") != "edge" or not desc.get("seg"):
+            return None
+        a, b = desc["seg"]
+        project = self._project()
+        for p in (a, b):
+            q = project(p)
+            if q is not None and math.hypot(q[0] - x, q[1] - y) <= PICK_PX:
+                return "point", tuple(p)
+        return "line", (tuple(a), tuple(b))
+
     def pick_at(self, x, y):
         """The entity under the screen point (x, y), or None."""
         project = self._project()
@@ -396,6 +464,14 @@ class Constrain3D:
                 else self._working_on()
             try:
                 hit = self.model_pick(x, y, parent)
+                edge = self.model_edge(x, y) if hit is None and \
+                    parent is not None else None
+                if edge is not None:     # any edge of the part
+                    kind, where = edge
+                    pts = [where] if kind == "point" else list(where)
+                    hit = self._add_reference(
+                        parent, kind,
+                        [self._in_sketch(parent, p) for p in pts])
             except (ValueError, KeyError):
                 hit = None
         if not self.picks:
@@ -416,8 +492,20 @@ class Constrain3D:
                       "line.")
             return None
         if hit[0].parent is not first[0].parent:
-            self._say("Dimensions join shapes of one sketch.")
-            return None
+            # another sketch's point or line: copied, fixed, into the
+            # sketch being worked on, as the 2D view does (2026-11-01, the
+            # user: nothing happened)
+            working = self._working_on()
+            home = working if hit[0].parent is working or \
+                first[0].parent is working else first[0].parent
+            if hit[0].parent is not home:
+                hit = self._copy_in(hit, home)
+            if first[0].parent is not home:
+                first = self._copy_in(first, home)
+            if hit is None or first is None:
+                self.picks = []
+                self._say("Those two cannot be dimensioned together.")
+                return None
         self.picks = []
         made = ui._smart(first, hit)
         self.view.update()

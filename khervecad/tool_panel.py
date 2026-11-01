@@ -104,6 +104,8 @@ class _Box(QFrame):
 class ToolPanel(QFrame):
     """A tool's window: title, rows, OK / Cancel."""
 
+    _last_pos = None           # a moved window opens there next time
+
     def __init__(self, view, title, on_ok=None, on_cancel=None):
         win = view.window()
         # the drawing area: a QGraphicsView's viewport, else the widget
@@ -112,6 +114,12 @@ class ToolPanel(QFrame):
         self._beside = win is not None and win is not view
         super().__init__(win if self._beside else area)
         self.view, self.area = view, area
+        if self._beside:
+            # a real window, moved by its title bar (2026-11-01, the user);
+            # it does not take the keyboard from the view
+            self.setWindowFlags(Qt.Tool)
+            self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+            self.setWindowTitle(title)
         self.setObjectName("toolPanel")
         self.setStyleSheet(_qss())
         self.boxes, self.fields, self._rows = {}, {}, {}
@@ -261,21 +269,35 @@ class ToolPanel(QFrame):
 
     def place(self):
         if self._beside:
-            vp = self.area
-            if not vp.isVisible():
-                return
-            top_left = vp.mapTo(self.parentWidget(), QPoint(0, 0))
-            x = top_left.x() - self.width() - 6
-            if x >= 0:
-                self.move(x, top_left.y() + 8)
+            if ToolPanel._last_pos is not None:   # where it was left
+                self.move(ToolPanel._last_pos)
             else:
-                self.move(top_left.x() + 12, top_left.y() + 12)
+                vp = self.area
+                if not vp.isVisible():
+                    return
+                # first beside the view, over the tree, not on the drawing
+                at = vp.mapToGlobal(QPoint(0, 8))
+                x = at.x() - self.width() - 6
+                win = self.parentWidget().mapToGlobal(QPoint(0, 0))
+                self.move(x if x >= win.x() else at.x() + 12, at.y())
+            self._placed = True
         else:
             self.move(12, 12)
         self.raise_()
 
+    def moveEvent(self, event):
+        super().moveEvent(event)
+        if self._beside and getattr(self, "_placed", False) and \
+                self.isVisible():
+            ToolPanel._last_pos = self.pos()
+
+    def closeEvent(self, event):
+        """The window's own close button is Cancel."""
+        event.ignore()
+        self.cancel.click()
+
     def eventFilter(self, obj, event):
-        if event.type() in (QEvent.Resize, QEvent.Move, QEvent.Show) \
-                and self.isVisible():
+        if not self._beside and event.type() in (
+                QEvent.Resize, QEvent.Move, QEvent.Show) and self.isVisible():
             self.place()
         return False
