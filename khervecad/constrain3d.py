@@ -284,6 +284,8 @@ class Constrain3D:
 
     def pick_at(self, x, y):
         """The entity under the screen point (x, y), or None."""
+        if self.kind == "delete":
+            return None
         project = self._project()
         solid = self._occluder()
         working = self._working_on()
@@ -341,6 +343,15 @@ class Constrain3D:
         if event.button() == Qt.RightButton:
             self.drop()
             return True
+        if self.kind == "delete" and event.button() == Qt.LeftButton:
+            from PyQt5.QtCore import QPoint
+            from . import view3d_menu
+            pos = event.pos()
+            if view3d_menu.relation_at(self.window, pos) or \
+                    view3d_menu.dimension_at(self.window, pos):
+                # (before the value's own click, which would edit it)
+                self.delete_at(pos.x(), pos.y())
+                return True
         self._down = event.pos()
         return False                # the view may still orbit on a drag
 
@@ -401,6 +412,9 @@ class Constrain3D:
 
     def _prompt(self):
         from . import sketch_constrain_ui as ui
+        if self.kind == "delete":
+            return ("Delete constraint (3D): click a relation mark or a "
+                    "dimension's value.")
         if self.kind == "dimension":
             return ("Smart Dimension (3D): click a line, a circle or a "
                     "point." if not self.picks else
@@ -408,7 +422,23 @@ class Constrain3D:
                     "anywhere empty for this one's size.")
         return ui.prompt(self.kind, len(self.picks)) + " (3D)"
 
+    def delete_at(self, x, y):
+        """Delete tool: the relation mark or dimension value clicked."""
+        from PyQt5.QtCore import QPoint
+        from . import view3d_menu
+        pos = QPoint(int(x), int(y))
+        hit = view3d_menu.relation_at(self.window, pos) or \
+            view3d_menu.dimension_at(self.window, pos)
+        if hit is None:
+            self._say(self._prompt())
+            return None
+        view3d_menu.delete_dimension(self.window, hit[1], hit[2])
+        self._say("Constraint deleted.")
+        return hit[1]
+
     def click(self, x, y):
+        if self.kind == "delete":
+            return self.delete_at(x, y)
         hit = self.pick_at(x, y)
         if self.kind == "dimension":
             return self._dimension_click(hit, x, y)
@@ -594,8 +624,6 @@ class Constrain3D:
 def start(window, tool):
     """Run constraint *tool* in the 3D view. True when it started."""
     from . import sketch_constrain_ui as ui
-    if tool == ui.DELETE:
-        return False                      # deleting marks: the 2D view
     view = window.view3d
     end(window)
     old = getattr(view, "edit_tool", None)

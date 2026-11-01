@@ -35,6 +35,15 @@ def dimension_at(window, pos):
     return None
 
 
+def relation_at(window, pos):
+    """``(mark rect, sketch, row index)`` of the relation mark under
+    *pos*, else None."""
+    for hit in getattr(window, "_relation_hits", []):
+        if hit[0].adjusted(-2, -2, 2, 2).contains(pos.x(), pos.y()):
+            return hit
+    return None
+
+
 def part_at(window, pos):
     """The part (a child of the scope) drawn under *pos*, else None."""
     from . import anchors, meshedit_ui
@@ -82,6 +91,11 @@ def context_menu(window, pos):
         menu.addAction(icons.icon("mdi.pencil"), tr("Edit value…"),
                        lambda: sketch_dims3d.edit(window, rect, cont, index))
         menu.addAction(icons.icon("mdi.delete"), tr("Delete dimension"),
+                       lambda: delete_dimension(window, cont, index))
+    elif relation_at(window, pos) is not None:
+        _rect, cont, index = relation_at(window, pos)
+        menu.addSection(tr("Relation"))
+        menu.addAction(icons.icon("mdi.delete"), tr("Delete constraint"),
                        lambda: delete_dimension(window, cont, index))
     else:
         node = part_at(window, pos)

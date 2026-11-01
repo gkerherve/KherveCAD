@@ -501,6 +501,10 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
 def _related(window, placed):
     """The sketches belonging to what is highlighted: a selected part,
     feature or sketch holds them, or a selected shape is in them."""
+    from . import constrain3d
+    if isinstance(getattr(window.view3d, "edit_tool", None),
+                  constrain3d.Constrain3D):
+        return list(placed)         # adding or deleting them: all of them
     ids = getattr(window, "_selected_ids", set()) or set()
     if not ids:
         return []
@@ -536,6 +540,7 @@ def _paint_relations(window, painter, placed, scr, vis, font):
     from PyQt5.QtCore import QPointF, QRectF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen
     from .sketch_constrain_ui import MARK
+    window._relation_hits = []      # (mark rect, sketch, row index)
     rel = _related(window, placed)
     if not rel:
         return
@@ -545,7 +550,7 @@ def _paint_relations(window, painter, placed, scr, vis, font):
     fm = painter.fontMetrics()
     taken = {}
     for cont, m in rel:
-        for row in sc.rows(cont):
+        for index, row in enumerate(sc.rows(cont)):
             if "value" in row or row.get("kind") not in MARK:
                 continue
             for ref in row["refs"][:1] if row["kind"] in (
@@ -570,6 +575,7 @@ def _paint_relations(window, painter, placed, scr, vis, font):
                 painter.setBrush(QBrush(QColor(235, 250, 238, 235)))
                 painter.drawRoundedRect(rect, 3, 3)
                 painter.drawText(rect, int(Qt.AlignCenter), text)
+                window._relation_hits.append((rect, cont, index))
 
 
 DRAG_PX = 4

@@ -435,3 +435,56 @@ def test_a_square_dimensioned_to_a_moved_top_moves_with_it(win):
     assert sc.measure(ext, "distance", refs) == pytest.approx(14.1421,
                                                               abs=0.01)
     assert after != before
+
+
+def _line_sketch(win):
+    m = win.model
+    g = m.add_node("union", {})
+    line = m.add_node("line", dict(x1=0, y1=0, x2=30, y2=3), parent=g)
+    QApplication.processEvents()
+    win.view3d.resize(800, 600)
+    win.view3d.fit()
+    return g, line
+
+
+def _draw(win):
+    from PyQt5.QtGui import QImage, QPainter
+    img = QImage(win.view3d.size(), QImage.Format_ARGB32)
+    p = QPainter(img)
+    win.view3d.render(p)
+    p.end()
+
+
+def test_add_then_delete_a_relation_in_3d(win):
+    from khervecad import constrain3d, sketch_constraints as sc
+    g, line = _line_sketch(win)
+    constrain3d.start(win, "con_horizontal")
+    tool = win.view3d.edit_tool
+    q = tool._project()((15, 1.5, 0))
+    tool.click(q[0], q[1])
+    assert any(r["kind"] == "horizontal" for r in sc.rows(g))
+    constrain3d.start(win, "con_delete")
+    tool = win.view3d.edit_tool
+    assert isinstance(tool, constrain3d.Constrain3D)
+    _draw(win)
+    rect = win._relation_hits[0][0]
+    tool.click(rect.center().x(), rect.center().y())
+    assert not sc.rows(g)
+
+
+def test_right_click_deletes_a_relation_in_3d(win, monkeypatch):
+    from PyQt5.QtCore import QPoint
+    from PyQt5.QtWidgets import QMenu
+    from khervecad import sketch_constraints as sc, view3d_menu
+    g, line = _line_sketch(win)
+    sc.add(win.model, g, "horizontal", [sc.ref_of(g, line, "l")])
+    win.builder.active_tree().select_nodes([line])
+    _draw(win)
+    rect = win._relation_hits[0][0]
+    menus = []
+    monkeypatch.setattr(QMenu, "exec_", lambda self, *a: menus.append(self))
+    view3d_menu.context_menu(win, QPoint(int(rect.center().x()),
+                                         int(rect.center().y())))
+    acts = {a.text(): a for a in menus[0].actions()}
+    acts["Delete constraint"].trigger()
+    assert not sc.rows(g)
