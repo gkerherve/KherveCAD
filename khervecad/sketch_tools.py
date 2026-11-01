@@ -277,7 +277,10 @@ def _xy(p):
 def drop(scene):
     """Throw the half-placed shape away (tool change, Esc)."""
     _state(scene).clear()
+    scene._sk_snaps = []
     _clear_items(scene)
+    from . import sketch_line
+    sketch_line._clear(scene)
     from . import sketch_tools2
     sketch_tools2.clear_marks(scene)
 
@@ -344,6 +347,7 @@ def _add(scene, pos):
 def finish(scene):
     """Make the shape from the points placed (the spline's Enter)."""
     pts = list(_state(scene))
+    snaps = list(getattr(scene, "_sk_snaps", []))
     tool = scene.tool
     drop(scene)
     from . import sketch_tools2
@@ -396,16 +400,7 @@ def finish(scene):
         slot2d.mark(scene.model, node)
         # drawn level / upright: it stays so (Horizontal / Vertical, as
         # the Line tool does) — a dimension to one end tilted it
-        p = node.params
-        kind = "horizontal" if abs(p["y1"] - p["y2"]) < 1e-9 else \
-            "vertical" if abs(p["x1"] - p["x2"]) < 1e-9 else None
-        if kind and node.parent is not None:
-            from . import sketch_constraints as sc
-            try:
-                sc.add(scene.model, node.parent, kind,
-                       [sc.ref_of(node.parent, node, "l")])
-            except (ValueError, KeyError):
-                pass
+        _slot_relations(scene, node, snaps)
     if tool == RECT_CENTER and node is not None and node.parent is not None \
             and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
         # drawn from the origin: its centre stays there, as SolidWorks
@@ -421,6 +416,65 @@ def finish(scene):
     return node
 
 
+def _snaps_like_a_line(scene):
+    """The slot's two centres are placed like a Line's ends (2026-11-01,
+    the user): points, edges, middles, centres, H / V / 45°, lined up."""
+    return scene.tool == SLOT and len(_state(scene)) < 2
+
+
+def _slot_snap(scene, raw):
+    from PyQt5.QtCore import QPointF
+    from . import sketch_line
+    pts = _state(scene)
+    start = QPointF(*pts[0]) if pts else None
+    pos, info = sketch_line.snap(scene, raw, start=start)
+    sketch_line.draw_overlay(scene, start, pos, info)
+    return pos, info
+
+
+def _slot_relations(scene, node, snaps):
+    """Horizontal / Vertical / 45° when the centre line snapped so (or
+    lies so), and each centre Coincident with the point it snapped to."""
+    from . import sketch_constraints as sc
+    parent = node.parent
+    if parent is None:
+        return
+    p = node.params
+    end = snaps[1] if len(snaps) > 1 else {}
+    kind = end.get("angle") or (
+        "h" if abs(p["y1"] - p["y2"]) < 1e-9 else
+        "v" if abs(p["x1"] - p["x2"]) < 1e-9 else None)
+    rows = []
+    if kind in ("h", "v", "45"):
+        rows.append(({"h": "horizontal", "v": "vertical",
+                      "45": "diagonal"}[kind],
+                     [sc.ref_of(parent, node, "l")]))
+    for info, name in zip(snaps, ("p1", "p2")):
+        hit = (info or {}).get("point")
+        if hit and hit[0] is not node and hit[0].parent is parent:
+            rows.append(("coincident", [sc.ref_of(parent, node, name),
+                                        sc.ref_of(parent, *hit)]))
+    for kind, refs in rows:
+        try:
+            sc.add(scene.model, parent, kind, refs)
+        except (ValueError, KeyError):
+            pass                         # already held / conflict
+
+
+def _place(scene, raw):
+    """Add a click: snapped like a line for a slot's centres."""
+    if _snaps_like_a_line(scene):
+        pos, info = _slot_snap(scene, raw)
+        if not hasattr(scene, "_sk_snaps"):
+            scene._sk_snaps = []
+        scene._sk_snaps.append(info)
+        _add(scene, pos)
+    else:
+        from . import sketch_line
+        sketch_line._clear(scene)
+        _add(scene, scene.snap(raw))
+
+
 def press(scene, event):
     from PyQt5.QtCore import Qt
     if event.button() == Qt.RightButton:
@@ -432,14 +486,18 @@ def press(scene, event):
     elif event.button() == Qt.LeftButton:
         from . import sketch_tools2
         sketch_tools2.mark(scene, event.scenePos())
-        _add(scene, scene.snap(event.scenePos()))
+        _place(scene, event.scenePos())
     event.accept()
 
 
 def move(scene, event):
     from . import sketch_tools2
     sketch_tools2.hover(scene, event.scenePos())
-    if _state(scene):
+    if _snaps_like_a_line(scene):
+        pos, _info = _slot_snap(scene, event.scenePos())
+        if _state(scene):
+            _redraw(scene, _xy(pos))
+    elif _state(scene):
         _redraw(scene, _xy(scene.snap(event.scenePos())))
     event.accept()
 
@@ -454,7 +512,7 @@ def release(scene, event):
         here = event.scenePos()
         if math.hypot(here.x() - down.x(), here.y() - down.y()) \
                 > px_to_scene(scene, 4.0):
-            _add(scene, scene.snap(here))
+            _place(scene, here)
     event.accept()
 
 

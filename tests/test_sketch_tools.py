@@ -1135,3 +1135,21 @@ def test_two_lines_join_two_circles_into_one_region():
     assert R.face_at(f, (0, 20)) is not None
     assert R.face_at(f, (-16, 25)) is None     # outside the lines: no face
     assert R.overlapping(g)
+
+
+def test_a_slot_snaps_and_constrains_like_a_line(view):
+    """The user: a slot snaps to H / V / 45° and to points like the
+    Line tool, and keeps the relation it snapped to."""
+    from khervecad import sketch_constraints as sc
+    _draw(view, st.SLOT, [(0, 0), (40, 1.5), (20, 5)])
+    (slot,) = _nodes(view)
+    p = slot.params
+    assert abs(p["y2"] - p["y1"]) < 1e-6           # snapped level
+    kinds = [r["kind"] for r in sc.rows(slot.parent)]
+    assert "horizontal" in kinds
+    _draw(view, st.SLOT, [(40, 0), (70, 29.0), (50, 25)])
+    second = [n for n in _nodes(view) if n is not slot][0]
+    q = second.params
+    assert abs(abs(q["x2"] - q["x1"]) - abs(q["y2"] - q["y1"])) < 1e-6
+    kinds = [r["kind"] for r in sc.rows(second.parent)]
+    assert "diagonal" in kinds and "coincident" in kinds
