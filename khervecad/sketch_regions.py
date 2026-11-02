@@ -875,7 +875,7 @@ def overlap_container(window, nodes):
 
 
 def start_3d(window, container=None, make_only=False, cut=False,
-             window_at_once=False):
+             window_at_once=False, on_nothing=None):
     """Pick regions on the 3D view: the region under the mouse lights
     up, a click keeps it (again drops it), Esc or right-click extrudes
     what was picked. False when no sketch has regions. *window_at_once*:
@@ -934,6 +934,9 @@ def start_3d(window, container=None, make_only=False, cut=False,
         nonlocal shapes
         if desc is None:                       # done
             view.set_highlight_mesh([])
+            if not picked and on_nothing is not None:
+                on_nothing()
+                return
             if picked and ghost is not None:
                 # the section the picked areas rely on: kept in the sketch
                 real = sketch_section.keep(window.model, container, ghost)
@@ -1005,6 +1008,11 @@ def start_3d(window, container=None, make_only=False, cut=False,
                 else None
         except Exception:
             key = None
+        if key is None and len(face_list) == 2:
+            # a chain and the part's edges: the area they fence off, not
+            # the rest of the face (the user had to find a second step,
+            # pressed Done, and nothing was cut)
+            key = min((0, 1), key=lambda i: face_list[i][0].area())
         if key is not None:
             on_pick({"kind": "face"}, key)
     return True

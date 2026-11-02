@@ -217,7 +217,9 @@ def _closes_with_model_edges(window, group, kind):
     try:
         started = sketch_regions.start_3d(window, group,
                                           cut=kind == "extruded_cut",
-                                          window_at_once=True)
+                                          window_at_once=True,
+                                          on_nothing=lambda: _back_to_sketch(
+                                              window, group, kind))
     except Exception:
         started = False
     if started:
@@ -227,6 +229,19 @@ def _closes_with_model_edges(window, group, kind):
     else:
         group.params[KEY] = kind
     return bool(started)
+
+
+def _back_to_sketch(window, group, kind):
+    """No area chosen: nothing is made, and the sketch stays open rather
+    than lines left behind with no feature."""
+    from . import sketch3d
+    group.params[KEY] = kind
+    tool = sketch3d.Sketch3DTool(window, "line")
+    window.view3d.edit_tool = tool
+    tool.use_group(group)
+    tool.begin()
+    window.view3d.flash("No area chosen — nothing was cut. The sketch is "
+                        "still open.", 8000)
 
 
 def start(window, kind):

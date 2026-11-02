@@ -11,7 +11,8 @@ the Free Software Foundation, either version 3 of the License, or
 import pytest
 from PyQt5.QtTest import QTest
 
-from khervecad import cut_feature, face_sketch as fs, sketch3d_tools as more
+from khervecad import cut_feature, extrude_panel, face_sketch as fs
+from khervecad import sketch3d_tools as more
 from khervecad import sketch_constraints as sc, sketch_modify as sm
 from khervecad import sketch_tools as st, sketch_tools2 as st2
 from khervecad.view2d import POLYGON, TEXT
@@ -234,11 +235,8 @@ def test_ending_a_chain_on_the_edges_offers_the_area(cutting, win):
     assert "Area closed" in tool.ready_button.text()
     assert not win.view3d._pick_groups
     tool.ready_button.click()
-    keys = win.view3d._pick_groups
-    assert len(keys) == 2
-    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
-    win.view3d._pick_cb({"kind": "face"}, area)
     QTest.qWait(50)
+    assert extrude_panel._panel(win) is not None      # its window, at once
     assert not any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 5))
     assert any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 40))
 
@@ -263,11 +261,8 @@ def test_a_boss_on_lines_closed_with_the_edges(cutting, win):
     assert "Area closed" in tool.ready_button.text()
     assert not win.view3d._pick_groups
     tool.ready_button.click()
-    keys = win.view3d._pick_groups
-    assert len(keys) == 2
-    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
-    win.view3d._pick_cb({"kind": "face"}, area)
     QTest.qWait(50)
+    assert extrude_panel._panel(win) is not None      # its window, at once
     assert any(h["point"][2] > 11 for h in _cut_at(win, 30, 5))
     assert not any(h["point"][2] > 11 for h in _cut_at(win, 30, 40))
 
@@ -279,3 +274,20 @@ def test_no_prompt_while_the_lines_close_nothing(cutting, win):
     assert tool.ready_button is None or tool.ready_button.isHidden()
     assert win.view3d.edit_tool is tool
     tool.finish()
+
+
+def test_several_chains_ask_and_no_area_keeps_the_sketch(cutting, win):
+    tool = cutting("extruded_cut")
+    g = tool.group
+    _click_line(tool, [(5, 0), (5, 10), (15, 10), (15, 0)])
+    tool._end_chain()
+    _click_line(tool, [(30, 0), (30, 10), (40, 10), (40, 0)])
+    tool._end_chain()
+    tool.ready_button.click()
+    assert len(win.view3d._pick_groups) == 3     # a real choice
+    win.view3d.cancel_pick()                     # Done with nothing picked
+    assert g.params.get(cut_feature.KEY) == "extruded_cut"
+    assert win.view3d.edit_tool.group is g
+    assert "No area" in win.view3d._flash_text
+    win.view3d.edit_tool.finish()
+    win.view3d.cancel_pick()

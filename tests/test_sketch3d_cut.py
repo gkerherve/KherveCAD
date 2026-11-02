@@ -136,11 +136,6 @@ def test_lines_ending_on_the_edge_close_an_area_with_it(win, monkeypatch):
     for p in ((25, 0), (25, 12), (15, 12), (15, 0)):
         tool.place(fs.to_local(g, (p[0], p[1], 20)))
     tool.finish()
-    keys = win.view3d._pick_groups
-    assert len(keys) == 2
-    cb = win.view3d._pick_cb
-    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 13][0]
-    cb({"kind": "face"}, area)
     QTest.qWait(50)                      # one click: the window, for a cut
     panel = extrude_panel._panel(win)
     assert panel is not None and not panel.isHidden()
