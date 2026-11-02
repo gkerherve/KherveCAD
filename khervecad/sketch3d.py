@@ -120,6 +120,7 @@ class Sketch3DTool:
         self._drag = None             # (node, role) of a dragged point
         self.made = []
         self.arc = self._armed = self._away = False
+        self.ready_button = None
 
     # -- life -------------------------------------------------------
     def begin(self):
@@ -268,16 +269,60 @@ class Sketch3DTool:
             return False
 
     def _end_chain(self):
-        """A chain ended. In a cut's or boss's sketch whose lines now make
-        an area, go on to that area: the feature is what the sketch is for."""
-        from . import cut_feature
-        had = self.mode == "line" and len(self.points) >= 2
+        """A chain ended; the sketch stays open until the user goes on."""
         self.points = []
         self.arc = self._armed = self._away = False
+        self.update_ready()
         self.view.update()
-        if had and self.holder is None and \
-                self.group.params.get(cut_feature.KEY) and self._closes_area():
-            self.finish()
+
+    def is_ready(self):
+        """A cut's or boss's sketch whose lines now make an area."""
+        from . import cut_feature, sketch_regions
+        g = self.group
+        if g is None or g.parent is None or self.holder is not None or \
+                not g.params.get(cut_feature.KEY):
+            return False
+        lines = [n for n in sketch_regions.shapes_of(g)
+                 if n.type == "line"]
+        return bool(lines) and self._closes_area()
+
+    def update_ready(self):
+        """Say when the sketch has closed an area, and offer the feature
+        (the window follows, as SolidWorks' does on leaving the sketch)."""
+        from . import cut_feature
+        ready = self.is_ready()
+        was = self.ready_button is not None and \
+            not self.ready_button.isHidden()
+        if not ready:
+            if self.ready_button is not None:
+                self.ready_button.hide()
+            return False
+        b = self.ready_button
+        if b is None:
+            from PyQt5.QtCore import Qt
+            from PyQt5.QtWidgets import QPushButton
+            b = self.ready_button = QPushButton(self.view)
+            b.setCursor(Qt.ArrowCursor)
+            b.setStyleSheet(
+                "QPushButton { background: #2e7d32; color: white; "
+                "border-radius: 4px; padding: 6px 16px; font-weight: "
+                "bold; } QPushButton:hover { background: #388e3c; }")
+            b.clicked.connect(self.go_on)
+        label = cut_feature.ALL[self.group.params[cut_feature.KEY]][0]
+        b.setText("✓  " + language.tr("Area closed — make %s") % label)
+        b.adjustSize()
+        b.move((self.view.width() - b.width()) // 2, 40)
+        b.show()
+        b.raise_()
+        if not was:
+            self.message(language.tr(
+                "Area closed: press the green button, or right-click, to "
+                "go on. Or keep drawing."), 8000)
+        return True
+
+    def go_on(self):
+        self.points = []
+        self.finish()
 
     def _join(self, last, node):
         """A chain's lines stay joined, as the 2D Line tool's."""
@@ -457,6 +502,10 @@ class Sketch3DTool:
             pass
 
     def _end(self):
+        if self.ready_button is not None:
+            self.ready_button.hide()
+            self.ready_button.deleteLater()
+            self.ready_button = None
         self.window._ref_force_planes = False
         self.window._sketch3d_tool = None
         from . import constrain3d
@@ -667,6 +716,8 @@ class Sketch3DTool:
                     tuple(self.points[0]) == tuple(self.points[-1]):
                 self._end_chain()        # back on its start: a closed loop
                 return node
+            if node.type == "line":
+                self.update_ready()
             from . import cut_feature
             if self.mode != "line" and self.holder is None and \
                     self.group.params.get(cut_feature.KEY):

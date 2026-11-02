@@ -230,6 +230,10 @@ def test_ending_a_chain_on_the_edges_offers_the_area(cutting, win):
     tool = cutting("extruded_cut")
     _click_line(tool, [(20, 0), (20, 15), (40, 15), (40, 0)])
     tool._end_chain()
+    assert not tool.ready_button.isHidden()       # it says so, and waits
+    assert "Area closed" in tool.ready_button.text()
+    assert not win.view3d._pick_groups
+    tool.ready_button.click()
     keys = win.view3d._pick_groups
     assert len(keys) == 2
     area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
@@ -243,6 +247,9 @@ def test_a_loop_of_lines_cuts_its_own_area_at_once(cutting, win):
     tool = cutting("extruded_cut")
     _click_line(tool, [(20, 20), (40, 20), (40, 40), (20, 40), (20, 20)])
     QTest.qWait(50)
+    assert not tool.ready_button.isHidden()
+    tool.ready_button.click()
+    QTest.qWait(50)
     assert not win.view3d._pick_groups
     assert not any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 30))
     assert any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 10, 10))
@@ -252,6 +259,10 @@ def test_a_boss_on_lines_closed_with_the_edges(cutting, win):
     tool = cutting("extruded_boss")
     _click_line(tool, [(20, 0), (20, 15), (40, 15), (40, 0)])
     tool._end_chain()
+    assert not tool.ready_button.isHidden()       # it says so, and waits
+    assert "Area closed" in tool.ready_button.text()
+    assert not win.view3d._pick_groups
+    tool.ready_button.click()
     keys = win.view3d._pick_groups
     assert len(keys) == 2
     area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
@@ -259,3 +270,12 @@ def test_a_boss_on_lines_closed_with_the_edges(cutting, win):
     QTest.qWait(50)
     assert any(h["point"][2] > 11 for h in _cut_at(win, 30, 5))
     assert not any(h["point"][2] > 11 for h in _cut_at(win, 30, 40))
+
+
+def test_no_prompt_while_the_lines_close_nothing(cutting, win):
+    tool = cutting("extruded_cut")
+    _click_line(tool, [(20, 20), (40, 20)])
+    tool._end_chain()
+    assert tool.ready_button is None or tool.ready_button.isHidden()
+    assert win.view3d.edit_tool is tool
+    tool.finish()
