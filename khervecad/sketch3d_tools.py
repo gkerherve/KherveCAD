@@ -70,6 +70,8 @@ class Bench:
         self.made = []
 
     def _create(self, type_, params):
+        if type_ == "line" and self.tool != st.SLOT:
+            params = dict(params, width=0.2)   # a sketch curve, not a band
         node = self.model.add_node(type_, params, parent=self.parent())
         self.made.append(node)
         return node

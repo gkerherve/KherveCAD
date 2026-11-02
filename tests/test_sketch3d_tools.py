@@ -175,3 +175,87 @@ def test_drawing_tools_work_with_the_extrude_window_open(sketch):
     assert drag_feature.pause_for(win, st.ELLIPSE)
     assert win.view3d.edit_tool.scene_tool == st.ELLIPSE
     win.view3d.edit_tool.finish()
+
+
+def _click_line(sketch, pts):
+    sketch.set_mode("line")
+    for p in pts:
+        sketch.place(fs.to_local(sketch.group, (*p, 10)))
+
+
+def test_back_on_the_last_point_and_out_makes_a_tangent_arc(sketch):
+    _click_line(sketch, [(10, 10), (30, 10)])
+    q = sketch.view._project(*sketch.view._camera(), (30, 10, 10))
+    sketch._arc_switch(q[0] + 60, q[1])      # was drawing the next line
+    sketch._arc_switch(q[0] + 2, q[1])       # back on the point
+    sketch._arc_switch(q[0] + 30, q[1])      # and out
+    assert sketch.arc
+    sketch.place(fs.to_local(sketch.group, (40, 20, 10)))
+    arc = sketch.made[-1]
+    assert arc.name == "Arc" and arc.params.get("bulge") and not sketch.arc
+    assert arc.params["width"] == 0.2
+    assert len(sketch._own()[0]) > 3          # drawn curved
+    sketch.place(fs.to_local(sketch.group, (40, 40, 10)))
+    assert not sketch.made[-1].params.get("bulge")     # lines again
+    sketch._end_chain()
+    sketch.finish()
+
+
+@pytest.fixture
+def cutting(win, monkeypatch):
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    win.model.add_node("cube", dict(width=60, depth=60, height=10))
+    QTest.qWait(50)
+    part = win.model.root.children[-1]
+    win.view3d.resize(800, 600)
+    win.view3d.set_view("Top", animate=False)
+    win.view3d.fit()
+
+    def start(kind):
+        cut_feature.start(win, kind)
+        win.view3d._pick_cb(dict(kind="face", pos=(30, 30, 10),
+                                 dir=(0, 0, 1)), part)
+        QTest.qWait(50)
+        return win.view3d.edit_tool
+    return start
+
+
+def _cut_at(win, x, y):
+    from khervecad.mcp_tools import McpToolExecutor
+    return McpToolExecutor(win).execute("probe_surface", {
+        "from": [x, y, 50], "direction": [0, 0, -1]})["hits"]
+
+
+def test_ending_a_chain_on_the_edges_offers_the_area(cutting, win):
+    tool = cutting("extruded_cut")
+    _click_line(tool, [(20, 0), (20, 15), (40, 15), (40, 0)])
+    tool._end_chain()
+    keys = win.view3d._pick_groups
+    assert len(keys) == 2
+    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
+    win.view3d._pick_cb({"kind": "face"}, area)
+    QTest.qWait(50)
+    assert not any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 5))
+    assert any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 40))
+
+
+def test_a_loop_of_lines_cuts_its_own_area_at_once(cutting, win):
+    tool = cutting("extruded_cut")
+    _click_line(tool, [(20, 20), (40, 20), (40, 40), (20, 40), (20, 20)])
+    QTest.qWait(50)
+    assert not win.view3d._pick_groups
+    assert not any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 30, 30))
+    assert any(abs(h["point"][2] - 10) < 1e-3 for h in _cut_at(win, 10, 10))
+
+
+def test_a_boss_on_lines_closed_with_the_edges(cutting, win):
+    tool = cutting("extruded_boss")
+    _click_line(tool, [(20, 0), (20, 15), (40, 15), (40, 0)])
+    tool._end_chain()
+    keys = win.view3d._pick_groups
+    assert len(keys) == 2
+    area = [k for k, t in keys if max(v[1] for f in t for v in f) < 16][0]
+    win.view3d._pick_cb({"kind": "face"}, area)
+    QTest.qWait(50)
+    assert any(h["point"][2] > 11 for h in _cut_at(win, 30, 5))
+    assert not any(h["point"][2] > 11 for h in _cut_at(win, 30, 40))

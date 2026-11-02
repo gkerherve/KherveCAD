@@ -960,7 +960,26 @@ def start_3d(window, container=None, make_only=False, cut=False,
                 window.statusBar().showMessage(
                     "Extruded %d region(s) — drag the arrow or set the "
                     "height in Properties." % len(picked), 6000)
-                _open_window(window, ext, cut)
+                if window_at_once:
+                    _open_window(window, ext, cut)
+                else:
+                    try:
+                        from . import drag_feature
+                        drag_feature.start(window, ext, quiet=True,
+                                           created=True)
+                    except Exception:          # pragma: no cover
+                        pass
+                    if cut:
+                        # what the window's Operation ▸ Cut does
+                        from . import extrude_panel
+                        panel = extrude_panel._panel(window)
+                        box = panel.fields.get("operation") if panel \
+                            else None
+                        if box is not None:
+                            box.setCurrentIndex(box.findData("cut"))
+                        else:
+                            extrude_panel.set_operation(window.model, ext,
+                                                        "cut")
             return
         picked.symmetric_difference_update({key})
         view.set_highlight_mesh([t for i in sorted(picked)
@@ -978,6 +997,16 @@ def start_3d(window, container=None, make_only=False, cut=False,
                         labeler=lambda _d, k: "Region — click to %s" % (
                             "drop" if k in picked else "keep"))
     arm()
+    if window_at_once:
+        # lines closing a loop by themselves: THAT area, nothing to ask
+        try:
+            own = faces(shapes_of(container))
+            key = face_at(face_list, seed(own[0][0])) if len(own) == 1 \
+                else None
+        except Exception:
+            key = None
+        if key is not None:
+            on_pick({"kind": "face"}, key)
     return True
 
 
@@ -988,7 +1017,12 @@ def _open_window(window, ext, cut):
     model = window.model
     try:
         if not cut:
-            drag_feature.start(window, ext, quiet=True, created=True)
+            # a boss opens at the default height, as a rectangle's does
+            model.set_param(ext, "height", HEIGHT)
+            drag = drag_feature.start(window, ext, quiet=True, panel=True)
+            if drag is not None:
+                drag.on_cancel = lambda: model.remove_node(
+                    extrude_panel._holder(ext))
             return
         if not extrude_panel.set_operation(model, ext, "cut"):
             drag_feature.start(window, ext, quiet=True, created=True)

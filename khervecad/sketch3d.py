@@ -119,6 +119,7 @@ class Sketch3DTool:
         self.info = {}                # the face's segments and points
         self._drag = None             # (node, role) of a dragged point
         self.made = []
+        self.arc = self._armed = self._away = False
 
     # -- life -------------------------------------------------------
     def begin(self):
@@ -204,6 +205,79 @@ class Sketch3DTool:
                 pts += [(x1, y1, "end"), (x2, y2, "end"),
                         ((x1 + x2) / 2, (y1 + y2) / 2, "middle")]
         return segs, pts
+
+    def _chain_end(self):
+        """The chain's last line, when the next point starts at its end
+        (only then is there a direction for a tangent arc)."""
+        last = self.made[-1] if self.made else None
+        if self.mode != "line" or len(self.points) < 1 or last is None or \
+                last.type != "line" or last.parent is None:
+            return None
+        end = (last.params["x2"], last.params["y2"])
+        at = self.points[-2] if len(self.points) >= 2 and \
+            self.points[-1] != end else self.points[-1]
+        return last if tuple(at) == tuple(end) else None
+
+    def _bulge(self, pt):
+        from . import sketch_arc
+        last = self.made[-1]
+        start = (last.params["x2"], last.params["y2"])
+        return sketch_arc.tangent_bulge(
+            start, sketch_arc.end_tangent(last.params), pt)
+
+    def _arc_switch(self, x, y):
+        """As the 2D Line: the mouse brought back onto the chain's last
+        point and out again makes the next piece a tangent arc (again:
+        a line); one arc, then lines."""
+        from . import sketch_line as sl
+        last = self._chain_end()
+        if last is None:
+            self.arc = self._armed = self._away = False
+            return
+        v = self.view
+        q = v._project(*v._camera(), self._world(self.points[-1]))
+        if q is None:
+            return
+        d = math.hypot(q[0] - x, q[1] - y)
+        if d >= sl.ARC_AWAY_PX:
+            self._away = True
+        if d <= sl.ARC_ARM_PX and self._away:
+            self._armed, self._away = True, False
+        elif self._armed and d >= sl.ARC_GO_PX:
+            self._armed = False
+            self.arc = not self.arc
+            self.message(language.tr(
+                "Line: tangent ARC — click where it ends (back on the point "
+                "and out again for a line)." if self.arc else
+                "Line: straight again."), 6000)
+
+    def _world(self, p):
+        from .face_sketch import to_world
+        return to_world(self.group, p[0], p[1])
+
+    def _closes_area(self):
+        """Do the lines drawn split the face into areas, with its edges
+        or by themselves?"""
+        from . import sketch_regions, sketch_section
+        cont = self.holder or self.group
+        try:
+            shapes, _ghost = sketch_section.with_section(
+                self.window, cont, sketch_regions.shapes_of(cont))
+            return len(sketch_regions.faces(shapes)) >= 2
+        except Exception:
+            return False
+
+    def _end_chain(self):
+        """A chain ended. In a cut's or boss's sketch whose lines now make
+        an area, go on to that area: the feature is what the sketch is for."""
+        from . import cut_feature
+        had = self.mode == "line" and len(self.points) >= 2
+        self.points = []
+        self.arc = self._armed = self._away = False
+        self.view.update()
+        if had and self.holder is None and \
+                self.group.params.get(cut_feature.KEY) and self._closes_area():
+            self.finish()
 
     def _join(self, last, node):
         """A chain's lines stay joined, as the 2D Line tool's."""
@@ -529,7 +603,7 @@ class Sketch3DTool:
             from . import sketch3d_tools
             return sketch3d_tools.place(self, pt)
         model = self.window.model
-        if self.points and self.mode == "line" or \
+        if self.points and self.mode == "line" and not self.arc or \
                 self.mode == "slot" and len(self.points) == 1:
             pt = straighten(self.points[-1], pt)
         self.points.append(pt)
@@ -568,9 +642,17 @@ class Sketch3DTool:
                 # a sketch line, as in the 2D view: a 1 mm line was a band
                 # with two sides, and closed nothing with the model's edges
                 last = self.made[-1] if self.made else None
-                node = model.add_node("line", dict(
-                    x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=0.2),
-                    parent=self.holder or self.group)
+                params = dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1], width=0.2)
+                arc = self.arc and self._chain_end() is not None
+                if arc:
+                    bulge = self._bulge(b)
+                    if abs(bulge) > 1e-9:
+                        params["bulge"] = round(bulge, 10)
+                self.arc = self._armed = self._away = False
+                node = model.add_node("line", params,
+                                      parent=self.holder or self.group)
+                if arc:
+                    model.rename(node, "Arc")
                 self._join(last, node)
             else:
                 self.points = []
@@ -581,6 +663,10 @@ class Sketch3DTool:
                 face_outline.pin(self.window.view2d.scene(), model, node)
             except Exception:
                 pass
+            if self.mode == "line" and len(self.points) >= 4 and \
+                    tuple(self.points[0]) == tuple(self.points[-1]):
+                self._end_chain()        # back on its start: a closed loop
+                return node
             from . import cut_feature
             if self.mode != "line" and self.holder is None and \
                     self.group.params.get(cut_feature.KEY):
@@ -682,8 +768,7 @@ class Sketch3DTool:
                 self.finish()
         elif key in (Qt.Key_Return, Qt.Key_Enter):
             if self.points:
-                self.points = []
-                self.view.update()
+                self._end_chain()
             else:
                 self.finish()
         elif event.text().upper() in MODE_KEYS:
@@ -701,8 +786,7 @@ class Sketch3DTool:
                     more.finish(self)
                     return True
             if self.points:
-                self.points = []
-                self.view.update()
+                self._end_chain()
             else:
                 self.finish()
             return True
@@ -754,6 +838,7 @@ class Sketch3DTool:
         if self.group is None:
             self.target = self.plane_hit(x, y)
         else:
+            self._arc_switch(x, y)
             self.hover = self.local_of(
                 x, y, bool(event.modifiers() & Qt.AltModifier))
         self.view.update()
@@ -816,6 +901,15 @@ class Sketch3DTool:
         if self.points and getattr(self, "scene_tool", None):
             from . import sketch3d_tools
             qs = [scr(p) for p in sketch3d_tools.preview(self, h)]
+            for qa, qb in zip(qs, qs[1:]):
+                if qa and qb:
+                    painter.drawLine(qa, qb)
+        elif self.points and h is not None and self.arc and \
+                self._chain_end() is not None:
+            from . import sketch_arc
+            a = self.points[-1]
+            run = sketch_arc.points(a[0], a[1], h[0], h[1], self._bulge(h))
+            qs = [scr(p) for p in run]
             for qa, qb in zip(qs, qs[1:]):
                 if qa and qb:
                     painter.drawLine(qa, qb)

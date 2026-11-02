@@ -206,12 +206,13 @@ def _closes_with_model_edges(window, group, kind):
     if not any(s.type == "line" and not slot2d.is_slot(s) and thin(s)
                for s in shapes):
         return False
-    try:
-        if sketch_regions.solid_faces(shapes,
-                                      sketch_regions.faces(shapes)):
-            return False                  # they close an area themselves
-    except Exception:
-        pass
+    if not all(s.type == "line" for s in shapes):
+        try:
+            if sketch_regions.solid_faces(shapes,
+                                          sketch_regions.faces(shapes)):
+                return False              # they close an area themselves
+        except Exception:
+            pass
     group.params.pop(KEY, None)
     try:
         started = sketch_regions.start_3d(window, group,
