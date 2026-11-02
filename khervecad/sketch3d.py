@@ -50,6 +50,28 @@ def straighten(a, b, tol=ANGLE_SNAP):
     return b
 
 
+def relation_of(a, b, prev=None):
+    """The relation a line from *a* to *b* already holds, or None."""
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    if math.hypot(dx, dy) < 1e-9:
+        return None
+    tol = 1e-3
+    if abs(dy) < tol:
+        return "horizontal"
+    if abs(dx) < tol:
+        return "vertical"
+    if abs(abs(dx) - abs(dy)) < tol:
+        return "diagonal"
+    if prev and abs(dx * prev[0] + dy * prev[1]) < tol * math.hypot(*prev):
+        return "perpendicular"
+    return None
+
+
+#: what the cursor says while a line is aimed
+RELATION_MARK = {"horizontal": "H", "vertical": "V", "diagonal": "45°",
+                 "perpendicular": "90°"}
+
+
 def start(window, mode="rect"):
     from . import drag_feature, refgeom_ui
     view = window.view3d
@@ -207,6 +229,74 @@ class Sketch3DTool:
                         ((x1 + x2) / 2, (y1 + y2) / 2, "middle")]
         return segs, pts
 
+    def aimed(self, pt):
+        """(*pt* moved onto the direction it nearly has, what that direction
+        is): level, upright, 45° or square to the last line. A corner it
+        snapped to wins; on an edge it stays on the edge."""
+        a = self.points[-1]
+        if self.snapped is not None and self.snapped[2] != "edge":
+            return pt, relation_of(a, pt, self._last_dir())
+        dx, dy = pt[0] - a[0], pt[1] - a[1]
+        L = math.hypot(dx, dy)
+        if L < 1e-9:
+            return pt, None
+        ang = math.degrees(math.atan2(dy, dx)) % 360.0
+        prev = self._last_dir()
+        best = None
+        for want in (0, 45, 90, 135, 180, 225, 270, 315):
+            if abs((ang - want + 180) % 360 - 180) < ANGLE_SNAP:
+                best = want
+        if best is None and prev is not None:
+            base = math.degrees(math.atan2(prev[1], prev[0]))
+            for want in (base + 90, base - 90):
+                if abs((ang - want + 180) % 360 - 180) < ANGLE_SNAP:
+                    best = want
+        if best is None:
+            return pt, None
+        c, s = math.cos(math.radians(best)), math.sin(math.radians(best))
+        if abs(c) < 1e-12:
+            c = 0.0
+        if abs(s) < 1e-12:
+            s = 0.0
+        q = (tidy(a[0] + c * L), tidy(a[1] + s * L))
+        if self.lit and self.snapped is not None:
+            # along that direction to where it meets the edge
+            e0, e1 = self.lit[0]
+            ex, ey = e1[0] - e0[0], e1[1] - e0[1]
+            det = c * ey - s * ex
+            if abs(det) > 1e-9:
+                t = ((e0[0] - a[0]) * ey - (e0[1] - a[1]) * ex) / det
+                q = (tidy(a[0] + c * t), tidy(a[1] + s * t))
+        return q, relation_of(a, q, prev)
+
+    def _last_dir(self):
+        last = self._chain_end()
+        if last is None or last.params.get("bulge"):
+            return None
+        p = last.params
+        return (p["x2"] - p["x1"], p["y2"] - p["y1"])
+
+    def _write_relations(self, node, prev):
+        """What the line was drawn as stays so (as the 2D Line)."""
+        from . import sketch_constraints as sc
+        p = node.params
+        cont = node.parent
+        kind = relation_of((p["x1"], p["y1"]), (p["x2"], p["y2"]),
+                           (prev["x2"] - prev["x1"], prev["y2"] - prev["y1"])
+                           if prev and not prev.get("bulge") else None)
+        rows = []
+        l = sc.ref_of(cont, node, "l")
+        if kind in ("horizontal", "vertical", "diagonal"):
+            rows.append((kind, [l]))
+        elif kind == "perpendicular":
+            last = self.made[-1]
+            rows.append((kind, [sc.ref_of(cont, last, "l"), l]))
+        for k, refs in rows:
+            try:
+                sc.add(self.window.model, cont, k, refs)
+            except ValueError:
+                pass
+
     def _chain_end(self):
         """The chain's last line, when the next point starts at its end
         (only then is there a direction for a tangent arc)."""
@@ -240,7 +330,7 @@ class Sketch3DTool:
         if q is None:
             return
         d = math.hypot(q[0] - x, q[1] - y)
-        if d >= sl.ARC_AWAY_PX:
+        if d >= sl.ARC_GO_PX:
             self._away = True
         if d <= sl.ARC_ARM_PX and self._away:
             self._armed, self._away = True, False
@@ -488,8 +578,9 @@ class Sketch3DTool:
         else:
             text = {"rect": "Rectangle: click two corners on the plane.",
                     "circle": "Circle: click the centre, then the rim.",
-                    "line": "Line: click point to point; right-click or "
-                            "Enter ends the chain.",
+                    "line": "Line: click point to point; A, or back on the "
+                            "last point and out, makes an arc; right-click "
+                            "or Enter ends the chain.",
                     "slot": "Slot: click one end, the other end, then "
                             "the width."}[self.mode] + \
                 " R / C / L / S switch, Alt draws off the grid, Esc ends."
@@ -652,8 +743,9 @@ class Sketch3DTool:
             from . import sketch3d_tools
             return sketch3d_tools.place(self, pt)
         model = self.window.model
-        if self.points and self.mode == "line" and not self.arc or \
-                self.mode == "slot" and len(self.points) == 1:
+        if self.mode == "line" and self.points and not self.arc:
+            pt = self.aimed(pt)[0]
+        elif self.mode == "slot" and len(self.points) == 1:
             pt = straighten(self.points[-1], pt)
         self.points.append(pt)
         node = None
@@ -703,6 +795,11 @@ class Sketch3DTool:
                 if arc:
                     model.rename(node, "Arc")
                 self._join(last, node)
+                if not arc:
+                    self._write_relations(
+                        node, last.params if last is not None and
+                        last.type == "line" and tuple(a) == (
+                            last.params["x2"], last.params["y2"]) else None)
             else:
                 self.points = []
         if node is not None:
@@ -822,6 +919,12 @@ class Sketch3DTool:
                 self._end_chain()
             else:
                 self.finish()
+        elif event.text().upper() == "A" and self._chain_end() is not None:
+            self.arc = not self.arc      # the same as back on the point
+            self.view.update()
+            self.message(language.tr("Line: tangent ARC — click where it "
+                                     "ends." if self.arc else
+                                     "Line: straight again."), 6000)
         elif event.text().upper() in MODE_KEYS:
             self.set_mode(MODE_KEYS[event.text().upper()])
         else:
@@ -964,6 +1067,14 @@ class Sketch3DTool:
             for qa, qb in zip(qs, qs[1:]):
                 if qa and qb:
                     painter.drawLine(qa, qb)
+        elif self.points and h is not None and self.mode == "line":
+            q, kind = self.aimed(h)
+            qa, qb = scr(self.points[-1]), scr(q)
+            if qa and qb:
+                painter.drawLine(qa, qb)
+                if kind:
+                    painter.drawText(qb + QPointF(10, -10),
+                                     RELATION_MARK[kind])
         elif self.points and h is not None:
             a = self.points[-1]
             if self.mode == "rect":

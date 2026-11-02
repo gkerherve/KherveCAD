@@ -55,6 +55,8 @@ def _under(node, scope):
 
 def assembly_mode(window):
     """The Main tab and no sketch open: parts, not their sketches."""
+    if getattr(window, "_sketch3d_tool", None) is not None:
+        return False                 # sketching: its relations show
     builder = getattr(window, "builder", None)
     if builder is None or builder.isolated_component() is not None:
         return False
@@ -314,7 +316,9 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen, QPolygonF
     if hits:
         window._dims3d_hits = []            # (chip rect, sketch, row)
-    if not getattr(window.scene, "show_sketch_dims", True):
+    # the switch is for dimensions: a sketch being drawn shows its relations
+    show = getattr(window.scene, "show_sketch_dims", True)
+    if not show and getattr(window, "_sketch3d_tool", None) is None:
         return
     try:
         placed = placements(window)
@@ -400,7 +404,7 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
                         painter.drawLine(qa, qb)
                 run = None
 
-    for cont, m in placed:
+    for cont, m in placed if show else ():
         for index, row in enumerate(sc.rows(cont)):
             if "value" not in row:
                 continue
@@ -514,6 +518,12 @@ def _related(window, placed):
     if isinstance(getattr(window.view3d, "edit_tool", None),
                   constrain3d.Constrain3D):
         return list(placed)         # adding or deleting them: all of them
+    sk = getattr(window, "_sketch3d_tool", None)
+    if sk is not None and sk.group is not None:     # the one being drawn
+        out = [(c, m) for c, m in placed
+               if c is sk.holder or c is sk.group]
+        if out:
+            return out
     ids = getattr(window, "_selected_ids", set()) or set()
     if not ids:
         return []

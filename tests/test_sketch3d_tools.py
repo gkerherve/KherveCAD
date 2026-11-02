@@ -291,3 +291,62 @@ def test_several_chains_ask_and_no_area_keeps_the_sketch(cutting, win):
     assert "No area" in win.view3d._flash_text
     win.view3d.edit_tool.finish()
     win.view3d.cancel_pick()
+
+
+def _kinds(sketch):
+    return [r["kind"] for r in sc.rows(sketch.group)]
+
+
+def test_lines_write_their_relations(sketch):
+    _click_line(sketch, [(10, 10), (30, 10.5), (30.4, 25), (40, 35)])
+    k = _kinds(sketch)
+    assert "horizontal" in k and "vertical" in k and "diagonal" in k
+    assert k.count("coincident") == 2
+    last = sketch.made[-1].params
+    assert abs(last["x2"] - last["x1"]) == pytest.approx(
+        abs(last["y2"] - last["y1"]), abs=1e-3)
+    sketch.finish()
+
+
+def test_a_slanted_chain_turns_square(sketch):
+    _click_line(sketch, [(10, 10), (30, 20), (25, 30.5)])
+    assert "perpendicular" in _kinds(sketch)
+    sketch.finish()
+
+
+def test_arc_by_key_and_by_the_real_mouse(sketch):
+    from PyQt5.QtCore import QEvent, QPoint, Qt
+    from PyQt5.QtGui import QKeyEvent
+    v = sketch.view
+    _click_line(sketch, [(10, 10), (30, 10)])
+    sketch.key_press(QKeyEvent(QEvent.KeyPress, Qt.Key_A, Qt.NoModifier, "a"))
+    assert sketch.arc
+    sketch.key_press(QKeyEvent(QEvent.KeyPress, Qt.Key_A, Qt.NoModifier, "a"))
+    q = v._project(*v._camera(), (30, 10, 10))
+    x, y = int(q[0]), int(q[1])
+    for dx in (60, 2, 30):
+        QTest.mouseMove(v, QPoint(x + dx, y))
+        QTest.qWait(20)
+    assert sketch.arc
+    sketch.finish()
+
+
+def test_the_relations_show_while_drawing(sketch):
+    _click_line(sketch, [(10, 10), (30, 10)])
+    sketch.view.grab()
+    assert sketch.window._relation_hits
+    sketch.finish()
+
+
+def test_relations_show_with_the_dimensions_switched_off(sketch):
+    _click_line(sketch, [(10, 10), (30, 10)])
+    scene = sketch.window.scene
+    was = getattr(scene, "show_sketch_dims", True)
+    scene.show_sketch_dims = False
+    try:
+        sketch.window._relation_hits = []
+        sketch.view.grab()
+        assert sketch.window._relation_hits
+    finally:
+        scene.show_sketch_dims = was
+    sketch.finish()

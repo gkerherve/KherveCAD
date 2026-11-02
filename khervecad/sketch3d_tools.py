@@ -151,7 +151,17 @@ def _closed(node):
 def _after(sketch, made):
     """What a drawn shape leads to: a cut's first closed shape, its
     feature and window, as the rectangle's."""
-    from . import cut_feature
+    from . import cut_feature, face_outline, sketch_line
+    scene = sketch.window.view2d.scene()
+    for node in made:
+        try:
+            face_outline.pin(scene, sketch.window.model, node)
+            if node.type == "polygon":
+                sketch_line.polygon_relations(sketch.window.model, node)
+            elif node.type == "line" and not node.params.get("bulge"):
+                sketch._write_relations(node, None)
+        except Exception:                    # never stop a sketch
+            pass
     sketch.made.extend(made)
     if made and all(n.type in sc.SHAPES + ("scale", "text") for n in made) \
             and any(_closed(n) for n in made) and sketch.holder is None and \
