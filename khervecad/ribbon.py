@@ -56,9 +56,9 @@ TABS = [
     # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
     ("sheetmetal", "SHEET METAL", "Sheet Metal",
      ["sheet_create", "sheet_modify", "sheet_export"]),
-    ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
     ("form", "FORM", "Sculpt", ["form_create", "deform", "edit"]),
     ("character", "CHARACTER", "Character", ["figures", "character"]),
+    ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
     ("inspect", "INSPECT", "Evaluate",
      ["analyse", "checks", "dimension"]),
     # everything that turns the model into something handed on —
