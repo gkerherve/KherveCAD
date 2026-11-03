@@ -2640,7 +2640,7 @@ into a new module and import.
                        mates are a Main-tab concern, not here):
                        `ObjectTab` (dropdown of the document's Objects +
                        "New", Rename, and **To Main** = insert an
-                       instance into the assembly) and `ComponentTree`
+                       instance into the assembly; with "(no object)" an overview folder tree of the whole assembly, sub-assemblies nested, a click opens that Object — 2026-11-03) and `ComponentTree`
                        (the same tree widget rooted at the **active
                        Object**; the dropdown lists **every** Object via
                        `model.all_components()`, nested ones included —
