@@ -6376,3 +6376,12 @@ Commit subjects under 70 chars; body explains *why*, not what.
 ## Licensing
 
 GPL-3.0. New source files must carry the short GPL notice at the top.
+
+# Commit messages start with the version
+
+**Every commit message starts with `v<N>: `** — before any `feat:`/`fix:` type (write `v940: feat: …`), never omit it, where N is the app's current version, e.g.
+`v0.237: every offered document type compiles`. For apps whose version is the git commit
+count (KherveBook, KhervePaint, KherveSheet, KherveMol, KherveCAD, KherveNoise, and the
+other CI-built tools), N = `git rev-list --count HEAD` + 1 (the commit being made), so the
+number says how many commits/messages it took to build the app. For apps that read
+`__version__` (KhervePY, KhervePDF, KherveTeX), use that constant. Release titles use the same `v<N>`.
