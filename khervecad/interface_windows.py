@@ -38,7 +38,7 @@ DARK_BACKGROUNDS = {"Fusion": ("#4a4f55", "#2c3035"),
                     "SolidWorks": ("#3c4e66", "#20262e")}
 
 #: the left panel's tabs as icons (SolidWorks' manager tabs)
-TAB_ICONS = ["mdi.file-tree-outline", "mdi.cube-outline",
+TAB_ICONS = ["mdi.folder-open-outline", "mdi.file-tree-outline", "mdi.cube-outline",
              "mdi.folder-multiple-outline", "mdi.variable",
              "mdi.code-braces"]
 
@@ -238,7 +238,7 @@ def apply_stylesheet(style, dark):
 
 # ------------------------------------------------------- left panel
 #: painted browser-tab icons (icons_cad_build), in TAB_ICONS' order
-TAB_KEYS = ["tab_main", "tab_object", "tab_collections", "tab_variables",
+TAB_KEYS = ["tab_worktree", "tab_main", "tab_object", "tab_collections", "tab_variables",
             "tab_code"]
 
 

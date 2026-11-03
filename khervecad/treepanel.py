@@ -2053,7 +2053,12 @@ class BuilderPanel(QTabWidget):
         # theme's roomy padding the five needed ~520 px, wider than the
         # left column, so Code fell off the end behind a scroll arrow.
         self.setStyleSheet("QTabBar::tab { padding: 4px 9px; }")
+        from .worktree_tab import WorkTreeTab
+        self.worktree = WorkTreeTab(model)
         for page, label, tip in (
+                (self.worktree, language.tr("Work tree"), language.tr(
+                    "Every assembly, sub-assembly and Object as folders; "
+                    "double-click one to edit it")),
                 (objects, language.tr("Main"), language.tr(
                     "The assembly: every part in the document")),
                 (self.object_tab, language.tr("Object"), language.tr(
@@ -2075,6 +2080,8 @@ class BuilderPanel(QTabWidget):
         browser_tabs.install(self)
         self.tree.open_component.connect(self.open_component)
         self.object_tab.tree.open_component.connect(self.open_component)
+        self.worktree.open_component.connect(self.open_component)
+        self.setCurrentWidget(objects)
         self.object_tab.active_changed.connect(self._active_changed)
         self.currentChanged.connect(self._tab_changed)
         model.structure_changed.connect(self.refresh_code)

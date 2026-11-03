@@ -230,7 +230,7 @@ def test_windows_and_views_take_the_style_and_give_it_back(window):
     assert window._tools_bar.isHidden()          # tools on the ribbon
     assert window.view3d.background == "Fusion"
     toolbar_style.apply(window, "KherveCAD")
-    assert window.builder.tabText(0) == "Main"
+    assert window.builder.tabText(1) == "Main"
     assert window.view3d.background not in ("Fusion", "SolidWorks")
     assert "QGroupBox::title" not in app.styleSheet()
 

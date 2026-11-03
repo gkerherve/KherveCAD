@@ -20,18 +20,10 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 from PyQt5.QtCore import QSize, pyqtSignal
-from PyQt5.QtWidgets import (QTreeWidget, QTreeWidgetItem, QComboBox, QHBoxLayout, QLabel, QMessageBox,
+from PyQt5.QtWidgets import (QComboBox, QHBoxLayout, QLabel, QMessageBox,
                              QToolButton, QVBoxLayout, QWidget)
 
 from . import icons
-
-
-def language_tr(text):
-    try:
-        from . import language
-        return language.tr(text)
-    except Exception:
-        return text
 from .model import DocumentModel
 from .treepanel import ObjectTree
 
@@ -170,15 +162,6 @@ class ObjectTab(QWidget):
 
         self.tree = ComponentTree(model, self.active_component)
         layout.addWidget(self.tree)
-        # with no Object chosen: a folder tree of the whole assembly,
-        # sub-assemblies (Objects made of Objects) nested — click one to
-        # open it here (the user, 2026-11-03)
-        self.overview = QTreeWidget()
-        self.overview.setHeaderHidden(True)
-        self.overview.setToolTip("Every part of the document — click "
-                                 "one to edit it in this tab")
-        self.overview.itemClicked.connect(self._overview_picked)
-        layout.addWidget(self.overview)
 
         model.structure_changed.connect(self._sync_combo)
         model.node_changed.connect(lambda _n: self._sync_combo())
@@ -290,84 +273,6 @@ class ObjectTab(QWidget):
             self._active_id = self._active_name = None
             self.tree.rebuild()
             self.active_changed.emit(None)
-        self._rebuild_overview()
-
-    # --------------------------------------------------------- overview
-    def _parts_in(self, node):
-        """The Objects and instances directly under *node* (looking
-        through groups, colours and transforms)."""
-        out = []
-        for child in node.children:
-            if child.type in ("component", "reference"):
-                out.append(child)
-            else:
-                out.extend(self._parts_in(child))
-        return out
-
-    def _definition(self, node):
-        if node.type != "reference":
-            return node
-        name = node.params.get("ref")
-        for comp in self.model.all_components():
-            if comp.name == name:
-                return comp
-        return None
-
-    def _rebuild_overview(self):
-        show = self.active_component() is None
-        self.tree.setVisible(not show)
-        self.overview.setVisible(show)
-        if not show:
-            return
-        self.overview.clear()
-        top = QTreeWidgetItem([language_tr("Main assembly")])
-        top.setIcon(0, icons.icon("mdi.folder-open"))
-        self.overview.addTopLevelItem(top)
-
-        def add(parent, node, depth):
-            comp = self._definition(node)
-            if comp is None:
-                return
-            inner = self._parts_in(comp)
-            item = QTreeWidgetItem([node.name if node.type == "component"
-                                    else comp.name])
-            item.setIcon(0, icons.icon(
-                "mdi.folder" if inner else "mdi.package-variant-closed"))
-            item.setData(0, 32, comp.id)                  # Qt.UserRole
-            if inner:
-                item.setToolTip(0, "Sub-assembly: an Object made of "
-                                   "other Objects")
-            parent.addChild(item)
-            if depth < 12:
-                for sub in inner:
-                    add(item, sub, depth + 1)
-
-        seen = set()
-        for node in self._parts_in(self.model.root):
-            comp = self._definition(node)
-            # a hidden definition placed by an instance shows once, there
-            if node.type == "component" and not node.visible:
-                continue
-            if comp is not None:
-                seen.add(comp.id)
-            add(top, node, 0)
-        loose = [c for c in self._parts_in(self.model.root)
-                 if c.type == "component" and not c.visible
-                 and c.id not in seen]
-        if loose:
-            defs = QTreeWidgetItem([language_tr("Not placed in Main")])
-            defs.setIcon(0, icons.icon("mdi.folder-outline"))
-            self.overview.addTopLevelItem(defs)
-            for comp in loose:
-                add(defs, comp, 0)
-        self.overview.expandAll()
-
-    def _overview_picked(self, item, _column):
-        node_id = item.data(0, 32)
-        if node_id is not None:
-            node = self.model.find(node_id)
-            if node is not None:
-                self.set_active(node)
 
     def _combo_picked(self, index):
         if self._updating:
