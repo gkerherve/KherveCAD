@@ -198,10 +198,7 @@ MENU_PANELS = {
         ("view/add reference image", None),
         ("view/clear reference images", "mdi.image-remove"),
         ("insert/code & files", None)],
-    "assemble_more": [
-        ("insert/new object", None),
-        ("view/exploded view", None),
-        ("view/animate ($t)", None)],
+    "assemble_more": [],  # the user removed them (2026-11-03)
     # Snap and the Gumball beside Translate: they move parts too (the user)
     "_move_tools": [("view/gumball (move / turn handles)", None)],
     "pub_share": [("file/publish to printables", None),

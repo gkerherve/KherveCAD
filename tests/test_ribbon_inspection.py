@@ -70,6 +70,10 @@ def _keys(act):
     return out - {""}
 
 
+OFF_RIBBON = {"New Object", "Exploded View", "Animate ($t)",
+              "Animate ($t)…", "Animate ($t)..."}
+
+
 def _ribbon_actions(win):
     seen, out = set(), []
     for _k, _f, _s, panels in ribbon.TABS:
@@ -92,6 +96,9 @@ def test_every_menu_command_is_on_the_ribbon(window, app, style):
     def walk(menu, path):
         for act in menu.actions():
             if act.isSeparator() or _keys(act) & on:
+                continue
+            # the user took these off the ribbon (2026-11-03)
+            if act.text().replace("&", "") in OFF_RIBBON:
                 continue
             here = path + " ▸ " + act.text().replace("&", "")
             if act.menu() is not None:
