@@ -665,3 +665,20 @@ def test_a_running_host_is_quit_written_and_reopened(tmp_path, monkeypatch):
     assert out["ok"] and out["reopened"]
     assert state == {"running": False, "quit": 1, "opened": 1}
     assert mcp_hosts.SERVER_NAME in _json.loads(cfg.read_text())["mcpServers"]
+
+
+def test_running_host_seen_when_pgrep_is_blind(monkeypatch):
+    """pgrep returned nothing for an open Claude Desktop, so the entry was
+    written under it; ps still lists the app's executable."""
+    import subprocess as _sp
+    import sys as _sys
+    monkeypatch.setattr(_sys, "platform", "darwin")
+
+    def run(args, **kw):
+        out = ("/Applications/Claude.app/Contents/MacOS/Claude\n"
+               if args[0] == "ps" else "")
+        return _sp.CompletedProcess(args, 1 if args[0] == "pgrep" else 0,
+                                    out, "")
+    monkeypatch.setattr(mcp_hosts.subprocess, "run", run)
+    assert mcp_hosts.host_by_key("claude-desktop").is_running()
+    assert not mcp_hosts.Host("x", "X", {}, mac_app="Other").is_running()

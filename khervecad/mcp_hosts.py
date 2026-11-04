@@ -285,11 +285,17 @@ class Host:
         if not self.mac_app or sys.platform != "darwin":
             return False
         try:
-            return subprocess.run(["pgrep", "-x", self.mac_app],
-                                  capture_output=True,
-                                  timeout=5).returncode == 0
+            if subprocess.run(["pgrep", "-x", self.mac_app],
+                              capture_output=True, timeout=5).returncode == 0:
+                return True
+            # pgrep cannot see other processes from inside some sandboxes
+            # (it missed a running Claude Desktop), but ps still can.
+            ps = subprocess.run(["ps", "-axo", "comm"], capture_output=True,
+                                text=True, timeout=5).stdout
         except (OSError, subprocess.SubprocessError):
             return False
+        tail = f"/{self.mac_app}.app/Contents/MacOS/{self.mac_app}"
+        return any(line.strip().endswith(tail) for line in ps.splitlines())
 
     def _quit_app(self, wait_s: float = 20.0) -> bool:
         try:
