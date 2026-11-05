@@ -354,8 +354,9 @@ def _ignore(uids):
     if not uids:
         return
     folder().mkdir(parents=True, exist_ok=True)
+    keep = sorted(ignored() | uids)     # read BEFORE "w" empties the file
     with open(folder() / IGNORED_FILE, "w", encoding="utf-8") as fh:
-        json.dump(sorted(ignored() | uids), fh)
+        json.dump(keep, fh)
 
 
 def unignore(uid):

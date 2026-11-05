@@ -267,3 +267,13 @@ def test_a_new_document_filled_at_once_is_still_saved(lib):
     saved = saver.flush()
     assert [s["title"] for s in saved] == ["Classical porch"]
     assert saved[0]["section"] == "Buildings"
+
+
+def test_removing_parts_one_by_one_ignores_every_one(lib):
+    """_ignore opened the file for writing before reading it, so each
+    removal wiped the earlier ones and autosave brought them back."""
+    a = user_library.save(_hook_object(), "Part A", "one", "Brackets")
+    b = user_library.save(_hook_object(), "Part B", "two", "Brackets")
+    user_library.remove(a["path"])
+    user_library.remove(b["path"])
+    assert {a["uid"], b["uid"]} <= user_library.ignored()
