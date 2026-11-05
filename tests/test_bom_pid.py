@@ -204,6 +204,18 @@ def test_bom_mcp_tool(window, tmp_path):
     assert "error" in err
 
 
+def test_bom_mcp_set_reaches_every_line_of_the_ids(window):
+    ex = McpToolExecutor(window)
+    rows = call(ex, "bill_of_materials")["rows"]
+    picked = [r for r in rows if r["level"] == 1][:3]
+    assert len(picked) == 3
+    ids = [r["node_ids"][0] for r in picked]
+    call(ex, "bill_of_materials", action="set", ids=ids,
+         fields={"supplier": "Acme"})
+    after = {r["item"]: r for r in call(ex, "bill_of_materials")["rows"]}
+    assert all(after[r["item"]]["supplier"] == "Acme" for r in picked)
+
+
 def test_bom_window_edits_a_cell(window):
     from khervecad import bom_window
     w = bom_window.open_bom(window)

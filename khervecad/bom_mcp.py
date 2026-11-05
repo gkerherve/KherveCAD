@@ -38,6 +38,19 @@ def _find(b, params, model):
     raise BomError("give the line's item number ('1.3.2') or node ids")
 
 
+def _find_all(b, params, model):
+    """Every line holding one of params["ids"] (or the one item)."""
+    ids = params.get("ids") or []
+    if params.get("item") or not ids:
+        return [_find(b, params, model)]
+    want = {int(i) for i in ids}
+    found = [ln for ln in b.flat()
+             if want & {n.id for n in ln.nodes if n is not None}]
+    if not found:
+        raise BomError(f"no BOM line holds nodes {sorted(want)}")
+    return found
+
+
 def run(window, params):
     model = window.model
     action = params.get("action") or "get"
@@ -89,9 +102,11 @@ def run(window, params):
         if bad:
             raise BomError(f"not BOM fields: {bad}; editable: "
                            f"{list(bom.EDITABLE)}")
-        line = _find(b, params, model)
         from .bom_window import set_line_fields
-        set_line_fields(model, line, fields)
+        lines = _find_all(b, params, model)
+        for ln in lines:            # every line the ids reach, not the first
+            set_line_fields(model, ln, fields)
+        line = lines[0]
         b = bom.build(model, detail)
         for ln in b.flat():
             if ln.values.get("item") == line.values.get("item"):
