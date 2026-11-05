@@ -67,6 +67,7 @@ BACKGROUNDS = {
     "Theme": None,
     "Studio": ("#f4f6f8", "#c9d2da"),
     "Light": ("#fbfbfb", "#ededed"),
+    "White": ("#ffffff", "#ffffff"),
     "Slate": ("#3a4048", "#22262b"),
     "Dark": ("#2b2f33", "#16181b"),
     "Blueprint": ("#123a6b", "#0a1f3d"),

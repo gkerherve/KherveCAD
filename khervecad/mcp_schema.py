@@ -3032,6 +3032,12 @@ TOOLS = [
             "projection": {"type": "string", "enum": PROJECTIONS,
                            "description": "The user's 3D projection: "
                                           "perspective or orthographic."},
+            "background": {"type": "string",
+                           "enum": ["Theme", "Studio", "Light", "White",
+                                    "Slate", "Dark", "Blueprint"],
+                           "description": "The 3D view's background. "
+                                          "'White' is plain white with no "
+                                          "horizon — for figures."},
             "stage": {"type": "boolean",
                       "description": "Stand the model on a round "
                                      "platform with a soft shadow from "

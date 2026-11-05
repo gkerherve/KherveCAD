@@ -2178,6 +2178,13 @@ class McpToolExecutor:
             win.set_projection(name)
         if params.get("stage") is not None:
             win.view3d.set_stage(bool(params["stage"]))
+        if params.get("background") is not None:
+            from .view3d import BACKGROUNDS
+            if params["background"] not in BACKGROUNDS:
+                raise ToolError(f"Unknown background "
+                                f"{params['background']!r}. Choose one "
+                                f"of: {', '.join(BACKGROUNDS)}.")
+            win.view3d.set_background(params["background"])
         heat = None
         if any(params.get(k) is not None for k in
                ("heatmap", "heat_min_wall", "heat_overhang",
@@ -2250,6 +2257,7 @@ class McpToolExecutor:
                 "global_segments_on": bool(model.global_fn_on),
                 "projection": win.view3d.projection,
                 "stage": bool(win.view3d.stage),
+                "background": win.view3d.background,
                 "opengl": bool(win.view3d.hardware),
                 "interface_style": getattr(win, "_interface_style",
                                            "KherveCAD"),
