@@ -37,6 +37,8 @@ from . import icons, language, toolbars, tooltips
 _SETTINGS = ("Kherve", "KherveCAD")
 TAB_KEY = "ribbon/tab"
 
+from .ribbon_library import PANELS as _LIBRARY_PANELS  # noqa: E402
+
 #: (key, Fusion title, SolidWorks title, panel keys)
 TABS = [
     # the vertical bar's tools live on the ribbon too (2026-10-19, the
@@ -72,13 +74,16 @@ TABS = [
     # every builder window (2026-10-19, the user: "where are all the
     # builders?") — the Tools menu's Builders section
     ("build", "BUILD", "Builders", ["builders"]),
+    # the Library menu's subjects, one button each (2026-11-09, the
+    # user: "we should have a library tab, this is really a big thing")
+    ("library", "LIBRARY", "Library", list(_LIBRARY_PANELS)),
 ]
 
 #: SolidWorks' own CommandManager order (2026-10-27, the user): Features
 #: first, Sketch beside it, then Surfaces, Sheet Metal and Evaluate; the
 #: tabs SolidWorks has no counterpart for follow
 SW_ORDER = ["features", "sketch", "surface", "sheetmetal", "inspect",
-            "form", "character", "publish", "utilities", "build"]
+            "library", "form", "character", "publish", "utilities", "build"]
 
 
 #: panels SolidWorks keeps off its Features tab (2026-10-27, the user:
@@ -449,6 +454,9 @@ def panel_actions(win, key):
 
 def _panel_actions(win, key):
     """(title, actions) of panel *key*."""
+    if key.startswith("lib_"):
+        from . import ribbon_library
+        return ribbon_library.panel(win, key)
     parts = win._bar_parts
     families = dict(parts["families"])
     if key == "finish":                # Fusion's MODIFY holds Shell too

@@ -768,7 +768,7 @@ def icon(key, style):
     from . import (icons_cad_more, icons_cad_build,  # noqa: F401
                    icons_cad_sketch, icons_cad_ribbon,
                    icons_cad_constrain, icons_cad_sheet,
-                   icons_cad_ref)
+                   icons_cad_ref, icons_cad_library)
     if style not in PALETTES or key not in DRAW:
         return None
     got = _CACHE.get((key, style))
