@@ -270,7 +270,7 @@ def _paint_kcad(size: int) -> QPixmap:
     """The KherveCAD mark (2026-10-21, the user: "more like SolidWorks,
     more evolved"): an ORIGINAL design, not SolidWorks' logo — a deep red
     rounded tile with a soft highlight, a shaded machined bracket in
-    metal, and the KCAD wordmark under it from 48 px up."""
+    metal, and the kCAD wordmark under it from 48 px up."""
     from PyQt5.QtGui import QLinearGradient, QRadialGradient
     pm = QPixmap(size, size)
     pm.fill(Qt.transparent)
@@ -314,7 +314,7 @@ def _paint_kcad(size: int) -> QPixmap:
 
 
 def _paint_wordmark_white(p: QPainter, rect: QRectF):
-    """'KCAD' in a bold sans, white, with a faint shadow."""
+    """'kCAD' in a bold sans, white, with a faint shadow."""
     from PyQt5.QtGui import QFont
     font = QFont("Helvetica Neue")
     font.setStyleHint(QFont.SansSerif)
@@ -322,7 +322,7 @@ def _paint_wordmark_white(p: QPainter, rect: QRectF):
     font.setPixelSize(max(6, int(rect.height() * 0.95)))
     font.setLetterSpacing(QFont.PercentageSpacing, 104)
     path = QPainterPath()
-    path.addText(0, 0, font, "KCAD")
+    path.addText(0, 0, font, "kCAD")
     box = path.boundingRect()
     k = min(rect.width() * 0.78 / box.width(),
             rect.height() * 0.82 / box.height())
@@ -340,7 +340,7 @@ def _paint_wordmark_white(p: QPainter, rect: QRectF):
 
 
 def app_icon() -> QIcon:
-    """Window/taskbar icon: the 'KCAD' wordmark above an isometric cube
+    """Window/taskbar icon: the 'kCAD' wordmark above an isometric cube
     on a rounded slate tile, rendered at each standard size."""
     ic = QIcon()
     for size in (16, 24, 32, 48, 64, 128, 256):
