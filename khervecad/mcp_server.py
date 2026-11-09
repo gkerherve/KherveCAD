@@ -668,6 +668,13 @@ a tool in a hand) is ordinary geometry you add beside the figure, \
 placed with face_landmarks and probe_surface. NEVER model a person \
 from spheres and capsules when build_character can.
 
+Shoes:
+- Build shoes with build_shoe (call list_shoe_options first): a preset \
+(pumps, boots, sandals, loafers, Oxfords, sneakers) and/or gender, EU \
+size, toe, upper, sole, heel + heel_height, colours, pair. NEVER copy \
+a brand's logo or a named brand design; the side decoration is an \
+original wave or stripe.
+
 Detail, age and texture (creatures, faces, hands, worn things):
 - A smooth blend of primitives reads as plastic. Make the form with \
 `kcad_blend(radius, detail)` — detail is cells across the part, up to \

@@ -557,6 +557,8 @@ def build_tools_menu(win, menu):
              "human_builder"),
             ("mdi.car-sports", "Ca&r Builder...", "car_dialog",
              "car_builder"),
+            ("mdi.shoe-heel", "&Shoe Builder...", "shoe_dialog",
+             "shoe_builder"),
             ("mdi.toy-brick-outline", "&Lego Builder...", "lego_builder",
              "lego_builder"),
             ("mdi.atom", "Cr&ystal Builder...", "crystal_dialog",

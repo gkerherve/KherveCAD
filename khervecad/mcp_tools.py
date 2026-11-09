@@ -1749,6 +1749,33 @@ class McpToolExecutor:
                 "note": "Clothes follow body parts. Look at it with "
                         "render_view (target_node) from Front and Right."}
 
+    def _t_list_shoe_options(self, params) -> dict:
+        from . import shoe_design
+        return shoe_design.options()
+
+    def _t_build_shoe(self, params) -> dict:
+        from . import shoe_design
+        params = dict(params)
+        place = {k: params.pop(k) for k in ("x", "y", "rz")
+                 if params.get(k) is not None}
+        replace_id = params.pop("replace_id", None)
+        replace = self._node(replace_id) if replace_id is not None else None
+        if replace is not None and not (replace.params or {}).get("shoe"):
+            raise ToolError(f"Node {replace_id} is not a shoe built by "
+                            "build_shoe or the Shoe Builder.")
+        try:
+            part = shoe_design.insert(
+                self._model, params, x=place.get("x"),
+                y=place.get("y", 0.0), rz=place.get("rz", 0.0),
+                replace=replace)
+        except shoe_design.SpecError as exc:
+            raise ToolError(f"{exc}. Call list_shoe_options.")
+        spec = part.params["shoe"]
+        return {"id": part.id, "name": part.name, "spec": spec,
+                "length_mm": round(shoe_design.length_mm(spec), 1),
+                "note": "Toe at x = 0 of the Object, heel towards +x. "
+                        "Look at it with render_view (target_node)."}
+
     def _t_build_molecule(self, params) -> dict:
         from . import molecule_build
         try:

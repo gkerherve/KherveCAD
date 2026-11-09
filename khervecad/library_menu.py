@@ -217,6 +217,14 @@ def _people(window, sub):
     sub.addSeparator()
 
 
+def _shoes(window, sub):
+    from . import shoe_dialog
+    sub.addAction(icons.icon("mdi.shoe-heel"),
+                  language.tr("Shoe Builder..."),
+                  lambda: shoe_dialog.open_builder(window))
+    sub.addSeparator()
+
+
 def _chemistry(window, sub):
     """The Chemistry Builder sits on top of every chemistry menu."""
     from . import chem_dialog
@@ -262,7 +270,7 @@ def _vacuum(window, sub):
     sub.addSeparator()
 
 
-_BUILDERS = {"people": _people, "vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
+_BUILDERS = {"people": _people, "shoes": _shoes, "vacuum": _vacuum, "cars": _cars, "lego": _lego, "city": _city, "crystals": _crystals,
              "surfaces": _surfaces,
              "molecules": _molecules}
 

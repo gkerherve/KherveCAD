@@ -291,3 +291,28 @@ def _segments(d):
     d.poly(top, None, color=d.pal.make, width=0.06)
     for q in top:
         d.disc(q, 0.035, d.pal.make)
+
+
+@draws("shoe_builder")
+def _shoe(d):
+    """A red pump seen from the side: pointed toe, rising arch, heel cup
+    and a stiletto."""
+    paint = QColor("#c8202c")
+    body = QPainterPath(QPointF(0.06, 0.78))
+    body.quadTo(0.10, 0.66, 0.30, 0.64)
+    body.lineTo(0.40, 0.66)
+    body.quadTo(0.58, 0.58, 0.72, 0.36)
+    body.lineTo(0.80, 0.24)
+    body.quadTo(0.90, 0.22, 0.92, 0.34)
+    body.lineTo(0.90, 0.46)
+    body.lineTo(0.70, 0.52)
+    body.quadTo(0.50, 0.74, 0.36, 0.80)
+    body.lineTo(0.08, 0.82)
+    body.closeSubpath()
+    g = QLinearGradient(QPointF(0, 0.24), QPointF(0, 0.82))
+    g.setColorAt(0, shade(paint, 1.35))
+    g.setColorAt(1, shade(paint, 0.7))
+    d.path(body, QBrush(g))
+    d.line(QPointF(0.86, 0.46), QPointF(0.84, 0.90), d.pal.edge, 0.07)
+    d.line(QPointF(0.86, 0.46), QPointF(0.84, 0.89), shade(paint, 0.85),
+           0.04)

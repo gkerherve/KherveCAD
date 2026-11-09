@@ -55,6 +55,7 @@ _READ_ONLY_TOOLS = frozenset({
     "get_code", "render_view", "list_parts", "list_examples",
     "list_crystals", "list_molecules", "list_proteins", "get_city",
     "list_character_options", "list_creature_options",
+    "list_shoe_options",
     "list_planetcraft_creatures",
     "list_scad_libraries",
     "list_anchors", "select_nodes", "get_node_bounds", "measure",

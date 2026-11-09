@@ -63,6 +63,21 @@ COMMANDS = {
          "Set paint, rim style, tyres and calipers.",
          "Insert places the car; Update selected rebuilds it in place."],
         "Sizes include 1:18, 1:43 and full size."),
+    "shoe builder": (
+        "Shoe Builder",
+        "Design a shoe on one parametric last: women's or men's, EU "
+        "size, pointed / round / square toe, pump, flat, loafer, Oxford, "
+        "sneaker, high-top, boot or sandal, thin or thick sole, "
+        "stiletto, block or wedge heel, colours — with live side and "
+        "top views.",
+        ["Start from a preset (devil arrow pump, Oxford, running "
+         "shoe…).",
+         "Change the upper, sole, heel and heel height, the size and "
+         "the colours.",
+         "Insert adds the shoe (tick Make a pair for two); Update "
+         "selected rebuilds the one you picked."],
+        "Side decorations are original waves and stripes, never a "
+        "brand's logo."),
     "lego builder": (
         "Lego Builder",
         "Build with Lego bricks on a stud grid, level by level: every "

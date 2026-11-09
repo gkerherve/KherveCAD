@@ -2691,6 +2691,59 @@ TOOLS = [
         "input_schema": _obj({}),
     },
     {
+        "name": "list_shoe_options",
+        "description": (
+            "Everything build_shoe accepts: the presets (Devil arrow "
+            "pump, Classic black pump, Kitten heel pump, Block-heel ankle "
+            "boot, Cork wedge sandal, Square-toe loafer, Ballet flat, "
+            "Tennis sneaker, Oxford dress shoe, Work boot, Running shoe, "
+            "High-top basketball, Retro court shoe, Canvas skate shoe), "
+            "genders, toes, uppers, soles, heels, side decorations and "
+            "named colours. Call it before build_shoe."
+        ),
+        "input_schema": _obj({}),
+    },
+    {
+        "name": "build_shoe",
+        "description": (
+            "Add a SHOE (or a pair) as one Object — the Shoe Builder in "
+            "one call. Start from a `preset` or none; every other key "
+            "overrides it: gender (Women/Men, men's last 4 % wider), "
+            "size (EU, sets the length), toe (Pointed/Round/Square), "
+            "upper (Pump, Ballet flat, Loafer, Oxford, Sneaker, "
+            "High-top, Ankle boot, Work boot, Sandal), sole (Thin rises "
+            "with the heel; Leather, Cupsole, Runner, Vulcanised, Lug "
+            "are thick with toe spring), heel (Stiletto, Block, Wedge, "
+            "None) + heel_height mm, arrow (a devil-tail arrowhead at "
+            "the stiletto's tip), decoration (an ORIGINAL side wave or "
+            "stripe — never copy a brand's logo), pair, and colours "
+            "upper_colour / lining_colour / sole_colour / heel_colour / "
+            "accent_colour / lace_colour (a name from list_shoe_options "
+            "or #rrggbb). `replace_id` rebuilds an earlier shoe in place."
+        ),
+        "input_schema": _obj({
+            "preset": {"type": "string"},
+            "name": {"type": "string"},
+            "gender": {"type": "string"},
+            "size": {"type": "number", "description": "EU size 30-50."},
+            "toe": {"type": "string"}, "upper": {"type": "string"},
+            "sole": {"type": "string"}, "heel": {"type": "string"},
+            "heel_height": {"type": "number", "description": "mm"},
+            "arrow": {"type": "boolean"},
+            "decoration": {"type": "string"},
+            "pair": {"type": "boolean"},
+            "upper_colour": {"type": "string"},
+            "lining_colour": {"type": "string"},
+            "sole_colour": {"type": "string"},
+            "heel_colour": {"type": "string"},
+            "accent_colour": {"type": "string"},
+            "lace_colour": {"type": "string"},
+            "x": {"type": "number"}, "y": {"type": "number"},
+            "rz": {"type": "number"},
+            "replace_id": {"type": "number"},
+        }),
+    },
+    {
         "name": "build_character",
         "description": (
             "Add a dressed, posed PERSON as one Object — the Human "

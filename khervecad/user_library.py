@@ -469,7 +469,8 @@ GENERIC = re.compile(r"^(object|group|union|part|component|body|move|"
                      r"color|colour|translate|rotate)( ?\d+)?$", re.I)
 #: an Object carrying one of these was built by a Library part or a
 #: builder (house, city, car, character...) — it is not the user's design
-BUILT_BY = ("library_part", "house", "city", "car", "character", "lego")
+BUILT_BY = ("library_part", "house", "city", "car", "character", "lego",
+            "shoe")
 
 
 def eligible(node) -> bool:

@@ -1257,6 +1257,8 @@ PARTS.update(library_hvac.PARTS)
 PARTS.update(library_characters.PARTS)
 PARTS.update(library_animals.PARTS)
 PARTS.update(library_monsters.PARTS)
+from . import library_shoes  # noqa: E402
+PARTS.update(library_shoes.PARTS)
 # library_animals_real is kept (and tested) but HIDDEN from the Library
 # until it is good enough: see its docstring and CLAUDE.md.
 PARTS.update(library_generative.PARTS)
