@@ -2993,8 +2993,16 @@ class MainWindow(QMainWindow):
                 language.tr("Could not export:\n{exc}").format(exc=exc))
 
     def export_stl(self):
+        # the Object tab exports what it shows: the active Object alone,
+        # at its own origin, named after it
+        iso = self.builder.isolated_component()
         suggestion = str(Path(self._path).with_suffix(".stl")) \
             if self._path else ""
+        if iso is not None:
+            stem = "".join(c if c.isalnum() or c in " -_" else "_"
+                           for c in iso.name).strip() or "object"
+            folder = Path(self._path).parent if self._path else Path.home()
+            suggestion = str(folder / f"{stem}.stl")
         path, _ = QFileDialog.getSaveFileName(
             self, language.tr("Export STL"), suggestion,
             language.tr("STL mesh (*.stl)"))
@@ -3005,20 +3013,28 @@ class MainWindow(QMainWindow):
         factor = self._export_scale()
         if factor is None:
             return
-        if self.engine.available:
-            error = self.engine.export_stl(self.model.to_scad(), path)
-            if error:
-                QMessageBox.warning(
-                    self, APP_NAME,
-                    language.tr("OpenSCAD export failed:\n{error}")
-                    .format(error=error))
-                return
-        else:
-            from .engine import write_stl
-            write_stl(mesh.tessellate(self.model.root), path)
+        scope = iso if iso is not None else self.model.root
+        with self._isolated_frame(iso):
+            if self.engine.available:
+                code = (self.model.subtree_scad(iso) if iso is not None
+                        else self.model.to_scad())
+                error = self.engine.export_stl(code, path)
+                if error:
+                    QMessageBox.warning(
+                        self, APP_NAME,
+                        language.tr("OpenSCAD export failed:\n{error}")
+                        .format(error=error))
+                    return
+            else:
+                from .engine import write_stl
+                write_stl(mesh.tessellate(scope), path)
         if factor != 1.0:
             units.scale_mesh_file(path, factor)
-        if not self.engine.available and mesh.approximates(self.model.root):
+        if iso is not None:
+            self.statusBar().showMessage(
+                language.tr("Exported {name} alone to {path}").format(
+                    name=iso.name, path=path), 8000)
+        if not self.engine.available and mesh.approximates(scope):
             QMessageBox.information(
                 self, APP_NAME,
                 language.tr(

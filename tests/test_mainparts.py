@@ -115,3 +115,36 @@ def test_part_library_window_is_organised_like_the_menu(window, app):
                          for it in shown)
     dlg._tree.setCurrentItem(shown[0])
     assert dlg._part_id() == shown[0].data(0, library_tree.PART)
+
+
+def test_export_stl_in_object_tab_writes_that_object_alone(
+        window, tmp_path, monkeypatch):
+    """Export STL from the Object tab writes only the Object shown,
+    at its own origin, named after it; Main writes everything."""
+    from PyQt5.QtWidgets import QFileDialog
+    from khervecad.engine import parse_mesh
+    monkeypatch.setattr(type(window.engine), "available",
+                        property(lambda _s: False))
+    a = window.model.new_component("Pot A", visible=True)
+    window.model.add_node("cube", dict(width=10, depth=10, height=10),
+                          parent=a)
+    a.params["x"] = 50.0
+    b = window.model.new_component("Pot B", visible=True)
+    window.model.add_node("cube", dict(width=4, depth=4, height=4),
+                          parent=b)
+    seen = {}
+
+    def ask(_parent, _title, suggestion, _filter):
+        seen["suggestion"] = suggestion
+        return str(tmp_path / Path(suggestion).name), ""
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", ask)
+    monkeypatch.setattr(window, "_export_scale", lambda: 1.0)
+
+    window.builder.open_component(a)
+    window.export_stl()
+    assert Path(seen["suggestion"]).name == "Pot A.stl"
+    tris = parse_mesh(str(tmp_path / "Pot A.stl"))
+    xs = [p[0] for t in tris for p in t[:3]]
+    assert max(xs) - min(xs) == pytest.approx(10, abs=0.01)
+    assert min(xs) > -1                      # own origin, not x = 50
+    assert a.params["x"] == 50.0             # placement put back
