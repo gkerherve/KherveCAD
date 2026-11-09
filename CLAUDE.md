@@ -3335,6 +3335,20 @@ into a new module and import.
                        revolve about the sketch's Y, sweep, section loft)
                        and part + sketch in a Difference. A selected face
                        sketch is cut at once. SOLID tab panel "cuts".
+  - Extruded Cut vs SolidWorks, by mouse (2026-11-09): once the cut is
+                       made the view glides back to where the face was
+                       chosen from (`cut_feature.show_depth`, from
+                       `drag_feature.start`; tilted if that was square on
+                       too, left alone if the user turned it) — square on,
+                       the arrow was end-on; Enter = OK on the arrow; no
+                       Done button on the one-click face pick
+                       (`start_pick(done=False)`); the 3D Line shows length
+                       and angle, a snapped line is as long as the cursor
+                       REACHES along it, and its arc needs the line drawn
+                       out `ARC_AWAY_PX` first, as in 2D. SolidWorks'
+                       normal-arc zones were tried and taken out: heading
+                       straight for a point square to the line must stay
+                       the tangent half circle.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into
@@ -5072,6 +5086,33 @@ into a new module and import.
                        half round); builds on a worker QThread (newest
                        request wins, ~2 s a figure), Random, Insert, Update
                        selected.
+  - `shoe_design.py` / `shoe_dialog.py` / `library_shoes.py` — the
+                       **Shoe Builder** (2026-11-09, the user: a devil-arrow
+                       stiletto, then "make a shoe builder"). One parametric
+                       last: stations `X` (toe x = 0, heel seat a half
+                       circle about x = 217), per station a half width
+                       (`WIDTHS` toe shapes) and upper height (`UPPERS`);
+                       the upper is hulled cross-sections minus the same a
+                       wall in, opened after `openx`; soles are planks
+                       across the foot so they follow the outline — Thin
+                       rises with the heel (half cosine ball -> seat),
+                       Leather / Cupsole / Runner / Vulcanised / Lug have
+                       toe spring and heel drop (`profile`); heels
+                       Stiletto (as wide as the seat, curving to a pin,
+                       optional devil `Arrow`), Block, Wedge; extras cup,
+                       shaft, collar, straps, laces, heel tab, toe cap,
+                       tread, an ORIGINAL side wave (never a brand mark).
+                       EU size -> length (x 2/3 cm), x/y scale only so a
+                       heel height stays true; men 4 % wider. Generated as
+                       plain OpenSCAD with literal arrays (`LIB` modules
+                       take everything as arguments — the preview cannot
+                       evaluate a user FUNCTION in a placement, nor a value
+                       derived from a boolean argument) and parsed by
+                       scadparse; spec on the Object as `params["shoe"]`
+                       (Update selected). 14 `PRESETS` are Library parts
+                       (Everyday things ▸ Shoes, EU sizes, colour combo =
+                       upper); MCP `list_shoe_options` / `build_shoe`.
+                       Tested in `tests/test_shoe_design.py`.
   - `library_animals.py` / `library_animals_real.py` — **Animals**
                        (2026-09-19, the user's request), Library ▸ Toys &
                        models ▸ Animals. **Cartoon animals** (30 chibi

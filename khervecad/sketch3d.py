@@ -258,7 +258,10 @@ class Sketch3DTool:
             c = 0.0
         if abs(s) < 1e-12:
             s = 0.0
-        q = (tidy(a[0] + c * L), tidy(a[1] + s * L))
+        # the cursor's own reach along that direction (its distance from
+        # the start made a level line 20.0062 long, not 20)
+        reach = dx * c + dy * s
+        q = (tidy(a[0] + c * reach), tidy(a[1] + s * reach))
         if self.lit and self.snapped is not None:
             # along that direction to where it meets the edge
             e0, e1 = self.lit[0]
@@ -330,7 +333,9 @@ class Sketch3DTool:
         if q is None:
             return
         d = math.hypot(q[0] - x, q[1] - y)
-        if d >= sl.ARC_GO_PX:
+        if d >= sl.ARC_AWAY_PX:
+            # the next line was really being drawn first, as in the 2D
+            # view (at 16 px an arc came far too easily)
             self._away = True
         if d <= sl.ARC_ARM_PX and self._away:
             self._armed, self._away = True, False
@@ -793,7 +798,9 @@ class Sketch3DTool:
                 node = model.add_node("line", params,
                                       parent=self.holder or self.group)
                 if arc:
-                    model.rename(node, "Arc")
+                    if params.get("bulge"):
+                        model.rename(node, "Arc")
+                    self._say()          # (lines again: say so)
                 self._join(last, node)
                 if not arc:
                     self._write_relations(
@@ -1072,9 +1079,13 @@ class Sketch3DTool:
             qa, qb = scr(self.points[-1]), scr(q)
             if qa and qb:
                 painter.drawLine(qa, qb)
+                a = self.points[-1]
+                L = math.hypot(q[0] - a[0], q[1] - a[1])
+                ang = math.degrees(math.atan2(q[1] - a[1], q[0] - a[0])) % 360
+                text = f"{tidy(L):g}  ∠ {round(ang, 1):g}°"
                 if kind:
-                    painter.drawText(qb + QPointF(10, -10),
-                                     RELATION_MARK[kind])
+                    text = RELATION_MARK[kind] + "  " + text
+                painter.drawText(qb + QPointF(10, -10), text)
         elif self.points and h is not None:
             a = self.points[-1]
             if self.mode == "rect":

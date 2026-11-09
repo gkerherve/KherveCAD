@@ -872,7 +872,7 @@ class View3D(QWidget):
         event.accept()
 
     def start_pick(self, callback, groups=None, banner="",
-                   labeler=None, extend=None):
+                   labeler=None, extend=None, done=True):
         """Enter pick mode: the next left click on the model picks a
         face or edge and *callback* receives its description (world
         coordinates); right click or Esc cancels. While armed, the
@@ -901,7 +901,8 @@ class View3D(QWidget):
         if getattr(self, "nav_bar", None) is not None:
             self.nav_bar.hide()
         self.setCursor(Qt.CrossCursor)
-        self._show_pick_done(True)
+        # (one click and it is over — a face to sketch on: no Done)
+        self._show_pick_done(bool(done))
         self.setMouseTracking(True)          # hover pre-highlight
         self.setFocus(Qt.OtherFocusReason)   # so Esc reaches us
         self.update()

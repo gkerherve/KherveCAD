@@ -178,8 +178,9 @@ def start(window, node=None, quiet=False, created=False, panel=None):
     # for a NEW extrude; one merely selected shows its arrow, and its
     # Properties say the same things (the window covered them)
     try:
-        from . import extrude_panel
+        from . import cut_feature, extrude_panel
         if created if panel is None else panel:
+            cut_feature.show_depth(window)
             extrude_panel.show(window, tool)
     except Exception:                          # never stop the arrow
         import traceback
@@ -579,10 +580,15 @@ class DragFeature:
     # -- the view's hooks ------------------------------------------------
     def wants_key(self, event):
         from PyQt5.QtCore import Qt
-        return event.key() == Qt.Key_Escape
+        return event.key() in (Qt.Key_Escape, Qt.Key_Return, Qt.Key_Enter)
 
     def key_press(self, event):
         from PyQt5.QtCore import Qt
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter) and \
+                self.drag is None:
+            self.ok()                    # Enter is OK, as in SolidWorks
+            self.view.update()
+            return True
         if event.key() != Qt.Key_Escape:
             return False
         if self.drag is not None:

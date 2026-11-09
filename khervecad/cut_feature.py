@@ -177,6 +177,39 @@ def paint_chosen_face(window, painter, project):
                 [QPointF(p[0], p[1]) for p in pts]))
 
 
+def _forward(yaw, pitch):
+    import math
+    y, p = math.radians(yaw), math.radians(pitch)
+    return (-math.cos(p) * math.cos(y), -math.cos(p) * math.sin(y),
+            -math.sin(p))
+
+
+def show_depth(window):
+    """The sketch was drawn looking straight at its face; from there the
+    extrude's arrow is seen end-on and its depth not at all. As
+    SolidWorks does on leaving a sketch, the view goes back to where the
+    face was chosen from (tilted, had that been square on too) — unless
+    the user has turned the view since."""
+    before = window.__dict__.pop("_cut_view_before", None)
+    if before is None:
+        return False
+    view = window.view3d
+    fy, fp = before["face"]
+    now = _forward(view.yaw, view.pitch)
+    if sum(a * b for a, b in zip(now, _forward(fy, fp))) < 0.9995:
+        return False                     # turned by hand: left alone
+    yaw, pitch = before["yaw"], before["pitch"]
+    if sum(a * b for a, b in zip(now, _forward(yaw, pitch))) > 0.9:
+        yaw = fy + 35.0
+        pitch = fp - 55.0 if fp > 45 else fp + 55.0 if fp < -45 \
+            else fp + 30.0
+    from . import view_anim
+    view_anim.glide_3d(view, dict(yaw=yaw, pitch=pitch,
+                                  target=list(view.target),
+                                  distance=view.distance))
+    return True
+
+
 def clear_chosen_face(window):
     window._chosen_face = None
     window.view3d.update()
@@ -310,6 +343,9 @@ def start(window, kind):
             view = window.view3d          # looking straight at the face
             yaw, pitch = face_sketch.camera_for(desc["dir"])
             view.user_moved = True
+            # (where the user was looking: back there for the depth)
+            window._cut_view_before = dict(
+                yaw=view.yaw, pitch=view.pitch, face=(yaw, pitch))
             from . import view_anim
             view_anim.glide_3d(view, dict(
                 yaw=yaw, pitch=pitch, target=list(view.target),
@@ -330,7 +366,7 @@ def start(window, kind):
     window.view3d.start_pick(
         picked, groups=parts,
         banner="%s: click the face to %s · Esc cancels" % (label, verb),
-        labeler=lambda desc, node: getattr(node, "name", ""))
+        labeler=lambda desc, node: getattr(node, "name", ""), done=False)
     return None
 
 

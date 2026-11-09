@@ -536,3 +536,115 @@ def test_right_click_deletes_a_relation_in_3d(win, monkeypatch):
     acts = {a.text(): a for a in menus[0].actions()}
     acts["Delete constraint"].trigger()
     assert not sc.rows(g)
+
+
+# ---- as SolidWorks does it (2026-11-09, the user: "go through every
+# step and see what is not the same")
+def test_a_3d_arc_needs_the_line_drawn_out_first(win, monkeypatch):
+    """As in the 2D view: merely leaving the point is a line; drawn out,
+    back on the point and out again is the tangent arc — a half circle to
+    a point square to the line."""
+    from khervecad import sketch_line as sl
+    tool = _on_face(win, monkeypatch)
+    win.view3d.resize(800, 600)
+    tool.set_mode("line")
+    tool.place((5, 5))
+    tool.place((15, 5))
+    v = win.view3d
+    q = v._project(*v._camera(), tool._world((15, 5)))
+    x, y = q[0], q[1]
+    tool._arc_switch(x + sl.ARC_GO_PX + 4, y)       # just leaving
+    tool._arc_switch(x, y)
+    tool._arc_switch(x + sl.ARC_GO_PX + 4, y)
+    assert not tool.arc
+    tool._arc_switch(x + sl.ARC_AWAY_PX + 4, y)     # drawn out first
+    tool._arc_switch(x, y)
+    tool._arc_switch(x + sl.ARC_GO_PX + 4, y)
+    assert tool.arc
+    arc = tool.place((15, 15))
+    assert arc.name == "Arc" and abs(arc.params["bulge"]) == pytest.approx(1)
+    assert not tool.arc                             # one arc, then lines
+    tool.points = []
+    tool._end()
+
+
+def test_a_level_line_is_as_long_as_the_cursor_reaches(win, monkeypatch):
+    """Not as far as the cursor is from its start: 20, never 20.0062."""
+    tool = _on_face(win, monkeypatch)
+    tool.set_mode("line")
+    tool.place((5, 5))
+    line = tool.place((25, 5.5))
+    assert (line.params["x2"], line.params["y2"]) == (25, 5)
+    tool.points = []
+    tool._end()
+
+
+def test_the_view_shows_the_depth_once_the_cut_is_made(win, monkeypatch):
+    """Drawn square on, the arrow would be seen end-on: the view goes
+    back to where the face was chosen from."""
+    from PyQt5.QtTest import QTest
+    v = win.view3d
+    v.yaw, v.pitch = 40.0, 25.0
+    tool = _on_face(win, monkeypatch)
+    QTest.qWait(700)                                 # the turn to the face
+    assert v.pitch == pytest.approx(90)
+    tool.place((5, 5))
+    tool.place((15, 12))
+    QTest.qWait(700)
+    assert (v.yaw % 360, v.pitch) == pytest.approx((40.0, 25.0))
+    assert not hasattr(win, "_cut_view_before")
+    v.edit_tool.cancel()
+
+
+def test_a_view_already_square_on_is_tilted_for_the_depth(win, monkeypatch):
+    from PyQt5.QtTest import QTest
+    v = win.view3d
+    v.yaw, v.pitch = -90.0, 90.0                     # looking down already
+    tool = _on_face(win, monkeypatch)
+    QTest.qWait(700)
+    tool.place((5, 5))
+    tool.place((15, 12))
+    QTest.qWait(700)
+    assert v.pitch == pytest.approx(35.0)
+    v.edit_tool.cancel()
+
+
+def test_a_view_turned_by_hand_is_left_alone(win, monkeypatch):
+    from PyQt5.QtTest import QTest
+    v = win.view3d
+    v.yaw, v.pitch = 40.0, 25.0
+    tool = _on_face(win, monkeypatch)
+    QTest.qWait(700)
+    v.yaw, v.pitch = 10.0, 60.0                      # the user's orbit
+    tool.place((5, 5))
+    tool.place((15, 12))
+    QTest.qWait(700)
+    assert (v.yaw, v.pitch) == (10.0, 60.0)
+    v.edit_tool.cancel()
+
+
+def test_enter_keeps_the_cut(win, monkeypatch):
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtTest import QTest
+    from khervecad import drag_feature
+    tool = _on_face(win, monkeypatch)
+    tool.place((5, 5))
+    tool.place((15, 12))
+    assert isinstance(win.view3d.edit_tool, drag_feature.DragFeature)
+    win.show()
+    win.view3d.setFocus()
+    QTest.keyClick(win.view3d, Qt.Key_Return)
+    assert win.view3d.edit_tool is None
+    assert any(n.type == "difference" for n in win.model.root.walk())
+
+
+def test_choosing_the_face_shows_no_done_button(win, monkeypatch):
+    """One click and that pick is over: nothing to be done with."""
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    McpToolExecutor(win).execute("apply_code", {"code": "cube(20);\n"})
+    QApplication.processEvents()
+    cut_feature.start(win, "extruded_cut")
+    done = getattr(win.view3d, "_pick_done", None)
+    assert win.view3d._pick_cb is not None
+    assert done is None or done.isHidden()
+    win.view3d.cancel_pick()
