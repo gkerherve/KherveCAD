@@ -3349,6 +3349,34 @@ into a new module and import.
                        normal-arc zones were tried and taken out: heading
                        straight for a point square to the line must stay
                        the tangent half circle.
+  - Ribbon walk-through (2026-11-09, the user: "go through every tool
+                       in the ribbon ... check manually ... explain in
+                       detail"): every tool of Features / Sketch / Surfaces
+                       / Sheet Metal pressed in four situations and followed
+                       with real clicks. Fixed: `op_pick` looped for ever
+                       when the Object tab had no Object open (add a solid,
+                       undo, Move, click the part — the tab's tree could not
+                       select a part of Main; it now goes to Main); Convert
+                       to Sheet Metal read a `size` a Cube does not have
+                       (every plate became a 10 mm cube at the origin; it
+                       reads width / depth / height, keeps x y z, and a
+                       plate on edge stays where it was); Fold after
+                       flanges says to fold the flat sheet first.
+                       `tooltips_more.py` gives the 33 tools that had a
+                       one-line card their numbered steps (later sketch
+                       shapes, surfaces from curves, all of sheet metal,
+                       Gumball); Extrude's and the cuts' cards say what
+                       really happens. `python -m khervecad.tools.
+                       ribbon_guide` writes `docs/RIBBON_TOOLS.md` from
+                       TIPS. `tests/test_ribbon_walkthrough.py`.
+  - `ribbon_library.py` / `icons_cad_library.py` — the ribbon's
+                       **LIBRARY** tab (same day, the user): every button
+                       IS a submenu of the Library menu (`menuAction`), one
+                       panel per menu section (`lib_parts`, `lib_<i>` per
+                       `library_groups.SECTIONS`, `lib_learn`), so a new
+                       subject appears by itself; painted icon per subject
+                       (`ICONS`, builders' drawings reused, `lib_generic`
+                       the fallback — a test refuses the fallback).
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

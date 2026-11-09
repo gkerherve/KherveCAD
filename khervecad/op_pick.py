@@ -76,7 +76,23 @@ def pick_part(window, op):
     tree = window.builder.active_tree()
 
     def finish():
+        nonlocal tree
         tree.select_nodes(chosen)
+        if not set(tree.selected_nodes()) & set(chosen):
+            # the Object tab with no Object open shows the assembly's
+            # parts in 3D, but its tree cannot select them: the click
+            # selected nothing, the tool asked for a click again, and so
+            # on for ever ("nothing happens" — add a solid, undo, Move).
+            # The parts are Main's: go there.
+            builder = window.builder
+            builder.setCurrentIndex(0)
+            tree = builder.active_tree()
+            tree.select_nodes(chosen)
+            if not set(tree.selected_nodes()) & set(chosen):
+                window.statusBar().showMessage(language.tr(
+                    "That part cannot be selected here — select it in "
+                    "the tree, then use the tool."), 8000)
+                return
         window._apply_operation(op)
 
     def picked(desc, node):

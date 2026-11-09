@@ -139,7 +139,9 @@ def test_convert_a_plate_and_the_old_part(app):
     assert len(body2.params["flanges"]) == 2
     upright = m.add_node("cube", dict(size=[80, 2, 50]))
     body3 = ops.convert(m, upright)
-    assert body3.parent.type == "rotate"
+    # (a thickness back inside the turn, so it stays where the cube was)
+    assert body3.parent.type == "translate"
+    assert body3.parent.parent.type == "rotate"
     with pytest.raises(ValueError):
         ops.convert(m, m.add_node("sphere", {}))
 

@@ -181,8 +181,13 @@ def test_every_ribbon_button_does_something(window, app, monkeypatch,
 
     def reset():
         for w in QApplication.topLevelWidgets():
-            if w is not win and w.isVisible():
-                w.close()
+            try:
+                if w is not win and w.isVisible():
+                    w.close()
+            except RuntimeError:
+                # closing a tool window deletes its drop-down lists,
+                # which are top-level frames further down this list
+                continue
         win.view3d.edit_tool = None
         win.statusBar().clearMessage()
         win.model.restore_state(base)

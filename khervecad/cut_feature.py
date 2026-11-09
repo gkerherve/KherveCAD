@@ -383,14 +383,51 @@ def _part_below(window, group):
     return None
 
 
+_HOW = {
+    "revolved_cut": "the profile is turned about the sketch's own Y axis "
+                    "— draw it to the right of that axis",
+    "swept_cut": "the profile is swept along a path you then set in "
+                 "Properties",
+    "lofted_cut": "the cut runs through the sketch's shapes as sections, "
+                  "one height each (Properties)",
+    "boundary_cut": "the cut runs through the sketch's shapes as "
+                    "sections, one height each (Properties)",
+}
 TIPS = {k: (v[0], "Cuts a shape sketched on a face into the part "
-            "(SolidWorks' %s)." % v[0],
-            ["Click the button, then the face to cut into.",
-             "Draw the shape on it — circle, slot, rectangle — and add "
-             "Smart Dimensions to place and size it.",
-             "Leave the sketch: the cut is made."],
+            "(SolidWorks' %s): %s." % (v[0], _HOW[k]),
+            ["Click the button, then the flat face to cut into: the view "
+             "turns to face it and the Sketch tab opens.",
+             "Draw the shape on the face — the Rectangle is ready; "
+             "Circle, Slot and Line are on the Sketch tab. Points snap "
+             "to the face's corners, middles and edges.",
+             "A rectangle, circle or slot is cut as soon as it is drawn; "
+             "lines once they close an area (the green button, or "
+             "right-click).",
+             "Set its numbers in Properties; Smart Dimension places and "
+             "sizes the sketch."],
             "Or select a face sketch you already drew and click it.")
-        for k, v in KINDS.items()}
+        for k, v in KINDS.items() if k in _HOW}
+TIPS["extruded_cut"] = (
+    "Extruded Cut",
+    "Cuts a shape sketched on a face straight into the part, as "
+    "SolidWorks' Extruded Cut: pick the face, draw, set the depth.",
+    ["Click Extruded Cut, then the flat face to cut into (it lights up "
+     "under the mouse): the view turns to face it and the Sketch tab "
+     "opens.",
+     "Draw the shape on the face — the Rectangle is ready (click two "
+     "corners); Circle, Slot and Line are on the Sketch tab. Points "
+     "snap to the face's corners, middles and edges.",
+     "A rectangle, circle or slot is cut as soon as it is drawn; lines "
+     "once they close an area, alone or with the face's edges (the "
+     "green button, or right-click).",
+     "The view turns back and the Extruded Cut window opens: drag the "
+     "blue arrow or type the Distance, choose Through all under End "
+     "condition, tick Reverse direction to go the other way.",
+     "Smart Dimension still works now, to place and size the shape. "
+     "OK or Enter keeps the cut; Cancel or Esc takes it away."],
+    "With sketch shapes already selected, Extruded Cut cuts them at "
+    "once. While drawing a Line, bring the mouse back onto the last "
+    "point and out again (or press A) for a tangent arc.")
 
 
 def actions(win):

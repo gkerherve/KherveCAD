@@ -310,13 +310,23 @@ TIPS = {
     # -------------------------------------------------------- operations
     "linear_extrude": (
         "Linear extrude",
-        "Turns a flat 2D shape into a solid by pushing it straight up "
-        "(along Z).",
-        [_SELECTION + " Pick 2D shapes: rectangle, circle, polygon, "
-         "text or line.",
-         "Click Linear extrude.",
-         "Set Height. Optional: Twist (degrees over the height), Scale "
-         "(top size vs bottom, 0 = a point), Center (extrude both ways)."],
+        "Turns a flat sketch shape into a solid by pushing it straight "
+        "out of its plane — the usual way a part begins, and how a boss "
+        "is added to one.",
+        ["Draw the shape in a sketch (Sketch Mode, then a plane or a "
+         "flat face) — or select 2D shapes you already have: rectangle, "
+         "circle, polygon, text, lines that close an area.",
+         "Click Extrude. One closed shape is extruded at once; "
+         "overlapping shapes show their regions in the 3D view — click "
+         "the ones to keep, then Done or right-click. With no sketch "
+         "left to extrude it asks for a face to sketch a boss on.",
+         "Its window opens beside a blue arrow in the 3D view: drag the "
+         "arrow or type the Distance; Direction is One side, Two sides "
+         "or Symmetric; End condition is Blind or Through all; Reverse "
+         "direction turns it round.",
+         "OK or Enter keeps it; Cancel or Esc takes it back. Later, "
+         "select the extrude: the arrow returns and Properties holds "
+         "the same settings, with Twist and Scale (top) to shape it."],
         "Only 2D shapes can go inside — a 3D object there turns red."),
     "rotate_extrude": (
         "Rotate extrude (lathe)",
@@ -1299,3 +1309,7 @@ def apply(target, key, shortcut: str = ""):
 
 from .tooltips_nav import NAV_TIPS  # noqa: E402  (after TIPS exists)
 TIPS.update(NAV_TIPS)
+
+# the ribbon tools that had only a one-line card: step by step
+from .tooltips_more import TIPS as _MORE_TIPS  # noqa: E402
+TIPS.update(_MORE_TIPS)

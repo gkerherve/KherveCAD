@@ -409,6 +409,11 @@ def test_every_fusion_menu_command_is_on_the_ribbon(window, app):
             here = path + " ▸ " + act.text().replace("&", "")
             if keys(act) & on:
                 continue                   # its button (or the submenu's)
+            # the user took these off the ribbon (2026-11-03, v941)
+            if act.text().replace("&", "") in (
+                    "New Object", "Exploded View", "Animate ($t)",
+                    "Animate ($t)…", "Animate ($t)..."):
+                continue
             if act.menu() is not None:
                 walk(act.menu(), here)
             else:

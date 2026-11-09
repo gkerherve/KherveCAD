@@ -137,10 +137,17 @@ def convert(model, node):
     index = parent.children.index(node)
     rot = None
     if node.type == "cube":
-        size = node.params.get("size", [10, 10, 10])
-        if not isinstance(size, list):
+        # a Cube's sides are width / depth / height (an older "size"
+        # is still read): reading only "size" made every plate a
+        # 10 mm cube
+        size = node.params.get("size")
+        if size is None:
+            size = [node.params.get(k, 20.0)
+                    for k in ("width", "depth", "height")]
+        elif not isinstance(size, list):
             size = [size] * 3
         sx, sy, sz = (mesh.rv(v, env, 10.0) for v in size)
+        place = [node.params.get(k, 0.0) for k in ("x", "y", "z")]
         dims = [sx, sy, sz]
         thin = dims.index(min(dims))
         if thin == 2:
@@ -150,7 +157,9 @@ def convert(model, node):
         else:                              # thin along x
             w, d, t, rot = sz, sy, sx, [0.0, -90.0, 0.0]
         outline = [[0, 0], [w, 0], [w, d], [0, d]]
-        shift = 0.0
+        # turned up on edge, the sheet's thickness runs the other way:
+        # start it a thickness back so it stays where the cube was
+        shift = -t if rot else 0.0
         if node.params.get("center"):
             outline = [[x - w / 2, y - d / 2] for x, y in outline]
             shift = -t / 2
@@ -173,8 +182,10 @@ def convert(model, node):
                          f"an extruded sketch shape) — not a {node.type}")
     model.move_node(body, parent, index)
     inner = body
+    where = place if node.type == "cube" and any(
+        isinstance(v, str) or abs(v) > 1e-12 for v in place) else None
     for kind, vec in (("translate", [0.0, 0.0, shift] if shift else None),
-                      ("rotate", rot)):
+                      ("rotate", rot), ("translate", where)):
         if vec is None:
             continue
         holder = model.add_node(kind, dict(x=vec[0], y=vec[1], z=vec[2]),
@@ -241,7 +252,16 @@ def add_fold(model, node, p1, p2, angle=90.0, radius=0.0):
     rows = _rows(node, "folds")
     rows.append([float(p1[0]), float(p1[1]), float(p2[0]), float(p2[1]),
                  float(angle), float(radius)])
-    _set(model, node, "folds", rows)
+    try:
+        _set(model, node, "folds", rows)
+    except ValueError:
+        if _rows(node, "flanges") or _rows(node, "hems"):
+            # (it read "flange 1: panel 0 has no edge 1")
+            raise ValueError(
+                "Fold: this sheet already has flanges or hems, and a fold "
+                "changes the edges they sit on. Fold the flat sheet first, "
+                "then add the flanges (Ctrl+Z takes them back).")
+        raise
 
 
 def path_flange(model, node, panel, edge, path):
