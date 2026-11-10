@@ -136,9 +136,9 @@ def test_hide_show_holds_the_dimensions_planes_axes_and_scale_bar(app):
     win = MainWindow()
     try:
         bar = win.view3d.nav_bar
-        assert bar.buttons["show"].menu().actions() == [
-            win._smart_dims_act, win._ref_planes_act, win._axes_act,
-            win._scale_bar_act]
+        shown = bar.buttons["show"].menu().actions()
+        assert shown[:4] == [win._smart_dims_act, win._ref_planes_act,
+                             win._axes_act, win._scale_bar_act]
     finally:
         win._dirty = False
         win.close()

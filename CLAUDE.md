@@ -3820,6 +3820,16 @@ into a new module and import.
                        screen: the largest 1-2-5 step, not above the
                        scene's, still `GRID_PX` (10) pixels wide. Tests:
                        test_sketch3d_fine_grid.py.
+  - Small parts in the 2D sketch (same day, the user: Sketch Mode on
+                       the 0.84 mm face, "not able to create sketches"):
+                       `SketchScene._finish_draft` threw away any line,
+                       rectangle or circle under 0.5 MM — now under 3
+                       PIXELS (never more than 0.5 mm); `snap_step` makes
+                       the 2D snap grid follow the zoom like the 3D one.
+                       And `_model_edited` says a stale extent error ("Up
+                       to: no object named ''", from an extrude in another
+                       Object) once, not on every edit over each tool's
+                       hint. Tests: test_small_sketch_2d.py.
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /

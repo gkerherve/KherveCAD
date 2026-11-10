@@ -1134,8 +1134,35 @@ class SketchScene(QGraphicsScene):
             self._set_snap_hint(hint)
         if not self.snap_enabled:
             return pos
-        g = self.grid_size
+        g = self.snap_step()
         return QPointF(round(pos.x() / g) * g, round(pos.y() / g) * g)
+
+    #: the finest the snap grid gets on screen (pixels a step)
+    SNAP_GRID_PX = 10.0
+
+    def snap_step(self):
+        """The grid step a click snaps to: `grid_size`, made FINER while
+        that is coarse on screen — the largest 1-2-5 step not above it
+        still `SNAP_GRID_PX` pixels wide (2026-11-10, the user: Sketch
+        Mode on a 0.84 x 0.5 mm face under the 0.5 mm grid — a circle
+        could only land on the face's corners). As the 3D sketch does
+        (Sketch3DTool.grid_at)."""
+        import math
+        g = float(self.grid_size) or 1.0
+        views = self.views()
+        if not views:
+            return g
+        k = abs(views[0].transform().m11())          # pixels per mm
+        if k <= 0:
+            return g
+        want = self.SNAP_GRID_PX / k
+        if want >= g:
+            return g
+        base = 10.0 ** math.floor(math.log10(want))
+        for f in (1.0, 2.0, 5.0, 10.0):
+            if f * base >= want - 1e-12:
+                return min(g, round(f * base, 9))
+        return g
 
     # -------------------------------------------------- feature snapping
     def _item_feature_points(self, item):
@@ -2332,19 +2359,24 @@ class SketchScene(QGraphicsScene):
         self._draft_start = None
         self._click_mode = False
         node = None
-        if self.tool == LINE and (pos - start).manhattanLength() > 0.5:
+        # too small to be meant: a few PIXELS, not half a millimetre — on
+        # a part a millimetre across every shape was thrown away and
+        # nothing could be drawn (2026-11-10, the user's 0.84 mm face)
+        from .polygon_draw import px_to_scene
+        tiny = min(0.5, px_to_scene(self, 3.0))
+        if self.tool == LINE and (pos - start).manhattanLength() > tiny:
             node = self._create("line", dict(
                 x1=start.x(), y1=start.y(), x2=pos.x(), y2=pos.y()))
         elif self.tool == RECT:
             rect = QRectF(start, pos).normalized()
-            if rect.width() > 0.5 and rect.height() > 0.5:
+            if rect.width() > tiny and rect.height() > tiny:
                 node = self._create("rect", dict(
                     x=rect.x(), y=rect.y(),
                     width=rect.width(), height=rect.height()))
         elif self.tool == CIRCLE:
             radius = ((pos.x() - start.x()) ** 2 +
                       (pos.y() - start.y()) ** 2) ** 0.5
-            if radius > 0.5:
+            if radius > tiny:
                 node = self._create("circle", dict(
                     x=start.x(), y=start.y(), radius=radius))
         if node is not None:

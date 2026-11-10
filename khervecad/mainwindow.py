@@ -1389,8 +1389,12 @@ class MainWindow(QMainWindow):
         sketch_constraints.refresh(self.model, edited)
         from . import extent, hole_wizard
         failed = extent.refresh(self.model)
-        if failed:                   # the depth kept is out of date: say so
+        # the depth kept is out of date: say so — ONCE. Said on every
+        # edit it buried each tool's own hint under "Up to: no object
+        # named ''" from an extrude in another Object (the user's file)
+        if failed and failed != getattr(self, "_extent_failed", None):
             self.statusBar().showMessage(next(iter(failed.values())), 8000)
+        self._extent_failed = failed
         hole_wizard.refresh(self.model)     # holes follow their faces
         from . import sketch_regions
         sketch_regions.refresh(self.model)  # region extrudes follow sketches
