@@ -153,7 +153,11 @@ def main() -> None:
     d.text((tx + px * .008, ty + px * .01), text, font=font, fill=(100, 10, 18, 255))
     d.text((tx, ty), text, font=font, fill=(255, 255, 255, 255))
     out = _HERE / "khervecad.png"
-    img.resize((SIZE, SIZE), Image.LANCZOS).save(out)
+    final = img.resize((SIZE, SIZE), Image.LANCZOS)
+    final.save(out)
+    # The window icon and start-up picture use this copy (shipped).
+    final.resize((512, 512), Image.LANCZOS).save(
+        _HERE.parent / "khervecad" / "help" / "app_mark.png")
     print(out)
 
 

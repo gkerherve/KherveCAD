@@ -272,6 +272,15 @@ def _paint_kcad(size: int) -> QPixmap:
     rounded tile with a soft highlight, a shaded machined bracket in
     metal, and the kCAD wordmark under it from 48 px up."""
     from PyQt5.QtGui import QLinearGradient, QRadialGradient
+    # The rendered mark (packaging/draw_icon.py: the pillow-block bracket)
+    # when it ships; the painted one below is the fallback.
+    import os
+    art = os.path.join(os.path.dirname(__file__), "help", "app_mark.png")
+    if size >= 48 and os.path.exists(art):
+        pic = QPixmap(art)
+        if not pic.isNull():
+            return pic.scaled(size, size, Qt.KeepAspectRatio,
+                              Qt.SmoothTransformation)
     pm = QPixmap(size, size)
     pm.fill(Qt.transparent)
     p = QPainter(pm)
