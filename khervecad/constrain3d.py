@@ -109,8 +109,13 @@ class Constrain3D:
         return self._seen
 
     def _shapes(self, cont):
+        # not the kept outline of the part (Model edges): it is grown a
+        # hair past the part so areas close, and a dimension clicked on
+        # it measured 47.55 where the real edge is 47.5 away. A click
+        # there falls through to the model's TRUE edge instead
+        from . import sketch_section
         return [k for k in cont.children if k.type in sc.SHAPES
-                and k.visible]
+                and k.visible and not sketch_section.is_section(k)]
 
     def entities(self):
         """[(node, entity, kind, world geometry)] of every sketch."""
@@ -235,7 +240,12 @@ class Constrain3D:
         if near is None:
             return None
         kind, where = near
-        pos = where if kind == "point" else where[0]
+        # an edge is named by its MIDDLE: its first end is a corner two
+        # edges share, and the other one was taken (the foot's end edge
+        # clicked, its long side dimensioned to — as an angle)
+        pos = where if kind == "point" else (
+            (where[0][0] + where[1][0]) / 2.0,
+            (where[0][1] + where[1][1]) / 2.0)
         return face_outline.reference(
             self.window.view2d.scene(), QPointF(pos[0], pos[1]), kind,
             parent=parent)
@@ -284,7 +294,12 @@ class Constrain3D:
         for n in cont.children:
             if n.params.get("ref_source") == wanted:
                 return n, *sc_entity(n, pick[2])
-        geo = {(id(n), e): g for n, e, _k, g in self.entities()}
+        # where the shape IS — its own sketch plane, the first of the
+        # levels it shows at (the far end of its extrude came last and
+        # won: a corner 20 mm away was offered as 29.96, then jumped)
+        geo = {}
+        for n, e, _k, g in self.entities():
+            geo.setdefault((id(n), e), g)
         g = geo.get((id(pick[0]), pick[1]))
         if g is None:
             return None

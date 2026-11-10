@@ -476,7 +476,11 @@ def follow(window, group):
     m = mesh.ancestor_matrix(group, {}, stop=iso)
     if any(abs(m[i][j] - (i == j)) > 1e-9 for i in range(4) for j in range(4)):
         return False
-    tris = sketch_section.built_before(window, group)
+    # the PART's faces only — never the sketch's own cut: its tool starts
+    # a hair above the plane, was taken for the face, and the sketch
+    # climbed onto it at every change (20.0, 20.02, 20.13 … 20.54 mm: the
+    # cuts came out shallower each time)
+    tris = sketch_section.built_before(window, group, own=False)
     seed, n0 = list(ref[:3]), list(ref[3:6])
 
     def normal(t):

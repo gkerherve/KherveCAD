@@ -648,3 +648,86 @@ def test_choosing_the_face_shows_no_done_button(win, monkeypatch):
     assert win.view3d._pick_cb is not None
     assert done is None or done.isHidden()
     win.view3d.cancel_pick()
+
+
+# ---- found making an L piece by hand, every size a Smart Dimension
+# (2026-11-10, the user: "use smart dimensions in many places and show
+# me nothing goes wrong")
+def test_a_loop_of_lines_stays_closed_under_a_dimension(win, monkeypatch):
+    """The last line back on the first point was not tied to it: 80 on
+    the L's foot pushed its free start to -4 and the outline came open."""
+    from khervecad import sketch_constraints as sc
+    tool = _on_face(win, monkeypatch)
+    tool.set_mode("line")
+    for p in ((5, 5), (25, 5), (25, 15), (5, 15), (5, 5)):
+        tool.place(p)
+    g = tool.group
+    lines = [n for n in g.children if n.type == "line"]
+    assert len(lines) == 4
+    assert [r["kind"] for r in sc.rows(g)].count("coincident") == 4
+    sc.add_dimension(win.model, g, "length", [sc.ref_of(g, lines[0], "l")],
+                     30)
+    first, last = lines[0].params, lines[-1].params
+    assert (first["x1"], first["y1"]) == pytest.approx(
+        (last["x2"], last["y2"]), abs=1e-6)
+    assert abs(first["x2"] - first["x1"]) == pytest.approx(30)
+    tool.points = []
+    tool._end()
+
+
+def test_the_parts_own_outline_is_never_moved_by_the_solver(win):
+    """A dimension of 48 to the part's edge moved the edge 0.4 mm."""
+    from khervecad import sketch_constraints as sc, sketch_section
+    m = win.model
+    g = m.add_node("union", {})
+    edges = m.add_node("polygon", dict(points=[[0, 0], [80, 0], [80, 50],
+                                               [0, 50]]), parent=g,
+                       name=sketch_section.NAME)
+    line = m.add_node("line", dict(x1=30, y1=10, x2=30, y2=30, width=0.2),
+                      parent=g)
+    assert sc._vars(edges) == []
+    sc.add(m, g, "point_line", [sc.ref_of(g, line, "p1"),
+                                sc.ref_of(g, edges, "e1")], 48)
+    assert edges.params["points"] == [[0, 0], [80, 0], [80, 50], [0, 50]]
+    assert line.params["x1"] == pytest.approx(32)
+
+
+def test_a_cut_sketch_does_not_climb_off_its_face(win, monkeypatch):
+    """Its own cut starts a hair above the plane and was taken for the
+    face: 20.0, 20.02, 20.13 … at every change, each cut shallower."""
+    from khervecad import model_refs
+    tool = _on_face(win, monkeypatch)
+    g = tool.group
+    tool.place((5, 5))
+    tool.place((15, 12))                       # a rectangle: the cut is made
+    drag = win.view3d.edit_tool
+    for _ in range(6):
+        win.model.node_changed.emit(g)
+        QApplication.processEvents()
+        model_refs.refresh(win)
+    assert g.params["z"] == pytest.approx(20.0, abs=1e-6)
+    drag.ok()
+    left = analysis.mass_properties(mesh.tessellate(win.model.root))["volume"]
+    assert left == pytest.approx(40 * 30 * 20 - 10 * 7 * 10, abs=1)
+
+
+def test_a_dimension_click_on_the_part_takes_its_true_edge(win, monkeypatch):
+    """Not the kept outline, which is grown a hair past the part."""
+    from khervecad import constrain3d, sketch_section
+    m = win.model
+    g = m.add_node("union", {})
+    m.add_node("polygon", dict(points=[[0, 0], [8, 0], [8, 5]]), parent=g,
+               name=sketch_section.NAME)
+    line = m.add_node("line", dict(x1=1, y1=1, x2=3, y2=1), parent=g)
+    tool = constrain3d.Constrain3D(win, "con_dimension") \
+        if hasattr(constrain3d, "Constrain3D") else None
+    assert tool is not None
+    assert tool._shapes(g) == [line]
+
+
+def test_the_cursor_readout_hides_under_a_message(win):
+    win.show()
+    win.statusBar().showMessage("Drag the blue arrow")
+    assert win._cursor_label.isHidden()
+    win.statusBar().clearMessage()
+    assert not win._cursor_label.isHidden()

@@ -434,6 +434,37 @@ class Sketch3DTool:
         except ValueError:
             pass
 
+    def _tie_ends(self, node):
+        """A line ending exactly on another line's end is tied to it —
+        above all the last line of a loop back on its first point (it
+        was not: Smart Dimension 80 on the L's foot pushed its free
+        start to -4 and the outline came open). SolidWorks adds the
+        same Coincident where it snaps to a point."""
+        from . import sketch_constraints as sc
+        cont = node.parent
+        if cont is None:
+            return
+        tied = {frozenset(r["refs"]) for r in sc.rows(cont)
+                if r["kind"] == "coincident"}
+        ends = lambda n: (("p1", (n.params["x1"], n.params["y1"])),
+                          ("p2", (n.params["x2"], n.params["y2"])))
+        for other in cont.children:
+            if other is node or other.type != "line":
+                continue
+            for a, pa in ends(node):
+                for b, pb in ends(other):
+                    if pa != pb:
+                        continue
+                    refs = [sc.ref_of(cont, other, b),
+                            sc.ref_of(cont, node, a)]
+                    if frozenset(refs) in tied:
+                        continue
+                    try:
+                        sc.add(self.window.model, cont, "coincident", refs)
+                        tied.add(frozenset(refs))
+                    except (ValueError, KeyError):
+                        pass
+
     def _mm_per_px(self, lx, ly):
         from .face_sketch import to_world
         view = self.view
@@ -802,6 +833,7 @@ class Sketch3DTool:
                         model.rename(node, "Arc")
                     self._say()          # (lines again: say so)
                 self._join(last, node)
+                self._tie_ends(node)
                 if not arc:
                     self._write_relations(
                         node, last.params if last is not None and

@@ -105,6 +105,11 @@ def _num(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _is_model_outline(node):
+    from . import sketch_section
+    return sketch_section.is_section(node)
+
+
 def _vars(node, slot=False):
     """(param path, value) of a shape's free numbers. A path is a key,
     or (key, row, col) for polygon points. A line's width is free only
@@ -118,6 +123,12 @@ def _vars(node, slot=False):
     out = []
     if keys:
         out = [(k, float(p.get(k, 0.0))) for k in keys if _num(p.get(k))]
+    elif node.type == "polygon" and _is_model_outline(node):
+        # the part's own outline kept in the sketch (Model edges): it is
+        # the MODEL, so nothing in it is free. Its corners were — a
+        # dimension of 48 to the part's edge moved the edge 0.4 mm and
+        # the sketch only 0.1
+        return []
     elif node.type == "polygon":
         for i, pt in enumerate(p.get("points") or []):
             for j in (0, 1):

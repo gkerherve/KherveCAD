@@ -3377,6 +3377,26 @@ into a new module and import.
                        subject appears by itself; painted icon per subject
                        (`ICONS`, builders' drawings reused, `lib_generic`
                        the fallback — a test refuses the fallback).
+  - An L piece made by mouse (2026-11-10, the user: an L, extruded
+                       cuts drawn with the Line on several faces, Smart
+                       Dimensions everywhere, pictures of each step). 14
+                       dimensions, four cuts, volume exact. It turned up:
+                       a loop's last line was not tied to its first point
+                       (`Sketch3DTool._tie_ends`: Coincident wherever a
+                       line ends on another's end); the kept **Model
+                       edges** polygon was free in the solver
+                       (`sketch_constraints._vars` -> none) and offered to
+                       dimension clicks though it is grown 0.05 mm
+                       (`Constrain3D._shapes` skips it: the click falls to
+                       the TRUE edge); `model_pick` named a clicked edge by
+                       its first END, a corner two edges share (now its
+                       middle); `_copy_in` took another sketch's point at
+                       its extrude's FAR level (now its own plane); and a
+                       cut's face sketch CLIMBED 0.01-0.1 mm at every
+                       model change, its own tool taken for the face
+                       (`model_refs.follow` -> `built_before(own=False)`)
+                       — every later cut came out shallower. The cursor
+                       x / y no longer shows through status messages.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

@@ -832,6 +832,11 @@ class MainWindow(QMainWindow):
         # stayed and the two were painted over each other
         self.statusBar().messageChanged.connect(
             lambda text: text and self._measure_label.clear())
+        # ...and the cursor's x / y was painted through a message (Qt
+        # hides it, then shows it again at its next layout): hidden for
+        # as long as a message is up
+        self.statusBar().messageChanged.connect(
+            lambda text: self._cursor_label.setVisible(not text))
         self._dims_label = QLabel("")          # selected object's size
         self.statusBar().addWidget(self._dims_label)
         self._file_label = QLabel()            # current document path

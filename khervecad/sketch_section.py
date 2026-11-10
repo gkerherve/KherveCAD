@@ -121,7 +121,7 @@ def section_shape(window, container, grow=GROW):
     return {"points": points, "paths": paths}
 
 
-def built_before(window, container):
+def built_before(window, container, own=True):
     """World triangles of what was built BEFORE *container*'s feature:
     the earlier siblings at every level up to the scope, each whole and
     alone. A later feature is never in it (2026-11-01, the user: a slot
@@ -133,7 +133,9 @@ def built_before(window, container):
     iso = root if root is not window.model.root else None
     env = anchors.doc_env(window.model)
     fn = window.model.effective_fn()
-    nodes = [c for c in container.children if c.category != SHAPE_2D]
+    # (*own* False: without what *container* itself holds — its extrude)
+    nodes = [c for c in container.children if c.category != SHAPE_2D] \
+        if own else []
     probe = container
     while probe is not root and probe.parent is not None:
         kids = probe.parent.children
