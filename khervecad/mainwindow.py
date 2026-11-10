@@ -1862,8 +1862,12 @@ class MainWindow(QMainWindow):
         flat = {i for i in ids if (lambda n: n is not None and
                                    n.category == SHAPE_2D)(
                                        self.model.find(i))}
-        self.view3d.selection_lines = self._selection_outlines(flat) \
-            if flat else []
+        # a selected sketch / extrude outlines its own shapes too: its
+        # solid may lie inside the part, where no tint can show it
+        from . import selection_sketch
+        drawn = flat | set(selection_sketch.shape_ids(self.model, ids))
+        self.view3d.selection_lines = self._selection_outlines(drawn) \
+            if drawn else []
         ids = set(ids) - flat
         self.view3d.selection_labels = []
         from . import sketch_section
