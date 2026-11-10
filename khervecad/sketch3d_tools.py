@@ -162,6 +162,8 @@ def _after(sketch, made):
                 sketch._write_relations(node, None)
             if node.type == "line":
                 sketch._tie_ends(node)   # a centerline from a corner
+            from . import sketch_touch   # on a corner, centre or middle
+            sketch_touch.relate(sketch.window.model, node)
         except Exception:                    # never stop a sketch
             pass
     sketch.made.extend(made)

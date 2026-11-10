@@ -484,6 +484,8 @@ class MainWindow(QMainWindow):
             "Show the sketch's Smart Dimensions in the 2D and 3D views"))
         self._smart_dims_act.toggled.connect(self._set_show_smart_dims)
         view_menu.addAction(self._smart_dims_act)
+        from . import relation_marks
+        view_menu.addAction(relation_marks.action(self))
         view_menu.addAction(self.tr("Clear &Dimensions"),
                             lambda: self._clear_said(
                                 self.model.dimensions,

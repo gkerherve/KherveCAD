@@ -698,11 +698,11 @@ def paint_references_2d(view, painter):
 
 
 def _paint_relations(window, painter, placed, scr, vis, font):
-    """The relations (H, V, ●, ⊥, 🔒 …) of the highlighted part's
-    sketches, on the 3D view (2026-11-01, the user: when a part is
-    highlighted, show every constraint put on it). Only what is seen."""
-    from PyQt5.QtCore import QPointF, QRectF, Qt
-    from PyQt5.QtGui import QBrush, QColor, QFont, QPen
+    """The relations of the sketch being worked on, on the 3D view, as
+    relation_marks' tiles. Until 2026-11-10 every sketch of a highlighted
+    part showed its marks (2026-11-01); the user then chose SolidWorks'
+    way — marks in the sketch being edited, a selected feature showing
+    only what it is locked to. Only what is seen."""
     from .sketch_constrain_ui import MARK
     window._relation_hits = []      # (mark rect, sketch, row index)
     rel = _related(window, placed)
@@ -721,15 +721,20 @@ def _paint_relations(window, painter, placed, scr, vis, font):
             except Exception:                # never break the paint
                 import traceback
                 traceback.print_exc()
-    f = QFont(font)
-    f.setPointSize(max(9, f.pointSize()))
-    painter.setFont(f)
-    fm = painter.fontMetrics()
+    from . import relation_marks as rm
+    if not (tooling or rm.shown()):
+        return                       # View ▸ Sketch Relations is off
+    # the marks belong to the sketch being worked on (SolidWorks): the
+    # one drawn, the one a relation tool edits, or a sketch / shape the
+    # user selected — a selected FEATURE shows what it is locked to only
+    editing = rel if tooling else _being_edited(window, rel)
     taken = {}
-    for cont, m in rel:
+    for cont, m in editing:
         for index, row in enumerate(sc.rows(cont)):
             if "value" in row or row.get("kind") not in MARK:
                 continue
+            if rm.hidden(cont, row):
+                continue             # two points made one: no mark
             if tooling and row.get("kind") == "fix" and \
                     _is_reference(cont, row):
                 # the pin of a point / edge copied from the part for a
@@ -748,18 +753,36 @@ def _paint_relations(window, painter, placed, scr, vis, font):
                 q = scr(m, p)
                 if q is None:
                     continue
-                text = MARK[row["kind"]]
                 key = (round(q.x() / 8), round(q.y() / 8))
                 dx = taken.get(key, 0)
-                w = fm.horizontalAdvance(text) + 8
-                taken[key] = dx + w + 3
-                rect = QRectF(q.x() + 6 + dx, q.y() - 8 - fm.height(),
-                              w, fm.height() + 2)
-                painter.setPen(QPen(QColor(30, 110, 60), 1.0))
-                painter.setBrush(QBrush(QColor(235, 250, 238, 235)))
-                painter.drawRoundedRect(rect, 3, 3)
-                painter.drawText(rect, int(Qt.AlignCenter), text)
+                taken[key] = dx + rm.SIZE + 3
+                rect = rm.rect_at(q.x(), q.y(), dx)
+                rm.paint(painter, rect, row["kind"])
                 window._relation_hits.append((rect, cont, index))
+
+
+def _being_edited(window, rel):
+    """The sketches of *rel* the user is working IN: the one drawn by
+    the 3D sketch tool, or one whose own Group / Regions or shapes are
+    selected (not a feature above it)."""
+    from .model import SHAPE_2D
+    sk = getattr(window, "_sketch3d_tool", None)
+    drawing = {id(c) for c in (getattr(sk, "holder", None),
+                               getattr(sk, "group", None)) if c is not None}
+    ids = getattr(window, "_selected_ids", set()) or set()
+    out = []
+    for c, m in rel:
+        if id(c) in drawing or c.id in ids or (
+                c.params.get("face_sketch") and c.id in ids) or any(
+                n.id in ids and (n.category == SHAPE_2D or n.type == "regions")
+                for n in c.walk()):
+            out.append((c, m))
+            continue
+        probe = c.parent
+        if probe is not None and probe.params.get("face_sketch") and \
+                probe.id in ids:
+            out.append((c, m))         # the face sketch holding it
+    return out
 
 
 DRAG_PX = 4

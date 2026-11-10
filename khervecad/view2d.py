@@ -1242,7 +1242,14 @@ class SketchScene(QGraphicsScene):
                    (tl + tr) / 2.0, (bl + br) / 2.0,
                    (tl + bl) / 2.0, (tr + br) / 2.0]
         elif isinstance(item, QGraphicsPolygonItem):
-            pts = list(item.polygon())
+            # corners and the middle of every side (the user: lock a
+            # circle on the middle of any line of any shape)
+            poly = list(item.polygon())
+            if len(poly) > 1 and poly[0] == poly[-1]:
+                poly = poly[:-1]
+            pts = poly + [(poly[i] + poly[(i + 1) % len(poly)]) / 2.0
+                          for i in range(len(poly))] if len(poly) > 1 \
+                else poly
         elif isinstance(item, QGraphicsPathItem):
             for poly in item.path().toSubpathPolygons():
                 pts += list(poly)
@@ -1583,6 +1590,10 @@ class SketchScene(QGraphicsScene):
                                 selected | set(self._highlight_ids),
                                 shows=None if flt is None else
                                 (lambda n: flt.shows(self, n)))
+            # blue while a shape can move, black once held, red when
+            # over defined (SolidWorks)
+            from . import sketch_state
+            sketch_state.apply(self, flt)
         # assembly mode: every top-level part gets a draggable outline
         # (in Sketch Mode the model's own picture is behind the sketch)
         for node in scope.children if flt is None else ():

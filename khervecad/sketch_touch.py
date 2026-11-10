@@ -5,7 +5,10 @@
 the user: a slot's end drawn on a rectangle's side came off it at the
 first Smart Dimension). As SolidWorks does: a point drawn ON another
 shape's point becomes Coincident, a point drawn on its side, line or
-circle becomes Point on curve ("On Edge")."""
+circle becomes Point on curve ("On Edge") — and a point drawn at the
+MIDDLE of a straight side or line becomes Midpoint, so it stays in the
+middle when the side changes (2026-11-10, the user: a circle locked on
+the middle of a rectangle's side; it only slid along the side)."""
 import math
 
 from . import sketch_constraints as sc
@@ -20,11 +23,16 @@ def _points(node):
     if t == "circle":
         return ["c"]
     if t == "rect":
-        return ["v0", "v1", "v2", "v3"]
+        return ["v0", "v1", "v2", "v3", "c"]
     if t == "polygon":
         return ["v%d" % i for i in range(len(node.params.get("points")
                                               or []))]
     return []
+
+
+def _at_middle(p, a, b):
+    m = ((a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0)
+    return math.hypot(p[0] - m[0], p[1] - m[1]) < TOL
 
 
 def _curves(node):
@@ -89,12 +97,14 @@ def found(container, node):
                             ok = abs(math.hypot(p[0] - c[0], p[1] - c[1])
                                      - r) < TOL
                         else:
-                            ok = _on_segment(p, *sc._line(other, cn, {}))
+                            seg = sc._line(other, cn, {})
+                            ok = _on_segment(p, *seg)
                     except (KeyError, ValueError, IndexError):
                         continue
                     if ok:
-                        hit = ("point_on", [me, sc.ref_of(container,
-                                                          other, cn)])
+                        kind = "midpoint" if cn != "o" and \
+                            _at_middle(p, *seg) else "point_on"
+                        hit = (kind, [me, sc.ref_of(container, other, cn)])
                         break
             if hit and (hit[0], tuple(sorted(hit[1]))) not in have:
                 have.add((hit[0], tuple(sorted(hit[1]))))

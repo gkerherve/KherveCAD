@@ -176,6 +176,7 @@ def add_window_controls(win):
     # ---- hide / show: before View settings (its separator + button)
     menu = QMenu(bar)
     shown = [("smart_dims", getattr(win, "_smart_dims_act", None)),
+             ("relations", getattr(win, "_relations_act", None)),
              ("planes", getattr(win, "_ref_planes_act", None)),
              ("axes", getattr(win, "_axes_act", None)),
              ("scale_bar", getattr(win, "_scale_bar_act", None))]

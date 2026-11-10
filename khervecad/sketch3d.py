@@ -232,6 +232,19 @@ class Sketch3DTool:
                                   ("x1", "y1", "x2", "y2"))
                 pts += [(x1, y1, "end"), (x2, y2, "end"),
                         ((x1 + x2) / 2, (y1 + y2) / 2, "middle")]
+            elif shape.type == "polygon":
+                # its corners and the middle of every side (the user: lock
+                # onto the middle of any line of any shape)
+                from . import sketch_constraints as sc
+                n = len(shape.params.get("points") or [])
+                for i in range(n):
+                    try:
+                        x, y = sc._point(shape, "v%d" % i, {})
+                        (ax, ay), (bx, by) = sc._line(shape, "e%d" % i, {})
+                    except (KeyError, ValueError, IndexError, TypeError):
+                        continue
+                    pts += [(x, y, "corner"),
+                            ((ax + bx) / 2, (ay + by) / 2, "middle")]
         return segs, pts
 
     def aimed(self, pt):
@@ -877,6 +890,12 @@ class Sketch3DTool:
             try:                 # tied to what it was drawn on
                 from . import face_outline
                 face_outline.pin(self.window.view2d.scene(), model, node)
+            except Exception:
+                pass
+            try:                 # ... and to the sketch's own shapes: a
+                # corner, an end, a centre, the middle of a side
+                from . import sketch_touch
+                sketch_touch.relate(model, node)
             except Exception:
                 pass
             if self.mode == "line" and len(self.points) >= 4 and \

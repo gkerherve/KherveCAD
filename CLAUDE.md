@@ -3097,6 +3097,33 @@ into a new module and import.
                        `SketchView.drawForeground`. MCP `sketch_constraint`.
                        Next: drag a point with the solver live, trim /
                        extend / sketch fillet, constraints on arcs.
+  - `relation_marks.py` / `sketch_state.py` / `relations_window.py` —
+                       sketch relations **the SolidWorks way** (2026-11-10,
+                       the user): one DRAWN square tile per relation (`paint`:
+                       a level bar, two strokes, a pin...) in the 2D sketch
+                       AND the 3D view, shown for the sketch being worked on
+                       (3D: drawn, edited by a relation tool, or the sketch /
+                       one of its shapes selected — a selected FEATURE shows
+                       only what it is locked to), switched by View ▸ Sketch
+                       Relations (QSettings `sketch/relations`; a relation
+                       tool shows them anyway); two POINTS made one draw no
+                       mark (`hidden`). `sketch_state` inks sketch lines
+                       blue (can still move), black (held) or red (over
+                       defined) from the solver's null space — every sketch
+                       while one is edited, only sketches with relations in
+                       the classic overview. `relations_window` is Display/
+                       Delete Relations (the old Constraints list): mark,
+                       "Line 2 (end)" entities, value, filter, Delete /
+                       Delete all, a row picked selects its shapes.
+                       `sketch_touch` gives a point drawn at the MIDDLE of a
+                       straight side Midpoint (it got Point on curve and
+                       slid), takes a rectangle's centre, and runs for the
+                       3D sketch too; polygon sides offer their middles as
+                       snaps in both views. `region_panel` replaces the
+                       region pick's Done button with an Extrude window
+                       (Profiles count, OK); `selection_sketch` outlines a
+                       selected sketch's shapes in 3D (a boss buried in the
+                       part has no surface for the depth-tested tint).
   - `suppress.py`    — **Suppress / roll back** (2026-10-21, SolidWorks
                        gap list): `params["suppressed"]` switches a node
                        off — a wrapper passes its children through, a

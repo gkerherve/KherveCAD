@@ -125,11 +125,13 @@ TIPS = {
                   "whole scope).", "Click Auto constrain."],
                  "The status bar says how many degrees of freedom are "
                  "left."),
-    "con_list": ("Constraints",
-                 "Lists the sketch's constraints and dimensions, says "
-                 "whether it is fully constrained, and edits or deletes "
-                 "them.",
-                 ["Select a shape of the sketch.", "Click Constraints…"],
+    "con_list": ("Display/Delete Relations",
+                 "Lists the sketch's relations and dimensions with their "
+                 "marks and the shapes they tie, says whether the sketch "
+                 "is fully defined, and edits or deletes them. Picking a "
+                 "line selects its shapes.",
+                 ["Open a sketch, or select one of its shapes.",
+                  "Click Display/Delete Relations…"],
                  None),
 }
 for _kind, _what in WHAT.items():
@@ -703,9 +705,18 @@ def glyphs(view):
     out = []
     view._dim_leaders = []          # (where it belongs, the moved label)
 
-    def place(spot, text, cont, index):
+    from . import relation_marks as rm
+    marks_on = rm.shown() or str(getattr(scene, "tool", "") or "") \
+        .startswith(PREFIX)            # a relation tool shows them anyway
+
+    def place(spot, text, cont, index, tile=False):
         key = (round(spot.x() / 6), round(spot.y() / 6))
         dx = taken.get(key, 0)
+        if tile:                       # a relation: SolidWorks' square
+            r = rm.rect_at(spot.x(), spot.y(), dx)
+            taken[key] = dx + rm.SIZE + MARK_GAP
+            out.append((r, text, cont, index))
+            return
         w = fm.horizontalAdvance(text) + 8
         taken[key] = dx + w + MARK_GAP
         x, y = spot.x() + 6 + dx, spot.y() - 7 - fm.ascent()
@@ -743,12 +754,15 @@ def glyphs(view):
                     continue
                 place(c, label, cont, index)
             else:
+                if not marks_on or rm.hidden(cont, row):
+                    continue           # switched off / two points made one
                 if row["kind"] == "symmetric" and len(spots) == 3:
                     # on its two points only: every pair mirrored about
                     # one centerline piled its mark up on that line
                     spots = spots[:2]
                 for spot in spots:
-                    place(spot, MARK.get(row["kind"], "?"), cont, index)
+                    place(spot, MARK.get(row["kind"], "?"), cont, index,
+                          tile=True)
     return out, font
 
 
@@ -949,12 +963,12 @@ def paint(view, painter):
         is_hot = deleting and hot == (cont.id, index)
         if (cont.id, index) in drawn and not is_hot:
             continue                     # drawn as a dimension line
-        if "value" not in sc.rows(cont)[index]:
-            # a relation mark: on a white tile, outlined in its colour
-            painter.setPen(QPen(red if is_hot else ink, 1.0))
-            painter.setBrush(QColor(255, 255, 255, 235))
-            painter.drawRoundedRect(rect, 3, 3)
-            painter.setBrush(Qt.NoBrush)
+        row = sc.rows(cont)[index]
+        if "value" not in row:
+            # a relation: the drawn tile both views share
+            from . import relation_marks
+            relation_marks.paint(painter, rect, row.get("kind"), is_hot)
+            continue
         painter.setPen(QPen(red if is_hot else ink, 1.2))
         if is_hot:
             painter.drawRect(rect.adjusted(-1, -1, 1, 1))
@@ -1433,86 +1447,9 @@ def auto(win):
 
 
 def open_window(win):
-    from PyQt5.QtWidgets import (QDialog, QHBoxLayout, QLabel,
-                                 QListWidget, QPushButton, QVBoxLayout,
-                                 QInputDialog, QMessageBox)
-    from . import language
-    dlg = getattr(win, "_constraints_window", None)
-    if dlg is None:
-        dlg = QDialog(win)
-        dlg.setWindowTitle(language.tr("Sketch constraints"))
-        lay = QVBoxLayout(dlg)
-        dlg.status = QLabel()
-        dlg.status.setWordWrap(True)
-        dlg.list = QListWidget()
-        lay.addWidget(dlg.status)
-        lay.addWidget(dlg.list)
-        from PyQt5.QtWidgets import QCheckBox
-        from PyQt5.QtCore import QSettings
-        dlg.scale_first = QCheckBox(language.tr(
-            "Scale the whole sketch on its first dimension"))
-        dlg.scale_first.setToolTip(language.tr(
-            "SolidWorks' option: the first size you give a sketch scales "
-            "every shape in it to match; later dimensions drive only "
-            "their own shapes."))
-        dlg.scale_first.setChecked(sc.scale_first_enabled())
-        dlg.scale_first.toggled.connect(lambda on: QSettings(
-            "Kherve", "KherveCAD").setValue(sc.SCALE_FIRST, bool(on)))
-        lay.addWidget(dlg.scale_first)
-        row = QHBoxLayout()
-        lay.addLayout(row)
-        buttons = {}
-        for key, text in (("value", "Edit value…"), ("delete", "Delete"),
-                          ("auto", "Auto constrain"),
-                          ("close", "Close")):
-            b = QPushButton(language.tr(text))
-            row.addWidget(b)
-            buttons[key] = b
-
-        def fill():
-            cont = container_for(win)
-            dlg.container = cont
-            dlg.list.clear()
-            for r in sc.rows(cont):
-                dlg.list.addItem(sc.describe(cont, r))
-            dlg.status.setText(language.tr(
-                "%s — %d constraint(s). %s") % (
-                cont.name, len(sc.rows(cont)),
-                sc.status_text(sc.solve(cont, write=False))))
-
-        def delete():
-            i = dlg.list.currentRow()
-            if i >= 0:
-                sc.remove(win.model, dlg.container, i)
-                fill()
-
-        def edit():
-            i = dlg.list.currentRow()
-            rs = sc.rows(dlg.container)
-            if i < 0 or "value" not in rs[i]:
-                return
-            text, ok = QInputDialog.getText(
-                dlg, language.tr("Value"), language.tr("New value:"),
-                text=str(rs[i]["value"]))
-            if ok and text.strip():
-                try:
-                    sc.set_value(win.model, dlg.container, i,
-                                 _value(text.strip()))
-                except ValueError as exc:
-                    QMessageBox.warning(dlg, language.tr("Constraints"),
-                                        str(exc))
-                fill()
-
-        buttons["value"].clicked.connect(edit)
-        buttons["delete"].clicked.connect(delete)
-        buttons["auto"].clicked.connect(lambda: (auto(win), fill()))
-        buttons["close"].clicked.connect(dlg.close)
-        dlg.fill = fill
-        win._constraints_window = dlg
-    dlg.fill()
-    dlg.show()
-    dlg.raise_()
-    return dlg
+    """Display/Delete Relations (relations_window)."""
+    from . import relations_window
+    return relations_window.open_window(win)
 
 
 def _keep(win, act, tool):
@@ -1539,7 +1476,8 @@ def panel_actions(win):
     for key, glyph, text, slot in (
             ("con_auto", "mdi.auto-fix", "Auto constrain",
              lambda: auto(win)),
-            ("con_list", "mdi.format-list-checks", "Constraints…",
+            ("con_list", "mdi.format-list-checks",
+             "Display/Delete Relations…",
              lambda: open_window(win))):
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
                       language.tr(text), win)
