@@ -3880,6 +3880,20 @@ into a new module and import.
                        has the old size inside the filter). Tests:
                        test_sketch_backdrop.py reads the picture at known
                        world points of three pieces (edges within 0.25 mm).
+  - Finding what a sketch is locked to (same day, the user: "each
+                       view is forgetting its locking reference ... we
+                       should be able to find them"): `sketch_dims3d.
+                       references(cont)` = the part's edges its points ride
+                       on, the corners / middles / centres they are pinned
+                       to and the points / edges / faces copied in for a
+                       dimension (hidden or not). With the feature SELECTED
+                       they are drawn on the part in orange (dashed edges,
+                       rings: `_paint_references`) and the locks of
+                       reference copies show again — they stay hidden only
+                       while a relation / dimension tool runs. The 2D
+                       sketch draws them too (`paint_references_2d`), and
+                       Properties has "Locked to" for any node with a
+                       sketch (a Group, a Regions), not only an extrude.
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /

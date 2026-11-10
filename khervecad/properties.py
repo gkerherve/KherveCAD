@@ -353,6 +353,20 @@ class PropertiesPanel(QScrollArea):
                 self._editors["slot:" + key] = editor
                 form.addRow(language.tr(label), editor)
         self._extrude = None
+        self._locked = None
+        if node.type != "linear_extrude" and not slot:
+            # a sketch (its Group, Regions, a revolve…): what it is held
+            # by and how it can still move — the extrude says it too
+            from . import sketch_lock
+            try:
+                has = sketch_lock.container_of(node) is not None and \
+                    node.category != "2d"
+            except Exception:
+                has = False
+            if has:
+                self._locked = QLabel()
+                self._locked.setWordWrap(True)
+                form.addRow(language.tr("Locked to"), self._locked)
         if node.type == "linear_extrude" and not slot:
             # in the words of the Extrude window (the user): profiles,
             # direction, end condition, distances, reverse — then twist,
@@ -504,6 +518,13 @@ class PropertiesPanel(QScrollArea):
         if getattr(self, "_extrude", None):
             from . import extrude_props
             extrude_props.load(self)
+        if getattr(self, "_locked", None) is not None:
+            from . import sketch_lock
+            try:
+                info = sketch_lock.of(self.model, self.node)
+                self._locked.setText(sketch_lock.text(info) if info else "")
+            except Exception:
+                self._locked.setText("")
         self._updating = False
 
     # --------------------------------------------------------- events

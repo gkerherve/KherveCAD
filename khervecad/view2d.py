@@ -2794,6 +2794,11 @@ class SketchView(QGraphicsView):
             sketch_dims_face.paint(self, painter)
         except Exception:               # never raise out of a paint
             pass
+        try:                            # what the sketch is locked to
+            from . import sketch_dims3d
+            sketch_dims3d.paint_references_2d(self, painter)
+        except Exception:               # never raise out of a paint
+            pass
         self._dim_hits = []           # every clickable value, this paint
         from . import sketch_constrain_ui
         try:

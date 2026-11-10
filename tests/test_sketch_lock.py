@@ -112,3 +112,134 @@ def test_an_assistant_reads_what_holds_a_sketch(win):
                                        dict(action="list", node_id=g.id))
     assert got["held_by"] == ["2 points on the part's edge"]
     assert any("slide left / right" in f for f in got["free_to"])
+
+
+# ------------------------------------------- finding what it is locked to
+def _locked_boss(win):
+    """A block and a boss on it whose sketch rides on the block's front
+    edge and is dimensioned to a point copied from the block's corner."""
+    from khervecad import face_sketch
+    part = _base(win)                       # 100 x 60 x 20 about the origin
+    boss = _rect_feature(win, part, (0, -20, 20), (-20, -30), (20, -10),
+                         height=8.0)
+    cont = sketch_lock.container_of(face_sketch.group_of(boss))
+    if cont is None:
+        cont = next(n for n in face_sketch.group_of(boss).walk()
+                    if n.type == "rect").parent
+    m = win.model
+    rect = next(c for c in cont.children if c.type == "rect")
+    i = cont.children.index(rect)
+    for row in list(sc.rows(cont)):
+        sc.remove(m, cont, 0)
+    for v in ("v0", "v1"):
+        sc.add(m, cont, "on_edge", ["%d.%s" % (i, v)],
+               edge=[-50, -30, 50, -30])
+    ref = m.add_node("circle", dict(x=-50.0, y=-30.0, radius=0.25),
+                     parent=cont, name="Reference point")
+    m.set_modifier(ref, "%")
+    ref.params["ref_world"] = [[-50.0, -30.0, 20.0]]
+    j = cont.children.index(ref)
+    sc.add(m, cont, "fix", ["%d.c" % j])
+    sc.add(m, cont, "distance", ["%d.c" % j, "%d.v0" % i], 30.0)
+    m.set_visible(ref, False)               # as a used reference is
+    QApplication.processEvents()
+    return part, boss, cont
+
+
+def test_what_a_sketch_is_locked_to_is_listed(win):
+    from khervecad import sketch_dims3d
+    part, boss, cont = _locked_boss(win)
+    refs = sketch_dims3d.references(cont)
+    assert ((-50, -30), (50, -30)) in refs["edges"]       # the edge it rides
+    assert (-50.0, -30.0) in refs["points"]               # the corner copied
+
+
+def test_a_selected_features_references_are_drawn_on_the_part(win):
+    """The user: "each view is forgetting its locking reference ... we
+    should be able to find them". Selected, the feature shows them."""
+    from PyQt5.QtGui import QColor
+    from khervecad import sketch_dims3d
+    part, boss, cont = _locked_boss(win)
+    v = win.view3d
+    v.resize(900, 700)
+    v.set_view("Isometric", animate=False)
+    v.fit()
+    tree = win.builder.active_tree()
+
+    def orange():
+        v.repaint()
+        QApplication.processEvents()
+        img = v.grab().toImage()
+        r, g, b = sketch_dims3d.REF_INK
+        n = 0
+        for x in range(0, img.width(), 2):
+            for y in range(0, img.height(), 2):
+                c = QColor(img.pixel(x, y))
+                if abs(c.red() - r) < 25 and abs(c.green() - g) < 25 \
+                        and abs(c.blue() - b) < 25:
+                    n += 1
+        return n
+    tree.clearSelection()
+    QApplication.processEvents()
+    before = orange()
+    tree.select_nodes([boss])
+    QApplication.processEvents()
+    assert orange() > before + 20
+
+
+def test_the_references_survive_save_and_open(win, tmp_path):
+    from khervecad import document, sketch_dims3d
+    part, boss, cont = _locked_boss(win)
+    want = sketch_dims3d.references(cont)
+    told = sketch_lock.describe(win.model, cont)
+    path = str(tmp_path / "locked.kcad")
+    document.save_kcad(win.model, path)
+    win._dirty = False
+    win.open_any(path)
+    QApplication.processEvents()
+    again = next(n for n in win.model.root.walk()
+                 if any(r.get("kind") == "on_edge"
+                        for r in n.params.get("constraints") or []))
+    assert sketch_dims3d.references(again) == want
+    got = sketch_lock.describe(win.model, again)
+    assert got["ties"] == told["ties"] and got["dof"] == told["dof"]
+
+
+def test_a_sketchs_properties_say_what_it_is_locked_to(win):
+    from PyQt5.QtWidgets import QLabel
+    from khervecad import face_sketch
+    part, boss, cont = _locked_boss(win)
+    group = face_sketch.group_of(boss)
+    win.builder.active_tree().select_nodes([group])
+    QApplication.processEvents()
+    texts = [w.text() for w in win.findChildren(QLabel)]
+    assert any("on the part's edge" in t for t in texts)
+
+
+def test_the_2d_sketch_shows_them_too(win):
+    from PyQt5.QtGui import QColor
+    from khervecad import (face_sketch, normal_to, sketch_dims3d,
+                           sketch_mode, toolbar_style)
+    part, boss, cont = _locked_boss(win)
+    win.resize(1200, 800)
+    win.show()
+    toolbar_style.apply(win, "SolidWorks")
+    try:
+        rect = next(c for c in cont.children if c.type == "rect")
+        normal_to.edit(win, rect)
+        from PyQt5.QtTest import QTest
+        QTest.qWait(900)
+        assert sketch_mode.sketching(win)
+        win.view2d.viewport().repaint()
+        img = win.view2d.viewport().grab().toImage()
+        r, g, b = sketch_dims3d.REF_INK
+        n = sum(1 for x in range(0, img.width(), 2)
+                for y in range(0, img.height(), 2)
+                if abs(QColor(img.pixel(x, y)).red() - r) < 25
+                and abs(QColor(img.pixel(x, y)).green() - g) < 25
+                and abs(QColor(img.pixel(x, y)).blue() - b) < 25)
+        assert n > 20
+        sketch_mode.finish(win)
+        QTest.qWait(600)
+    finally:
+        toolbar_style.apply(win, "KherveCAD")

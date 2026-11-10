@@ -593,6 +593,110 @@ def _spot(cont, ref):
     return (c[0], c[1] + r)
 
 
+#: what a sketch is locked to, drawn on the part
+REF_INK = (230, 120, 20)
+
+
+def references(cont):
+    """What sketch *cont* is tied to the part by, in its own (x, y):
+    {"edges": [((x, y), (x, y))], "points": [(x, y)]} — the part's edges
+    its points ride on, the corners / middles / centres they are pinned
+    to, and the points, edges and faces copied in for a dimension
+    (shown or hidden)."""
+    edges, points = [], []
+    for row in sc.rows(cont):
+        kind = row.get("kind")
+        if kind == "on_edge" and row.get("edge"):
+            e = row["edge"]
+            edges.append(((e[0], e[1]), (e[2], e[3])))
+        elif kind == "fix" and row.get("at") and (
+                row.get("model") or _is_reference(cont, row)):
+            points.append((row["at"][0], row["at"][1]))
+            if row.get("edge") and row.get("model") in ("mid", "on"):
+                e = row["edge"]
+                edges.append(((e[0], e[1]), (e[2], e[3])))
+    for node in cont.children:
+        p = node.params
+        if not (p.get("ref_world") or p.get("ref_source") or
+                p.get("ref_face") or str(node.name).startswith("Reference")):
+            continue
+        try:
+            if node.type == "line":
+                edges.append(((float(p["x1"]), float(p["y1"])),
+                              (float(p["x2"]), float(p["y2"]))))
+            elif node.type == "circle":
+                points.append((float(p["x"]), float(p["y"])))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return {"edges": edges, "points": points}
+
+
+def _paint_references(painter, cont, m, scr):
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QBrush, QColor, QPen
+    refs = references(cont)
+    if not refs["edges"] and not refs["points"]:
+        return
+    ink = QColor(*REF_INK)
+    painter.save()
+    painter.setRenderHint(painter.Antialiasing, True)
+    pen = QPen(ink, 2.6, Qt.DashLine)
+    painter.setPen(pen)
+    for a, b in refs["edges"]:
+        qa, qb = scr(m, a), scr(m, b)
+        if qa is not None and qb is not None:
+            painter.drawLine(qa, qb)
+    painter.setPen(QPen(ink, 2.0))
+    painter.setBrush(QBrush(QColor(255, 255, 255, 220)))
+    for p in refs["points"]:
+        q = scr(m, p)
+        if q is not None:
+            painter.drawEllipse(QPointF(q), 5.0, 5.0)
+            painter.drawPoint(q)
+    painter.restore()
+
+
+def paint_references_2d(view, painter):
+    """The same in the 2D sketch (Sketch Mode): what the sketch on show
+    is locked to, over the part's picture — scene coordinates."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QBrush, QColor, QPen
+    from . import sketch_constrain_ui as ui
+    scene = view.scene()
+    focus = scene.sketch_focus() if getattr(scene, "sketch_focus", None) \
+        else None
+    if focus is None:
+        return
+    items = {it.node.id: it for it in ui._shape_items(scene)}
+    k = abs(view.transform().m11()) or 1.0
+    ink = QColor(*REF_INK)
+    painter.save()
+    painter.setRenderHint(painter.Antialiasing, True)
+    for cont in ui.shown_containers(scene):
+        refs = references(cont)
+        item = next((items[c.id] for c in cont.children if c.id in items),
+                    None)
+        frame = item.parentItem() if item is not None else None
+
+        def at(p):
+            q = QPointF(p[0], p[1])
+            return frame.mapToScene(q) if frame is not None else q
+        pen = QPen(ink, 0, Qt.DashLine)
+        pen.setCosmetic(True)
+        pen.setWidthF(2.2)
+        painter.setPen(pen)
+        for a, b in refs["edges"]:
+            painter.drawLine(at(a), at(b))
+        pen = QPen(ink, 0)
+        pen.setCosmetic(True)
+        pen.setWidthF(1.8)
+        painter.setPen(pen)
+        painter.setBrush(QBrush(QColor(255, 255, 255, 220)))
+        for p in refs["points"]:
+            painter.drawEllipse(at(p), 5.0 / k, 5.0 / k)
+    painter.restore()
+
+
 def _paint_relations(window, painter, placed, scr, vis, font):
     """The relations (H, V, ●, ⊥, 🔒 …) of the highlighted part's
     sketches, on the 3D view (2026-11-01, the user: when a part is
@@ -604,6 +708,19 @@ def _paint_relations(window, painter, placed, scr, vis, font):
     rel = _related(window, placed)
     if not rel:
         return
+    from . import constrain3d
+    tooling = isinstance(getattr(window.view3d, "edit_tool", None),
+                         constrain3d.Constrain3D)
+    if not tooling:
+        # a feature is SELECTED: what it is locked to is shown on the
+        # part, so it can be found (the user: "each view is forgetting
+        # its locking reference ... we should be able to find them")
+        for cont, m in rel:
+            try:
+                _paint_references(painter, cont, m, scr)
+            except Exception:                # never break the paint
+                import traceback
+                traceback.print_exc()
     f = QFont(font)
     f.setPointSize(max(9, f.pointSize()))
     painter.setFont(f)
@@ -613,10 +730,12 @@ def _paint_relations(window, painter, placed, scr, vis, font):
         for index, row in enumerate(sc.rows(cont)):
             if "value" in row or row.get("kind") not in MARK:
                 continue
-            if row.get("kind") == "fix" and _is_reference(cont, row):
+            if tooling and row.get("kind") == "fix" and \
+                    _is_reference(cont, row):
                 # the pin of a point / edge copied from the part for a
-                # dimension: not a relation the user made (a lock showed
-                # on every corner a Smart Dimension had touched)
+                # dimension: not a relation the user made (while adding
+                # dimensions a lock showed on every corner one had
+                # touched). With the feature SELECTED they are shown.
                 continue
             for ref in row["refs"][:1] if row["kind"] in (
                     "coincident", "fix", "on_edge") else row["refs"]:
