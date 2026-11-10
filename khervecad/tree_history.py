@@ -254,10 +254,20 @@ def clicked(tree, item):
 
 
 # --------------------------------------------------------------- history
+#: names a feature is given by the tool that made it: not shown again
+#: beside "Boss-Extrude 2"
+_AUTO_NAMES = {"Extrude regions", "Extruded Boss/Base", "Extruded Cut",
+               "Revolved Cut", "Revolved Boss/Base", "Revolve"}
+
+
 def build_history(tree, selected):
-    """The scope's features in order, groups as folders."""
+    """SolidWorks' feature list: one row a feature, in the order they
+    were made, its sketch under it; the user's Groups as folders
+    (feature_list.py says what gets no row)."""
+    from . import feature_list
+    feature_list.stamp(tree.model)
     counts = {}
-    for node in tree._top_nodes():
+    for node in feature_list.ordered(tree._top_nodes()):
         _features(tree, node, tree.invisibleRootItem(), selected, counts)
     _rollback_bar(tree)
 
@@ -272,20 +282,20 @@ def _label(node, counts):
     from .interface_names import tree_base
     base = tree_base(node.type) or FEATURE.get(node.type) or language.tr(
         NODE_TYPES[node.type]["label"])
-    if node.type == "linear_extrude" and base == "Boss-Extrude":
+    if node.type in ("linear_extrude", "rotate_extrude"):
         # SolidWorks calls an extrude that cuts Cut-Extrude (every cut
         # read "Boss-Extrude 2 (Extruded Cut)")
         from . import extrude_panel
         if extrude_panel.is_cut(node):
-            base = "Cut-Extrude"
+            base = {"Boss-Extrude": "Cut-Extrude",
+                    "Revolve": "Cut-Revolve"}.get(base, base)
     counts[base] = counts.get(base, 0) + 1
     shown = "%s %d" % (language.tr(base), counts[base])
     plain = NODE_TYPES[node.type]["label"]
     import re
     default = any(re.fullmatch(re.escape(p) + r"( \d+)?", node.name or "")
                   for p in (plain, language.tr(plain)))
-    if node.name and not default and not (
-            base == "Cut-Extrude" and node.name == "Extruded Cut"):
+    if node.name and not default and node.name not in _AUTO_NAMES:
         shown += "  (%s)" % node.name
     return shown
 
@@ -294,9 +304,9 @@ def _row(tree, node, parent_item, selected, text):
     from PyQt5.QtCore import Qt
     item = tree._new_item(parent_item, node)
     item.setData(0, Qt.UserRole, node.id)
+    item.setData(0, ROLE_SHOWN, text)
     tree._decorate(item, node)
     item.setText(0, text)
-    item.setData(0, ROLE_SHOWN, text)
     item.setFlags(item.flags() & ~(Qt.ItemIsDragEnabled
                                    | Qt.ItemIsDropEnabled))
     if node.id in selected:
@@ -306,13 +316,25 @@ def _row(tree, node, parent_item, selected, text):
 
 def _features(tree, node, parent_item, selected, counts):
     """Rows for *node*: what it holds first (earlier features), then the
-    node itself with the 2D shapes it uses under it."""
+    node itself with its sketch under it."""
+    from . import feature_list
+    if node.params.get("hole_wizard"):
+        _row(tree, node, parent_item, selected, node.name)
+        return
+    if feature_list.is_sketch_group(node):
+        # a sketch nothing uses yet: a Sketch of its own, its shapes in it
+        item = _row(tree, node, parent_item, selected,
+                    _sketch(node, counts))
+        for shape in node.children:
+            _row(tree, shape, item, selected, shape.name)
+        item.setExpanded(tree._expand_state.get(node.id, False))
+        return
     if node.type in FOLDERS or node.type == "assign":
         if node.type == "assign":
             _row(tree, node, parent_item, selected, node.name)
             return
         folder = _row(tree, node, parent_item, selected, node.name)
-        for child in node.children:
+        for child in feature_list.ordered(node.children):
             _features(tree, child, folder, selected, counts)
         folder.setExpanded(tree._expand_state.get(node.id, True))
         return
@@ -323,15 +345,24 @@ def _features(tree, node, parent_item, selected, counts):
         # a sketch shape nobody uses yet: a sketch of its own
         _row(tree, node, parent_item, selected, _sketch(node, counts))
         return
-    sketch = [c for c in node.children if _is_2d(c)]
-    for child in node.children:
-        if child not in sketch:
-            _features(tree, child, parent_item, selected, counts)
+    holder, sketch = (None, [c for c in node.children if _is_2d(c)])
+    if node.type in feature_list.EXTRUDES:
+        holder, sketch = feature_list.sketch_of(node)
+    inner = [c for c in node.children if not _is_2d(c)
+             and not (node.type in feature_list.EXTRUDES
+                      and c.type == "regions")]
+    for child in feature_list.ordered(inner):
+        _features(tree, child, parent_item, selected, counts)
     item = _row(tree, node, parent_item, selected, _label(node, counts))
+    under = item
+    if holder is not None and sketch:
+        counts["Sketch"] = counts.get("Sketch", 0) + 1
+        under = _row(tree, holder, item, selected,
+                     "%s %d" % (language.tr("Sketch"), counts["Sketch"]))
+        under.setExpanded(tree._expand_state.get(holder.id, False))
+    for shape in sketch:
+        _row(tree, shape, under, selected, shape.name)
     if sketch:
-        holder = item
-        for shape in sketch:
-            _row(tree, shape, holder, selected, shape.name)
         item.setExpanded(tree._expand_state.get(node.id, False))
 
 
@@ -342,34 +373,26 @@ def _sketch(node, counts):
 
 
 def _rollback_bar(tree):
-    """A bar under the last active top-level feature when the scope's
-    container is rolled back (right-click a row ▸ Roll back to here)."""
+    """The bar above the first feature that is rolled back (right-click
+    a row ▸ Roll back to here)."""
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QTreeWidgetItem
     from . import suppress
-    tops = tree._top_nodes()
-    if not tops:
-        return
-    container = tops[0].parent
-    k = container.params.get(suppress.ROLLBACK) \
-        if container is not None else None
-    if not isinstance(k, int) or k >= len(container.children):
-        return
-    stop = container.children[k]
     root = tree.invisibleRootItem()
-    at = root.childCount()
+    at = None
     for i in range(root.childCount()):
-        if root.child(i).data(0, Qt.UserRole) == stop.id:
-            # the first row belonging to the first rolled-back node
+        item = root.child(i)
+        if item.data(0, ROLE_FIXED):
+            continue
+        node = tree.model.find(item.data(0, Qt.UserRole)) \
+            if hasattr(tree.model, "find") else tree.node_of(item)
+        if node is not None and not node.params.get(suppress.KEY) and (
+                node.params.get(suppress.ROLLED)
+                or suppress.rolled_back(node)):
             at = i
             break
-    else:
-        # the stop node's own row comes after its contents: find any row
-        ids = {n.id for n in stop.walk()}
-        for i in range(root.childCount()):
-            if root.child(i).data(0, Qt.UserRole) in ids:
-                at = i
-                break
+    if at is None:
+        return
     bar = QTreeWidgetItem()
     bar.setText(0, "━━━━  " + language.tr("Rollback") + "  ━━━━")
     bar.setData(0, ROLE_FIXED, "rollback")

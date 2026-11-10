@@ -67,6 +67,17 @@ def assembly_mode(window):
     return True
 
 
+def _switched_off(node):
+    """Inside a feature that is suppressed or rolled back: its sketch's
+    dimensions go with it (they stood in the air over the part)."""
+    from . import suppress
+    while node is not None:
+        if suppress.is_off(node):
+            return True
+        node = node.parent
+    return False
+
+
 def _in_object(c, root):
     probe = c
     while probe is not None and probe is not root:
@@ -85,7 +96,8 @@ def placements(window):
     scope = window._render_scope()[0]
     iso = scope if scope is not root else None
     out = []
-    conts = [c for c in sc.containers(model) if sc.rows(c)]
+    conts = [c for c in sc.containers(model) if sc.rows(c)
+             and not _switched_off(c)]
     if iso is None and assembly_mode(window):
         # the assembly (Main tab, not sketching): an Object's sketch
         # dimensions stay in its Object tab (the user: none at all here)
@@ -306,6 +318,21 @@ def _occluder(window):
     return seen
 
 
+def _selected_sketches(window, conts):
+    """ids of the containers that belong to what is selected in the
+    tree: the feature clicked, its sketch, or a shape of it."""
+    try:
+        picked = window.builder.active_tree().selected_nodes()
+    except Exception:
+        return set()
+    if not picked:
+        return set()
+    from . import face_sketch
+    tops = [face_sketch.group_of(n) or n for n in picked]
+    return {id(c) for c in conts
+            if any(_under(c, t) or _under(t, c) for t in tops)}
+
+
 def paint(window, painter, project, skip=(), hits=True, occlude=True,
           colour="#1565c0"):
     """Draw every shown sketch's dimensions; *project* maps a world
@@ -376,9 +403,17 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
     except Exception:
         seen = None
 
+    # the SELECTED feature's dimensions show through the part, as
+    # SolidWorks' do when a feature is clicked: a base grown past where
+    # its width was written hid the number under itself, and a boss
+    # stands on its own sketch (2026-11-10: neither could be clicked)
+    front = _selected_sketches(window, [c for c, _m in placed])
+    through = [False]
+
     def vis(m, p):
         """Is the sketch point *p* in front of every solid?"""
-        return seen is None or seen(_apply(m, (p[0], p[1], 0.0)))
+        return seen is None or through[0] or \
+            seen(_apply(m, (p[0], p[1], 0.0)))
 
     def seg(m, a, b):
         """A line from *a* to *b* (sketch mm), drawn only where no
@@ -405,6 +440,7 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
                 run = None
 
     for cont, m in placed if show else ():
+        through[0] = id(cont) in front
         for index, row in enumerate(sc.rows(cont)):
             if "value" not in row:
                 continue

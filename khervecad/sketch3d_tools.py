@@ -160,6 +160,8 @@ def _after(sketch, made):
                 sketch_line.polygon_relations(sketch.window.model, node)
             elif node.type == "line" and not node.params.get("bulge"):
                 sketch._write_relations(node, None)
+            if node.type == "line":
+                sketch._tie_ends(node)   # a centerline from a corner
         except Exception:                    # never stop a sketch
             pass
     sketch.made.extend(made)

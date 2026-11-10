@@ -48,7 +48,8 @@ module kcad_regions(seeds = [], inside = [], points = [], paths = []) {
 def shapes(node):
     """The sketch shapes the regions are cut from (hidden ones too)."""
     from .model import SHAPE_2D
-    return [c for c in node.children if c.category == SHAPE_2D]
+    return [c for c in node.children if c.category == SHAPE_2D
+            and c.params.get("modifier") != "%"]
 
 
 def _cs(node):
@@ -88,7 +89,13 @@ def _fused(node, cs):
     if not loops:
         return cs
     section = m.CrossSection(loops, m.FillRule.EvenOdd)
-    band = cs.offset(3 * sketch_section.GROW, m.JoinType.Miter) ^ section
+    # only what stands OUTSIDE the part is pushed into it: an area drawn
+    # on a face lies inside the outline, and growing all of it made a
+    # 60 mm boss 60.3 wide (2026-11-10)
+    outside = cs - section
+    if outside.is_empty():
+        return cs
+    band = outside.offset(3 * sketch_section.GROW, m.JoinType.Miter) ^ section
     return cs + band
 
 

@@ -297,7 +297,10 @@ class ToolPanel(QFrame):
         self.cancel.click()
 
     def eventFilter(self, obj, event):
-        if not self._beside and event.type() in (
+        # (asked while the window is being taken down, its Python half
+        # is already gone: an AttributeError out of a Qt callback aborts
+        # the app — the crash at exit the drag tests showed now and then)
+        if not getattr(self, "_beside", True) and event.type() in (
                 QEvent.Resize, QEvent.Move, QEvent.Show) and self.isVisible():
             self.place()
         return False

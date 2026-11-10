@@ -558,6 +558,19 @@ class Constrain3D:
         if self.kind == "dimension":
             return self._dimension_click(hit, x, y)
         if hit is None:
+            # the origin, a corner or an edge of the part, as a Smart
+            # Dimension takes them (a Midpoint on the origin found
+            # nothing to click)
+            parent = self.picks[0][0].parent if self.picks \
+                else self._working_on()
+            try:
+                near = self.model_near(x, y, parent) \
+                    if parent is not None else None
+                if near is not None and near[0] in self._allowed():
+                    hit = self.model_pick(x, y, parent)
+            except (ValueError, KeyError):
+                hit = None
+        if hit is None:
             self._say(self._prompt())
             return None
         if self.picks and hit[:2] == self.picks[0][:2]:

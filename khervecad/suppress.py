@@ -78,6 +78,13 @@ def keep_of(node) -> str:
         return "none"
     if node.type == "difference":
         return "first"
+    if node.type in ("linear_extrude", "rotate_extrude", "sweep",
+                     "section_loft") or node.params.get("hole_wizard") \
+            or node.params.get("face_sketch"):
+        # a feature that makes its own solid: off, nothing of it shows
+        # (a switched-off extrude passed its flat sketch on, into the
+        # Difference it cut)
+        return "none"
     return "all" if node.is_container() else "none"
 
 

@@ -75,8 +75,12 @@ def test_point_rect3_circles_and_polygon(view):
     view.scene().ask_value = lambda tool, default: "5"
     _draw(view, s2.POLY_REG, [(10, 30), (16, 30)])
     kinds = [n.type for n in _shapes(view)]
-    assert kinds == ["circle", "polygon", "circle", "circle", "polygon"]
-    pt, rect, c2, c3, pent = _shapes(view)
+    # (the regular polygon brings its construction circle, SolidWorks')
+    assert kinds == ["circle", "polygon", "circle", "circle", "polygon",
+                     "circle"]
+    pt, rect, c2, c3, pent, ring = _shapes(view)
+    assert ring.params["modifier"] == "%"
+    assert ring.params["radius"] == pytest.approx(6)
     assert pt.params["modifier"] == "%"
     assert len(rect.params["points"]) == 4
     assert c2.params["radius"] == pytest.approx(5)

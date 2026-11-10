@@ -534,7 +534,7 @@ class ObjectTree(QTreeWidget):
             # re-decorate the whole subtree: hiding a node dims every row
             # below it, so its descendants must refresh too
             self._decorate_subtree(item)
-            if node.type in self._PLACED_TYPES:
+            if node.type in self._PLACED_TYPES and not self.history:
                 # a mate re-solve / drag / Properties edit moved it:
                 # keep the Position/Rotation rows in sync
                 self._refresh_placement_rows(item, node)
@@ -1169,13 +1169,26 @@ class ObjectTree(QTreeWidget):
             node = nodes[0]
             menu.addAction(icons.icon("mdi.timeline-clock-outline"),
                            language.tr("Roll back to here"),
-                           lambda: suppress.roll_back_to(self.model, node))
+                           lambda: self._roll_back(node))
             if suppress.any_rollback(self.model.root):
                 # (a rollback reaches up through the nested features:
                 # forward brings all of it back)
                 menu.addAction(icons.icon("mdi.fast-forward"),
                                language.tr("Roll forward to the end"),
                                lambda: suppress.roll_forward(self.model))
+
+    def _roll_back(self, node):
+        """Roll back to *node*: in History, every feature made after it
+        in the LIST (SolidWorks' bar); in Structure, what follows it in
+        the tree."""
+        from . import suppress
+        if getattr(self, "history", False):
+            from . import feature_list
+            tops = self._top_nodes()
+            feature_list.roll_back_to(
+                self.model, node, tops[0].parent if tops else None)
+        else:
+            suppress.roll_back_to(self.model, node)
 
     def _objects_menu(self, menu, nodes, roots):
         from .mates import definition_of

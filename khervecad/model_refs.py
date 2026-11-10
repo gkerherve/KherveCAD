@@ -481,6 +481,11 @@ def follow(window, group):
     # climbed onto it at every change (20.0, 20.02, 20.13 … 20.54 mm: the
     # cuts came out shallower each time)
     tris = sketch_section.built_before(window, group, own=False)
+    # the feature the sketch was drawn on, when known: a boss made
+    # taller under a stack put its own top nearer the old plane than
+    # the face that had moved up, and the sketch went down onto it
+    from . import face_owner
+    tris = face_owner.tris(window, group) or tris
     seed, n0 = list(ref[:3]), list(ref[3:6])
 
     def normal(t):

@@ -433,6 +433,14 @@ def make(model, container, face_list, picked, hide=None):
     if not picked or not shapes:
         return None
     from . import sketch_constraints as sc
+    from .model import SHAPE_2D
+    # the sketch's construction shapes (a centerline, a reference point
+    # on the origin) go in WITH the shapes they locate — left behind,
+    # every relation to them was dropped and a centred boss came loose
+    helpers = [c for c in container.children
+               if c not in shapes and c.category == SHAPE_2D
+               and c.params.get("modifier") == "%"]
+    shapes = shapes + helpers
     at = min(container.children.index(s) for s in shapes)
     reg = model.add_node("regions", {
         "seeds": [seed(face_list[i][0]) for i in picked],
@@ -458,7 +466,8 @@ def make(model, container, face_list, picked, hide=None):
     container.params.pop(sc.KEY, None)
     for s in shapes:
         model.move_node(s, reg)
-        s.params.pop("modifier", None)
+        if s not in helpers:
+            s.params.pop("modifier", None)
     if moved:
         reg.params[sc.KEY] = moved
     # the container's own rows: re-indexed for the shapes taken out

@@ -410,7 +410,44 @@ def build_poly_reg(scene, c, corner):
         sides = int(float(text))
     except (TypeError, ValueError):
         sides = 6
+    scene._pending_regular = (float(c[0]), float(c[1]))
     return poly_reg(c, corner, sides)
+
+
+def regular_relations(scene, node, centre):
+    """What keeps a regular polygon REGULAR, as SolidWorks' Polygon: a
+    construction circle through its corners (each corner On it) and
+    every side Equal — so one Smart Dimension (a side, or the circle's
+    diameter) sizes all of it and its centre is a point to tie
+    (2026-11-10: a side dimensioned 15 moved that one side alone and
+    left nine freedoms). Returns the circle."""
+    from . import sketch_constraints as sc
+    parent = node.parent
+    pts = node.params.get("points") or []
+    if parent is None or len(pts) < 3:
+        return None
+    ox = float(node.params.get("x", 0) or 0)
+    oy = float(node.params.get("y", 0) or 0)
+    r = math.hypot(float(pts[0][0]) + ox - centre[0],
+                   float(pts[0][1]) + oy - centre[1])
+    circle = scene.model.add_node("circle", dict(
+        x=_r(centre[0]), y=_r(centre[1]), radius=_r(r), modifier="%"),
+        parent=parent, name="Polygon circle")
+    made = getattr(scene, "made", None)
+    if isinstance(made, list):
+        made.append(circle)
+    rows = [("point_on", [sc.ref_of(parent, node, "v%d" % i),
+                          sc.ref_of(parent, circle, "o")])
+            for i in range(len(pts))]
+    rows += [("equal", [sc.ref_of(parent, node, "e%d" % i),
+                        sc.ref_of(parent, node, "e%d" % (i + 1))])
+             for i in range(len(pts) - 1)]
+    for kind, refs in rows:
+        try:
+            sc.add(scene.model, parent, kind, refs)
+        except (ValueError, KeyError):
+            pass
+    return circle
 
 
 BUILD = {CONST_LINE: const_line, POINT: point, RECT_3PT: rect_3pt, CIRCLE_2PT: circle_2pt,

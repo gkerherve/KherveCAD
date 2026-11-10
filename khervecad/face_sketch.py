@@ -174,7 +174,10 @@ def make(window, part, point, normal, open_2d=True):
         x=round(float(point[0]), 4), y=round(float(point[1]), 4),
         z=round(float(point[2]), 4), rx=rx, ry=ry, rz=rz), parent=scope)
     group.params[KEY] = True
-    model.rename(group, "Sketch on " + getattr(part, "name", "face"))
+    on = getattr(part, "name", "face") or "face"
+    while on.startswith("Sketch on "):   # never "Sketch on Sketch on …"
+        on = on[len("Sketch on "):]
+    model.rename(group, "Sketch on " + on)
     group._outline_part = part
     remember_face(window, group, raw, normal)
     if open_2d:
@@ -194,6 +197,8 @@ def remember_face(window, group, point, normal):
     if centre is not None:
         group.params[FACE_REF] = [round(float(v), 6) for v in
                                   (*centre, *normal)]
+        from . import face_owner            # ... and whose face it is
+        face_owner.remember(window, group, point, normal)
 
 
 #: an old sketch's plane this near a face (mm) stands on that face

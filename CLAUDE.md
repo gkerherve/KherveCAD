@@ -3629,6 +3629,80 @@ into a new module and import.
                        3D view to it and sketches there; a click on Origin
                        shows / hides the origin axes) and Material (click
                        sets it on every part). Structure stays exactly as built.
+  - `feature_list.py` — History is a FEATURE LIST, not the structure
+                       redrawn (2026-11-10, the user: "we have 2 modes,
+                       tree and history ... you believe they are the same
+                       but no"). One row a feature — Boss-Extrude,
+                       Cut-Extrude, Revolve, Cut-Revolve — with "Sketch N"
+                       under it holding its shapes, in the order MADE.
+                       `is_plumbing` nodes get no row: the sketch Group
+                       round its extrude, the Difference a cut put round
+                       the part, a revolve's axis turn, a nested cut's
+                       frame; a Regions and the kept "Model edges" are not
+                       listed. The order is `params["feature_order"]`,
+                       given once by `stamp` (MainWindow._model_edited and
+                       every History build; skipped by the mesh key) —
+                       tree order alone put a pocket made LAST second,
+                       since its Difference wraps the base. A file from
+                       before, or a .scad import, numbers features as they
+                       stand. **Roll back to here** in History =
+                       `roll_back_to`: every feature later in the LIST gets
+                       `suppress.ROLLED`, wherever it nests (Structure
+                       keeps the tree's own rollback: `ObjectTree.
+                       _roll_back`). `suppress.keep_of`: a switched-off
+                       extrude / revolve / hole / face sketch draws
+                       NOTHING (it passed its flat sketch into the
+                       Difference). MCP `suppress` actions `history`,
+                       `rollback_history`. Tests: test_stacked_features.py.
+  - A stack by mouse (same day: a boss on a boss on a boss, a cut, a
+                       boss in the cut, a revolve, a pocket; Smart
+                       Dimensions on each; lines, polygon, regular polygon;
+                       then every dimension changed). What it turned up:
+                       **`face_owner.py`** — a face sketch followed its
+                       face by geometry (nearest flat face of that
+                       facing); a boss made 10 mm taller under a stack put
+                       its own top nearer the old plane than the face that
+                       had moved up, and the sketches above went DOWN onto
+                       it. A sketch now remembers the feature it stands on
+                       (`params["face_owner"]` = that feature's
+                       feature_order) and `model_refs.follow` looks only at
+                       that feature's solid (a cut's inside out). A boss of
+                       LINES on a face was 0.15 mm fat all round
+                       (`regions2d._fused` pushed the whole area into the
+                       section: only what stands OUTSIDE the part now).
+                       Construction shapes (a centerline, a reference
+                       point) closed "an area" so the loop was extruded as
+                       strips (`cut_feature._closes_with_model_edges`), and
+                       were left behind with their relations when the
+                       Regions was made (`sketch_regions.make` moves them
+                       in, still `%`; `regions2d.shapes` leaves them out).
+                       A regular polygon was a free polygon: it now gets
+                       SolidWorks' construction circle, each corner On it
+                       and every side Equal (`sketch_tools2.
+                       regular_relations`) — one dimension sizes it. A
+                       still click on a sketch point starts a shape there
+                       (the press was always a grab); a centerline's ends
+                       are tied (`_tie_ends`, 1e-4); relations take the
+                       origin and the part's corners / edges
+                       (`Constrain3D.click` -> `model_pick`); a sketch
+                       point's radius is no freedom (`_vars`). **Revolved
+                       Boss** on a sketch (`revolve_feature.py`): the AREA
+                       the lines close, about the sketch's own Y axis (a
+                       `rotate` -90 named "Revolve (about the sketch's Y
+                       axis)"); `mesh.node_matrix(rotate_extrude)` is
+                       Rx(90) — where its profile, dimensions and
+                       references really stand. The SELECTED feature's
+                       dimensions show through the part
+                       (`sketch_dims3d._selected_sketches`), a switched-off
+                       feature's are hidden. `tool_panel.eventFilter` no
+                       longer raises while the window is taken down (the
+                       crash at exit of the drag tests). STILL OPEN: a
+                       sketch on a PLANE through the part (the revolve's
+                       profile) pinned to the section's corners does not
+                       follow the part — `model_refs.outline` only knows
+                       faces; a first try (section fallback + adopt on
+                       leaving the sketch) matched the wrong edge and was
+                       taken out.
   - `browser_tabs.py` — Variables and Code tabs start hidden (BROWSER
                        caption, the ⋯ corner button or a right-click on
                        the tab bar shows them; QSettings `browser/hidden`,

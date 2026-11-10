@@ -117,8 +117,14 @@ def test_a_dimension_behind_the_part_is_not_drawn_through_it(win):
         QTest.qWait(50)
         return any(h[1] is cont and h[2] == i for h in win._dims3d_hits)
 
+    win.builder.active_tree().clearSelection()
     assert drawn("Bottom")
     assert not drawn("Top")
+    # ... but the feature CLICKED in the tree shows its dimensions through
+    # the part, as SolidWorks' do, or a number the part covers could
+    # never be clicked to change it (2026-11-10)
+    win.builder.active_tree().select_nodes([slot])
+    assert drawn("Top")
 
 
 def test_hovering_a_slots_end_lights_that_arc_then_gives_its_radius(win):

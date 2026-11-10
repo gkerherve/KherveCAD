@@ -382,6 +382,10 @@ def finish(scene):
                         sc.ref_of(parent, b, "p1")])
         except (ValueError, KeyError):
             pass
+    centre = getattr(scene, "_pending_regular", None)
+    scene._pending_regular = None
+    if centre is not None and node is not None and node.type == "polygon":
+        sketch_tools2.regular_relations(scene, node, centre)
     pending = getattr(scene, "_pending_tangents", None)
     if pending and node is not None and node.type == "circle":
         # the perimeter circle clicked on lines: Tangent to each

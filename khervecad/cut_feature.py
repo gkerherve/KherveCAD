@@ -235,7 +235,10 @@ def _closes_with_model_edges(window, group, kind):
     the areas they make WITH the face's edges are offered in 3D instead.
     True when that pick was started."""
     from . import slot2d, sketch_regions
-    shapes = _shapes(group)
+    # construction shapes (a centerline, a reference point on the
+    # origin) close nothing: with one in the sketch, a loop of lines was
+    # extruded as four thin strips
+    shapes = [s for s in _shapes(group) if s.params.get("modifier") != "%"]
     def thin(s):
         # a sketch line (0.2 mm), not a band drawn as a thick line
         try:

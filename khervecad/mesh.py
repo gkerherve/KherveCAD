@@ -146,6 +146,11 @@ def node_matrix(node, env=None):
     if t in ("union", "component", "reference"):
         return mat_mul(mat_translate(num("x"), num("y"), num("z")),
                        mat_rotate(num("rx"), num("ry"), num("rz")))
+    if t == "rotate_extrude":
+        # the profile it holds stands in its XZ plane (x the radius, y
+        # along the axis): where a sketch's shapes, dimensions and
+        # references really are. Nothing 3D is ever inside one.
+        return mat_rotate(90.0, 0.0, 0.0)
     if t == "joint":
         # kcad_joint: translate(pivot) rotate(a) translate(-pivot)
         px, py, pz = num("px"), num("py"), num("pz")
@@ -1248,7 +1253,7 @@ def _component_key(node, env):
         for key in sorted(n.params):
             if n is node and key in _PLACEMENT_KEYS:
                 continue
-            if key in ("bom", "welds"):
+            if key in ("bom", "welds", "feature_order"):
                 continue        # a supplier typed in the BOM is no shape
             parts.append(f"{key}={n.params[key]!r}")
             _expr_strings(n.params[key], exprs)

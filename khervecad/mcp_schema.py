@@ -1591,13 +1591,20 @@ TOOLS = [
             "cannot be suppressed — hide them instead), rollback "
             "(node_id: everything AFTER it among its siblings is off), "
             "roll_forward (node_id = the container, or none for all), "
-            "list (default). Written to the program as kcad_off(...) so "
-            "it survives export and import."
+            "list (default). history: the feature list of the tree's "
+            "History view — one entry a feature in the order they were "
+            "MADE (not the order they nest), each with its sketch. "
+            "rollback_history (node_id of a feature): every feature made "
+            "AFTER it is off, wherever it stands in the tree — "
+            "SolidWorks' rollback bar; roll_forward brings them back. "
+            "Written to the program as kcad_off(...) so it survives "
+            "export and import."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["list", "suppress", "unsuppress",
-                                "rollback", "roll_forward"]},
+                                "rollback", "roll_forward", "history",
+                                "rollback_history"]},
             "node_ids": {"type": "array", "items": {"type": "integer"}},
             "node_id": {"type": "integer"},
         }),

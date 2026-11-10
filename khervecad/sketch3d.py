@@ -458,8 +458,8 @@ class Sketch3DTool:
                 continue
             for a, pa in ends(node):
                 for b, pb in ends(other):
-                    if pa != pb:
-                        continue
+                    if abs(pa[0] - pb[0]) > 1e-4 or abs(pa[1] - pb[1]) > 1e-4:
+                        continue                 # (the solver's 1e-6)
                     refs = [sc.ref_of(cont, other, b),
                             sc.ref_of(cont, node, a)]
                     if frozenset(refs) in tied:
@@ -993,7 +993,12 @@ class Sketch3DTool:
         if self.group is not None and not self.points:
             grab = self.handle_at(event.pos().x(), event.pos().y())
             if grab is not None:
+                # a drag moves the point; a click that does not move
+                # starts the shape ON it (a centerline from a corner
+                # never began: the press was always taken as a grab)
                 self._drag = grab
+                self._drag_from = (event.pos(), event.modifiers())
+                self._drag_moved = False
                 return True
         self._press = (event.pos(), event.modifiers())
         self._pulling = False
@@ -1012,7 +1017,11 @@ class Sketch3DTool:
         from PyQt5.QtCore import Qt
         if self._drag is not None:
             self._drag = None
-            return True
+            start = getattr(self, "_drag_from", None)
+            if start is None or getattr(self, "_drag_moved", True) or \
+                    event.button() != Qt.LeftButton:
+                return True
+            self._press = start              # a still click on a point
         press, self._press = self._press, None
         if press is None or event.button() != Qt.LeftButton:
             return False
@@ -1044,6 +1053,11 @@ class Sketch3DTool:
         from PyQt5.QtCore import Qt
         x, y = event.pos().x(), event.pos().y()
         if self._drag is not None:
+            start = getattr(self, "_drag_from", None)
+            if start is not None and not getattr(self, "_drag_moved", True) \
+                    and (event.pos() - start[0]).manhattanLength() <= DRAG_PX:
+                return True
+            self._drag_moved = True
             pt = self.local_of(x, y, bool(event.modifiers() &
                                           Qt.AltModifier))
             if pt is not None:

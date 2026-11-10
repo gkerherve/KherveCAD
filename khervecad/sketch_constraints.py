@@ -121,6 +121,11 @@ def _vars(node, slot=False):
             "rect": ("x", "y", "width", "height"),
             "circle": ("x", "y", "radius")}.get(node.type)
     out = []
+    if keys and node.type == "circle" and p.get("modifier") == "%" and \
+            _num(p.get("radius")) and abs(float(p["radius"]) - 0.25) < 1e-9:
+        # a sketch POINT (a 0.25 mm construction circle): its size is
+        # not a freedom — a fully tied sketch read "1 degree left"
+        keys = ("x", "y")
     if keys:
         out = [(k, float(p.get(k, 0.0))) for k in keys if _num(p.get(k))]
     elif node.type == "polygon" and _is_model_outline(node):

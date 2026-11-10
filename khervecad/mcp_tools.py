@@ -1633,6 +1633,15 @@ class McpToolExecutor:
             nid = params.get("node_id")
             suppress.roll_forward(model, self._node(nid) if nid is not None
                                   else None)
+        elif action in ("history", "rollback_history"):
+            # the History view's list: features in the order MADE
+            from . import feature_list
+            feature_list.stamp(model)
+            if action == "rollback_history":
+                feature_list.roll_back_to(model,
+                                          self._node(params["node_id"]))
+            return dict(suppress.state(model.root),
+                        history=feature_list.describe(model))
         elif action != "list":
             raise ToolError("Unknown action %r." % action)
         return suppress.state(model.root)

@@ -1069,6 +1069,18 @@ class MainWindow(QMainWindow):
                     "sketch a new feature on.").format(name=done[0].name),
                     8000)
                 return
+        if op == "rotate_extrude" and nodes:
+            # a sketch on a plane or face: its AREA, about its own Y axis
+            from . import revolve_feature
+            tool = revolve_feature.revolve(self, nodes)
+            if tool is not None:
+                tree.select_nodes([tool])
+                self.statusBar().showMessage(language.tr(
+                    "Revolved about the sketch's Y axis — drag the arrow "
+                    "or set the angle in Properties."), 6000)
+                from . import drag_feature
+                drag_feature.start(self, tool, quiet=True, created=True)
+                return
         if op == "linear_extrude":
             # overlapping sketch shapes: pick the regions to extrude on
             # the 3D view, as SolidWorks' Selected Contours (the user)
@@ -1365,6 +1377,8 @@ class MainWindow(QMainWindow):
         # keep attached Objects glued to their (possibly just moved)
         # parents; the guard makes nested refreshes no-ops
         from . import mates, sketch_constraints
+        from . import feature_list          # History: the order made
+        feature_list.stamp(self.model)
         mates.refresh(self.model)
         edited, self._sketch_edited = getattr(self, "_sketch_edited",
                                               set()), set()
