@@ -731,3 +731,129 @@ def test_the_cursor_readout_hides_under_a_message(win):
     assert win._cursor_label.isHidden()
     win.statusBar().clearMessage()
     assert not win._cursor_label.isHidden()
+
+
+def _mouse(view, kind, pos, button=None, buttons=None):
+    from PyQt5.QtCore import QEvent, QPointF, Qt
+    from PyQt5.QtGui import QMouseEvent
+    button = Qt.LeftButton if button is None else button
+    k = {"press": QEvent.MouseButtonPress, "move": QEvent.MouseMove,
+         "release": QEvent.MouseButtonRelease}[kind]
+    held = (Qt.NoButton if kind == "release" else button) \
+        if buttons is None else buttons
+    QApplication.sendEvent(view, QMouseEvent(
+        k, QPointF(pos), Qt.NoButton if kind == "move" else button, held,
+        Qt.NoModifier))
+
+
+@pytest.mark.parametrize("mode, kind", [("rect", "rect"),
+                                        ("circle", "circle"),
+                                        ("line", "line")])
+def test_a_left_drag_draws_the_shape_and_never_turns_the_view(
+        win, monkeypatch, mode, kind):
+    """As SolidWorks: press, drag, release. It used to orbit."""
+    from PyQt5.QtCore import QPoint
+    from PyQt5.QtTest import QTest
+    from khervecad import face_sketch as fs
+    win.show()
+    win.view3d.resize(800, 600)
+    tool = _on_face(win, monkeypatch)
+    QTest.qWait(700)                               # the turn to the face
+    tool.set_mode(mode)
+    v = win.view3d
+    g = tool.group
+
+    def at(x, y):
+        q = v._project(*v._camera(), fs.to_world(g, x, y))
+        return QPoint(int(q[0]), int(q[1]))
+    a, b = at(8, 8), at(20, 16)
+    cam = (v.yaw, v.pitch)
+    _mouse(v, "press", a)
+    for i in range(1, 6):
+        _mouse(v, "move", QPoint(a.x() + (b.x() - a.x()) * i // 5,
+                                 a.y() + (b.y() - a.y()) * i // 5))
+    assert tool.points and tool.hover is not None  # a rubber band shows
+    _mouse(v, "release", b)
+    QApplication.processEvents()
+    assert (v.yaw, v.pitch) == cam or win.view3d.edit_tool is not tool
+    made = [n for n in win.model.root.walk() if n.type == kind]
+    assert len(made) == 1
+    if kind == "line":
+        assert not tool.points                     # one line, not a chain
+        tool.points = []
+        tool._end()
+    else:
+        win.view3d.edit_tool.cancel()
+
+
+def test_the_middle_button_turns_the_view_while_sketching(win, monkeypatch):
+    from PyQt5.QtCore import QPoint, Qt
+    from PyQt5.QtTest import QTest
+    win.show()
+    win.view3d.resize(800, 600)
+    tool = _on_face(win, monkeypatch)
+    QTest.qWait(700)
+    v = win.view3d
+    yaw = v.yaw
+    _mouse(v, "press", QPoint(100, 100), Qt.MiddleButton)
+    _mouse(v, "move", QPoint(160, 100), Qt.MiddleButton, Qt.MiddleButton)
+    _mouse(v, "release", QPoint(160, 100), Qt.MiddleButton)
+    assert v.yaw != yaw
+    assert not [n for n in tool.group.children]    # and drew nothing
+    tool.finish()
+
+
+# ---- a plate with ten features, and going back in its history
+# (2026-11-10, the user: "can we easily go back, how is the history?")
+def test_an_ellipse_drawn_on_a_face_is_cut(win, monkeypatch):
+    """A circle under a scale was not taken for a sketch shape: an
+    ellipse drawn for a cut or a boss made nothing."""
+    from khervecad import sketch3d_tools as more, sketch_tools
+    tool = _on_face(win, monkeypatch)
+    more.use(tool, sketch_tools.ELLIPSE)
+    tool.place((20, 15))
+    tool.place((28, 20))
+    assert any(n.type == "difference" for n in win.model.root.walk())
+    left = analysis.mass_properties(mesh.tessellate(win.model.root))["volume"]
+    assert left == pytest.approx(40 * 30 * 20 - 3.14159 * 8 * 5 * 10, rel=0.002)
+    win.view3d.edit_tool.cancel()
+
+
+def test_rolling_back_reaches_through_nested_cuts(win):
+    """Features made by clicking nest — each cut a Difference round the
+    part so far, a fillet round that. Rolling back stopped at the
+    siblings, of which there were none."""
+    from khervecad import suppress
+    m = win.model
+    McpToolExecutor(win).execute("apply_code", {"code": """
+translate([0, 0, 0]) {
+  difference() {
+    difference() {
+      cube([40, 30, 20]);
+      union() { translate([5, 5, 10]) cube([10, 10, 20]); }   // Cut A
+    }
+    union() { translate([25, 5, 10]) cube([10, 10, 20]); }    // Cut B
+  }
+  translate([0, 0, 20]) cube([5, 5, 5]);                      // Boss
+}
+"""})
+    QApplication.processEvents()
+
+    def volume():
+        return round(analysis.mass_properties(
+            mesh.tessellate(m.root))["volume"])
+    full = volume()
+    assert full == 24000 - 1000 - 1000 + 125
+    cut_a = next(n for n in m.root.walk() if "Cut A" in n.name)
+    suppress.roll_back_to(m, cut_a)
+    QApplication.processEvents()
+    assert volume() == 24000 - 1000          # no Cut B, no Boss
+    assert suppress.any_rollback(m.root)
+    cube = next(n for n in m.root.walk() if n.type == "cube"
+                and n.params.get("width") == 40)
+    suppress.roll_back_to(m, cube)           # further back: the block
+    QApplication.processEvents()
+    assert volume() == 24000
+    suppress.roll_forward(m)
+    QApplication.processEvents()
+    assert volume() == full and not suppress.any_rollback(m.root)

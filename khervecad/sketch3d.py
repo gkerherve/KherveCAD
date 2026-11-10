@@ -123,6 +123,10 @@ def circle_params(c, p):
                 radius=tidy(math.hypot(p[0] - c[0], p[1] - c[1])))
 
 
+#: a press moved further than this (px) is a drag: it draws the shape
+DRAG_PX = 6
+
+
 class Sketch3DTool:
     """See the module docstring."""
 
@@ -135,6 +139,7 @@ class Sketch3DTool:
         self.hover = None             # local point under the cursor
         self.target = None            # plane / face under the cursor
         self._press = None
+        self._pulling = False
         self.holder = None            # the extrude shapes join, if made
         self.snapped = None           # (x, y, kind) under the cursor
         self.lit = []                 # model / sketch edges lit up
@@ -991,7 +996,17 @@ class Sketch3DTool:
                 self._drag = grab
                 return True
         self._press = (event.pos(), event.modifiers())
-        return False                 # the view may start an orbit
+        self._pulling = False
+        # on a sketch the left button DRAWS, as in SolidWorks: press,
+        # drag, release makes the shape (2026-11-10, the user). It turned
+        # the view, and one slip of the hand lost the square-on look. The
+        # middle button turns it meanwhile (`middle_orbits`). Before a
+        # plane is chosen a drag still turns, to find the plane.
+        return self.group is not None
+
+    @property
+    def middle_orbits(self):
+        return self.group is not None
 
     def mouse_release(self, event):
         from PyQt5.QtCore import Qt
@@ -1001,10 +1016,18 @@ class Sketch3DTool:
         press, self._press = self._press, None
         if press is None or event.button() != Qt.LeftButton:
             return False
-        if (event.pos() - press[0]).manhattanLength() > 4:
-            return False                    # it was an orbit
-        self.click(event.pos().x(), event.pos().y(),
-                   bool(press[1] & Qt.AltModifier))
+        free = bool(press[1] & Qt.AltModifier)
+        if self.group is None:
+            if (event.pos() - press[0]).manhattanLength() > 4:
+                return False                # it was an orbit
+            self.click(event.pos().x(), event.pos().y(), free)
+            return True
+        pulled, self._pulling = self._pulling, False
+        made = self.click(event.pos().x(), event.pos().y(), free)
+        if pulled and self.mode == "line" and made is not None and \
+                not getattr(self, "scene_tool", None) and \
+                self.window._sketch3d_tool is self:
+            self._end_chain()        # one dragged line, not a chain
         return True
 
     def click(self, x, y, free=False):
@@ -1027,7 +1050,22 @@ class Sketch3DTool:
                 self.drag_to(self._drag[0], self._drag[1], pt)
             return True
         if self._press is not None:
-            return False
+            if self.group is None:
+                return False                # turning, to find the plane
+            press = self._press
+            if not self._pulling and \
+                    (event.pos() - press[0]).manhattanLength() > DRAG_PX:
+                # a drag: its first point is where the button went down
+                self._pulling = True
+                if not self.points:
+                    self.click(press[0].x(), press[0].y(),
+                               bool(press[1] & Qt.AltModifier))
+            if self._pulling and self.window._sketch3d_tool is self:
+                self._arc_switch(x, y)
+                self.hover = self.local_of(
+                    x, y, bool(event.modifiers() & Qt.AltModifier))
+                self.view.update()
+            return True
         if self.group is None:
             self.target = self.plane_hit(x, y)
         else:

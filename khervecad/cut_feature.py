@@ -49,8 +49,14 @@ KEY = "cut"                  # on the face sketch Group: the cut it makes
 
 def _shapes(group):
     from .model import SHAPE_2D
-    return [c for c in group.children if c.category == SHAPE_2D
-            or c.type == "regions"]
+
+    def flat(c):
+        # an ELLIPSE is a circle under a scale: a sketch shape too (it
+        # was left out — an ellipse drawn for a cut or boss made nothing)
+        return c.category == SHAPE_2D or c.type == "regions" or (
+            c.type == "scale" and c.children and
+            all(k.category == SHAPE_2D for k in c.children))
+    return [c for c in group.children if flat(c)]
 
 
 def apply(model, group, part, kind):

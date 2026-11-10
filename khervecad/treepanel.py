@@ -1170,11 +1170,12 @@ class ObjectTree(QTreeWidget):
             menu.addAction(icons.icon("mdi.timeline-clock-outline"),
                            language.tr("Roll back to here"),
                            lambda: suppress.roll_back_to(self.model, node))
-            if isinstance(node.parent.params.get(suppress.ROLLBACK), int):
+            if suppress.any_rollback(self.model.root):
+                # (a rollback reaches up through the nested features:
+                # forward brings all of it back)
                 menu.addAction(icons.icon("mdi.fast-forward"),
                                language.tr("Roll forward to the end"),
-                               lambda: suppress.roll_forward(
-                                   self.model, node.parent))
+                               lambda: suppress.roll_forward(self.model))
 
     def _objects_menu(self, menu, nodes, roots):
         from .mates import definition_of

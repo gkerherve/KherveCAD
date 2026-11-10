@@ -316,7 +316,7 @@ TIPS = {
         ["Draw the shape in a sketch (Sketch Mode, then a plane or a "
          "flat face) — or select 2D shapes you already have: rectangle, "
          "circle, polygon, text, lines that close an area.",
-         "Click Extrude. One closed shape is extruded at once; "
+         "Click Linear extrude. One closed shape is extruded at once; "
          "overlapping shapes show their regions in the 3D view — click "
          "the ones to keep, then Done or right-click. With no sketch "
          "left to extrude it asks for a face to sketch a boss on.",

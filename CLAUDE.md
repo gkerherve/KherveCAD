@@ -3397,6 +3397,29 @@ into a new module and import.
                        (`model_refs.follow` -> `built_before(own=False)`)
                        — every later cut came out shallower. The cursor
                        x / y no longer shows through status messages.
+  - Sketching like SolidWorks, and the history (2026-11-10, the user:
+                       "like in SolidWorks ... can we easily go back, how
+                       is the history?"). On an open 3D sketch the LEFT
+                       button draws — press, drag, release makes the
+                       rectangle / circle / line (`Sketch3DTool._pulling`,
+                       `DRAG_PX`; a dragged line is one line, not a chain)
+                       — and the MIDDLE button turns the view meanwhile
+                       (`middle_orbits`, read by View3D.mousePressEvent);
+                       before a plane is chosen a left-drag still turns.
+                       A plate with ten features by mouse (dragged corner
+                       rectangle boss, centre-rectangle pocket, slot
+                       through, dragged circle boss, 3-point rectangle
+                       pocket, hexagon pocket, ellipse boss, Hole Wizard,
+                       fillet, chamfer) found: an ELLIPSE (circle under a
+                       scale) was not taken for a sketch shape by
+                       `cut_feature._shapes`. History: **Roll back to
+                       here** now reaches up through NESTED features
+                       (`suppress.roll_back_to`: the rollback index at
+                       every level above, `ROLLED` on wrappers applied on
+                       top; `roll_forward` clears all) and a rolled-back
+                       node draws NOTHING (`keep_of` -> "none": a rolled-
+                       back Group passed its cut through). The History
+                       view names a cutting extrude Cut-Extrude.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

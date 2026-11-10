@@ -2176,8 +2176,11 @@ def _check_node(node, env, errors):
     elif node.is_container() and t not in ("if_else", "variables"):
         # an Object may say it starts empty on purpose (a Lego build
         # before its first piece): OpenSCAD takes an empty module
+        # (nor is a sketch just opened on a plane or face an error: it
+        # showed red in the tree until its first shape was drawn)
         if not any(c.type != "assign" for c in node.children) \
-                and not (t == "component" and node.params.get("keep_empty")):
+                and not (t == "component" and node.params.get("keep_empty")) \
+                and not node.params.get("face_sketch"):
             return "empty — add child objects"
     elif t == "if_else":
         else_node = next((c for c in node.children

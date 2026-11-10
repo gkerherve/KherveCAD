@@ -835,8 +835,12 @@ class MainWindow(QMainWindow):
         # ...and the cursor's x / y was painted through a message (Qt
         # hides it, then shows it again at its next layout): hidden for
         # as long as a message is up
-        self.statusBar().messageChanged.connect(
-            lambda text: self._cursor_label.setVisible(not text))
+        def cursor_shows(text, label=self._cursor_label):
+            try:
+                label.setVisible(not text)
+            except RuntimeError:         # the window is going: no label
+                pass
+        self.statusBar().messageChanged.connect(cursor_shows)
         self._dims_label = QLabel("")          # selected object's size
         self.statusBar().addWidget(self._dims_label)
         self._file_label = QLabel()            # current document path

@@ -99,7 +99,7 @@ def test_material_row_sets_every_part(app):
 
 def test_origin_and_plane_rows_act_in_the_window():
     from khervecad.mainwindow import MainWindow
-    QApplication.instance() or QApplication([])
+    app = QApplication.instance() or QApplication([])   # (held: unreferenced, it was collected and the window aborted)
     w = MainWindow()
     w.show()
     tree_history.set_enabled(True)

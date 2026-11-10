@@ -272,13 +272,20 @@ def _label(node, counts):
     from .interface_names import tree_base
     base = tree_base(node.type) or FEATURE.get(node.type) or language.tr(
         NODE_TYPES[node.type]["label"])
+    if node.type == "linear_extrude" and base == "Boss-Extrude":
+        # SolidWorks calls an extrude that cuts Cut-Extrude (every cut
+        # read "Boss-Extrude 2 (Extruded Cut)")
+        from . import extrude_panel
+        if extrude_panel.is_cut(node):
+            base = "Cut-Extrude"
     counts[base] = counts.get(base, 0) + 1
     shown = "%s %d" % (language.tr(base), counts[base])
     plain = NODE_TYPES[node.type]["label"]
     import re
     default = any(re.fullmatch(re.escape(p) + r"( \d+)?", node.name or "")
                   for p in (plain, language.tr(plain)))
-    if node.name and not default:
+    if node.name and not default and not (
+            base == "Cut-Extrude" and node.name == "Extruded Cut"):
         shown += "  (%s)" % node.name
     return shown
 

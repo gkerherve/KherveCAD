@@ -52,13 +52,30 @@ def rolled_back(node) -> bool:
         return False
 
 
+#: on a wrapper applied AFTER the feature the history is rolled back to
+#: (a fillet, a move round it): off until rolled forward
+ROLLED = "rolled_off"
+#: what groups features rather than being one applied to them
+_GROUPS = {"root", "union", "difference", "intersection", "component",
+           "hull", "minkowski"}
+#: wrappers that belong to a sketch's own feature, never rolled away
+_OWN = {"linear_extrude", "rotate_extrude", "sweep", "section_loft",
+        "regions", "offset", "color"}
+
+
 def is_off(node) -> bool:
     if node.type in NEVER:
         return False
-    return bool(node.params.get(KEY)) or rolled_back(node)
+    return bool(node.params.get(KEY) or node.params.get(ROLLED)) \
+        or rolled_back(node)
 
 
 def keep_of(node) -> str:
+    if rolled_back(node) and not node.params.get(KEY):
+        # past the rollback bar: not built yet, so nothing of it shows.
+        # (A rolled-back Group still passed its contents through — a
+        # cut's sketch Group went on cutting.)
+        return "none"
     if node.type == "difference":
         return "first"
     return "all" if node.is_container() else "none"
@@ -110,27 +127,53 @@ def set_suppressed(model, nodes, on=True):
 
 
 def roll_back_to(model, node):
-    """Switch off everything after *node* among its siblings."""
-    parent = node.parent
-    if parent is None:
+    """Roll the history back to *node*: everything built after it is
+    off. Among its siblings that is what follows it — and, as features
+    made by clicking NEST (each cut a Difference round the part so far,
+    a fillet round that), also what follows at every level above, and
+    each wrapper applied on top. It used to stop at the siblings: in a
+    part made with Extruded Cut there were none, and rolling back did
+    nothing (2026-11-10)."""
+    if node.parent is None:
         return
-    parent.params[ROLLBACK] = parent.children.index(node) + 1
+    roll_forward(model, quiet=True)
+    child = node
+    while child.parent is not None:
+        parent = child.parent
+        index = parent.children.index(child)
+        if index + 1 < len(parent.children):
+            parent.params[ROLLBACK] = index + 1
+        if parent.type in ("root", "component"):
+            break                         # the scope: its history ends here
+        if parent.type not in _GROUPS and parent.type not in _OWN and \
+                parent.type not in NEVER:
+            parent.params[ROLLED] = True  # applied on top: off as well
+        child = parent
     model.structure_changed.emit()
 
 
-def roll_forward(model, container=None):
+def any_rollback(root) -> bool:
+    return any(isinstance(n.params.get(ROLLBACK), int) or
+               n.params.get(ROLLED) for n in root.walk())
+
+
+def roll_forward(model, container=None, quiet=False):
     """Remove the rollback of *container* (every one when None)."""
     nodes = [container] if container is not None else list(
         model.root.walk())
     for n in nodes:
         n.params.pop(ROLLBACK, None)
-    model.structure_changed.emit()
+        n.params.pop(ROLLED, None)
+    if not quiet:
+        model.structure_changed.emit()
 
 
 def state(root):
     return dict(
         suppressed=[dict(id=n.id, name=n.name) for n in root.walk()
                     if n.params.get(KEY)],
+        rolled=[dict(id=n.id, name=n.name) for n in root.walk()
+                if n.params.get(ROLLED)],
         rollbacks=[dict(id=n.id, name=n.name, at=n.params[ROLLBACK],
                         of=len(n.children)) for n in root.walk()
                    if isinstance(n.params.get(ROLLBACK), int)])

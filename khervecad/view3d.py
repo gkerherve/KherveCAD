@@ -2072,6 +2072,11 @@ class View3D(QWidget):
             if event.button() == Qt.RightButton else None
         self._last = event.pos()
         self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
+        if event.button() == Qt.MiddleButton and \
+                getattr(self.edit_tool, "middle_orbits", False):
+            # a sketch tool draws with the left button: the middle one
+            # turns the view meanwhile, as SolidWorks' does
+            self._mode = "orbit"
         self._begin_fast()
 
     def mouseReleaseEvent(self, event):
