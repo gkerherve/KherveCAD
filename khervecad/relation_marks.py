@@ -79,6 +79,15 @@ def hidden(container, row):
         return False
 
 
+#: a point held ON something: one mark, at the point
+AT_POINT = ("coincident", "fix", "on_edge", "midpoint", "point_on")
+
+
+def spots(kind, refs):
+    """The refs a relation's marks stand at."""
+    return list(refs[:1]) if kind in AT_POINT else list(refs)
+
+
 # ------------------------------------------------------------- drawing
 def rect_at(x, y, dx=0.0):
     """The tile's rectangle beside an entity at (x, y) view pixels,

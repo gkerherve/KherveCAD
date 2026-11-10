@@ -742,8 +742,7 @@ def _paint_relations(window, painter, placed, scr, vis, font):
                 # dimensions a lock showed on every corner one had
                 # touched). With the feature SELECTED they are shown.
                 continue
-            for ref in row["refs"][:1] if row["kind"] in (
-                    "coincident", "fix", "on_edge") else row["refs"]:
+            for ref in rm.spots(row["kind"], row["refs"]):
                 try:
                     p = _spot(cont, ref)
                 except (KeyError, ValueError, IndexError, TypeError):

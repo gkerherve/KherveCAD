@@ -756,6 +756,8 @@ def glyphs(view):
             else:
                 if not marks_on or rm.hidden(cont, row):
                     continue           # switched off / two points made one
+                if row["kind"] in rm.AT_POINT:
+                    spots = spots[:1]  # one mark, at the point it holds
                 if row["kind"] == "symmetric" and len(spots) == 3:
                     # on its two points only: every pair mirrored about
                     # one centerline piled its mark up on that line
