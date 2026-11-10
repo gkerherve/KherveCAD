@@ -513,7 +513,13 @@ def _fdist(a, b):
     return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(3)))
 
 
-def face_edges(tris, edges, row, tol=1e-3, box=None):
+#: a picked face found again when the part changed is the one facing
+#: within this of the remembered direction (cos): a rib made longer
+#: tilts its slope by degrees (the user's 25 -> 35)
+FACE_TURN_COS = 0.9
+
+
+def face_edges(tris, edges, row, tol=1e-3, box=None, found=None):
     """The crease edges round the flat face a [x, y, z, nx, ny, nz] row
     names, holes included: the coplanar triangles joined to the one
     nearest the point, and every crease with that region on one side
@@ -529,15 +535,24 @@ def face_edges(tris, edges, row, tol=1e-3, box=None):
         return _mul(_add(_add(t[0], t[1]), t[2]), 1.0 / 3.0)
     if on:
         start = min(on, key=lambda i: _len(_sub(centre(tris[i]), p)))
-    elif len(row) >= 9 and facing and box is not None:
-        # the face moved (a taller extrusion): the face facing the same
-        # way at the same place IN THE PART — by its box fractions
+    elif len(row) >= 9 and box is not None:
+        # the face moved (a taller extrusion) or turned (a rib made
+        # longer tilts its slope — the user's fillet on it vanished): the
+        # face facing about the same way at the same place IN THE PART,
+        # by its box fractions; the latest direction known wins
         want = row[6:9]
-        start = min(facing, key=lambda i: _fdist(
-            fraction(centre(tris[i]), box), want))
+        n = _unit(row[9:12]) if len(row) >= 12 else n
+        near = [i for i, m in enumerate(normals)
+                if _dot(m, n) > FACE_TURN_COS]
+        if not near:
+            return []
+        start = min(near, key=lambda i: _fdist(
+            fraction(centre(tris[i]), box), want)
+            + 2.0 * (1.0 - _dot(normals[i], n)))
+        n = normals[start]
         plane = _dot(tris[start][0], n)
-        on = [i for i in facing
-              if abs(_dot(tris[i][0], n) - plane) < max(tol, 1e-4)]
+        on = [i for i, m in enumerate(normals) if _dot(m, n) > 0.9999
+              and abs(_dot(tris[i][0], n) - plane) < max(tol, 1e-4)]
     else:
         return []
     by_edge = {}
@@ -556,6 +571,13 @@ def face_edges(tris, edges, row, tol=1e-3, box=None):
                 if j not in region:
                     region.add(j)
                     todo.append(j)
+    if found is not None:
+        # where the face is now and which way it looks, to be found
+        # again from there after the next change
+        cs = [centre(tris[i]) for i in region]
+        found["centre"] = _mul(
+            [sum(c[k] for c in cs) for k in range(3)], 1.0 / len(cs))
+        found["normal"] = list(normals[start])
     tri_of = {}
     for i, t in enumerate(tris):
         keys = [_vkey(v) for v in t]
@@ -628,12 +650,17 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         known = (places or {}).get(key)
         probe = values[:6] + list(known) if known and len(values) == 6 \
             else values
-        found = face_edges(tris, edges, probe, size * 1e-5, box) \
-            if len(values) in (6, 9) else []
+        where = {}
+        found = face_edges(tris, edges, probe, size * 1e-5, box,
+                           found=where) if len(values) in (6, 9) else []
         if not found:
             missing.append(row)
-        elif places is not None and key not in places and box is not None:
-            places[key] = [round(v, 6) for v in fraction(values[:3], box)]
+        elif places is not None and box is not None and where:
+            # its place in the part and its direction NOW, so a run of
+            # changes keeps finding it
+            places[key] = [round(v, 6) for v in
+                           fraction(where["centre"], box)] + \
+                [round(v, 6) for v in where["normal"]]
         for y in found:
             chosen[id(y)] = y
     picked = list(chosen.values())

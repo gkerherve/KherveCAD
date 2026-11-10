@@ -518,3 +518,32 @@ def test_an_inside_corner_follows_a_widened_leg(app, kind):
         assert not got["missing"]
         assert got["adds"]                   # the inside corner, filled
         assert fillet.check(fil, env) is None
+
+
+def test_a_picked_face_follows_a_rib_made_longer(app):
+    """2026-11-10, the user: a round picked on a triangular rib's sloped
+    FACE vanished when a Smart Dimension made the rib 25 -> 35 long —
+    the slope tilted, and the face was looked for by its exact
+    direction. It is found again facing about the same way."""
+    import math
+    from khervecad.anchors import doc_env
+    m = DocumentModel()
+    a = math.atan2(14, 25)
+    fil = m.add_node("fillet", dict(radius=2, kind="round", detail=6,
+                                     edges=[], faces=[[-7.5, 0, 17,
+                                                       math.sin(a), 0,
+                                                       math.cos(a)]]))
+    base = m.add_node("translate", dict(x=-30, y=-15, z=0), parent=fil)
+    m.add_node("cube", dict(width=60, depth=30, height=10), parent=base)
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0), parent=fil)
+    ext = m.add_node("linear_extrude", dict(height=20, center=True),
+                     parent=rot)
+    tri = m.add_node("polygon", dict(x=0, y=0, points=[
+        [-20, 10], [-20, 24], [5, 10]]), parent=ext)
+    env = doc_env(m)
+    assert not fillet.baked(fil, env)["missing"]
+    for end in (15, 25):
+        m.set_param(tri, "points", [[-20, 10], [-20, 24], [end, 10]])
+        got = fillet.baked(fil, env)
+        assert not got["missing"], end
+        assert got["cuts"] or got["adds"]
