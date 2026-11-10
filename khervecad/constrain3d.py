@@ -72,6 +72,13 @@ def _seg_px(p, a, b):
     return math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy), t
 
 
+def dim_fixed(container, node):
+    """Is *node* a reference copied from the part or another sketch?"""
+    p = node.params
+    return bool(p.get("ref_world") or p.get("ref_source") or
+                p.get("ref_face")) or str(node.name).startswith("Reference")
+
+
 def sc_entity(node, kind):
     """(entity, kind) of a reference node already in a sketch."""
     if node.type == "line":
@@ -183,7 +190,15 @@ class Constrain3D:
         if sk is not None:
             return sk.holder or sk.group
         drag = getattr(w, "_drag_paused", None)
-        return drag.target() if drag is not None else None
+        ext = drag.target() if drag is not None else None
+        if ext is not None:
+            # the extrude's SKETCH: its Regions when it has one (a
+            # reference put beside the Regions was a stray "Sketch 4
+            # (Reference edge)" in the History, outside every sketch)
+            for child in ext.children:
+                if child.type == "regions":
+                    return child
+        return ext
 
     def _face_info(self, parent):
         """The face's outline for *parent*'s sketch: (group, info)."""
@@ -231,6 +246,49 @@ class Constrain3D:
                 best = (d, "line", (a, b))
         return best[1:] if best else None
 
+    def _corner_near(self, x, y, parent):
+        """The CORNER of the face's outline under the screen point (its
+        world place), or None."""
+        from . import face_sketch
+        group, info = self._face_info(parent)
+        if group is None:
+            return None
+        project = self._project()
+        # the face's OWN outline only (not the section behind it, whose
+        # every facet of a hole is a "corner")
+        ends = {(round(p[0], 3), round(p[1], 3))
+                for seg in info.get("segments") or () for p in seg}
+        for px, py, kind in info.get("points") or ():
+            if kind != "corner" or \
+                    (round(px, 3), round(py, 3)) not in ends:
+                continue
+            w = face_sketch.to_world(group, px, py)
+            q = project(w)
+            if q is not None and math.hypot(q[0] - x, q[1] - y) <= PICK_PX:
+                return tuple(w)
+        return None
+
+    def _passes_through(self, hit, world):
+        """Does the picked line / circle really go through *world* (and
+        not only across it on screen)?"""
+        for node, name, _kind, g in self.entities():
+            if node is not hit[0] or name != hit[1]:
+                continue
+            pts = list(g) if hit[2] == "circle" else [g[0], g[1]]
+            tol = 1e-3
+            if hit[2] == "circle":       # drawn as chords: within one
+                tol = max(tol, 0.02 * max(math.dist(pts[0], q)
+                                          for q in pts))
+            for a, b in zip(pts, pts[1:]):
+                ab = [b[i] - a[i] for i in range(3)]
+                L2 = sum(c * c for c in ab) or 1e-18
+                t = max(0.0, min(1.0, sum(
+                    (world[i] - a[i]) * ab[i] for i in range(3)) / L2))
+                if math.dist(world, [a[i] + ab[i] * t
+                                     for i in range(3)]) < tol:
+                    return True
+        return False
+
     def model_pick(self, x, y, parent):
         """A click on the face: a fixed construction copy in the sketch,
         as the 2D view makes, returned as a pick."""
@@ -246,9 +304,17 @@ class Constrain3D:
         pos = where if kind == "point" else (
             (where[0][0] + where[1][0]) / 2.0,
             (where[0][1] + where[1][1]) / 2.0)
-        return face_outline.reference(
+        before = set(map(id, parent.children)) if parent is not None \
+            else set()
+        made = face_outline.reference(
             self.window.view2d.scene(), QPointF(pos[0], pos[1]), kind,
             parent=parent)
+        if parent is not None:           # new ones go if nothing uses them
+            if not hasattr(self, "_fresh"):
+                self._fresh = []
+            self._fresh += [c for c in parent.children
+                            if id(c) not in before]
+        return made
 
     def _in_sketch(self, cont, world):
         """World point -> (x, y) in *cont*'s sketch, along its normal."""
@@ -265,7 +331,33 @@ class Constrain3D:
         made = self._make_reference(model, cont, kind, pts)
         if tag:
             made[0].params.update(tag)
+        if not hasattr(self, "_fresh"):
+            self._fresh = []
+        self._fresh.append(made[0])      # goes again if nothing uses it
         return made
+
+    def _drop_fresh(self):
+        """References made for a dimension that did not come about are
+        taken out again (they piled up as stray reference edges)."""
+        fresh, self._fresh = getattr(self, "_fresh", []), []
+        model = self.window.model
+        for node in reversed(fresh):
+            cont = node.parent
+            if cont is None or not cont.children or \
+                    cont.children[-1] is not node:
+                continue                 # not the last: indices would shift
+            idx = str(len(cont.children) - 1)
+            rows = sc.rows(cont)
+            mine = [r for r in rows if any(
+                str(x).partition(".")[0] == idx for x in r.get("refs", ()))]
+            if any(r.get("kind") != "fix" for r in mine):
+                continue                 # something holds on to it
+            keep = [r for r in rows if r not in mine]
+            if keep:
+                cont.params[sc.KEY] = keep
+            else:
+                cont.params.pop(sc.KEY, None)
+            model.remove_node(node)
 
     def _make_reference(self, model, cont, kind, pts):
         if kind == "point":
@@ -485,7 +577,19 @@ class Constrain3D:
     def mouse_press(self, event):
         from PyQt5.QtCore import Qt
         if event.button() == Qt.RightButton:
+            idle = not (self.picks or getattr(self, "_placing", None) or
+                        getattr(self, "model_first", None) or
+                        getattr(self, "face_first", None))
             self.drop()
+            if idle and (getattr(self.window, "_drag_paused", None)
+                         is not None or
+                         getattr(self.window, "_sketch3d_tool", None)
+                         is not None):
+                # nothing picked: the tool is done — back to the extrude's
+                # arrow or the sketch it was called from (the user was
+                # left in Smart Dimension with the arrow gone)
+                from PyQt5.QtCore import QTimer
+                QTimer.singleShot(0, lambda: end(self.window))
             return True
         if self.kind == "delete" and event.button() == Qt.LeftButton:
             from PyQt5.QtCore import QPoint
@@ -501,6 +605,10 @@ class Constrain3D:
 
     def mouse_move(self, event):
         x, y = event.pos().x(), event.pos().y()
+        self._cursor = (x, y)
+        if getattr(self, "_placing", None) is not None:
+            self.view.update()           # the number follows the cursor
+            return False
         hit = self.pick_at(x, y)
         near = None
         edge = None
@@ -552,6 +660,7 @@ class Constrain3D:
         return False
 
     def drop(self):
+        self._drop_fresh()
         self.picks = []
         self.model_first = None
         self.face_first = None
@@ -702,6 +811,10 @@ class Constrain3D:
             # the click that places the number: horizontal / vertical /
             # straight, an arc's length, a diameter across a centerline
             self._placing = None
+            try:
+                self.view.flash("", 1)
+            except Exception:
+                pass
             cont = placing[1][0][0].parent
             at = self._place_xy(cont, x, y) if x is not None else None
             return self._make_dimension(dim_more.refine(placing, at))
@@ -713,6 +826,20 @@ class Constrain3D:
             if at is not None:
                 self._rim_clicks[id(hit[0])] = at
         parent = None
+        if hit is not None and hit[2] != "point" and x is not None:
+            # a CORNER of the part right under the cursor beats a line or
+            # circle that merely passes over it on screen (a boss's far
+            # rim drawn across the block's corner took the click)
+            home = self.picks[0][0].parent if self.picks \
+                else self._working_on()
+            try:
+                corner = self._corner_near(x, y, home) \
+                    if home is not None else None
+                if corner is not None and \
+                        not self._passes_through(hit, corner):
+                    hit = None
+            except (ValueError, KeyError):
+                pass
         if hit is None and x is not None:
             # the model's corner, centre or edge (SolidWorks)
             parent = self.picks[0][0].parent if self.picks \
@@ -808,7 +935,13 @@ class Constrain3D:
             return None
         if dim_more.needs_place(made) and x is not None:
             self._placing = made
-            self._say("Smart Dimension (3D): " + dim_more.place_prompt(made))
+            self._cursor = (x, y)
+            text = "Smart Dimension: " + dim_more.place_prompt(made)
+            self._say(text)
+            try:                         # said ON the view too
+                self.view.flash(text, 15000)
+            except Exception:
+                pass
             return None
         return self._make_dimension((made[0], made[1], {}))
 
@@ -826,6 +959,7 @@ class Constrain3D:
         text = ui._ask_value(self.window.view2d.scene(), kind,
                              sc.measure(container, kind, refs, extra))
         if text is None:
+            self._drop_fresh()
             return None
         model = self.window.model
         same = [i for i, r in enumerate(sc.rows(container))
@@ -841,9 +975,17 @@ class Constrain3D:
                 report, _scaled, driven = dim_more.add(
                     model, container, kind, refs, ui._value(text), extra)
         except ValueError as exc:
+            self._drop_fresh()
             self._refuse("Dimension refused: %s" % exc)
             return None
-        if driven:
+        self._fresh = []                 # used: they stay
+        if driven and all(dim_fixed(container, n) for n, _e, _k in chosen):
+            self._say("%s — both are edges of the PART, not of this "
+                      "sketch, so nothing here can move: the dimension "
+                      "only measures (in brackets). To drive that "
+                      "distance, dimension the sketch of the feature the "
+                      "edge belongs to." % sc.KINDS[kind][0])
+        elif driven:
             self._say("%s — the sketch is already fully defined there, so "
                       "it was added DRIVEN: it shows the size in brackets "
                       "and follows the sketch." % sc.KINDS[kind][0])
@@ -854,9 +996,88 @@ class Constrain3D:
         return report
 
     # ---------------------------------------------------------- paint
+    def _paint_placing(self, painter, project):
+        """The dimension as it would be made where the cursor is now:
+        its line between what it measures and its value at the cursor."""
+        import numpy as np
+        from PyQt5.QtCore import QPointF, QRectF, Qt
+        from PyQt5.QtGui import QColor, QPen
+        from . import dim_more, model_refs
+        placing = self._placing
+        cursor = getattr(self, "_cursor", None)
+        if placing is None or cursor is None:
+            return
+        cont = placing[1][0][0].parent
+        at = self._place_xy(cont, *cursor)
+        try:
+            kind, chosen, extra = dim_more.refine(placing, at)
+            refs = [sc.ref_of(cont, n, name) for n, name, _k in chosen]
+            value = sc.measure(cont, kind, refs, extra)
+            m = model_refs.sketch_matrix(self.window, cont)
+        except Exception:
+            return
+        ends = []
+        try:
+            if kind == "arc_length":
+                ends = list(sc._line(chosen[0][0], "l", {}))
+            elif kind == "point_line":
+                p = sc._point(chosen[0][0], chosen[0][1], {})
+                a, b = sc._line(chosen[1][0], chosen[1][1], {})
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / \
+                    (dx * dx + dy * dy or 1.0)
+                foot = (a[0] + dx * t, a[1] + dy * t)
+                ends = [p, foot]
+                if extra.get("double"):  # across the centerline
+                    ends = [p, (2 * foot[0] - p[0], 2 * foot[1] - p[1])]
+            else:
+                pa = sc._point(chosen[0][0], chosen[0][1], {})
+                pb = sc._point(chosen[1][0], chosen[1][1], {})
+                if kind == "hdistance":
+                    y = at[1] if at else pa[1]
+                    ends = [(pa[0], y), (pb[0], y)]
+                elif kind == "vdistance":
+                    x = at[0] if at else pa[0]
+                    ends = [(x, pa[1]), (x, pb[1])]
+                else:
+                    ends = [pa, pb]
+        except Exception:
+            ends = []
+        qs = [project((m @ np.array([e[0], e[1], 0.0, 1.0]))[:3].tolist())
+              for e in ends]
+        ink = QColor(33, 118, 199)
+        painter.save()
+        painter.setRenderHint(painter.Antialiasing, True)
+        if len(qs) == 2 and all(qs):
+            painter.setPen(QPen(ink, 1.6, Qt.DashLine))
+            painter.drawLine(QPointF(qs[0][0], qs[0][1]),
+                             QPointF(qs[1][0], qs[1][1]))
+        name = {"hdistance": "horizontal", "vdistance": "vertical",
+                "distance": "straight", "arc_length": "arc length",
+                "point_line": "diameter" if extra.get("double")
+                else "distance"}.get(kind, kind)
+        from . import units
+        label = "%s%s  ·  %s — click to place" % (
+            "Ø" if extra.get("double") else "", units.number(value), name)
+        fm = painter.fontMetrics()
+        box = QRectF(cursor[0] + 14, cursor[1] - fm.height() - 8,
+                     fm.horizontalAdvance(label) + 14, fm.height() + 8)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(33, 118, 199, 225))
+        painter.drawRoundedRect(box, 6, 6)
+        painter.setPen(QColor("white"))
+        painter.drawText(box, int(Qt.AlignCenter), label)
+        painter.restore()
+
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF
         from PyQt5.QtGui import QColor, QPen
+        if getattr(self, "_placing", None) is not None:
+            try:
+                self._paint_placing(painter, project)
+            except Exception:            # never break the paint
+                import traceback
+                traceback.print_exc()
         geo = {(id(n), e): g for n, e, _k, g in self.entities()}
         near = getattr(self, "model_hover", None)
         if near and near[0]:

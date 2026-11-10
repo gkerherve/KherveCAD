@@ -88,7 +88,18 @@ def context_menu(window, pos):
     from PyQt5.QtWidgets import QMenu
     from . import icons, round_ui, sketch_dims3d
     view = window.view3d
-    if getattr(view, "edit_tool", None) is not None:
+    tool = getattr(view, "edit_tool", None)
+    if tool is not None and type(tool).__name__ == "DragFeature":
+        # the extrude's arrow: SolidWorks' right-click OK / Cancel (a
+        # right click did nothing, and the user did not know how to go on)
+        menu = QMenu(view)
+        menu.addAction(icons.icon("mdi.check"), language.tr("OK — keep it"),
+                       tool.ok)
+        menu.addAction(icons.icon("mdi.close"), language.tr("Cancel"),
+                       tool.cancel)
+        menu.exec_(view.mapToGlobal(pos))
+        return menu
+    if tool is not None:
         return None
     if getattr(view, "_pick_cb", None) is not None:
         view.cancel_pick()

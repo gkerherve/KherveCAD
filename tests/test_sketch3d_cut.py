@@ -323,6 +323,8 @@ def test_smart_dimension_with_the_window_open(win, monkeypatch, kind):
     assert tool.model_near(*screen(0, 0), circle.parent) is not None
     tool.click(*screen(circle.params["x"], circle.params["y"]))
     tool.click(*screen(0, 0))
+    if getattr(tool, "_placing", None) is not None:
+        tool.click(*screen(10, 7))               # between: the straight one
     assert any(n.name == "Reference point" for n in circle.parent.children)
     drag.cancel()
 

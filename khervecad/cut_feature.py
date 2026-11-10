@@ -211,9 +211,34 @@ def show_depth(window):
             else fp + 30.0
     from . import view_anim
     view_anim.glide_3d(view, dict(yaw=yaw, pitch=pitch,
-                                  target=list(view.target),
+                                  target=_feature_centre(window)
+                                  or list(view.target),
                                   distance=view.distance))
     return True
+
+
+def _feature_centre(window):
+    """The middle of the extrude whose arrow is showing: the view turns
+    ABOUT it, so the arrow stays in the middle of the picture (the user:
+    "it doesn't really centre the plane")."""
+    try:
+        from . import mesh
+        tool = window.view3d.edit_tool
+        node = tool.target() if tool is not None else None
+        if node is None:
+            return None
+        root = window._render_scope()[0]
+        iso = root if root is not window.model.root else None
+        with window._isolated_frame(iso):
+            m = mesh.ancestor_matrix(node, {}, stop=iso)
+            tris = mesh.transform_mesh(m, mesh.tessellate(node, {}))
+        pts = [p for t in tris for p in t[:3]]
+        if not pts:
+            return None
+        return [(min(p[i] for p in pts) + max(p[i] for p in pts)) / 2.0
+                for i in range(3)]
+    except Exception:
+        return None
 
 
 def clear_chosen_face(window):

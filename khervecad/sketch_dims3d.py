@@ -212,6 +212,16 @@ def _centre(cont, row):
     return None
 
 
+def _is_reference(cont, row):
+    try:
+        node, _name = sc.entity(cont, row["refs"][0])
+    except (KeyError, ValueError, IndexError):
+        return False
+    p = node.params
+    return bool(p.get("ref_world") or p.get("ref_source") or
+                p.get("ref_face")) or str(node.name).startswith("Reference")
+
+
 def _text(row):
     from . import dim_more
     return dim_more.text(row)
@@ -602,6 +612,11 @@ def _paint_relations(window, painter, placed, scr, vis, font):
     for cont, m in rel:
         for index, row in enumerate(sc.rows(cont)):
             if "value" in row or row.get("kind") not in MARK:
+                continue
+            if row.get("kind") == "fix" and _is_reference(cont, row):
+                # the pin of a point / edge copied from the part for a
+                # dimension: not a relation the user made (a lock showed
+                # on every corner a Smart Dimension had touched)
                 continue
             for ref in row["refs"][:1] if row["kind"] in (
                     "coincident", "fix", "on_edge") else row["refs"]:

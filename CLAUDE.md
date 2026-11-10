@@ -3787,6 +3787,31 @@ into a new module and import.
                        on History rows with the sentence as tooltip, a
                        "Locked to" line in an extrude's Properties, and MCP
                        sketch_constraint list `held_by` / `free_to`.
+  - Smart Dimension while the Extrude window is open (same day, the
+                       user: two edges of the part "not possible", locks
+                       appearing and no dimension, "the extrude is gone").
+                       `Constrain3D._working_on` gives the paused extrude's
+                       SKETCH (its Regions), not the extrude — references
+                       landed beside the Regions and showed as stray
+                       "Sketch 4 (Reference edge)" rows. References made
+                       for a dimension that did not come about are removed
+                       (`_fresh` / `_drop_fresh`: value cancelled, refused,
+                       right-click). Two picks that are both the PART's
+                       give a driven dimension and say why. While a
+                       dimension waits for its placing click it is DRAWN at
+                       the cursor (`_paint_placing`: dashed line, value,
+                       kind, "click to place") and flashed on the view —
+                       the user saw only the reference points' locks. Those
+                       locks are no longer drawn (`sketch_dims3d.
+                       _is_reference`). A right-click with nothing picked
+                       ends Smart Dimension and the extrude's arrow is back;
+                       the arrow itself has a right-click OK / Cancel
+                       (view3d_menu). `cut_feature.show_depth` turns the
+                       view ABOUT the new feature (`_feature_centre`). A
+                       face corner under the cursor beats a line or circle
+                       that only crosses it on screen (`_corner_near`,
+                       `_passes_through`). Tests:
+                       test_dimension_while_extruding.py.
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /
