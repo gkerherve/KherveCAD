@@ -179,6 +179,9 @@ def add_window_controls(win):
              ("planes", getattr(win, "_ref_planes_act", None)),
              ("axes", getattr(win, "_axes_act", None)),
              ("scale_bar", getattr(win, "_scale_bar_act", None))]
+    from . import view_cube
+    win._view_cube_act = view_cube.action(win)
+    shown.append(("view_cube", win._view_cube_act))
     for key, act in shown:
         if act is not None:
             menu.addAction(act)

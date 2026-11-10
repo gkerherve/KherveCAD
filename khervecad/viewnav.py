@@ -566,7 +566,8 @@ class HandPan3D(HandPan):
 def attach_3d(view):
     """The 3D view's bar (viewbar3d.py): a few buttons along the foot of
     the view, the rest under their arrows."""
-    from . import viewbar3d
+    from . import view_cube, viewbar3d
+    view_cube.attach(view)
     return viewbar3d.attach(view)
 
 
