@@ -417,13 +417,38 @@ def _seg_dist(p, a, b) -> float:
     return _len(_sub(p, _add(a, _mul(ab, t))))
 
 
+def _faces_of(e):
+    """The two faces meeting at a crease, order-free, and its kind: what
+    names an edge after the part has changed shape."""
+    a, b = list(e.nl), list(e.nr)
+    if (a > b):
+        a, b = b, a
+    return [round(v, 6) for v in a + b] + [1.0 if e.convex else 0.0]
+
+
+def _same_faces(e, want):
+    """*e* has the faces (and convexity) *want* remembered."""
+    n1, n2, convex = tuple(want[:3]), tuple(want[3:6]), want[6] > 0.5
+    if bool(e.convex) != convex:
+        return False
+    for p, q in ((e.nl, e.nr), (e.nr, e.nl)):
+        if _dot(p, n1) > 0.999 and _dot(q, n2) > 0.999:
+            return True
+    return False
+
+
 def _edge_by_fraction(edges, seed, box):
     """The crease parallel to the remembered one at the same place IN
     THE PART (box fractions) — the seed's own spot is gone after an
-    edit."""
+    edit. When the faces meeting at it were remembered too (seed[9:16])
+    the crease between faces facing the same ways wins however far it
+    moved in the box: an L's inside corner goes from a quarter to half
+    way across when its leg is widened, past any fraction tolerance (the
+    user: a fillet stopped working after a Smart Dimension change)."""
     d = _unit(_sub(tuple(seed[3:6]), tuple(seed[:3])))
     want = seed[6:9]
-    best = None
+    faces = seed[9:16] if len(seed) >= 16 else None
+    best = best_same = None
     for e in edges:
         if abs(_dot(e.direction, d)) < 0.9:
             continue
@@ -431,6 +456,11 @@ def _edge_by_fraction(edges, seed, box):
         dist = _fdist(fraction(mid, box), want)
         if best is None or dist < best[0]:
             best = (dist, e)
+        if faces is not None and _same_faces(e, faces) and \
+                (best_same is None or dist < best_same[0]):
+            best_same = (dist, e)
+    if best_same is not None:
+        return best_same[1]
     return best[1] if best is not None and best[0] < 0.25 else None
 
 
@@ -566,18 +596,23 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             missing.append(seed)
             continue
         key = _place_key(values)
-        known = values[6:9] if len(values) == 9 else \
-            (places or {}).get(key)
+        known = (places or {}).get(key) or \
+            (values[6:9] if len(values) == 9 else None)
         e = find_edge(edges, values[:6], size)
+        moved = False
         if e is None and known and box is not None:
             e = _edge_by_fraction(edges, values[:6] + list(known), box)
+            moved = e is not None
         if e is None:
             missing.append(seed)
             continue
-        if places is not None and key not in places and box is not None:
-            # remember where it sits in the part, for when it moves
+        if places is not None and box is not None and (
+                moved or len(places.get(key) or ()) < 10):
+            # remember where it sits in the part and which faces meet at
+            # it, for when it moves — kept up to date as it moves
             mid = _mul(_add(e.a, e.b), 0.5)
-            places[key] = [round(v, 6) for v in fraction(mid, box)]
+            places[key] = [round(v, 6) for v in fraction(mid, box)] + \
+                _faces_of(e)
         for x in chain(edges, e)["edges"]:
             key = frozenset((_vkey(x.a), _vkey(x.b)))
             for y in edges:

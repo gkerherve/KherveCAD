@@ -492,3 +492,29 @@ def test_a_filleted_face_and_edge_follow_a_taller_extrusion():
         zs = [p[2] for tri in again["cuts"][0] for p in tri]
         assert max(zs) == pytest.approx(30, abs=0.6), which
 
+
+
+@pytest.mark.parametrize("kind", ["round", "chamfer"])
+def test_an_inside_corner_follows_a_widened_leg(app, kind):
+    """2026-11-10, the user: a fillet or chamfer stopped working once a
+    Smart Dimension changed the part. An L's inside corner moves from a
+    quarter to half way across its box when a leg is widened — past the
+    box-fraction tolerance; the faces meeting at it (remembered with its
+    place) find it however far it went."""
+    from khervecad.anchors import doc_env
+    m = DocumentModel()
+    fil = m.add_node("fillet", dict(radius=2, kind=kind, detail=6,
+                                     edges=[[10, 10, 0, 10, 10, 10]]))
+    ext = m.add_node("linear_extrude", dict(height=10), parent=fil)
+    poly = m.add_node("polygon", dict(x=0, y=0, points=[
+        [0, 0], [40, 0], [40, 10], [10, 10], [10, 30], [0, 30]]),
+        parent=ext)
+    env = doc_env(m)
+    assert not fillet.baked(fil, env)["missing"]
+    for pts in ([[0, 0], [40, 0], [40, 20], [20, 20], [20, 30], [0, 30]],
+                [[0, 0], [60, 0], [60, 25], [25, 25], [25, 50], [0, 50]]):
+        m.set_param(poly, "points", pts)
+        got = fillet.baked(fil, env)
+        assert not got["missing"]
+        assert got["adds"]                   # the inside corner, filled
+        assert fillet.check(fil, env) is None
