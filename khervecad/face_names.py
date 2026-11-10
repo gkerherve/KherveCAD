@@ -37,8 +37,16 @@ TOL_MIN = 1e-3
 
 
 def _key(node):
+    """The feature's stable number, else its place in the tree (two
+    unnumbered features may share a name: "Linear extrude")."""
     order = node.params.get("feature_order")
-    return str(order) if order is not None else "n:%s" % node.name
+    if order is not None:
+        return str(order)
+    path, n = [], node
+    while n.parent is not None:
+        path.append(str(n.parent.children.index(n)))
+        n = n.parent
+    return "p:" + "/".join(reversed(path))
 
 
 def _inverse(m):
@@ -111,11 +119,17 @@ def _shape_segments(container, env, hidden_ok=False):
     return out
 
 
-def _sides(c2, segs, tol, unset, out, key):
+def _sides(c2, segs, tol, unset, out, key, n2=None):
     """Name the triangles (centroids *c2*, N x 2, in the profile's plane)
     lying on each sketch entity's swept side; *unset* masks the ones
-    still to name."""
+    still to name. *n2* (N x 2, the normals in that plane, unit or not):
+    a side also FACES the way its entity does — near a line's end lay
+    the next face's triangles, and took the line's name (the user's rib:
+    its foot's rounding came out wrong)."""
     import numpy as np
+    if n2 is not None:
+        ln = np.linalg.norm(n2, axis=1)
+        n2 = n2 / np.maximum(ln, 1e-30)[:, None]
     for name, a, b, circle in segs:
         if not unset.any():
             return
@@ -123,19 +137,27 @@ def _sides(c2, segs, tol, unset, out, key):
             r = float(b)
             d = np.abs(np.hypot(c2[:, 0] - a[0], c2[:, 1] - a[1]) - r)
             hit = unset & (d < max(tol, r * 0.03))
+            if n2 is not None:
+                rad = c2 - np.array([a[0], a[1]], float)
+                rad = rad / np.maximum(np.linalg.norm(rad, axis=1),
+                                       1e-30)[:, None]
+                hit &= np.abs((rad * n2).sum(1)) > 0.8
         else:
             ax, ay = float(a[0]), float(a[1])
             dx, dy = float(b[0]) - ax, float(b[1]) - ay
-            n2 = dx * dx + dy * dy
-            if n2 < 1e-18:
+            L2 = dx * dx + dy * dy
+            if L2 < 1e-18:
                 continue
-            t = ((c2[:, 0] - ax) * dx + (c2[:, 1] - ay) * dy) / n2
+            t = ((c2[:, 0] - ax) * dx + (c2[:, 1] - ay) * dy) / L2
             d = np.abs(dx * (c2[:, 1] - ay) - dy * (c2[:, 0] - ax)) / \
-                math.sqrt(n2)
+                math.sqrt(L2)
             band = 0.0 if circle is False else float(circle)
-            reach = band / math.sqrt(n2) + 1e-3     # past its round ends
+            reach = band / math.sqrt(L2) + 1e-3     # past its round ends
             hit = unset & (d < tol + band) & (t >= -reach) & \
                 (t <= 1 + reach)
+            if n2 is not None:
+                side = np.array([dy, -dx], float) / math.sqrt(L2)
+                hit &= np.abs(n2 @ side) > 0.99
         if hit.any():
             out[hit] = "%s:%s" % (key, name)
             unset &= ~hit
@@ -169,7 +191,7 @@ def _extrude_surfaces(node, root, env, tol):
             unset &= ~hit
         side = unset & (np.abs(n[:, 2]) < 0.05) & (c[:, 2] > z0 - tol) & \
             (c[:, 2] < z1 + tol)
-        _sides(c[:, :2], segs, tol, side, out, key)
+        _sides(c[:, :2], segs, tol, side, out, key, n[:, :2])
         unset &= ~(out != None)  # noqa: E711 (numpy object compare)
     return [_Surface(key, inv, test)]
 
@@ -185,9 +207,13 @@ def _revolve_surfaces(node, root, env, tol):
         import numpy as np
         r = np.hypot(c[:, 0], c[:, 1])
         rz = np.stack([r, c[:, 2]], axis=1)
+        # the normal in the profile's (r, z) plane
+        radial = np.stack([c[:, 0], c[:, 1]], axis=1) / \
+            np.maximum(r, 1e-30)[:, None]
+        nrz = np.stack([(n[:, :2] * radial).sum(1), n[:, 2]], axis=1)
         mine = unset.copy()
         _sides(rz, segs, max(tol, float(r.max()) * 0.005 if len(r) else
-                             tol), mine, out, key)
+                             tol), mine, out, key, nrz)
         unset &= ~(out != None)  # noqa: E711
     return [_Surface(key, inv, test)]
 

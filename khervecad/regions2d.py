@@ -95,8 +95,98 @@ def _fused(node, cs):
     outside = cs - section
     if outside.is_empty():
         return cs
-    band = outside.offset(3 * sketch_section.GROW, m.JoinType.Miter) ^ section
-    return cs + band
+    pushed = _push_into(outside, loops, 3 * sketch_section.GROW, m)
+    if pushed is None:                   # as before: grown and clipped
+        return cs + (outside.offset(3 * sketch_section.GROW,
+                                    m.JoinType.Miter) ^ section)
+    return cs + pushed
+
+
+def _push_into(outside, loops, depth, m):
+    """*outside* with its edges that lie on the part's (grown) outline
+    moved *depth* into the part, and a free edge meeting the outline
+    EXTENDED along its own line to that depth — so a rib's slope runs on,
+    one flat face, into the wall and the base. Growing the whole area and
+    clipping it (the first way) made the corners spike past the slope:
+    0.05 mm steps above it at the wall and at its foot, which a fillet
+    rounded into a lip (2026-11-10, the user). None when it cannot."""
+    import math
+    segs = []
+    for loop in loops:
+        n = len(loop)
+        segs += [(loop[i], loop[(i + 1) % n]) for i in range(n)]
+
+    def on_outline(p):
+        for a, b in segs:
+            dx, dy = b[0] - a[0], b[1] - a[1]
+            L2 = dx * dx + dy * dy
+            if L2 < 1e-18:
+                continue
+            t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2
+            if -1e-6 <= t <= 1 + 1e-6:
+                q = (a[0] + t * dx, a[1] + t * dy)
+                if math.hypot(p[0] - q[0], p[1] - q[1]) < 1e-5:
+                    return True
+        return False
+
+    def meet(p, d, q, e):
+        """Where line p + s d meets line q + t e (or None)."""
+        det = d[0] * e[1] - d[1] * e[0]
+        if abs(det) < 1e-12:
+            return None
+        s = ((q[0] - p[0]) * e[1] - (q[1] - p[1]) * e[0]) / det
+        return (p[0] + s * d[0], p[1] + s * d[1])
+
+    out = []
+    for poly in outside.to_polygons():
+        loop = [(float(x), float(y)) for x, y in poly]
+        n = len(loop)
+        if n < 3:
+            continue
+        on_edge = []
+        for i in range(n):
+            a, b = loop[i], loop[(i + 1) % n]
+            on_edge.append(on_outline(((a[0] + b[0]) / 2,
+                                       (a[1] + b[1]) / 2)))
+        new = []
+        for i in range(n):
+            v = loop[i]
+            prev_on, next_on = on_edge[i - 1], on_edge[i]
+            if not (prev_on or next_on):
+                new.append(v)
+                continue
+            a, b = loop[i - 1], loop[(i + 1) % n]
+            d_in, d_out = (v[0] - a[0], v[1] - a[1]), (b[0] - v[0],
+                                                     b[1] - v[1])
+
+            def into(d):
+                # the part lies on the RIGHT of an outline edge of the
+                # area (its inside is on the left)
+                L = math.hypot(*d) or 1.0
+                return (d[1] / L * depth, -d[0] / L * depth)
+            if prev_on and next_on:
+                ia, ib = into(d_in), into(d_out)
+                got = meet((a[0] + ia[0], a[1] + ia[1]), d_in,
+                           (v[0] + ib[0], v[1] + ib[1]), d_out)
+            elif prev_on:                 # the free edge leaves v
+                ia = into(d_in)
+                got = meet(v, (-d_out[0], -d_out[1]),
+                           (a[0] + ia[0], a[1] + ia[1]), d_in)
+            else:                         # the free edge arrives at v
+                ib = into(d_out)
+                got = meet(v, d_in, (v[0] + ib[0], v[1] + ib[1]), d_out)
+            if got is None or math.hypot(got[0] - v[0], got[1] - v[1]) > \
+                    depth * 20:
+                new.append(v)             # a grazing line: leave it
+            else:
+                new.append(got)
+        out.append(new)
+    if not out:
+        return None
+    try:
+        return m.CrossSection(out, m.FillRule.Positive)
+    except Exception:
+        return None
 
 
 def outlines(node, env=None):

@@ -716,6 +716,7 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         for key in (_vkey(x.a), _vkey(x.b)):
             count[(key, x.convex)] = count.get((key, x.convex), 0) + 1
     runs = []
+    around = None                     # face normals at each vertex
     for e in picked:
         run = chain(picked, e, through=lambda key, k=e.convex:
                     count.get((key, k), 0) == 2)
@@ -727,6 +728,9 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         body = strip(run, float(radius), kind, int(detail),
                      section=_chamfer_section(kind, float(radius),
                                               int(detail)))
+        if around is None:
+            around = _vertex_normals(tris)
+        body = _trim_ends(body, run, around)
         if not body:
             continue
         (cuts if run["convex"] else adds).append(body)
@@ -738,6 +742,60 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     cuts.extend(_corner_pieces(edges, runs, float(radius), kind,
                                int(detail), adds))
     return dict(cuts=cuts, adds=adds, missing=missing, chains=len(seen))
+
+
+def _vertex_normals(tris):
+    """{vertex key: [face normals round it]} (distinct directions)."""
+    out = {}
+    for t in tris:
+        n = _normal(t)
+        for v in t:
+            have = out.setdefault(_vkey(v), [])
+            if not any(_dot(n, m) > 0.9999 for m in have):
+                have.append(n)
+    return out
+
+
+def _trim_ends(body, run, around):
+    """*body* (a run's strip) cut at each end of an OPEN run by the faces
+    the edge runs into: a strip ends square across its edge, and where
+    the edge meets the next face at a slant (a rib's sloped top running
+    down onto the base) that square end reached through that face and
+    carved into the base and the upright — the user's rounding stood up
+    the wrong way at the rib's foot. As SolidWorks stops a fillet at the
+    face its edge ends on, the strip keeps only the side of each such
+    face's plane that the edge itself is on."""
+    if run.get("closed") or not body or len(run["points"]) < 2:
+        return body
+    from . import csg
+    if not csg.available():
+        return body
+    edges = run["edges"]
+    ends = ((run["points"][0], edges[0], run["points"][1]),
+            (run["points"][-1], edges[-1], run["points"][-2]))
+    planes = []
+    for p, e, inner in ends:
+        q = _add(p, _mul(_sub(inner, p), 0.25))   # a point of the edge
+        for m in around.get(_vkey(p), ()):
+            if any(abs(_dot(m, f)) > 0.999 for f in (e.nl, e.nr)):
+                continue                  # the edge's own two faces
+            side = _dot(m, _sub(q, p))
+            if abs(side) < 1e-6:
+                continue                  # the edge runs along it
+            n = m if side > 0 else _mul(m, -1.0)
+            planes.append((n, _dot(n, p)))
+    if not planes:
+        return body
+    try:
+        solid = csg.to_manifold([(t, None, False) for t in body], {})
+        if solid is None:
+            return body
+        for n, off in planes:
+            solid = solid.trim_by_plane(tuple(n), off)
+        out = csg.to_triangles(solid)
+    except Exception:                       # pragma: no cover
+        return body
+    return out or body
 
 
 def _chamfer_section(kind, radius, detail):

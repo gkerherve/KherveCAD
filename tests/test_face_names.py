@@ -30,7 +30,7 @@ def test_an_extrude_names_its_sides_and_caps(app):
     from khervecad import mesh
     tris = mesh.tessellate(ext, {})
     got = set(face_names.names(m.root, {}, tris))
-    key = "n:" + ext.name
+    key = face_names._key(ext)
     assert {key + ":cap0", key + ":cap1"} <= got
     assert {key + ":0.e%d" % i for i in range(4)} <= got
     assert None not in got
@@ -123,3 +123,49 @@ def test_the_users_rib_of_sketch_lines_keeps_its_round(app):
     got = fillet.baked(fil, env)
     assert not got["missing"]
     assert got["cuts"] or got["adds"]
+
+
+def _bracket():
+    """The user's bracket (Object 3): base with an upright, a rib of
+    sketch lines fused to both, its slope rounded, chamfers round it."""
+    import json
+    from pathlib import Path
+    from khervecad import document
+    m = DocumentModel()
+    m.root.add(document.node_from_dict(json.load(open(
+        Path(__file__).parent / "data" / "rib_bracket_object.json"))))
+    rib = [n for n in m.root.walk() if n.type == "fillet"
+           and n.params.get("faces")][0]
+    return m, rib
+
+
+def _box(body):
+    pts = [v for t in body for v in t]
+    return [(min(p[i] for p in pts), max(p[i] for p in pts))
+            for i in range(3)]
+
+
+def test_a_fused_rib_runs_into_the_wall_and_the_base(app):
+    """2026-11-10, the user: the rib's rounding stood up the wrong way at
+    its foot and left a lip at the wall. The fused area stopped 0.05 mm
+    short of both (the outline is grown) with mitred spikes above the
+    slope; now its slope runs on, one face, into them."""
+    from khervecad import mesh
+    m, rib = _bracket()
+    env = doc_env(m)
+    src = fillet._merged(mesh._children_mesh(rib, env, None, frozenset(),
+                                             False))
+    names = face_names.names(rib, env, src)
+    got = fillet.baked(rib, env)
+    assert not got["missing"]
+    # nothing between the slope's foot and the base but the base itself:
+    # every crease of the slope's face meets a named face of a feature
+    (slope,), = rib.params[fillet.NAMES].values()
+    for e in fillet.crease_edges(src):
+        if slope in (names[e.il], names[e.ir]):
+            other = names[e.ir] if names[e.il] == slope else names[e.il]
+            assert other is not None, e.mid
+    # no cutter reaches into the base (top z = 10) or the upright (x = -20)
+    for body in got["cuts"]:
+        (x0, _x1), _y, (z0, _z1) = _box(body)
+        assert z0 > 10 - 1e-3 and x0 > -20 - 1e-3, _box(body)
