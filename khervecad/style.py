@@ -94,6 +94,7 @@ def _arrow_files(colour: str):
 
 def _template(t: dict) -> str:
     up, down = _arrow_files(t['text'])
+    up_dim, down_dim = _arrow_files(t.get('dim', t['border']))
     return f"""
 QMainWindow, QDialog {{ background: {t['window']}; }}
 QWidget {{ color: {t['text']}; }}
@@ -133,10 +134,20 @@ QComboBox {{
     min-width: 70px;
 }}
 QComboBox:hover {{ border-color: {t['select']}; }}
-QComboBox::drop-down {{ border: none; width: 18px; }}
+/* combobox-popup 0: the list drops BELOW the box at full height. The
+   Fusion style's own popup laid the list over the box, centred on the
+   current row, and near the window's edge it shrank to ONE row with a
+   scroll arrow — the other choices could not be seen (the user). */
+QComboBox {{ combobox-popup: 0; padding-right: 22px; }}
+QComboBox::drop-down {{ subcontrol-origin: padding;
+    subcontrol-position: top right; width: 20px; border: none;
+    border-left: 1px solid {t['border']}; }}
+QComboBox::down-arrow {{ image: url({down}); width: 10px; height: 7px; }}
+QComboBox::down-arrow:disabled {{ image: url({down_dim}); }}
 QComboBox QAbstractItemView {{ background: {t['card']};
+    border: 1px solid {t['select']};
     selection-background-color: {t['hover']};
-    selection-color: {t['text']}; }}
+    selection-color: {t['text']}; outline: 0; }}
 /* the popup's rows: without these, macOS drew the picked row in the
    system's black highlight (the user) */
 QComboBox QAbstractItemView::item {{ padding: 3px 6px; color: {t['text']}; }}
@@ -153,19 +164,26 @@ QSpinBox, QDoubleSpinBox {{
 QSpinBox:focus, QDoubleSpinBox:focus {{ border-color: {t['select']}; }}
 /* a styled spin box draws its own buttons: give them room and arrows
    made of borders (the user saw the arrows cut off) */
-QSpinBox, QDoubleSpinBox {{ padding: 2px 18px 2px 6px; min-height: 18px; }}
+QSpinBox, QDoubleSpinBox {{ padding: 2px 22px 2px 6px; min-height: 18px; }}
 QSpinBox::up-button, QDoubleSpinBox::up-button,
 QSpinBox::down-button, QDoubleSpinBox::down-button {{
-    subcontrol-origin: border; width: 16px; border: none;
-    background: transparent; }}
+    subcontrol-origin: border; width: 18px; border: none;
+    border-left: 1px solid {t['border']}; background: transparent; }}
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {{
+    background: {t['hover']}; }}
+QSpinBox::up-arrow:disabled, QDoubleSpinBox::up-arrow:disabled {{
+    image: url({up_dim}); }}
+QSpinBox::down-arrow:disabled, QDoubleSpinBox::down-arrow:disabled {{
+    image: url({down_dim}); }}
 QSpinBox::up-button, QDoubleSpinBox::up-button {{
     subcontrol-position: top right; }}
 QSpinBox::down-button, QDoubleSpinBox::down-button {{
     subcontrol-position: bottom right; }}
 QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
-    image: url({up}); width: 8px; height: 5px; }}
+    image: url({up}); width: 10px; height: 7px; }}
 QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
-    image: url({down}); width: 8px; height: 5px; }}
+    image: url({down}); width: 10px; height: 7px; }}
 
 QGraphicsView {{ background: {t['window']}; border: none; }}
 
