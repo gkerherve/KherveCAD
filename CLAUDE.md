@@ -3772,6 +3772,21 @@ into a new module and import.
                        middles of every earlier feature's OWN face in that
                        plane, an island each (face_owner._world per
                        feature). Tests: test_feature_face_centres.py.
+  - `sketch_lock.py` — what a sketch is LOCKED to and what is still
+                       free (same day, the user: a boss grew both ways when
+                       its length changed, "why is he using this centre").
+                       No centre: nothing held it sideways, and the solver
+                       moves a free sketch as little as it can, so a line
+                       grows at both ends. `describe` -> ties (points on
+                       the part's edge, pinned corners / middles / centres,
+                       dimensions to references, plain fixes) and free (the
+                       whole sketch sliding along X / Y when that slide
+                       lies in the solver's null space — `solve` now
+                       reports it as `free` — then the shapes that can
+                       still change). Shown as SolidWorks' "(-) Sketch N"
+                       on History rows with the sentence as tooltip, a
+                       "Locked to" line in an extrude's Properties, and MCP
+                       sketch_constraint list `held_by` / `free_to`.
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /

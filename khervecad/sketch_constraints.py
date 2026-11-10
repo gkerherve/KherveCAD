@@ -554,6 +554,18 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
         err = float("inf")      # met only by shrinking a shape to nothing
     report = dict(ok=err < 1e-4, residual=err, dof=len(x) - rank,
                   redundant=len(f) - rank, moved=[])
+    if dof and len(x) - rank > 0:
+        # HOW it can still move (sketch_lock): the null space of J
+        try:
+            if J.size:
+                _u, sv, vt = np.linalg.svd(J)
+                null = vt[int((sv > 1e-7).sum()):]
+            else:
+                null = np.eye(len(x))
+            report["free"] = [dict(zip(keys, [float(c) for c in v]))
+                              for v in null]
+        except Exception:
+            pass
     if report["ok"] and write:
         for (nid, path), v, v0 in zip(keys, x, x0):
             if abs(v - v0) > 1e-9:

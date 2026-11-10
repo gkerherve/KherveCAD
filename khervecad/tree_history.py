@@ -357,8 +357,20 @@ def _features(tree, node, parent_item, selected, counts):
     under = item
     if holder is not None and sketch:
         counts["Sketch"] = counts.get("Sketch", 0) + 1
+        # SolidWorks' "(-)" on an under defined sketch; the tooltip says
+        # what it is held by and how it can still move (sketch_lock)
+        from . import sketch_lock
+        try:
+            lock = sketch_lock.of(tree.model, holder)
+        except Exception:
+            lock = None
         under = _row(tree, holder, item, selected,
-                     "%s %d" % (language.tr("Sketch"), counts["Sketch"]))
+                     "%s%s %d" % (sketch_lock.marker(lock) if lock else "",
+                                  language.tr("Sketch"), counts["Sketch"]))
+        if lock:
+            tip = sketch_lock.text(lock)
+            under.setToolTip(0, tip)
+            item.setToolTip(0, tip)
         under.setExpanded(tree._expand_state.get(holder.id, False))
     for shape in sketch:
         _row(tree, shape, under, selected, shape.name)

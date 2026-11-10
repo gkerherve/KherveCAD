@@ -1629,6 +1629,12 @@ def run_mcp(win, params):
         out.update(face_dim.run_mcp(win, cont, params))
     elif action != "list" and action != "solve":
         raise ValueError("Unknown action %r." % action)
+    try:                             # what holds it, how it can still move
+        from . import sketch_lock
+        info = sketch_lock.describe(model, cont)
+        out["held_by"], out["free_to"] = info["ties"], info["free"]
+    except Exception:
+        pass
     report = sc.solve(cont, write=False)
     out.update(
         status=sc.status_text(report), dof=report.get("dof"),

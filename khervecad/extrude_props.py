@@ -41,6 +41,12 @@ def build(panel, form, node):
     profiles.setWordWrap(True)
     form.addRow(tr("Profiles"), profiles)
     st["profiles"] = profiles
+    # what its sketch is held by, and how it can still move (the user:
+    # "I do not know what it is locked to")
+    locked = QLabel()
+    locked.setWordWrap(True)
+    form.addRow(tr("Locked to"), locked)
+    st["locked"] = locked
 
     def guard(fn):
         def run(*a):
@@ -140,6 +146,15 @@ def load(panel):
     if node is None or not st:
         return
     st["profiles"].setText(ep.profiles_text(node))
+    if "locked" in st:
+        from . import sketch_lock
+        try:
+            info = sketch_lock.of(panel.model, node)
+        except Exception:
+            info = None
+        st["locked"].setText(
+            sketch_lock.text(info) if info else
+            "No relations: the sketch is only where it was drawn.")
     d = ep.direction_of(node)
     for key, value in (("operation", ep.operation_of(node)),
                        ("direction", d),
