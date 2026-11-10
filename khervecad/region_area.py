@@ -55,7 +55,7 @@ class RegionArea(QGraphicsPathItem):
             self.setBrush(QBrush(QColor(33, 118, 199, 45)))
 
 
-def add_all(scene, scope, selected):
+def add_all(scene, scope, selected, shows=None):
     """A RegionArea for every visible Regions node in *scope* whose
     shapes lie on the view's plane."""
     from PyQt5.QtWidgets import QGraphicsItem  # noqa: F401
@@ -76,6 +76,8 @@ def add_all(scene, scope, selected):
                    None)
         if kid is None or not view2d_edit.on_view_plane(scene, kid):
             continue
+        if shows is not None and not shows(kid):
+            continue                         # another sketch's
         area = RegionArea(node, node.id in selected)
         t = view2d_edit.frame_transform(scene, kid)
         if t is None:

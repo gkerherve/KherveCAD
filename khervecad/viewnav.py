@@ -104,7 +104,18 @@ class NavBar(QWidget):
         if obj is self._host and event.type() in (QEvent.Resize,
                                                   QEvent.Show):
             self.place()
+            # ... and once the host has taken its new size in: this runs
+            # BEFORE its own resize, when a scroll area's viewport still
+            # has the old one (the bar stood in the middle of the sketch)
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(0, self._place_later)
         return False
+
+    def _place_later(self):
+        try:
+            self.place()
+        except RuntimeError:               # went with its view
+            pass
 
     def _area(self):
         """The part of the host that shows content — a scroll area's
@@ -117,6 +128,10 @@ class NavBar(QWidget):
     def place(self):
         self.adjustSize()
         area = self._area()
+        if area.height() < self.height() + 12 or area.width() < 40:
+            # the host has no size yet (hidden, mid-layout): placed now
+            # the bar would land off the view — wait for its next resize
+            return
         if getattr(self, "anchor", "top-right") == "bottom-centre":
             # Fusion's navigation bar: centred along the canvas' foot
             # (above the Cut Through bar while that one shows)
@@ -294,7 +309,11 @@ def attach_2d(view):
          view.fit_content, False),
     ])
     bar.buttons["hand"].setCheckable(True)
+    # along the foot of the sketch, centred, as the 3D view's (the user,
+    # 2026-11-10)
+    bar.anchor = "bottom-centre"
     view.nav_bar = bar
+    bar.place()
     return bar
 
 

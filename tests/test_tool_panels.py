@@ -267,9 +267,12 @@ def test_a_sketch_line_shows_over_an_extruded_part(win):
                      L._at(win, 22, -22))
     QTest.qWait(150)
     scene = v2.scene()
-    assert scene._part_items
-    assert max(p.zValue() for p in scene._part_items.values()) < \
-        min(i.zValue() for i in scene._items.values())
+    # (since 2026-11-10 the part is the picture BEHIND the sketch —
+    # sketch_backdrop — never an item that could lie over a line)
+    from khervecad import sketch_backdrop
+    assert not scene._part_items
+    assert sketch_backdrop.refresh(win)
+    v2.viewport().repaint()
     img = v2.viewport().grab().toImage()
     q = L._at(win, 6, 5)
     assert QColor(img.pixel(q.x(), q.y())).lightness() < 110   # the line

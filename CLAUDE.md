@@ -3830,6 +3830,56 @@ into a new module and import.
                        to: no object named ''", from an extrude in another
                        Object) once, not on every edit over each tool's
                        hint. Tests: test_small_sketch_2d.py.
+  - `sketch_backdrop.py` / `sketch_focus.py` — the 2D sketch like
+                       SolidWorks' Normal To (same day, the user: "whatever
+                       we select is what should be sketched in the 2D ...
+                       exactly what it should be", then "random circles ...
+                       only show the plane that we've selected"). In the
+                       one-canvas styles, while Sketch Mode is on,
+                       `sketch_focus.current` says WHICH sketch is on show:
+                       **group** (a face / reference-plane sketch),
+                       **container** (Edit Sketch on a main-plane shape:
+                       `window._sketch_edit_node`, set by normal_to.turn_to)
+                       or **plane** (a new Front / Top / Right sketch: the
+                       loose shapes ON that plane, used by no feature). The
+                       scene (`SketchScene.sketch_focus`, in
+                       `_rebuild_items_now`) then draws only that sketch's
+                       shapes — no profile-alone mode, no part silhouettes,
+                       no other plane's sketch with its marks — and a shape
+                       drawn during Edit Sketch joins that sketch
+                       (`parent_for_new`). Behind them sketch_backdrop
+                       paints the PART, rendered by the 3D view's own
+                       renderer (`View3D.snapshot(mesh=, colors=, edges=,
+                       cavity=)`), square on (`face_sketch.camera_for` /
+                       normal_to.CAMERA), orthographic, at the 2D view's
+                       px/mm (distance = 1.2·min(w, h) / k), transparent
+                       round the model — the part AS BUILT BEFORE the
+                       sketch (`built_before`: SolidWorks' rollback; the
+                       whole part for a new plane sketch). The picture is
+                       stored upside down (Y-up scene), covers `MARGIN`
+                       more than the view, and is redone `DELAY_MS` after
+                       the view leaves it, zooms past `BLUR`, or the model
+                       changes. face_outline.paint then tints and outlines
+                       the FACE (no hatch over the picture). The turn into
+                       a face sketch ends framed on the WHOLE face
+                       (`sketch_backdrop.face_rect`; its target is now a
+                       world point — it was given the sketch's x, y and the
+                       view slid). sketch_mode.enter / finish rebuild the
+                       scene. Also: a sketch point / reference point is a
+                       small cross at any zoom (`view2d.is_sketch_point`:
+                       drawn at its real 0.25 mm it was a big dashed circle
+                       on a millimetre part); only sketches PARALLEL to a
+                       face lend it their centres (`face_outline.
+                       sketch_points`); the corner views (3D in the sketch,
+                       sketch in 3D) are OFF unless View ▸ Corner Views
+                       While Sketching (`sketch/corner_views`; the tests'
+                       conftest turns it on); the 2D bar is bottom-centre,
+                       the polygon bar above it, the Front / Top / Right
+                       buttons hidden on a face; NavBar places itself again
+                       after its host's resize (a scroll area's viewport
+                       has the old size inside the filter). Tests:
+                       test_sketch_backdrop.py reads the picture at known
+                       world points of three pieces (edges within 0.25 mm).
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /

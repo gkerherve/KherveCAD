@@ -87,7 +87,8 @@ _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
                      "language",
                      # Fusion / SolidWorks toolbars and the ribbon tab
                      "interface_style", "ribbon/tab", "tree/history",
-                     "browser/hidden", "ribbon/hidden_tabs")
+                     "browser/hidden", "ribbon/hidden_tabs",
+                     "sketch/corner_views")
 
 #: looks that default to on, held off for the session instead of removed
 _NEUTRAL_OFF = ("render_stage", "render_edges", "render_scale_bar")
@@ -114,6 +115,8 @@ def _fresh_blueprint_settings():
     settings.setValue("browser/hidden", "none")
     # ... and every ribbon tab (users start with the usual ones)
     settings.setValue("ribbon/hidden_tabs", "none")
+    # ... and the corner views the older tests look at (off for users)
+    settings.setValue("sketch/corner_views", True)
     # the Origin / planes rows over the tree: older tests read row 0
     settings.setValue("tree/planes", False)
     yield

@@ -144,6 +144,7 @@ FUSION = [
         "view/3d background", "-", "view/3d surface and shadow",
         "view/3d cavity shading", "view/3d edge lines",
         "view/3d scale bar", "view/3d ground grid", "view/3d axes (x y z)",
+        "view/corner views while sketching",
         "view/3d smooth shading", "view/3d hardware rendering (opengl)"]),
     ("&Help", ["help"]),
 ]
@@ -180,7 +181,8 @@ SOLIDWORKS = [
                      "view/gumball (move / turn handles)"]),
         ("&Lights and Cameras", ["view/3d camera", "view/3d projection"]),
         ("&Hide / Show", ["view/grid", "view/snap", "view/3d ground grid",
-                          "view/3d scale bar", "view/3d axes (x y z)", "-",
+                          "view/3d scale bar", "view/3d axes (x y z)",
+                          "view/corner views while sketching", "-",
                           "view/show dimensions", "view/show smart dimensions",
                           "view/clear dimensions", "-",
                           "view/add reference image",

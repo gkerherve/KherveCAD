@@ -652,7 +652,8 @@ class View3D(QWidget):
                  distance=None, target=None, projection=None,
                  frame=None, zoom=1.0, clean=False, transparent=False,
                  pixel_ratio=1.0, uncut=False, overlay=None,
-                 highlight=False):
+                 highlight=False, mesh=None, colors=None, edges=None,
+                 cavity=None):
         """Paint the scene from another camera into a QImage, leaving
         this view — the user's camera — exactly where it is.
 
@@ -671,7 +672,10 @@ class View3D(QWidget):
         *clean* paints the model alone — no grid, axes, badge,
         selection tint, anchors or reference images — as an exported
         picture should; *transparent* leaves the background out, so the
-        pixels around the model have alpha 0.
+        pixels around the model have alpha 0. *mesh* (with *colors*)
+        paints THAT mesh instead of the view's own (the part behind a 2D
+        sketch, sketch_backdrop.py); *edges* / *cavity* force the edge
+        lines / the cavity shading on or off.
         Returns ``(image, camera_state)``."""
         from PyQt5.QtCore import QPoint, QSize
         from PyQt5.QtGui import QImage, QPainter, QRegion
@@ -699,7 +703,14 @@ class View3D(QWidget):
         twin.hardware = self.hardware
         twin.projection = projection if projection in PROJECTIONS \
             else self.projection
-        if uncut and self.cut is not None:
+        if edges is not None:
+            twin.edges = bool(edges)
+        if cavity is not None:
+            twin.cavity = bool(cavity)
+        if mesh is not None:
+            twin.set_mesh(list(mesh), self.source, colors)
+            twin.wait_for_bsp()
+        elif uncut and self.cut is not None:
             # the whole model (a Printables still, a drawing's picture)
             # while the user looks at a cut: its own tree and analysis
             twin.set_mesh(self.model_mesh, self.source, self.model_colors)

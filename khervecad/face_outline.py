@@ -445,6 +445,7 @@ def sketch_points(group, part):
     from . import face_sketch, mesh
     from .model import SHAPE_2D
     out = []
+    normal = _unit(face_sketch._normal_of(group))
     for node in part.walk() if part is not None else ():
         if node.category != SHAPE_2D:
             continue
@@ -470,6 +471,13 @@ def sketch_points(group, part):
             continue                          # expressions: skip
         m = mesh.mat_mul(mesh.ancestor_matrix(node, {}, stop=group.parent),
                          mesh.node_matrix(node, {}))
+        # only a sketch lying PARALLEL to this face: the centre of a
+        # circle drawn on another side of the part, dropped onto this
+        # face, is a point of nothing (the user's "random" marks)
+        nz = [m[r][2] for r in range(3)]
+        length = math.sqrt(sum(c * c for c in nz)) or 1.0
+        if abs(sum(a * b for a, b in zip(nz, normal))) / length < 0.999:
+            continue
         for x, y, kind in local:
             w = [m[r][0] * x + m[r][1] * y + m[r][3] for r in range(3)]
             lx, ly = face_sketch.to_local(group, w)
@@ -584,16 +592,22 @@ def paint(scene, painter):
     info = getattr(scene, "face_outline", None)
     if not info:
         return
+    # the model itself is painted behind the sketch (sketch_backdrop):
+    # no hatch over it then — the FACE sketched on is tinted and outlined
+    backdrop = bool(getattr(scene, "_backdrop_on", False))
     if info.get("section"):
-        _paint_section(scene, painter, info["segments"])
+        _paint_section(scene, painter, info["segments"], hatch=not backdrop)
         return
-    if info.get("cut"):
+    if info.get("cut") and not backdrop:
         # the whole part cut just behind the face, under its contour
         _paint_section(scene, painter, info["cut"], edges=False)
     painter.save()
-    pen = QPen(QColor(110, 120, 135), 0)
+    if backdrop:
+        _paint_face(painter, info["segments"])
+    pen = QPen(QColor(40, 120, 225) if backdrop
+               else QColor(110, 120, 135), 0)
     pen.setCosmetic(True)
-    pen.setWidthF(1.6)
+    pen.setWidthF(2.0 if backdrop else 1.6)
     painter.setPen(pen)
     for a, b in info["segments"]:
         painter.drawLine(QLineF(QPointF(*a), QPointF(*b)))
@@ -780,7 +794,28 @@ def _whole_edge(segs, a, b):
             (a[0] + ux * hi, a[1] + uy * hi))
 
 
-def _paint_section(scene, painter, segments, edges=True):
+def _paint_face(painter, segments):
+    """The face sketched on, tinted: this is where the sketch lies (the
+    rest of the picture is the part round it and behind it)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QPainterPath
+    from . import section as _section
+    fill = QPainterPath()
+    fill.setFillRule(Qt.OddEvenFill)
+    for pts, closed in _section.chain(
+            [((a[0], a[1]), (b[0], b[1])) for a, b in segments]):
+        if closed and len(pts) >= 3:
+            fill.moveTo(QPointF(*pts[0]))
+            for q in pts[1:]:
+                fill.lineTo(QPointF(*q))
+            fill.closeSubpath()
+    painter.setPen(Qt.NoPen)
+    painter.setBrush(QColor(90, 165, 255, 70))
+    painter.drawPath(fill)
+    painter.setBrush(Qt.NoBrush)
+
+
+def _paint_section(scene, painter, segments, edges=True, hatch=True):
     """The part CUT by the sketch plane (section_outline): a light
     section fill, drawn UNDER the sketch shapes (drawBackground)."""
     from PyQt5.QtCore import QPointF, Qt
@@ -806,16 +841,18 @@ def _paint_section(scene, painter, segments, edges=True):
     painter.setPen(Qt.NoPen)
     painter.setBrush(QColor(33, 118, 199, 55))
     painter.drawPath(fill)
-    # black hatch lines (2026-11-01, the user: darker, black)
-    hatch = QBrush(QColor(0, 0, 0, 170), Qt.BDiagPattern)
+    # black hatch lines (2026-11-01, the user: darker, black) — not over
+    # the model's own picture
+    lines = QBrush(QColor(0, 0, 0, 170), Qt.BDiagPattern)
     views = scene.views()
     if views:                 # hatch at screen size, not model size
         from PyQt5.QtGui import QTransform
         m = views[0].transform()
-        hatch.setTransform(QTransform.fromScale(
+        lines.setTransform(QTransform.fromScale(
             1 / (abs(m.m11()) or 1), 1 / (abs(m.m22()) or 1)))
-    painter.setBrush(hatch)
-    painter.drawPath(fill)
+    if hatch:
+        painter.setBrush(lines)
+        painter.drawPath(fill)
     edge = QPen(QColor(30, 60, 120), 0)
     edge.setCosmetic(True)
     edge.setWidthF(2.2 if edges else 1.2)

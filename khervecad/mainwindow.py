@@ -152,6 +152,8 @@ class MainWindow(QMainWindow):
         self.scene.assembly_mode = lambda: _sd3.assembly_mode(self)
         self.scene.isolation_resolver = lambda: _fs.current(self) or \
             self.builder.isolated_component()
+        from . import sketch_focus as _sf   # which sketch is on show
+        self.scene.sketch_focus = lambda: _sf.current(self)
         self.builder.active_component_changed.connect(
             lambda _n: self._isolation_changed())
         self.builder.currentChanged.connect(
@@ -639,6 +641,8 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._scale_bar_act)
         view_menu.addAction(self._grid3d_act)
         view_menu.addAction(self._axes_act)
+        from . import sketch_mode as _sm     # off unless ticked
+        view_menu.addAction(_sm.corner_action(self))
         view_menu.addAction(self._smooth_act)
         view_menu.addAction(self._overlay_act)
         view_menu.addAction(self._gl_act)

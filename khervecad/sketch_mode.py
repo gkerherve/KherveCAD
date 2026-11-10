@@ -144,6 +144,27 @@ def _show(win, sketch: bool):
     # the green FINISH SKETCH is not drawn (2026-10-21, the user: remove
     # it from the 2D view); picking a 3D tab or tool leaves the sketch
     b.setVisible(False)
+    # on a face the sketch has its own plane: the Front / Top / Right
+    # buttons are not for it ("Top" stood lit on a front face)
+    on_face = sketch and getattr(win, "_face_sketch", None) is not None
+    for button in (getattr(win, "_plane_buttons", None) or {}).values():
+        try:
+            button.setVisible(not on_face)
+        except RuntimeError:
+            pass
+    bar = getattr(win.view2d, "nav_bar", None)
+    if bar is not None:
+        bar.place()
+    # the small 3D view in the sketch's corner and the small sketch in
+    # the 3D view's are OFF (2026-11-10, the user: "when we are in 3D,
+    # we're in 3D view; when we are in 2D view, we're in 2D view") unless
+    # View ▸ Corner Views While Sketching is ticked
+    if not corner_views():
+        for name in ("_sketch_inset", "_sketch_mini2d"):
+            w = getattr(win, name, None)
+            if w is not None:
+                w.hide()
+        return
     inset = _inset(win)
     inset.setVisible(sketch and not vibe)
     mini = _mini2d(win)
@@ -157,6 +178,38 @@ def _show(win, sketch: bool):
         inset.redraw()
         # the splitter sizes a view it just showed on the next turn
         QTimer.singleShot(0, inset.place)
+
+
+#: QSettings key: the corner views (off unless asked for)
+CORNER_KEY = "sketch/corner_views"
+
+
+def corner_views() -> bool:
+    from PyQt5.QtCore import QSettings
+    v = QSettings("Kherve", "KherveCAD").value(CORNER_KEY, False)
+    return v in (True, "true", "1", 1)
+
+
+def set_corner_views(win, on):
+    from PyQt5.QtCore import QSettings
+    QSettings("Kherve", "KherveCAD").setValue(CORNER_KEY, bool(on))
+    if active(win):
+        _show(win, sketching(win))
+
+
+def corner_action(win):
+    """View ▸ Corner Views While Sketching, made once per window."""
+    act = getattr(win, "_corner_views_act", None)
+    if act is None:
+        act = QAction(language.tr("Corner Views While Sketching"), win)
+        act.setCheckable(True)
+        act.setChecked(corner_views())
+        act.setStatusTip(language.tr(
+            "A small 3D view in the sketch's corner, and the sketch small "
+            "in the 3D view's (SolidWorks and Fusion styles)."))
+        act.toggled.connect(lambda on: set_corner_views(win, on))
+        win._corner_views_act = act
+    return act
 
 
 
@@ -177,6 +230,11 @@ def enter(win):
         if shape is not None:
             tree.select_nodes([shape])
     _show(win, True)
+    # the scene shows THIS sketch only from now on (sketch_focus)
+    try:
+        win.view2d.scene().rebuild()
+    except Exception:
+        pass
     QTimer.singleShot(0, lambda: _frame_2d(win))
     if getattr(win, "ribbon", None) is not None:
         win.ribbon.show_tab("sketch")
@@ -186,6 +244,11 @@ def enter(win):
 def finish(win):
     """Finish Sketch: back to the 3D model, Select tool."""
     win._sketching = False
+    win._sketch_edit_node = None
+    try:                                  # the overview again
+        win.view2d.scene().rebuild()
+    except Exception:
+        pass
     sync_create(win)
     from .view2d import SELECT
     for act in win._tool_group.actions():

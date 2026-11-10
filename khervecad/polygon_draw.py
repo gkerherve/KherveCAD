@@ -152,8 +152,14 @@ class PolygonBar(QFrame):
 
     def _place(self):
         vp = self.view.viewport()
+        # above the view's own bar, which stands along the foot too
+        lift = 0
+        nav = getattr(self.view, "nav_bar", None)
+        if nav is not None and not nav.isHidden() and \
+                getattr(nav, "anchor", "") == "bottom-centre":
+            lift = nav.height() + 8
         self.move(max(4, (vp.width() - self.width()) // 2),
-                  max(4, vp.height() - self.height() - 14))
+                  max(4, vp.height() - self.height() - 14 - lift))
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Resize and self.isVisible():

@@ -16,7 +16,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 from PyQt5 import sip
 import math
-from PyQt5.QtCore import QPointF, QRectF, Qt, QTimer, pyqtSignal
+from PyQt5.QtCore import QLineF, QPointF, QRectF, Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import (QBrush, QColor, QFont, QPainter, QPainterPath,
                          QPen, QPolygonF)
 from PyQt5.QtWidgets import (QGraphicsEllipseItem, QGraphicsItem,
@@ -495,13 +495,56 @@ class RectShapeItem(ShapeItem, QGraphicsRectItem):
         self._scene.model.node_changed.emit(self.node)
 
 
+def is_sketch_point(node) -> bool:
+    """A sketch POINT or a point copied from the part for a dimension: a
+    0.25 mm construction circle. It is a point, whatever the zoom."""
+    p = node.params
+    try:
+        return node.type == "circle" and p.get("modifier") == "%" and \
+            abs(float(p.get("radius", 0)) - 0.25) < 1e-9
+    except (TypeError, ValueError):
+        return False
+
+
 class CircleShapeItem(ShapeItem, QGraphicsEllipseItem):
+    #: half the size of a sketch point's mark, in pixels
+    POINT_PX = 4.0
+
     def __init__(self, node, scene):
         super().__init__()
         self.init_node(node, scene)
         self.setPen(_pen("#2e3440"))
         self.setBrush(_shape_fill(self.node))
         self.apply_node()
+
+    def _point_size(self):
+        """Half a sketch point's mark in scene units (a few pixels)."""
+        views = self.scene().views() if self.scene() is not None else []
+        k = abs(views[0].transform().m11()) if views else 1.0
+        return self.POINT_PX / (k or 1.0)
+
+    def paint(self, painter, option, widget=None):
+        if not is_sketch_point(self.node):
+            return super().paint(painter, option, widget)
+        # a small cross, the same on screen at any zoom: drawn at its
+        # real 0.25 mm it was a big dashed circle over a part a
+        # millimetre across (the user's "random circles")
+        s = self._point_size()
+        pen = QPen(QColor("#e07b39") if self.isSelected()
+                   else QColor("#5b6b7a"), 0)
+        pen.setCosmetic(True)
+        pen.setWidthF(1.4)
+        painter.setPen(pen)
+        painter.drawLine(QLineF(-s, 0, s, 0))
+        painter.drawLine(QLineF(0, -s, 0, s))
+
+    def shape(self):
+        if not is_sketch_point(self.node):
+            return super().shape()
+        s = self._point_size() * 1.5
+        path = QPainterPath()
+        path.addRect(QRectF(-s, -s, 2 * s, 2 * s))
+        return path
 
     def apply_node(self):
         r = self.rv("radius", 1.0)
@@ -1007,6 +1050,9 @@ class SketchScene(QGraphicsScene):
         #: Object tab's active component) or None — re-resolved on
         #: every rebuild so undo restores never leave a stale node.
         self.isolation_resolver = None
+        #: () -> sketch_focus.Focus or None: which sketch is on show in
+        #: the one-canvas Sketch Mode (only its shapes are drawn then)
+        self.sketch_focus = None
         model.structure_changed.connect(self.rebuild)
         model.node_changed.connect(self._node_changed)
         model.dimensions_changed.connect(self.update)
@@ -1089,7 +1135,16 @@ class SketchScene(QGraphicsScene):
         Object tab has the viewers isolated, else at the top level."""
         iso = self.isolation_resolver() if self.isolation_resolver \
             else None
-        parent = self._sketch_group(iso)
+        parent = None
+        if self.sketch_focus is not None:
+            # Edit Sketch: a shape drawn now joins THAT sketch
+            try:
+                flt = self.sketch_focus()
+                parent = flt.parent_for_new(self) if flt else None
+            except Exception:
+                parent = None
+        if parent is None:
+            parent = self._sketch_group(iso)
         return self.model.add_node(type_, params, parent=parent)
 
     #: the turn that lays a sketch's XY onto each view plane
@@ -1438,7 +1493,17 @@ class SketchScene(QGraphicsScene):
         self._part_items.clear()
         self._highlight_items = []
 
-        focus = self._focus_shapes()
+        # Sketch Mode (SolidWorks / Fusion): the model is painted behind
+        # the sketch (sketch_backdrop) and only THAT sketch's shapes are
+        # drawn — never a profile alone, a part's silhouette or another
+        # plane's sketch
+        flt = None
+        if self.sketch_focus is not None:
+            try:
+                flt = self.sketch_focus()
+            except Exception:
+                flt = None
+        focus = self._focus_shapes() if flt is None else []
         if focus:
             # profile-edit mode: the selected 2D profile is shown alone
             # and fully editable (drag points to resize, drag the shape
@@ -1472,7 +1537,7 @@ class SketchScene(QGraphicsScene):
             self.updating = False
             return
 
-        if self._isolating():
+        if flt is None and self._isolating():
             # show only the selected object(s), as their true projected
             # shape in the current plane
             seen = set()
@@ -1502,7 +1567,8 @@ class SketchScene(QGraphicsScene):
                 if node.category == SHAPE_2D and \
                         node.type in _ITEM_CLASSES and \
                         self._branch_visible(node, stop=iso) and \
-                        view2d_edit.on_view_plane(self, node):
+                        view2d_edit.on_view_plane(self, node) and \
+                        (flt is None or flt.shows(self, node)):
                     item = _ITEM_CLASSES[node.type](node, self)
                     _construction_look(item, node)
                     # drawn through its rotate / move / scale, as in 3D
@@ -1514,9 +1580,12 @@ class SketchScene(QGraphicsScene):
             # the area each Regions keeps, under its (outlined) shapes
             from . import region_area
             region_area.add_all(self, scope,
-                                selected | set(self._highlight_ids))
+                                selected | set(self._highlight_ids),
+                                shows=None if flt is None else
+                                (lambda n: flt.shows(self, n)))
         # assembly mode: every top-level part gets a draggable outline
-        for node in scope.children:
+        # (in Sketch Mode the model's own picture is behind the sketch)
+        for node in scope.children if flt is None else ():
             if node.visible and _produces_3d(node):
                 item = self._make_part_item(node)
                 if item is not None:
@@ -2610,6 +2679,13 @@ class SketchView(QGraphicsView):
             refimage.draw_2d(painter, refs, scene.plane)
         if scene.show_grid:
             self._draw_grid(painter, rect)
+        # the MODEL seen square on, behind a sketch on a face (SolidWorks'
+        # Normal To: sketch_backdrop.py)
+        try:
+            from . import sketch_backdrop
+            scene._backdrop_on = sketch_backdrop.paint(self, painter)
+        except Exception:               # never raise out of a paint
+            scene._backdrop_on = False
         # the face sketched on / the part cut by the sketch plane: UNDER
         # the sketch shapes (painted over them it hid a thin line — the
         # user's horizontal line — and veiled every shape)

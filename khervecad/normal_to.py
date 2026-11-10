@@ -166,6 +166,9 @@ def turn_to(window, plane, node=None, camera=None, face=None):
     window._normal_to_saved = dict(
         yaw=view.yaw, pitch=view.pitch, projection=view.projection)
     yaw, pitch = camera if camera is not None else CAMERA[plane]
+    # Edit Sketch on a shape of a main plane: THAT sketch is what the 2D
+    # view shows (sketch_focus)
+    window._sketch_edit_node = node if face is None else None
     view.projection = "Orthographic"
     centre = list(view.target)
     if face is not None:
@@ -174,8 +177,27 @@ def turn_to(window, plane, node=None, camera=None, face=None):
         from . import face_sketch
         lx, ly = face_sketch.to_local(face, view.target)
         centre = [lx, ly, 0.0]
-    goal = dict(yaw=yaw, pitch=pitch, target=centre,
+    # (the camera's target is a WORLD point: for a face it was given the
+    # sketch's own x, y and the view slid away while it turned)
+    goal = dict(yaw=yaw, pitch=pitch,
+                target=centre if face is None else list(view.target),
                 distance=view.distance)
+    if face is not None:
+        # ... and the WHOLE face is what the sketch opens on (2026-11-10,
+        # the user: "if we select a plane, then it's the whole plane that
+        # we should have"): the turn ends framed on it, so the 2D view
+        # takes over a picture of all of it
+        from . import face_sketch, sketch_backdrop
+        box = sketch_backdrop.face_rect(window, face)
+        if box is not None:
+            x, y, w, h = box
+            port = view.size()
+            k = min(port.width() / w, port.height() / h)   # px per mm
+            centre = [x + w / 2.0, y + h / 2.0, 0.0]
+            goal = dict(yaw=yaw, pitch=pitch,
+                        target=list(face_sketch.to_world(
+                            face, centre[0], centre[1])),
+                        distance=view._focal() / max(k, 1e-9))
 
     def arrived():
         scale = view._focal() / max(view.distance, 1e-6)  # px per mm
