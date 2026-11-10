@@ -435,6 +435,8 @@ class View3D(QWidget):
         self.cut_bar.sync()
         self.cut_bar.setVisible(self.cut is not None)
         self._place_cut_bar()
+        if getattr(self, "nav_bar", None) is not None:
+            self.nav_bar.place()         # it stands above the cut bar
         self.cut_changed.emit()
 
     def _place_cut_bar(self):

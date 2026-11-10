@@ -40,21 +40,21 @@ def test_3d_bar_zooms_pans_turns_and_focuses(app):
     view.fit()
     bar = viewnav.attach_3d(view)
     dist = view.distance
-    bar.buttons["zoom_in"].click()
+    bar.actions["zoom_in"].trigger()
     assert view.distance < dist and view.user_moved
     target = list(view.target)
     viewnav.pan_3d(view, 1, 0)
     assert view.target != target
     assert "right" not in bar.buttons and bar.buttons["hand"].isCheckable()
     yaw = view.yaw
-    bar.buttons["orbit_left"].click()
+    bar.actions["orbit_left"].trigger()
     assert view.yaw != yaw
     view.set_highlight_mesh(far)                # the far part selected
-    bar.buttons["focus"].click()
+    bar.actions["focus"].trigger()
     assert abs(view.target[0] - 205) < 1.0
     close_up = view.distance
     view.set_highlight_mesh([])
-    bar.buttons["focus"].click()                # nothing: the whole model
+    bar.actions["focus"].trigger()                # nothing: the whole model
     assert view.distance > 5 * close_up         # both boxes in frame
     assert 0 < view.target[0] < 200
 
@@ -68,9 +68,10 @@ def test_3d_bar_toggles_the_platform_stage(app):
         view = View3D()
         view.set_stage(False)
         bar = viewnav.attach_3d(view)
-        button = bar.buttons["stage"]
+        button = bar.actions["stage"]           # in View settings
+        assert button in bar.buttons["display"].menu().actions()
         assert not button.isChecked()
-        button.click()
+        button.trigger()
         assert view.stage and button.isChecked()
         view.set_stage(False)                   # the menu, say
         assert not button.isChecked()
@@ -81,7 +82,7 @@ def test_3d_bar_toggles_the_platform_stage(app):
             settings.setValue("render_stage", saved)
 
 
-def test_3d_bar_sits_top_right_and_hides_for_a_pick(app):
+def test_3d_bar_sits_bottom_centre_and_hides_for_a_pick(app):
     from khervecad.view3d import View3D
     view = View3D()
     view.resize(640, 420)
@@ -90,7 +91,9 @@ def test_3d_bar_sits_top_right_and_hides_for_a_pick(app):
     view.resize(800, 500)
     app.processEvents()
     geo = bar.geometry()
-    assert geo.right() <= 800 and geo.right() > 800 - 30 and geo.top() < 30
+    assert abs(geo.center().x() - 400) <= 2 and geo.bottom() > 500 - 30
+    # six buttons, not nineteen: the rest are under the arrows
+    assert list(bar.buttons) == ["orientation", "fit", "hand", "display"]
     view.start_pick(lambda _d: None, banner="pick")
     assert bar.isHidden()
     view.cancel_pick()
@@ -98,35 +101,44 @@ def test_3d_bar_sits_top_right_and_hides_for_a_pick(app):
     view.close()
 
 
-def test_3d_bar_carries_exploded_view_and_cut_through(app):
-    """Both switches on the 3D view's own bar, every option under the
-    arrow — the View menu's very actions, so the two always agree."""
+def test_exploded_view_and_cut_through_left_the_3d_bar(app):
+    """2026-11-10, the user: off the view's bar — they are the ribbon's
+    (and the View menu's)."""
+    from khervecad import toolbar_style
     from khervecad.mainwindow import MainWindow
     win = MainWindow()
     try:
-        win.model.add_node("cube")
-        win._refresh_preview()
         bar = win.view3d.nav_bar
-        explode, cut = bar.buttons["explode"], bar.buttons["cut"]
-        assert explode.menu().actions() == win._explode_menu.actions()
-        assert cut.menu().actions() == win._cut_menu.actions()
-        explode.click()
-        assert win.explode_state()["on"] and win._explode_act.isChecked()
-        win.set_explode(False)                  # the menu, say
-        assert not explode.isChecked()
-        cut.click()
-        assert win.view3d.cut_state() is not None and win._cut_act.isChecked()
-        # positions are every tenth, in the menu's Where submenu
-        quarter = next(a for a in win._cut_positions.actions()
-                       if abs(a.data() - 0.3) < 1e-9)
-        where = next(a.menu() for a in cut.menu().actions()
-                     if a.menu() is not None and "Where" in a.text())
-        assert quarter in where.actions()
-        quarter.trigger()
-        assert abs(win.view3d.cut_state()["position"] - 0.3) < 1e-6
-        assert quarter.isChecked()
+        assert "explode" not in bar.buttons and "cut" not in bar.buttons
+        assert set(bar.buttons) == {"wireframe", "orientation", "fit",
+                                    "hand", "show", "display"}
+        assert bar.layout().itemAt(0).widget() is bar.buttons["wireframe"]
+        toolbar_style.apply(win, "SolidWorks")
+        acts = {a for b in win.findChildren(type(bar.buttons["hand"]))
+                for a in [b.defaultAction()] if a is not None}
+        assert win._cut_tool_act in acts                # Evaluate
+        assert win._explode_act in acts or any(
+            a.menu() is win._explode_menu for a in acts)
+        # the bar stands above the Cut Through bar while that shows
+        win.show()
+        win.set_cut(True)
+        app.processEvents()
+        assert bar.geometry().bottom() < win.view3d.cut_bar.y()
         win.set_cut(False)
-        assert not cut.isChecked() and not quarter.isChecked()
+        toolbar_style.apply(win, "KherveCAD")
+    finally:
+        win._dirty = False
+        win.close()
+
+
+def test_hide_show_holds_the_dimensions_planes_axes_and_scale_bar(app):
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        bar = win.view3d.nav_bar
+        assert bar.buttons["show"].menu().actions() == [
+            win._smart_dims_act, win._ref_planes_act, win._axes_act,
+            win._scale_bar_act]
     finally:
         win._dirty = False
         win.close()
@@ -141,9 +153,9 @@ def test_3d_bar_carries_the_display_options_menu(app):
     try:
         bar = win.view3d.nav_bar
         display = bar.buttons["display"]
-        expected = [win._stage_act, win._cavity_act, win._edges_act,
-                   win._scale_bar_act, win._axes_act, win._smooth_act,
-                   win._overlay_act, win._gl_act]
+        expected = [win._stage_act, bar.actions["lighting"],
+                    win._cavity_act, win._edges_act, win._smooth_act,
+                    win._overlay_act, win._gl_act]
         assert display.menu().actions() == expected
         assert win._cavity_act.isChecked()
         win._cavity_act.trigger()               # on by default: switch off
@@ -249,9 +261,13 @@ def test_3d_bar_view_cubes(app):
     from khervecad.mainwindow import MainWindow
     win = MainWindow()
     try:
-        win.view3d.nav_bar.buttons["view_top"].click()
+        bar = win.view3d.nav_bar
+        menu = bar.buttons["orientation"].menu().actions()
+        assert [a.text() for a in menu if not a.isSeparator()][:7] == [
+            "Isometric", "Front", "Back", "Left", "Right", "Top", "Bottom"]
+        bar.actions["view_top"].trigger()
         assert win.view3d.pitch > 80
-        win.view3d.nav_bar.buttons["view_front"].click()
+        bar.actions["view_front"].trigger()
         assert win.view3d.yaw == win.view3d.VIEWS["Front"][0]
     finally:
         win.close()
@@ -294,12 +310,12 @@ def test_the_3d_bar_shows_and_hides_the_lighting_panel(app):
     view.resize(640, 420)
     view.show()
     bar = viewnav.attach_3d(view)
-    button = bar.buttons["lighting"]
+    button = bar.actions["lighting"]
     assert button.isCheckable() and button.isChecked()
     assert view.lighting_bar.isVisible()
-    button.click()                                  # hide
+    button.trigger()                                # hide
     assert not view.lighting_bar.isVisible() and not view.lighting_wanted
-    button.click()                                  # back
+    button.trigger()                                # back
     assert view.lighting_bar.isVisible()
     view.close()
 

@@ -1550,6 +1550,10 @@ def run_mcp(win, params):
         sc.set_value(model, cont, int(params["index"]), params["value"])
     elif action == "auto":
         out["added"] = sc.auto_constrain(model, cont)
+    elif action == "face_reference":
+        # a face of the part as a line of this sketch (face_dim)
+        from . import face_dim
+        out.update(face_dim.run_mcp(win, cont, params))
     elif action != "list" and action != "solve":
         raise ValueError("Unknown action %r." % action)
     report = sc.solve(cont, write=False)

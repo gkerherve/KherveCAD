@@ -680,8 +680,9 @@ def test_smart_dimensions_hide_and_show_from_both_bars(window):
     act = window._smart_dims_act
     assert act.isChecked() and window.scene.show_sketch_dims
     b2 = window.view2d.nav_bar.buttons["dims"]
-    b3 = window.view3d.nav_bar.buttons["smart_dims"]
-    b3.click()
+    b3 = window.view3d.nav_bar.actions["smart_dims"]   # Hide / show
+    assert b3 is act
+    b3.trigger()
     assert not act.isChecked()
     assert window.scene.show_sketch_dims is False
     from PyQt5.QtGui import QImage, QPainter

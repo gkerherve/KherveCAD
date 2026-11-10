@@ -323,5 +323,6 @@ def style_nav(win, style):
     bar = getattr(win.view3d, "nav_bar", None)
     if bar is None:
         return
-    bar.anchor = "bottom-centre" if style == "Fusion" else "top-right"
+    # (every style since 2026-11-10, the user: along the foot, centred)
+    bar.anchor = "bottom-centre"
     bar.place()

@@ -53,13 +53,11 @@ def test_solidworks_is_the_default_style(app, monkeypatch):
     assert toolbar_style.saved() == "SolidWorks"
 
 
-def test_fusion_puts_the_3d_nav_bar_bottom_centre(window, app):
-    toolbar_style.apply(window, "Fusion")
-    app.processEvents()
-    bar = window.view3d.nav_bar
-    assert bar.anchor == "bottom-centre"
-    toolbar_style.apply(window, "KherveCAD")
-    assert bar.anchor == "top-right"
+def test_the_3d_nav_bar_is_bottom_centre_in_every_style(window, app):
+    for style in ("Fusion", "SolidWorks", "KherveCAD"):
+        toolbar_style.apply(window, style)
+        app.processEvents()
+        assert window.view3d.nav_bar.anchor == "bottom-centre"
 
 
 def test_classic_has_no_ribbon(window):

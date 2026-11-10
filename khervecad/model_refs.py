@@ -42,6 +42,7 @@ ANGLE_TOL = math.radians(1.0)
 SAME = 1e-6
 
 _BUSY = False
+_AGAIN = False
 #: {container id: the outline last seen} — an on-edge reference follows
 #: only an edge that WAS on the model's outline (the user's block corner,
 #: drawn on a line 16 mm in from the plate's edge, was moved onto the
@@ -105,7 +106,9 @@ def plan(container, root):
 
 
 def _has_refs(container, root):
-    from . import sketch_constraints as sc, sketch_section
+    from . import plane_refs, sketch_constraints as sc, sketch_section
+    if plane_refs.has_refs(container):
+        return True
     if plan(container, root) is None:
         return False
     rows = sc.rows(container)
@@ -299,9 +302,14 @@ def refresh_container(window, container):
     True when anything moved."""
     from . import sketch_constraints as sc
     rows = sc.rows(container)
-    refs = [r for r in rows if r.get("kind") == "on_edge" or
-            (r.get("kind") == "fix" and r.get("model"))]
-    moved = False
+    from . import plane_refs
+    # (a sketch on a plane THROUGH the part: each reference follows the
+    # section of the feature it sits on — plane_refs)
+    moved = plane_refs.refresh(window, container)
+    rows = sc.rows(container)
+    refs = [r for r in rows if plane_refs.OWNER not in r and (
+        r.get("kind") == "on_edge" or
+        (r.get("kind") == "fix" and r.get("model")))]
     if refs:
         segs = outline(window, container)
         prev = _LAST.get(container.id)
@@ -411,7 +419,8 @@ def follow_references(window, cont):
     import numpy as np
     from . import sketch_constraints as sc, sketch_section
     refs = [c for c in cont.children
-            if c.params.get("ref_source") or c.params.get("ref_world")]
+            if c.params.get("ref_source") or c.params.get("ref_world")
+            or c.params.get("ref_face")]
     if not refs:
         return False
     inv = np.linalg.inv(sketch_matrix(window, cont))
@@ -422,6 +431,9 @@ def follow_references(window, cont):
         world = None
         if node.params.get("ref_source"):
             world = _source_world(window, node.params["ref_source"])
+        elif node.params.get("ref_face"):
+            from . import face_dim        # a face: found again
+            world = face_dim.world(window, cont, node)
         else:
             if verts is None:
                 tris = sketch_section.built_before(window, cont)
@@ -537,10 +549,24 @@ def follow(window, group):
 
 
 def refresh(window):
-    """Every sketch's model references, after a model edit."""
-    global _BUSY
+    """Every sketch's model references, after a model edit. A sketch it
+    moves is re-solved at once, and that may move the part again (a
+    centred rectangle re-centring) while this pass is still running: the
+    pass is then run once more, so what follows sees the part as it
+    ended."""
+    global _BUSY, _AGAIN
     if _BUSY:
+        _AGAIN = True
         return
+    for _turn in range(3):
+        _AGAIN = False
+        _refresh_once(window)
+        if not _AGAIN:
+            break
+
+
+def _refresh_once(window):
+    global _BUSY
     _BUSY = True
     try:
         root = window._render_scope()[0]
@@ -554,7 +580,7 @@ def refresh(window):
                     traceback.print_exc()
         for node in list(root.walk()):
             if any(c.params.get("ref_source") or c.params.get("ref_world")
-                   for c in node.children):
+                   or c.params.get("ref_face") for c in node.children):
                 try:
                     follow_references(window, node)
                 except Exception:          # never break an edit
@@ -590,6 +616,10 @@ def adopt_container(window, container):
         segs0 = None
     if segs0:
         _LAST[container.id] = segs0        # what later edits follow from
+    else:
+        # no face at this plane: it cuts through the part
+        from . import plane_refs
+        return n + plane_refs.adopt(window, container)
     rows = sc.rows(container)
     plain = [r for r in rows if r.get("kind") == "fix" and
              not r.get("model") and r.get("at")]
@@ -640,6 +670,12 @@ def adopt(window):
             if node.children and node.params.get("constraints"):
                 if plan(node, root) is None:
                     n += _repair(node)
+                    try:
+                        from . import plane_refs
+                        n += plane_refs.adopt(window, node)
+                    except Exception:
+                        import traceback
+                        traceback.print_exc()
                     continue
                 try:
                     n += adopt_container(window, node)

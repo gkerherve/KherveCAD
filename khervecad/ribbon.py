@@ -587,7 +587,16 @@ def _panel_actions(win, key):
     # analyse: the measure tool of the vertical bar, the three checks
     # and a section (Cut Through)
     measure = [a for a in win._tool_group.actions() if a.data() == MEASURE]
-    return title, measure + analysis_actions(win) + [win._cut_tool_act]
+    # ... Cut Through and Exploded View: the 3D view's bar no longer
+    # carries them (2026-11-10, the user: "inside the ribbon")
+    more = [win._cut_tool_act]
+    explode = getattr(win, "_explode_act", None)
+    if explode is not None:
+        if explode.property("kc_paint") != "explode":
+            explode.setProperty("kc_paint", "explode")
+            explode.setProperty("kc_painted", None)
+        more.append(explode)
+    return title, measure + analysis_actions(win) + more
 
 
 def short_name(text):
@@ -689,6 +698,9 @@ class Ribbon(QWidget):
                 tab_row.addWidget(b)
             tab_row.addWidget(self._workspace_button())
         tab_row.addWidget(self.tabs)
+        # which tabs show: a right-click on them, or this ⋯ (ribbon_tabs)
+        from . import ribbon_tabs
+        tab_row.addWidget(ribbon_tabs.install(self))
         # the command search, after the last tab (ribbon_search.py)
         from .ribbon_search import SearchBox
         self.search = SearchBox(self)
@@ -715,6 +727,9 @@ class Ribbon(QWidget):
                 index = keys.index(TABS[index][0])
             except (TypeError, ValueError):
                 index = 0
+        if not self.tabs.isTabVisible(index):     # hidden since: the first
+            index = next((i for i in range(self.tabs.count())
+                          if self.tabs.isTabVisible(i)), 0)
         self.tabs.setCurrentIndex(index)
         self.stack.setCurrentIndex(index)
         self.tabs.currentChanged.connect(self._tab_changed)
@@ -732,6 +747,8 @@ class Ribbon(QWidget):
 
     # ------------------------------------------------------------ tabs
     def _tab_changed(self, index):
+        from . import ribbon_tabs
+        ribbon_tabs.reveal(self, index)      # opened by a command
         self.stack.setCurrentIndex(index)
         if 0 <= index < len(self.order):
             QSettings(*_SETTINGS).setValue(TAB_KEY, self.order[index][0])

@@ -225,6 +225,56 @@ def whole_face(group, own, others):
     return segs or None
 
 
+def feature_points(window, group):
+    """[(x, y, kind)] the centre, corners and edge middles of every
+    earlier FEATURE's own face lying in *group*'s plane (2026-11-10, the
+    user: sketching on a boss's end, flush with the base under it, "I
+    cannot access the centre of that plane ... somehow it is focused on
+    another centre"). The face a sketch stands on is the whole flat
+    region — base and boss together — and its one centre is the middle
+    of the two; SolidWorks offers each face's own. A face in several
+    islands gives each island's centre."""
+    try:
+        import manifold3d as m
+    except ImportError:                              # pragma: no cover
+        return []
+    from . import face_owner
+    out = []
+    for node in face_owner._before(window, group):
+        try:
+            tris = _face_triangles(group, face_owner._world(window, node))
+        except Exception:
+            continue
+        if not tris:
+            continue
+        try:
+            cs = m.CrossSection([[tuple(p) for p in t] for t in tris],
+                                m.FillRule.Positive).simplify(1e-4)
+            islands = cs.decompose()
+        except Exception:
+            continue
+        for island in islands:
+            a = cx = cy = 0.0
+            segs = []
+            for poly in island.to_polygons():      # holes run clockwise
+                pts = [(round(float(x), 4) + 0.0, round(float(y), 4) + 0.0)
+                       for x, y in poly]
+                for i, p in enumerate(pts):
+                    q = pts[(i + 1) % len(pts)]
+                    c = p[0] * q[1] - q[0] * p[1]
+                    a += c
+                    cx += (p[0] + q[0]) * c
+                    cy += (p[1] + q[1]) * c
+                    if p != q:
+                        segs.append((p, q))
+            if abs(a) < 1e-9:
+                continue
+            out.append((round(cx / (3 * a), 6) + 0.0,
+                        round(cy / (3 * a), 6) + 0.0, "face centre"))
+            out += snap_points(segs)
+    return out
+
+
 def show(window, group, part):
     """Hand the face's outline to the 2D view for *group*'s sketch: the
     whole face, every part lying in it (`whole_face`)."""
@@ -251,6 +301,18 @@ def show(window, group, part):
     middle = centre_of(segs)
     if middle is not None:
         points.append((middle[0], middle[1], "face centre"))
+    try:
+        # ... and of each FEATURE's own face in this plane (the user: a
+        # boss flush with the base — only the middle of the two together
+        # was offered, never the boss's own)
+        have = {(round(x, 3), round(y, 3), k) for x, y, k in points}
+        for q in feature_points(window, group):
+            if (round(q[0], 3), round(q[1], 3), q[2]) not in have:
+                have.add((round(q[0], 3), round(q[1], 3), q[2]))
+                points.append(q)
+    except Exception:                        # never stop the sketch
+        import traceback
+        traceback.print_exc()
     try:
         points += sketch_points(group, part)
     except Exception:                        # never stop the sketch

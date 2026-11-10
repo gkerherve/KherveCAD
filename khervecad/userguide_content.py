@@ -384,9 +384,13 @@ everything.</p>
 middle-drag</b> pans, the <b>wheel</b> zooms and a <b>double-click</b>
 frames the whole model. The floating bar at the top left sets
 <b>brightness</b> and <b>contrast</b> (&#x27F2; resets them) and has
-<b>Redraw</b> (&#x27F3;). The bar at the top right turns the model,
-pans, zooms, frames the selected part (<b>Focus</b>) or the whole model
-(<b>Fit all</b>). The label at the bottom says what you are
+<b>Redraw</b> (&#x27F3;). The bar along the foot of the view holds, from
+the left: <b>Wireframe</b>, <b>View orientation</b> (the cube: a click
+is Isometric, its arrow lists Front, Back, Left, Right, Top, Bottom),
+<b>Zoom to fit</b> (its arrow: Zoom to selection, Zoom in, Zoom out),
+the <b>Pan</b> hand, <b>Hide / show</b> (Smart Dimensions, planes, axes,
+scale bar) and <b>View settings</b> (shadow, lighting panel, edges&hellip;).
+The label at the bottom says what you are
 looking at: <i>built-in preview</i> (instant, approximate) or
 <i>OpenSCAD</i> (exact), and how many parts are exact already.</p>
 {figure("view3d_plate", "The 3D preview with the lighting bar.")}
@@ -475,8 +479,8 @@ is a way of <i>looking</i>: the model itself does not move.</p>
 <ul>
 <li><b>View &rsaquo; Exploded View &rsaquo; Explode the Assembly</b>
 {K("Ctrl+Shift+X")} switches it on and off; {K("Ctrl+F")} frames the
-spread-out parts. The same switch is on the bar in the top-right corner
-of the 3D view, with every option under its arrow.</li>
+spread-out parts. The same switch is on the ribbon's <b>Evaluate</b>
+tab, beside Cut through.</li>
 <li><b>What comes apart</b>: with a part selected, the assembly it
 belongs to &mdash; select one leaf of a hinge and the whole hinge comes
 apart, while everything else stays put and the selection follows its
@@ -505,8 +509,8 @@ exploded view it is a way of <i>looking</i>: the model, its exports and
 its drawings stay whole.</p>
 <ul>
 <li>Click the <b>scissors</b> on the toolbar, or <b>View &rsaquo; Cut
-Through</b> {K("Ctrl+Alt+X")}, or the scissors on the bar in the
-top-right corner of the 3D view &mdash; its arrow lists every option:
+Through</b> {K("Ctrl+Alt+X")}, or the scissors on the ribbon's
+<b>Evaluate</b> tab. The View menu lists every option:
 the axis, where the cut goes (a quarter, the middle, three quarters)
 and which half stays.</li>
 <li>A bar appears along the bottom of the 3D view: pick <b>X</b>,
@@ -989,9 +993,9 @@ trees built this way &mdash; insert one and look at its tree to see how.</p>
 <tr><td>Zoom</td><td>mouse wheel</td></tr>
 <tr><td>Frame everything</td><td>double-click, {K("Ctrl+F")} or the Fit
 3D button</td></tr>
-<tr><td>Buttons</td><td>the bar in the top-right corner: turn left /
-right, pan, zoom in / out (hold to repeat), <b>Focus</b> on the selected
-part, <b>Fit all</b></td></tr>
+<tr><td>Buttons</td><td>the bar along the foot of the view: view
+orientation (the cube), <b>Zoom to fit</b> with Zoom to selection under
+its arrow, the pan hand</td></tr>
 <tr><td>Standard views</td><td>View &rsaquo; 3D Camera: Isometric, Top,
 Bottom, Front, Back, Left, Right</td></tr>
 </table>

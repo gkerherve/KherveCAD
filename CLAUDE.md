@@ -3696,13 +3696,83 @@ into a new module and import.
                        (`sketch_dims3d._selected_sketches`), a switched-off
                        feature's are hidden. `tool_panel.eventFilter` no
                        longer raises while the window is taken down (the
-                       crash at exit of the drag tests). STILL OPEN: a
-                       sketch on a PLANE through the part (the revolve's
-                       profile) pinned to the section's corners does not
-                       follow the part — `model_refs.outline` only knows
-                       faces; a first try (section fallback + adopt on
-                       leaving the sketch) matched the wrong edge and was
-                       taken out.
+                       crash at exit of the drag tests). (A sketch on a
+                       PLANE through the part did not follow it: fixed the
+                       same day, plane_refs.py below.)
+  - `plane_refs.py`  — sketches on a PLANE through the part follow the
+                       part (2026-11-10, the user's cone on a pin). There
+                       is no face there: the points were snapped to the
+                       part's SECTION, and the whole section cannot be
+                       matched by geometry (a boss 10 mm taller: the edge
+                       nearest the pin's old top is the top of the feature
+                       under it — the first try's "wrong edge"). So each
+                       reference row takes an ``owner`` (feature_order, as
+                       face_owner) — the latest earlier feature whose OWN
+                       section the point sits on — and follows that
+                       section alone: a corner (`model` True + dirs), the
+                       middle of an edge ("mid"), elsewhere on an edge
+                       ("on": its foot, so it rises with a top), or an
+                       on_edge row. Edges are matched by DIRECTION (section
+                       segments run solid-on-the-left), never a top for a
+                       bottom. `adopt` (scope open, sketch left; from
+                       model_refs.adopt / adopt_container when no face) —
+                       a point on no single feature's section stays as
+                       drawn. `model_refs.refresh` now runs AGAIN when a
+                       model edit arrived while it was running (a sketch it
+                       re-solved, a centred rectangle re-centring): the
+                       follow saw a half-way part. Tests:
+                       test_plane_refs.py.
+  - `face_dim.py`    — Smart Dimension to a FACE (same day, the user:
+                       "fix the distance between one face to another
+                       face ... not possible"). In 3D a click on a flat
+                       face away from its edges (`Constrain3D.model_face`,
+                       tinted under the cursor) is: the SKETCH LINE that
+                       made it (in the face's plane, sketch edge-on to it —
+                       so two faces of two features are their two sketch
+                       lines, the later sketch driven), else a fixed
+                       construction "Reference face" line where the face
+                       meets the sketch plane (`ref_face` [point, normal] +
+                       `ref_owner`; `world` finds the face again in
+                       model_refs.follow_references). A face parallel to
+                       the sketch is refused (that is the extrude's depth);
+                       two faces no sketch made cannot be driven (Measure).
+                       The face may be clicked first (`face_first`). MCP
+                       sketch_constraint `face_reference`. Still missing
+                       against SolidWorks' Smart Dimension: horizontal /
+                       vertical by where the number is placed, arc length,
+                       a doubled (diameter) dimension about a centerline,
+                       driven dimensions, min / max arc conditions.
+  - Face centres per feature (same day, the user: sketching on a
+                       boss's end flush with the base, "I cannot access the
+                       centre ... focused on another centre"): the face a
+                       sketch stands on is the whole flat region, base and
+                       boss together, with ONE centre. `face_outline.
+                       feature_points` adds the centre, corners and edge
+                       middles of every earlier feature's OWN face in that
+                       plane, an island each (face_owner._world per
+                       feature). Tests: test_feature_face_centres.py.
+  - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
+                       toolbar (same day, the user: bottom centre, fewer
+                       buttons, wireframe on the left, no Exploded View /
+                       Cut Through): six buttons along the foot, centred in
+                       EVERY style — Wireframe | View orientation ▾ (cube:
+                       click = Isometric, arrow = the seven views + small
+                       turns) | Zoom to fit ▾ (Zoom to selection, in, out)
+                       | Pan | Hide / show ▾ (Smart Dimensions, planes,
+                       axes, scale bar) | View settings ▾ (stage, lighting
+                       panel, cavity, edges, smooth, overlay, OpenGL).
+                       Menu entries are in `bar.actions` by key, buttons in
+                       `bar.buttons`; it stands above the CutBar. Exploded
+                       View joined Cut Through on the Evaluate tab
+                       (ribbon "analyse" panel).
+  - `ribbon_tabs.py` — which ribbon tabs show (same day, the user: "way
+                       too many"; SolidWorks shows ~6 and hides the rest
+                       behind a right-click ▸ Tabs): Sculpt, Character,
+                       Utilities and Builders are off until ticked — right-
+                       click a tab or the ⋯ after the last one; QSettings
+                       `ribbon/hidden_tabs` ("none" = all, the tests'). A
+                       command of a hidden tab (search box, show_tab) shows
+                       it for the session (`reveal`).
   - `browser_tabs.py` — Variables and Code tabs start hidden (BROWSER
                        caption, the ⋯ corner button or a right-click on
                        the tab bar shows them; QSettings `browser/hidden`,

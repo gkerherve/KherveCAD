@@ -3,7 +3,7 @@
 Both views could only be steered with the mouse — wheel to zoom,
 middle-drag to pan — and a part that did not sit near the origin was
 easy to lose. Each view now carries a small bar in its top-right
-corner: pan arrows, zoom in / out (hold to repeat), **Focus** (frame
+corner (the 3D view's is viewbar3d.py, along its foot): pan arrows, zoom in / out (hold to repeat), **Focus** (frame
 the selected part, or the whole model when nothing is selected) and
 **Fit all**; the 3D bar also turns the camera left / right.
 
@@ -119,8 +119,12 @@ class NavBar(QWidget):
         area = self._area()
         if getattr(self, "anchor", "top-right") == "bottom-centre":
             # Fusion's navigation bar: centred along the canvas' foot
-            self.move(area.left() + (area.width() - self.width()) // 2,
-                      area.bottom() - self.height() - 10)
+            # (above the Cut Through bar while that one shows)
+            y = area.bottom() - self.height() - 10
+            cut = getattr(self._host, "cut_bar", None)
+            if cut is not None and not cut.isHidden():
+                y = min(y, cut.y() - self.height() - 6)
+            self.move(area.left() + (area.width() - self.width()) // 2, y)
         else:
             self.move(area.right() - self.width() - 8, area.top() + 8)
         self.raise_()
@@ -560,62 +564,10 @@ class HandPan3D(HandPan):
 
 
 def attach_3d(view):
-    view.hand_pan = HandPan3D(view)
-    bar = NavBar(view, [
-        ("orbit_left", "mdi.rotate-left", "↺",
-         "nav3d_orbit_left",
-         lambda: orbit_3d(view, -ORBIT_STEP), True),
-        ("orbit_right", "mdi.rotate-right", "↻", "nav3d_orbit_right",
-         lambda: orbit_3d(view, ORBIT_STEP), True),
-        None,
-        # the hand replaces the four pan arrows (2026-10-19, the user:
-        # "useless because we can use this hand")
-        ("hand", "mdi6.hand-back-right-outline", "✋", "nav3d_hand",
-         lambda: view.hand_pan.set_on(bar.buttons["hand"].isChecked()),
-         False),
-        None,
-        ("zoom_in", "mdi.magnify-plus-outline", "+",
-         "nav3d_zoom_in",
-         lambda: zoom_3d(view, ZOOM_STEP), True),
-        ("zoom_out", "mdi.magnify-minus-outline", "−", "nav3d_zoom_out",
-         lambda: zoom_3d(view, 1 / ZOOM_STEP), True),
-        None,
-        ("focus", "mdi.image-filter-center-focus", "◎",
-         "nav3d_focus", lambda: focus_3d(view), False),
-        ("fit", "mdi.arrow-expand-all", "⤢",
-         "nav3d_fit",
-         lambda: (view.fit(), view.update()), False),
-        None,
-        ("stage", "mdi.box-shadow", "◐",
-         "nav3d_stage",
-         lambda: view.set_stage(not view.stage), False),
-        ("lighting", "mdi.brightness-6", "☀", "nav3d_lighting",
-         lambda: view.set_lighting_bar(
-             bar.buttons["lighting"].isChecked()), False),
-    ])
-    # the button shows the stage's state, whoever switched it
-    stage = bar.buttons["stage"]
-    stage.setCheckable(True)
-    stage.setChecked(bool(getattr(view, "stage", False)))
-    bar.buttons["hand"].setCheckable(True)
-    light = bar.buttons["lighting"]
-    light.setCheckable(True)
-    light.setChecked(bool(getattr(view, "lighting_wanted", True)))
-    view.stage_toggled.connect(stage.setChecked)
-    layout = bar.layout()
-    layout.insertWidget(0, _vline(bar))
-    for face, name, key in reversed((("iso", "Isometric", "nav3d_iso"),
-                                     ("top", "Top", "nav3d_top"),
-                                     ("front", "Front", "nav3d_front"),
-                                     ("side", "Right", "nav3d_side"))):
-        button = QToolButton(bar)
-        button.setIcon(cube_icon(face))
-        set_tip(button, key)
-        button.clicked.connect(lambda _=False, n=name: view_click(view, n))
-        layout.insertWidget(0, button)
-        bar.buttons["view_" + face] = button
-    view.nav_bar = bar
-    return bar
+    """The 3D view's bar (viewbar3d.py): a few buttons along the foot of
+    the view, the rest under their arrows."""
+    from . import viewbar3d
+    return viewbar3d.attach(view)
 
 
 #: a repeated click turns the view this much (positive = clockwise as

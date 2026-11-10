@@ -166,10 +166,30 @@ NAV_TIPS = {
          "Click Focus — the camera moves to it."],
         "Good for inspecting a small part inside a big assembly."),
     "nav3d_fit": (
-        "Fit all",
+        "Zoom to fit",
         "Frames the whole model (surface and shadow included when "
-        "they are on).",
-        ["Click Fit all, press Ctrl+F, or double-click the view."],
+        "they are on). The arrow beside it holds the other zooms.",
+        ["Click to frame everything (or press Ctrl+F, or double-click "
+         "the view).",
+         "Click the small arrow for Zoom to selection — it frames the "
+         "selected part — Zoom in and Zoom out."],
+        "The mouse wheel zooms at any time."),
+    "nav3d_orientation": (
+        "View orientation",
+        "Looks at the model from a standard side, as SolidWorks' view "
+        "cube does. Only the camera moves.",
+        ["Click the cube for the Isometric view; click again for the "
+         "next quarter turn.",
+         "Click the small arrow and pick Front, Back, Left, Right, Top "
+         "or Bottom, or a small turn left or right."],
+        "Drag in the view to turn it freely."),
+    "nav3d_show": (
+        "Hide / show items",
+        "What is drawn over the model besides the model itself. None of "
+        "it changes the part.",
+        ["Click to open the list and tick what you want to see:",
+         "Smart Dimensions, the Front / Top / Right planes, the origin "
+         "axes and the scale bar."],
         None),
     "nav3d_stage": (
         "Surface & shadow",
@@ -206,13 +226,13 @@ NAV_TIPS = {
         "Orbit while it is cut: the red face is the section, the rest "
         "is the inside of the part."),
     "nav3d_display": (
-        "Display options",
+        "View settings",
         "How the 3D picture is drawn — the same switches as the View "
         "menu. None of them changes the model.",
         ["Click to open the list and tick what you want:",
-         "Surface & shadow, cavity shading (dark creases), edge lines, "
-         "scale bar, smooth shading, reference-image overlay and "
-         "hardware (OpenGL) rendering."],
+         "Platform & shadow, the lighting panel, cavity shading (dark "
+         "creases), edge lines, smooth shading, reference-image overlay "
+         "and hardware (OpenGL) rendering."],
         "Turn hardware rendering off if the view ever looks wrong on "
-        "an old graphics card."),
+        "your graphics card."),
 }

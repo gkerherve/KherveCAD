@@ -2170,46 +2170,17 @@ class MainWindow(QMainWindow):
 
     # --------------------------------------------------- cut through
     def _add_view_toggles(self):
-        """Exploded View and Cut Through on the 3D view's floating bar:
-        a button that switches each, and an arrow holding every option —
-        the View menu's own actions, so the two always agree."""
+        """The window's own switches on the two views' floating bars
+        (viewnav.add_sketch_controls, viewbar3d.add_window_controls)."""
         from . import viewnav
         viewnav.add_sketch_controls(self, self.view2d.nav_bar)
         bar = getattr(self.view3d, "nav_bar", None)
         if bar is None:
             return
-        explode = viewnav.add_menu_button(
-            bar, "explode", "mdi.cube-unfolded", "✥",
-            "nav3d_explode",
-            self._explode_menu.actions(),
-            lambda on: self.set_explode(bool(on)))
-        explode.setChecked(self._explode["on"])
-        self._explode_act.toggled.connect(explode.setChecked)
-        cut = viewnav.add_menu_button(
-            bar, "cut", "mdi.content-cut", "✂",
-            "nav3d_cut",
-            self._cut_menu.actions(), lambda on: self.set_cut(bool(on)))
-        cut.setChecked(self.view3d.cut_state() is not None)
-        self.view3d.cut_changed.connect(
-            lambda *_: cut.setChecked(self.view3d.cut_state() is not None))
-        viewnav.add_toggle_button(
-            bar, "smart_dims", "mdi.ruler", "↔", "smart_dims_bar",
-            self._smart_dims_act)
-        from . import wireframe            # edges + every sketch's lines
-        viewnav.add_toggle_button(
-            bar, "wireframe", "mdi.cube-outline", "▢", "wireframe_bar",
-            wireframe.action(self))
-        planes = getattr(self, "_ref_planes_act", None)
-        if planes is not None:            # Front / Top / Right on or off
-            viewnav.add_toggle_button(
-                bar, "planes", "mdi.layers-triple-outline", "▱",
-                "planes_bar", planes)
-        viewnav.add_options_button(
-            bar, "display", "mdi.eye-settings-outline", "☰",
-            "nav3d_display",
-            [self._stage_act, self._cavity_act, self._edges_act,
-             self._scale_bar_act, self._axes_act, self._smooth_act,
-             self._overlay_act, self._gl_act])
+        # (Exploded View and Cut Through are on the ribbon and in the
+        # View menu: off this bar since 2026-11-10, the user)
+        from . import viewbar3d
+        viewbar3d.add_window_controls(self)
 
     def _build_cut_menu(self, view_menu):
         """View ▸ Cut Through (cut_ui.py)."""

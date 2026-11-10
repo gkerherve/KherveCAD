@@ -1682,13 +1682,22 @@ TOOLS = [
             "status + degrees of freedom), add, remove (index), "
             "set_value (index, value), auto (add the H / V / coincident "
             "constraints the drawing already looks like), solve. A "
-            "constraint that cannot hold with the others is refused."
+            "constraint that cannot hold with the others is refused. "
+            "face_reference: a flat FACE of the part (world point on it, "
+            "from probe_surface; optional normal) becomes a fixed "
+            "construction line of this sketch where the face meets the "
+            "sketch plane — the reply's `reference` is its ref; use it "
+            "in point_line / parallel / angle to dimension a sketch "
+            "shape to that face. The line follows the face when the "
+            "part changes."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["list", "add", "remove", "set_value",
-                                "auto", "solve"]},
+                                "auto", "solve", "face_reference"]},
             "node_id": {"type": "integer"},
+            "point": {"type": "array", "items": {"type": "number"}},
+            "normal": {"type": "array", "items": {"type": "number"}},
             "kind": {"type": "string"},
             "refs": {"type": "array", "items": {"type": "string"}},
             "value": {"type": ["number", "string"]},

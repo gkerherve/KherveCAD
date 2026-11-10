@@ -380,6 +380,48 @@ class Constrain3D:
                 return "point", tuple(p)
         return "line", (tuple(a), tuple(b))
 
+    def model_face(self, x, y):
+        """The flat face of the part under the screen point, away from
+        its edges: {pos, dir, tris} in world, or None (face_dim)."""
+        try:
+            desc, _key = self.view._pick_at(x, y)
+        except Exception:
+            return None
+        if not desc or desc.get("kind") != "face" or not desc.get("dir"):
+            return None
+        return dict(pos=list(desc["pos"]), dir=list(desc["dir"]),
+                    tris=list(desc.get("tris") or []))
+
+    def _face_pick(self, x, y, parent):
+        """A click on a face for Smart Dimension: the sketch line that
+        made it, else a reference line in *parent*'s sketch. Returns
+        (pick or None, handled) — handled when the click is used up."""
+        from . import face_dim
+        face = self.model_face(x, y)
+        if face is None:
+            return None, False
+        hit = face_dim.sketch_line(self, face)
+        if hit is not None:
+            return hit, False
+        if parent is None:
+            if getattr(self, "face_first", None) is not None:
+                self.face_first = None
+                self._refuse("Neither face was made by a sketch, so no "
+                             "dimension can drive them — use Measure for "
+                             "the distance.")
+                return None, True
+            self.face_first = face           # waits for the sketch's shape
+            self.view.update()
+            self._say("Smart Dimension (3D): now click the shape or the "
+                      "other face to dimension from this face.")
+            return None, True
+        hit = face_dim.reference(self, parent, face)
+        if hit is None:
+            self._refuse("That face lies flat to the sketch: its distance "
+                         "is the extrude's depth, not a sketch dimension.")
+            return None, True
+        return hit, False
+
     def pick_at(self, x, y):
         """The entity under the screen point (x, y), or None."""
         if self.kind == "delete":
@@ -468,8 +510,15 @@ class Constrain3D:
             near = (self.model_near(x, y, parent), parent)
             if not near[0]:
                 edge = self.model_edge(x, y)
-        if edge != getattr(self, "edge_hover", None):
+        face = None
+        if hit is None and edge is None and self.kind == "dimension" \
+                and not (near and near[0]):
+            face = self.model_face(x, y)     # a face: dimensioned to
+        if edge != getattr(self, "edge_hover", None) or \
+                (face or {}).get("pos") != \
+                (getattr(self, "face_hover", None) or {}).get("pos"):
             self.edge_hover = edge
+            self.face_hover = face
             self.view.update()
         if hit != self.hover or near != getattr(self, "model_hover", None):
             self.hover = hit
@@ -643,6 +692,26 @@ class Constrain3D:
                         dict(ref_world=[list(p) for p in pts]))
             except (ValueError, KeyError):
                 hit = None
+            if hit is None and not (not self.picks and parent is None and
+                                    self.model_edge(x, y) is not None):
+                # a FACE of the part (SolidWorks: face to face)
+                try:
+                    hit, used = self._face_pick(x, y, parent)
+                except (ValueError, KeyError):
+                    hit, used = None, False
+                if used:
+                    return None
+        face = getattr(self, "face_first", None)
+        if face is not None and hit is not None and not self.picks:
+            # the face clicked first comes into this shape's sketch
+            from . import face_dim
+            self.face_first = None
+            ref = face_dim.reference(self, hit[0].parent, face)
+            if ref is None:
+                self._refuse("That face lies flat to the sketch: its "
+                             "distance is the extrude's depth.")
+                return None
+            self.picks.append(ref)
         waiting = getattr(self, "model_first", None)
         if waiting is not None and hit is not None and not self.picks:
             # the model's line clicked first: it comes into this sketch
@@ -743,6 +812,20 @@ class Constrain3D:
                     painter.drawLine(QPointF(pts[0][0], pts[0][1]),
                                      QPointF(pts[1][0], pts[1][1]))
 
+        from PyQt5.QtGui import QPolygonF
+        for face, colour in (
+                (getattr(self, "face_hover", None), QColor(0, 190, 255, 70)),
+                (getattr(self, "face_first", None), QColor(230, 120, 20, 90))):
+            if not face:
+                continue
+            painter.setPen(QPen(colour, 1))
+            painter.setBrush(colour)
+            for t in face.get("tris") or ():
+                qs = [project(p) for p in t[:3]]
+                if all(qs):
+                    painter.drawPolygon(QPolygonF(
+                        [QPointF(q[0], q[1]) for q in qs]))
+            painter.setBrush(QColor(0, 0, 0, 0))
         for where, colour in (
                 (getattr(self, "edge_hover", None), QColor(0, 190, 255, 235)),
                 (getattr(self, "model_first", None), QColor(230, 120, 20))):

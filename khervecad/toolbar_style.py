@@ -404,10 +404,12 @@ def apply(win, name: str = None, remember: bool = True):
             # open / save / undo (the user, 2026-10-21)
             tabs = win.ribbon.tabs
             tabs.setShape(QTabBar.RoundedNorth)
-            for w in (tabs, search):
+            # (... and the ⋯ that shows / hides tabs, right after them)
+            more = getattr(win.ribbon, "more_tabs", None)
+            for w in [w for w in (tabs, more, search) if w is not None]:
                 # the tabs on the left, just after Rebuild (the user)
                 at = getattr(win, "_quick_spacer", None) \
-                    if w is tabs else before
+                    if w is not search else before
                 if at is not None and at in bar.actions():
                     win._vibe_keep.add(bar.insertWidget(at, w))
                 elif before is not None:
