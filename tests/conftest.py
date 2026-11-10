@@ -53,6 +53,31 @@ class _TestSettings(_REAL_QSETTINGS):
 
 QtCore.QSettings = _TestSettings
 
+# ONE QApplication for the whole run, held here. Each test module made
+# its own in a fixture (`QApplication.instance() or QApplication([])`),
+# so the only reference was pytest's fixture cache: when that module's
+# fixture was torn down the application was freed while windows still
+# lived, and sip crashed in dealloc_QApplication — a "Python quit
+# unexpectedly" report on the user's Mac after test runs (2026-11-10).
+from PyQt5.QtWidgets import QApplication  # noqa: E402
+
+_QAPP = QApplication.instance() or QApplication([])
+_EXIT_STATUS = [0]
+
+
+def pytest_sessionfinish(session, exitstatus):
+    _EXIT_STATUS[0] = int(exitstatus)
+
+
+def pytest_unconfigure(config):
+    """Leave without Python tearing the Qt objects down one by one (the
+    same crash at interpreter exit): everything is reported by now."""
+    import os
+    import sys
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(_EXIT_STATUS[0])
+
 import pytest
 
 # Fusion is the app's default; the tests were written for the classic
