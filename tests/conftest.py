@@ -16,6 +16,9 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # MainWindow fixtures must not spawn debounced OpenSCAD subprocesses:
 # their finished-callbacks would fire inside later tests' event loops.
 os.environ.setdefault("KHERVECAD_DISABLE_ENGINE", "1")
+# windows start on the Main tab in the tests (the app starts on the
+# Object tab's explorer: treepanel.show_overview)
+os.environ.setdefault("KHERVECAD_START_MAIN", "1")
 # My Library (user_library) must never read or write the user's real
 # ~/Documents/KherveCAD Library from a test
 import tempfile  # noqa: E402

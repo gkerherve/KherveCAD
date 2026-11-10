@@ -3124,6 +3124,22 @@ into a new module and import.
                        (Profiles count, OK); `selection_sketch` outlines a
                        selected sketch's shapes in 3D (a boss buried in the
                        part has no surface for the depth-tested tint).
+  - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
+                       (2026-11-10, the user: "a dimension that comes from a
+                       linear extrude ... a rotation extrude"). A selected
+                       Linear extrude shows its Distance (and Distance 2) as
+                       a dimension along its axis beside the profile, a
+                       selected Rotate extrude its angle as an arc, in
+                       violet chips beside the sketch's blue ones ("Σ 10"
+                       when an expression drives it); a click types a new
+                       value. `dim_link.open_editor` is the one in-place box
+                       for sketch and feature dimensions: Enter keeps, Esc
+                       drops, and a click on ANOTHER dimension while typing
+                       puts its variable in the box (SolidWorks' "= D1@
+                       Boss-Extrude1") — a plain number first becomes a
+                       document variable that drives it (`variable_of`).
+                       While a value is typed every feature in view shows
+                       its dimensions. MCP sketch_constraint `link`.
   - `suppress.py`    — **Suppress / roll back** (2026-10-21, SolidWorks
                        gap list): `params["suppressed"]` switches a node
                        off — a wrapper passes its children through, a

@@ -2109,6 +2109,18 @@ class BuilderPanel(QTabWidget):
         self.object_tab.set_active(node)
         self.setCurrentWidget(self.object_tab)
 
+    def show_overview(self):
+        """The Work tree tab — the explorer of every assembly,
+        sub-assembly and Object — with no Object open: where the app and
+        every opened document start (2026-11-10, the user: it opened
+        straight into one assembly, "so that we can see what we have").
+        KHERVECAD_START_MAIN=1 (the tests) keeps the Main tab."""
+        import os
+        if os.environ.get("KHERVECAD_START_MAIN"):
+            return
+        self.object_tab.set_active(None)
+        self.setCurrentWidget(self.worktree)
+
     def set_history(self, on):
         """Structure / History for both trees (remembered)."""
         from . import tree_history

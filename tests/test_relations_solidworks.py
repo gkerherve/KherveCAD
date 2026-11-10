@@ -131,7 +131,7 @@ def test_a_circle_drawn_on_a_side_middle_stays_in_the_middle(app):
     assert hole.params["y"] == pytest.approx(rect.params["y"], abs=1e-4)
 
 
-def test_a_rectangle_centre_and_a_polygon_side_middle_lock(app):
+def test_a_polygon_side_middle_locks_a_rectangle_centre_does_not(app):
     from khervecad import sketch_touch
     m = DocumentModel()
     m.add_node("rect", dict(x=0, y=0, width=40, height=20))
@@ -142,7 +142,7 @@ def test_a_rectangle_centre_and_a_polygon_side_middle_lock(app):
     sketch_touch.relate(m, c1)
     sketch_touch.relate(m, c2)
     kinds = sorted(r["kind"] for r in sc.rows(m.root))
-    assert kinds == ["coincident", "midpoint"]
+    assert kinds == ["midpoint"]         # a corner rectangle: no centre
     assert any(r["kind"] == "midpoint" and
                r["refs"][1] == sc.ref_of(m.root, tri, "e0")
                for r in sc.rows(m.root))

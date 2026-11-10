@@ -855,33 +855,18 @@ def release(window, pos):
 
 
 def edit(window, rect, cont, index):
-    from PyQt5.QtWidgets import QLineEdit
-    view = window.view3d
-    old = getattr(view, "_dim3d_editor", None)
-    if old is not None:
-        old.deleteLater()
+    """Type a new value in place (dim_link's editor: a click on another
+    dimension meanwhile links this one to it)."""
+    from . import dim_link
+    from .sketch_constrain_ui import _value
     row = sc.rows(cont)[index]
-    box = QLineEdit(str(row.get("value", "")), view)
-    box.setFixedWidth(max(70, int(rect.width()) + 20))
-    box.move(int(rect.x()) - 8, int(rect.y()) - 3)
-    box.selectAll()
-    box.show()
-    box.setFocus()
-    view._dim3d_editor = box
+    view = window.view3d
 
-    def done():
-        if getattr(view, "_dim3d_editor", None) is not box:
-            return
-        view._dim3d_editor = None
-        text = box.text().strip().replace(",", ".")
-        box.deleteLater()
-        from .sketch_constrain_ui import _value
-        value = _value(text)        # "52 - 10" -> 42; variables kept
+    def commit(text):
         try:
-            sc.set_value(window.model, cont, index, value)
-        except (ValueError, KeyError, IndexError) as exc:
-            window.statusBar().showMessage(str(exc), 5000)
-            view.flash("Dimension refused: %s" % exc, 8000)
+            sc.set_value(window.model, cont, index, _value(text))
+        except sc.Conflict as exc:
+            raise ValueError(str(exc))
         view.update()
-    box.editingFinished.connect(done)
-    return box
+    return dim_link.open_editor(window, rect, str(row.get("value", "")),
+                                commit, ("sketch", cont, index))

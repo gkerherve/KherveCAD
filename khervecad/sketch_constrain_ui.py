@@ -1563,6 +1563,8 @@ def run_mcp(win, params):
         sc.set_value(model, cont, int(params["index"]), params["value"])
     elif action == "auto":
         out["added"] = sc.auto_constrain(model, cont)
+    elif action == "link":
+        out.update(_mcp_link(win, cont, params))
     elif action == "face_reference":
         # a face of the part as a line of this sketch (face_dim)
         from . import face_dim
@@ -1586,3 +1588,33 @@ def run_mcp(win, params):
                 for i, n in enumerate(cont.children)
                 if n.type in sc.SHAPES])
     return out
+
+
+def _mcp_link(win, cont, params):
+    """MCP sketch_constraint `link` (dim_link): target follows source."""
+    from . import dim_link
+    model = win.model
+
+    def node(key):
+        n = model.find(int(params[key]))
+        if n is None:
+            raise ValueError("No node %s." % params[key])
+        return n
+    if params.get("feature_id") is not None:
+        target = ("feature", node("feature_id"), params.get("key", "height"))
+    elif params.get("index") is not None:
+        target = ("sketch", cont, int(params["index"]))
+    else:
+        raise ValueError("link needs index (a row of this sketch) or "
+                         "feature_id + key.")
+    if params.get("source_feature_id") is not None:
+        source = ("feature", node("source_feature_id"),
+                  params.get("source_key", "height"))
+    elif params.get("source_index") is not None:
+        holder = node("source_id") if params.get("source_id") is not None \
+            else cont
+        source = ("sketch", holder, int(params["source_index"]))
+    else:
+        raise ValueError("link needs source_index or source_feature_id.")
+    return {"variable": dim_link.link(win, target, source)}
+

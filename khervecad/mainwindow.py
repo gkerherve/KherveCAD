@@ -92,21 +92,30 @@ class MainWindow(QMainWindow):
                     self, painter, project),
             lambda painter, project: sketch_dims3d.paint(self, painter,
                                                          project),
+            # an extrude's depth, a revolve's angle (feature_dims)
+            lambda painter, project: __import__(
+                "khervecad.feature_dims", fromlist=["paint"]).paint(
+                    self, painter, project),
             lambda painter, project: plane_pick.paint(self, painter,
                                                       project),
             # Wireframe (3D toolbar): every sketch as its lines
             lambda painter, project: __import__(
                 "khervecad.wireframe", fromlist=["paint"]).paint(
                     self, painter, project)]
+        from . import dim_link, feature_dims
         self.view3d.click_hooks = [
             lambda pos: plane_pick.press(self, pos),
-            lambda pos: sketch_dims3d.press(self, pos)]
+            lambda pos: dim_link.press(self, pos),     # link while typing
+            lambda pos: sketch_dims3d.press(self, pos),
+            lambda pos: feature_dims.press(self, pos)]
         self.view3d.move_hooks = [
             lambda pos: plane_pick.move(self, pos),
             lambda pos: sketch_dims3d.move(self, pos)]
         self.view3d.release_hooks = [
             lambda pos: plane_pick.release(self, pos),
-            lambda pos: sketch_dims3d.release(self, pos)]
+            lambda pos: dim_link.release(self, pos),
+            lambda pos: sketch_dims3d.release(self, pos),
+            lambda pos: feature_dims.release(self, pos)]
 
         left = QSplitter(Qt.Vertical)
         left.addWidget(self.builder)
@@ -230,6 +239,8 @@ class MainWindow(QMainWindow):
         from . import toolbar_style
         if toolbar_style.saved() != toolbar_style.CLASSIC:
             toolbar_style.apply(self, remember=False)
+        # start on the Object tab's explorer of every assembly and Object
+        self.builder.show_overview()
         self._update_title()
         self._refresh_preview()
         # an installed build looks for a new release once a day
@@ -2455,6 +2466,7 @@ class MainWindow(QMainWindow):
         self._dirty = False
         self._fitted = False
         self.view3d.user_moved = False        # fresh document, frame it
+        self.builder.show_overview()          # the explorer, no Object
         self._update_title()
 
     def new_window(self):
@@ -2581,6 +2593,9 @@ class MainWindow(QMainWindow):
         self._fitted = False
         self.view3d.user_moved = False        # fresh document, frame it
         self._add_recent(path)
+        # the explorer of every assembly and Object, none of them open
+        # (the last document's active Object was kept by NAME)
+        self.builder.show_overview()
         self.view3d.fit()
         self._update_title()
 

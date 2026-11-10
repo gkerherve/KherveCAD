@@ -1698,13 +1698,31 @@ TOOLS = [
             "sketch plane — the reply's `reference` is its ref; use it "
             "in point_line / parallel / angle to dimension a sketch "
             "shape to that face. The line follows the face when the "
-            "part changes."
+            "part changes. "
+            "link: make a dimension FOLLOW another, as SolidWorks' "
+            "= D1@Boss-Extrude1 — the target is this sketch's row "
+            "`index`, or a feature's size (`feature_id` + `key`: an "
+            "extrude's height / height2, a revolve's angle); the source "
+            "is `source_index` (+ `source_id`, the sketch holding it; "
+            "default this one) or `source_feature_id` + `source_key`. "
+            "Both then read one document variable (made from the "
+            "source's value when it was a plain number); the reply "
+            "names it. The user sees an extrude's depth and a revolve's "
+            "angle on the model when the feature is selected."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["list", "add", "remove", "set_value",
                                 "auto", "solve", "face_reference",
-                                "set_driven"]},
+                                "set_driven", "link"]},
+            "feature_id": {"type": "integer"},
+            "key": {"type": "string",
+                    "enum": ["height", "height2", "angle"]},
+            "source_index": {"type": "integer", "minimum": 0},
+            "source_id": {"type": "integer"},
+            "source_feature_id": {"type": "integer"},
+            "source_key": {"type": "string",
+                           "enum": ["height", "height2", "angle"]},
             "double": {"type": "boolean"},
             "driven": {"type": "boolean"},
             "rim": {"type": "object"},

@@ -23,7 +23,9 @@ def _points(node):
     if t == "circle":
         return ["c"]
     if t == "rect":
-        return ["v0", "v1", "v2", "v3", "c"]
+        # (no centre: a corner rectangle has no centre point in
+        # SolidWorks, and a circle drawn there tied the two together)
+        return ["v0", "v1", "v2", "v3"]
     if t == "polygon":
         return ["v%d" % i for i in range(len(node.params.get("points")
                                               or []))]

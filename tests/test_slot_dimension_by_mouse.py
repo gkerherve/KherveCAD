@@ -74,7 +74,8 @@ def test_a_slot_drawn_on_a_rectangles_side_stays_on_it(win):
     _clicks(win, "slot", (60, 30), (100, 30), (80, 35))
     slot = _lines_of(win, before)[-1]
     rows = slot.parent.params.get("constraints") or []
-    on = [r for r in rows if r["kind"] == "point_on"]
+    # (at the side's middle it is Midpoint since 2026-11-10)
+    on = [r for r in rows if r["kind"] in ("point_on", "midpoint")]
     assert on, rows
     # widen the rectangle: the slot's end goes with its side
     asked = _dimension(win, (50, 0), (50, -6), value=120)
