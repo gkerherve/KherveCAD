@@ -533,7 +533,12 @@ class Constrain3D:
                 (event.pos() - down).manhattanLength() > CLICK_PX:
             return False
         self._seen = None
-        self.click(event.pos().x(), event.pos().y())
+        # Shift+click on a circle: its near / far side (min / max)
+        self._shift = bool(event.modifiers() & Qt.ShiftModifier)
+        try:
+            self.click(event.pos().x(), event.pos().y())
+        finally:
+            self._shift = False
         return True
 
     def wheel(self, event):
@@ -549,6 +554,9 @@ class Constrain3D:
     def drop(self):
         self.picks = []
         self.model_first = None
+        self.face_first = None
+        self._placing = None
+        self._rim_clicks = {}
         self.view.update()
         self._say(self._prompt())
 
@@ -672,8 +680,38 @@ class Constrain3D:
                                      sc.status_text(report)))
         return report
 
+    def _place_xy(self, cont, x, y):
+        """The sketch (x, y) of *cont* under the screen point, or None."""
+        import numpy as np
+        from . import model_refs, refgeom
+        from .sculpt_ui import screen_ray
+        try:
+            m = model_refs.sketch_matrix(self.window, cont)
+            origin, d = screen_ray(self.view, x, y)
+            o = (m @ np.array([0.0, 0.0, 0.0, 1.0]))[:3].tolist()
+            n = m[:3, 2].tolist()
+            p = refgeom.ray_plane(list(origin), list(d), o, n)
+            return None if p is None else self._in_sketch(cont, p)
+        except Exception:
+            return None
+
     def _dimension_click(self, hit, x=None, y=None):
-        from . import sketch_constrain_ui as ui
+        from . import dim_more, sketch_constrain_ui as ui
+        placing = getattr(self, "_placing", None)
+        if placing is not None:
+            # the click that places the number: horizontal / vertical /
+            # straight, an arc's length, a diameter across a centerline
+            self._placing = None
+            cont = placing[1][0][0].parent
+            at = self._place_xy(cont, x, y) if x is not None else None
+            return self._make_dimension(dim_more.refine(placing, at))
+        if hit is not None and hit[2] == "circle" and x is not None and \
+                getattr(self, "_shift", False):
+            if not hasattr(self, "_rim_clicks"):
+                self._rim_clicks = {}
+            at = self._place_xy(hit[0].parent, x, y)
+            if at is not None:
+                self._rim_clicks[id(hit[0])] = at
         parent = None
         if hit is None and x is not None:
             # the model's corner, centre or edge (SolidWorks)
@@ -768,28 +806,51 @@ class Constrain3D:
         if made is None:
             self._refuse("Those two cannot be dimensioned together.")
             return None
-        kind, chosen = made
+        if dim_more.needs_place(made) and x is not None:
+            self._placing = made
+            self._say("Smart Dimension (3D): " + dim_more.place_prompt(made))
+            return None
+        return self._make_dimension((made[0], made[1], {}))
+
+    def _make_dimension(self, made):
+        """Ask the value of (kind, chosen, extra) and add it."""
+        from . import dim_more, sketch_constrain_ui as ui
+        kind, chosen, extra = made
+        clicks, self._rim_clicks = getattr(self, "_rim_clicks", {}), {}
+        if kind in ("distance", "point_line") and clicks:
+            rim = dim_more.rim_for(chosen, clicks)
+            if rim:
+                extra = dict(extra, rim=rim)
         container = chosen[0][0].parent
         refs = [sc.ref_of(container, n, name) for n, name, _k in chosen]
         text = ui._ask_value(self.window.view2d.scene(), kind,
-                             sc.measure(container, kind, refs))
+                             sc.measure(container, kind, refs, extra))
         if text is None:
             return None
         model = self.window.model
         same = [i for i, r in enumerate(sc.rows(container))
-                if r["kind"] == kind and sorted(r["refs"]) == sorted(refs)]
+                if r["kind"] == kind and sorted(r["refs"]) == sorted(refs)
+                and bool(r.get("double")) == bool(extra.get("double"))
+                and (r.get("rim") or {}) == (extra.get("rim") or {})]
+        driven = False
         try:
             if same:
                 report = sc.set_value(model, container, same[0],
                                       ui._value(text))
             else:
-                report, _scaled = sc.add_dimension(model, container, kind,
-                                                   refs, ui._value(text))
+                report, _scaled, driven = dim_more.add(
+                    model, container, kind, refs, ui._value(text), extra)
         except ValueError as exc:
             self._refuse("Dimension refused: %s" % exc)
             return None
-        self._say("%s %s — %s" % (sc.KINDS[kind][0], text,
-                                  sc.status_text(report)))
+        if driven:
+            self._say("%s — the sketch is already fully defined there, so "
+                      "it was added DRIVEN: it shows the size in brackets "
+                      "and follows the sketch." % sc.KINDS[kind][0])
+        else:
+            self._say("%s %s — %s" % (sc.KINDS[kind][0], text,
+                                      sc.status_text(report)))
+        self.view.update()
         return report
 
     # ---------------------------------------------------------- paint

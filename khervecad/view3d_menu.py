@@ -67,6 +67,16 @@ def part_at(window, pos):
     return best
 
 
+def set_driven(window, cont, index, on):
+    """The dimension's Driven tick: it only measures, or drives again."""
+    from . import sketch_constraints as sc
+    try:
+        sc.set_driven(window.model, cont, index, on)
+    except ValueError as exc:
+        window.view3d.flash(str(exc))
+    window.view3d.update()
+
+
 def delete_dimension(window, cont, index):
     from . import sketch_constraints as sc
     sc.remove(window.model, cont, index)
@@ -90,6 +100,16 @@ def context_menu(window, pos):
         menu.addSection(tr("Smart Dimension"))
         menu.addAction(icons.icon("mdi.pencil"), tr("Edit value…"),
                        lambda: sketch_dims3d.edit(window, rect, cont, index))
+        from . import sketch_constraints as sc
+        try:
+            row = sc.rows(cont)[index]
+        except IndexError:
+            row = {}
+        driven = menu.addAction(tr("Driven (only measures)"))
+        driven.setCheckable(True)
+        driven.setChecked(bool(row.get("driven")))
+        driven.triggered.connect(
+            lambda on: set_driven(window, cont, index, on))
         menu.addAction(icons.icon("mdi.delete"), tr("Delete dimension"),
                        lambda: delete_dimension(window, cont, index))
     elif relation_at(window, pos) is not None:

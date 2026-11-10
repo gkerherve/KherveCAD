@@ -90,6 +90,8 @@ KINDS = {
     "point_line": ("Point to line distance", ["point", "line"], True),
     "radius": ("Radius", ["circle"], True),
     "diameter": ("Diameter", ["circle"], True),
+    # SolidWorks' arc length: the two ends of an arc, then the arc
+    "arc_length": ("Arc length", ["line"], True),
     "angle": ("Angle", ["line", "line"], True),
 }
 #: H and V also take two points (SolidCraft's two-point alignment)
@@ -110,14 +112,16 @@ def _is_model_outline(node):
     return sketch_section.is_section(node)
 
 
-def _vars(node, slot=False):
+def _vars(node, slot=False, arc=False):
     """(param path, value) of a shape's free numbers. A path is a key,
     or (key, row, col) for polygon points. A line's width is free only
     when a row sizes its round end (*slot*): every plain line would
     otherwise count one more freedom."""
     p = node.params
     keys = {"line": ("x1", "y1", "x2", "y2") + (("width",) if slot
-                                                 else ()),
+                                                 else ())
+            # (an arc's bulge is free only under an Arc length)
+            + (("bulge",) if arc else ()),
             "rect": ("x", "y", "width", "height"),
             "circle": ("x", "y", "radius")}.get(node.type)
     out = []
@@ -281,6 +285,33 @@ def _pl_dist(p, line):
     return _cross(_unit(_sub(b, a)), _sub(p, a))
 
 
+def arc_length(line, bulge):
+    """Length of the arc over chord *line* with DXF *bulge* (tan of a
+    quarter of its sweep); the chord itself when straight."""
+    chord = _len(_sub(line[1], line[0]))
+    theta = 4.0 * math.atan(abs(float(bulge or 0.0)))
+    if theta < 1e-9:
+        return chord
+    return chord / (2.0 * math.sin(theta / 2.0)) * theta
+
+
+def _rim(container, row, vals):
+    """What a row's min / max arc conditions add to the distance between
+    centres: ``row["rim"]`` {ref index: "min" | "max"} — to the NEAR side
+    of that circle (minus its radius) or the FAR side (plus it)."""
+    total = 0.0
+    for i, cond in (row.get("rim") or {}).items():
+        try:
+            node, _name = entity(container, row["refs"][int(i)])
+        except (KeyError, ValueError, IndexError):
+            continue
+        if node.type != "circle":
+            continue
+        r = _f(node, "radius", vals, 0.0)
+        total += r if cond == "max" else -r
+    return total
+
+
 def value_of(row, env=None):
     from . import expr
     v = row.get("value")
@@ -292,6 +323,8 @@ def value_of(row, env=None):
 def residuals(container, row, vals, env=None):
     """The equations one row asks to be zero."""
     kind = row["kind"]
+    if row.get("driven"):
+        return []                # it only measures (SolidWorks' driven)
     g = [_geom(container, r, vals) for r in row["refs"]]
     kinds = [k for k, _ in g]
     geo = [x for _, x in g]
@@ -362,6 +395,13 @@ def residuals(container, row, vals, env=None):
         c, r = geo[1]
         return [_len(_sub(geo[0], c)) - r]
     v = value_of(row, env)
+    if kind == "arc_length":
+        node, _name = entity(container, row["refs"][0])
+        return [arc_length(geo[0], _f(node, "bulge", vals)) - v]
+    if row.get("double"):        # across a centerline: a diameter
+        v = v / 2.0
+    if row.get("rim"):           # to a circle's near / far side
+        v = v - _rim(container, row, vals)
     if kind == "distance":
         return [_len(_sub(geo[1], geo[0])) - v]
     if kind == "hdistance":
@@ -431,19 +471,25 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
         return dict(ok=False, error="numpy is needed for constraints")
     rs = rows(container) if rs is None else rs
     nodes = _nodes_of(container, rs)
-    slots = set()
+    slots, arcs = set(), set()
     for row in rs:
         for ref in row.get("refs", ()):
             idx, _, name = ref.partition(".")
             if name in ("a1", "a2"):
                 slots.add(idx)
+            if row.get("kind") == "arc_length" and not row.get("driven"):
+                arcs.add(idx)
     keys, x0, w = [], [], []
     for node in nodes:
         try:
             slot = str(container.children.index(node)) in slots
         except ValueError:
             slot = False
-        for path, v in _vars(node, slot):
+        try:
+            arc = str(container.children.index(node)) in arcs
+        except ValueError:
+            arc = False
+        for path, v in _vars(node, slot, arc):
             keys.append((node.id, path))
             x0.append(v)
             # what the user just typed or dragged is HELD (it barely
@@ -559,10 +605,12 @@ def ref_of(container, node, name):
     return "%d.%s" % (container.children.index(node), name)
 
 
-def add(model, container, kind, refs, value=None, edge=None):
+def add(model, container, kind, refs, value=None, edge=None, extra=None):
     """Add one constraint and solve. Raises ValueError / Conflict; the
-    sketch is untouched then. Returns the report."""
+    sketch is untouched then. Returns the report. *extra*: a dimension's
+    options (double, rim, driven)."""
     row = {"kind": kind, "refs": list(refs)}
+    row.update(extra or {})
     if kind == "on_edge":
         if edge is None or len(edge) < 4:
             raise ValueError("On model edge needs the edge.")
@@ -572,8 +620,9 @@ def add(model, container, kind, refs, value=None, edge=None):
     if kind == "fix":
         node, name = entity(container, refs[0])
         row["at"] = list(_point(node, name, {}))
-    elif KINDS.get(kind, (0, 0, False))[2] and value is None:
-        row["value"] = round(measure(container, kind, refs), 4)
+    elif KINDS.get(kind, (0, 0, False))[2] and (value is None or
+                                                row.get("driven")):
+        row["value"] = round(measure(container, kind, refs, row), 4)
     check_row(container, row)
     rs = rows(container) + [row]
     env = _env(model)
@@ -601,10 +650,19 @@ def add(model, container, kind, refs, value=None, edge=None):
     return report
 
 
-def measure(container, kind, refs):
-    """What a dimension measures now (the value it takes by default)."""
+def measure(container, kind, refs, row=None):
+    """What a dimension measures now (the value it takes by default);
+    *row* brings its options: doubled across a centerline, to a circle's
+    near / far side."""
     g = [_geom(container, r, {}) for r in refs]
     geo = [x for _, x in g]
+    if kind == "arc_length":
+        node, _name = entity(container, refs[0])
+        return arc_length(geo[0], _f(node, "bulge", {}))
+    if row and (row.get("double") or row.get("rim")):
+        plain = measure(container, kind, refs)
+        plain += _rim(container, dict(row, refs=list(refs)), {})
+        return plain * (2.0 if row.get("double") else 1.0)
     if kind == "distance":
         return _len(_sub(geo[1], geo[0]))
     if kind == "hdistance":
@@ -636,8 +694,55 @@ def remove(model, container, index):
     model.node_changed.emit(container)
 
 
+def set_driven(model, container, index, on=True):
+    """Make dimension *index* DRIVEN (it only measures, shown in
+    brackets) or driving again. Driving again may be refused."""
+    rs = rows(container)
+    row = rs[index]
+    if "value" not in row:
+        raise ValueError("Only a dimension can be driven.")
+    if on:
+        row["driven"] = True
+        row["value"] = round(measure(container, row["kind"], row["refs"],
+                                     row), 4)
+    else:
+        row.pop("driven", None)
+        report = solve(container, rs, env=_env(model), write=False)
+        if not report["ok"]:
+            raise Conflict("Driving, that dimension cannot hold with the "
+                           "sketch's other constraints.")
+    container.params[KEY] = rs
+    report = solve(container, rs, env=_env(model))
+    model._last_sketch = container
+    model.node_changed.emit(container)
+    return report
+
+
+def update_driven(container, rs=None):
+    """Driven dimensions read what they measure now. True if any
+    changed."""
+    rs = rows(container) if rs is None else rs
+    changed = False
+    for row in rs:
+        if not row.get("driven"):
+            continue
+        try:
+            now = round(measure(container, row["kind"], row["refs"], row), 4)
+        except (KeyError, ValueError, IndexError, TypeError):
+            continue
+        if row.get("value") != now:
+            row["value"] = now
+            changed = True
+    if changed:
+        container.params[KEY] = rs
+    return changed
+
+
 def set_value(model, container, index, value):
     rs = rows(container)
+    if rs[index].get("driven"):
+        raise ValueError("A driven dimension only measures — make it "
+                         "driving to type a value.")
     old = rs[index].get("value")
     rs[index]["value"] = value
     report = solve(container, rs, env=_env(model), write=False)
@@ -708,6 +813,7 @@ def refresh(model, edited=()):
                            dof=False, held=_changed_vars(nodes))
             _remember(nodes)
             out[cont.id] = report
+            update_driven(cont)
             for nid in report["moved"]:
                 model.node_changed.emit(report["nodes"][nid])
     finally:
@@ -949,7 +1055,7 @@ def drop_between(parent, a, b, kinds=("coincident",)):
 #: QSettings key: the first dimension of a sketch scales all of it
 SCALE_FIRST = "sketch/scale_on_first_dimension"
 DIMENSION_KINDS = ("distance", "hdistance", "vdistance", "length",
-                   "point_line", "radius", "diameter")
+                   "point_line", "radius", "diameter", "arc_length")
 
 
 def scale_first_enabled():
@@ -1000,7 +1106,7 @@ def _part_exists(model):
     return any(n.type in _SOLIDS and n.visible for n in model.root.walk())
 
 
-def add_dimension(model, container, kind, refs, value):
+def add_dimension(model, container, kind, refs, value, extra=None):
     """A sketch dimension: the FIRST one of a sketch scales the whole
     sketch to it (when the option is on and it is a length), later ones
     drive their own shapes. Returns (report, scaled)."""
@@ -1014,9 +1120,10 @@ def add_dimension(model, container, kind, refs, value):
     # user's bracket: Ø8 typed on four Ø10 holes pulled them all inward)
     anchored = anchored or _part_exists(model)
     if kind in DIMENSION_KINDS and not has_dimension(container) and \
-            not anchored and scale_first_enabled():
+            not anchored and scale_first_enabled() and \
+            not (extra or {}).get("driven"):
         try:
-            now = measure(container, kind, refs)
+            now = measure(container, kind, refs, extra)
             target = float(value) if _num(value) else value_of(
                 {"value": value}, _env(model))
         except (KeyError, ValueError, TypeError):
@@ -1024,4 +1131,4 @@ def add_dimension(model, container, kind, refs, value):
         if now > 1e-9 and target > 0:
             scale_shapes(model, container, target / now)
             scaled = True
-    return add(model, container, kind, refs, value), scaled
+    return add(model, container, kind, refs, value, extra=extra), scaled

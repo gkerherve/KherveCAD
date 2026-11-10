@@ -86,6 +86,7 @@ WHAT = {
     "point_line": "Drives the distance from a point to a line.",
     "radius": "Drives a circle's radius.",
     "diameter": "Drives a circle's diameter.",
+    "arc_length": "Drives the length of an arc.",
     "angle": "Drives the angle between two lines.",
 }
 TIPS = {
@@ -97,8 +98,20 @@ TIPS = {
          "A line's length: click it, then anywhere empty.",
          "Two lines: the angle between them. Two points: their "
          "distance. A point and a line: the distance between them.",
+         "Two points not level with each other: one more click places "
+         "the number — above or below them for the HORIZONTAL distance, "
+         "left or right for the VERTICAL, between them for the straight "
+         "one.",
+         "An arc's two ends, then the arc itself: its arc length.",
+         "A point or line and a centerline, the number placed beyond "
+         "the centerline: the diameter (Ø), as for a revolve.",
+         "A face of the part (3D): the distance to that face.",
+         "Shift+click a circle: to its near or far side instead of its "
+         "centre.",
          "A value may be an expression of the variables (w / 2)."],
-        "Delete constraint removes a dimension like any constraint."),
+        "A dimension the sketch cannot take (it is fully defined) is "
+        "added DRIVEN, in brackets: it only measures. Right-click a "
+        "dimension to switch Driven; Delete constraint removes one."),
     PREFIX + "delete": (
         "Delete constraint",
         "Removes one constraint or dimension: click its mark on the "
@@ -302,6 +315,8 @@ def _state(scene):
 
 def drop(scene):
     scene._con_picks = []
+    scene._con_placing = None
+    scene._con_rim = {}
     scene._con_origin_first = False
     scene._con_hover = None
     scene.update()
@@ -712,9 +727,8 @@ def glyphs(view):
             if "value" in row:
                 c = QPointF(sum(s.x() for s in spots) / len(spots),
                             sum(s.y() for s in spots) / len(spots))
-                unit = "°" if row["kind"] == "angle" else ""
-                prefix = {"radius": "R", "diameter": "Ø"}.get(
-                    row["kind"], "")
+                from . import dim_more
+                label = dim_more.text(row)
                 moved = row.get("label_offset")
                 if moved and row["kind"] not in LINEAR:
                     # dragged out of the way (dim_edit), in model units
@@ -722,14 +736,12 @@ def glyphs(view):
                     k = scale(view)
                     home = QPointF(c)
                     c = QPointF(c.x() + moved[0] * k, c.y() + moved[1] * k)
-                    place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
-                          index)
+                    place(c, label, cont, index)
                     if row["kind"] not in ("radius", "diameter"):
                         # (R and Ø draw their own leader: _paint_radius)
                         view._dim_leaders.append((home, out[-1][0]))
                     continue
-                place(c, "%s%s%s" % (prefix, row["value"], unit), cont,
-                      index)
+                place(c, label, cont, index)
             else:
                 if row["kind"] == "symmetric" and len(spots) == 3:
                     # on its two points only: every pair mirrored about
@@ -833,7 +845,8 @@ def _paint_radius(view, painter, items, cont, index, row, ink, bg):
         edge, QPointF(base.x() - uy * 4, base.y() + ux * 4),
         QPointF(base.x() + uy * 4, base.y() - ux * 4)]))
     painter.drawEllipse(pc, 2.2, 2.2)
-    text = ("R%s" if row["kind"] == "radius" else "Ø%s") % row["value"]
+    from . import dim_more
+    text = dim_more.text(row)
     font = painter.font()
     font.setBold(True)
     painter.setFont(font)
@@ -850,6 +863,11 @@ def _paint_radius(view, painter, items, cont, index, row, ink, bg):
     if hasattr(view, "_dim_hits"):
         view._dim_hits.append((QRectF(chip), (cont, "constraint", index)))
     return True
+
+
+def _dim_text(row):
+    from . import dim_more
+    return dim_more.text(row)
 
 
 def _paint_dimensions(view, painter):
@@ -896,7 +914,7 @@ def _paint_dimensions(view, painter):
                 else 26
             try:
                 view._dim_screen(painter, ends[0], ends[1], color=ink,
-                                 bg=bg, text=str(row["value"]),
+                                 bg=bg, text=_dim_text(row),
                                  offset=px, dots=True)
             finally:
                 view._dim_ctx = None
@@ -1173,9 +1191,27 @@ def dimension_press(scene, event):
         drop(scene)
         return
     picks = _state(scene)
+    from . import dim_more
+    placing = getattr(scene, "_con_placing", None)
+    if placing is not None:
+        # the click that places the number (dim_more): horizontal /
+        # vertical / straight, an arc's length, Ø across a centerline
+        at = _frame_xy(scene, placing[1][0][0], event.scenePos())
+        made = dim_more.refine(placing, at)
+        rim = getattr(scene, "_con_rim", {})
+        drop(scene)
+        _make_dimension(scene, made, rim)
+        return
     # a line's midpoint too, right at it (the user: the middle of a line
     # to a circle's centre)
     hit = pick(scene, event.scenePos(), midpoints=True)
+    if hit is not None and hit[2] == "circle" and \
+            event.modifiers() & Qt.ShiftModifier:
+        # Shift+click on a circle: its near / far side (min / max)
+        if not isinstance(getattr(scene, "_con_rim", None), dict):
+            scene._con_rim = {}
+        at = _frame_xy(scene, hit[0], event.scenePos())
+        scene._con_rim[id(hit[0])] = (at[0], at[1])
     if hit is None:
         # on the face's own edge or corner: dimension to it (SolidWorks)
         from . import face_outline
@@ -1253,18 +1289,44 @@ def dimension_press(scene, event):
                               "other one.")
             return
         made = _smart(first, hit)
+    rim = getattr(scene, "_con_rim", {})
     drop(scene)
     if made is None:
         scene.status.emit("Those two cannot be dimensioned together.")
         return
-    kind, chosen = made
+    if dim_more.needs_place(made):
+        scene._con_placing = made
+        scene._con_rim = rim
+        scene.status.emit("Dimension: " + dim_more.place_prompt(made))
+        return
+    _make_dimension(scene, (made[0], made[1], {}), rim)
+
+
+def _frame_xy(scene, node, scene_pos):
+    """*scene_pos* in the frame *node*'s params are written in."""
+    item = {it.node.id: it for it in _shape_items(scene)}.get(node.id)
+    frame = item.parentItem() if item is not None else None
+    q = frame.mapFromScene(scene_pos) if frame is not None else scene_pos
+    return q.x(), q.y()
+
+
+def _make_dimension(scene, made, rim_clicks=None):
+    """Ask the value of (kind, chosen, extra) and add it."""
+    from . import dim_more
+    kind, chosen, extra = made
+    if kind in ("distance", "point_line") and rim_clicks:
+        rim = dim_more.rim_for(chosen, rim_clicks)
+        if rim:
+            extra = dict(extra, rim=rim)
     container = chosen[0][0].parent
     refs = [sc.ref_of(container, n, name) for n, name, _k in chosen]
-    text = _ask_value(scene, kind, sc.measure(container, kind, refs))
+    text = _ask_value(scene, kind, sc.measure(container, kind, refs, extra))
     if text is None:
         return
     same = [i for i, r in enumerate(sc.rows(container))
-            if r["kind"] == kind and sorted(r["refs"]) == sorted(refs)]
+            if r["kind"] == kind and sorted(r["refs"]) == sorted(refs)
+            and bool(r.get("double")) == bool(extra.get("double"))
+            and (r.get("rim") or {}) == (extra.get("rim") or {})]
     if same:
         # already dimensioned: change that one, never stack a second on
         # top of it (the two then hid each other)
@@ -1278,12 +1340,18 @@ def dimension_press(scene, event):
             sc.KINDS[kind][0], text, sc.status_text(report)))
         return
     try:
-        report, scaled = sc.add_dimension(scene.model, container, kind,
-                                          refs, _value(text))
+        report, scaled, driven = dim_more.add(
+            scene.model, container, kind, refs, _value(text), extra)
     except ValueError as exc:
         scene.status.emit(str(exc))
         return
     _hide_references(scene, chosen)
+    if driven:
+        scene.status.emit(
+            "%s — the sketch is already fully defined there, so it was "
+            "added DRIVEN: it shows the size in brackets and follows the "
+            "sketch." % sc.KINDS[kind][0])
+        return
     scene.status.emit("%s %s — %s%s" % (
         sc.KINDS[kind][0], text, sc.status_text(report),
         " The whole sketch was scaled to it (first dimension)."
@@ -1534,16 +1602,21 @@ def run_mcp(win, params):
     action = params.get("action", "list")
     out = {"node_id": cont.id}
     if action == "add":
+        extra = {k: params[k] for k in ("double", "rim", "driven")
+                 if params.get(k)}
         if params.get("value") is not None and \
                 params.get("scale_sketch", True):
             # the first dimension scales the sketch, as in the 2D view
             report, out["scaled"] = sc.add_dimension(
                 model, cont, params["kind"], params["refs"],
-                params.get("value"))
+                params.get("value"), extra=extra)
         else:
             report = sc.add(model, cont, params["kind"], params["refs"],
-                            params.get("value"))
+                            params.get("value"), extra=extra)
         out["status"] = sc.status_text(report)
+    elif action == "set_driven":
+        sc.set_driven(model, cont, int(params["index"]),
+                      bool(params.get("driven", True)))
     elif action == "remove":
         sc.remove(model, cont, int(params["index"]))
     elif action == "set_value":

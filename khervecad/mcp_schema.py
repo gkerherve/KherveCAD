@@ -1677,7 +1677,14 @@ TOOLS = [
             "line), symmetric (point, point, line), fix, point_on, diagonal (one line at 45°); "
             "dimensions with value (number or expression of variables, "
             "measured when omitted): distance, hdistance, vdistance, "
-            "length, point_line, radius, diameter, angle (degrees). "
+            "length, point_line, radius, diameter, angle (degrees), "
+            "arc_length (an arc: a line with a bulge). Options on add: "
+            "double true (point_line across a centerline: the value is "
+            "the DIAMETER, twice the distance — a revolve's profile), "
+            "rim {'0': 'min' | 'max'} (that ref is a circle's centre: "
+            "measure to its near / far side), driven true (it only "
+            "measures, shown in brackets, never conflicts). set_driven "
+            "(index, driven) switches one. "
             "action: list (default: rows, shapes with their entities, "
             "status + degrees of freedom), add, remove (index), "
             "set_value (index, value), auto (add the H / V / coincident "
@@ -1694,7 +1701,11 @@ TOOLS = [
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["list", "add", "remove", "set_value",
-                                "auto", "solve", "face_reference"]},
+                                "auto", "solve", "face_reference",
+                                "set_driven"]},
+            "double": {"type": "boolean"},
+            "driven": {"type": "boolean"},
+            "rim": {"type": "object"},
             "node_id": {"type": "integer"},
             "point": {"type": "array", "items": {"type": "number"}},
             "normal": {"type": "array", "items": {"type": "number"}},

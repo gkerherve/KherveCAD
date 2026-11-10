@@ -3737,11 +3737,32 @@ into a new module and import.
                        the sketch is refused (that is the extrude's depth);
                        two faces no sketch made cannot be driven (Measure).
                        The face may be clicked first (`face_first`). MCP
-                       sketch_constraint `face_reference`. Still missing
-                       against SolidWorks' Smart Dimension: horizontal /
-                       vertical by where the number is placed, arc length,
-                       a doubled (diameter) dimension about a centerline,
-                       driven dimensions, min / max arc conditions.
+                       sketch_constraint `face_reference`.
+  - `dim_more.py`    — the rest of SolidWorks' Smart Dimension (same day,
+                       "add everything SolidWorks has"). A PLACING click
+                       only where the picks leave a choice (`needs_place`,
+                       `refine`; both tools: `Constrain3D._placing`, the 2D
+                       scene's `_con_placing`): two points not level —
+                       above / below = hdistance, left / right = vdistance,
+                       between = distance; an arc's two ends then the arc =
+                       `arc_length` (new kind on a bulged line; its bulge is
+                       a solver variable only under that row); a point /
+                       line and a user's CENTERLINE (`%` line that is no
+                       Reference) placed beyond it = row `double` (the
+                       value is the diameter, label Ø). Shift+click a
+                       circle = row `rim` {ref index: min | max} (near /
+                       far side: ∓ radius on the centre distance). Row
+                       `driven`: no residual, value re-measured in
+                       `sc.refresh` (`update_driven`), shown in brackets;
+                       `dim_more.add` falls back to it when the driving
+                       dimension is a Conflict (SolidWorks' "make this
+                       dimension driven?"); right-click ▸ Driven
+                       (`view3d_menu.set_driven`). All labels through
+                       `dim_more.text`. MCP sketch_constraint add `double`
+                       / `rim` / `driven`, action `set_driven`. A redundant
+                       but CONSISTENT dimension is still accepted as
+                       driving (the solver only refuses contradictions).
+                       Tests: test_dim_more.py.
   - Face centres per feature (same day, the user: sketching on a
                        boss's end flush with the base, "I cannot access the
                        centre ... focused on another centre"): the face a

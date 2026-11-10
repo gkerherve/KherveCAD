@@ -213,13 +213,8 @@ def _centre(cont, row):
 
 
 def _text(row):
-    unit = "°" if row["kind"] == "angle" else ""
-    prefix = {"radius": "R", "diameter": "Ø"}.get(row["kind"], "")
-    value = row["value"]
-    if isinstance(value, (int, float)):
-        from . import units
-        value = units.number(value)
-    return "%s%s%s" % (prefix, value, unit)
+    from . import dim_more
+    return dim_more.text(row)
 
 
 def _closed_solids(mesh):
