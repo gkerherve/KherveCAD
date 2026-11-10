@@ -292,7 +292,7 @@ def _closes_with_model_edges(window, group, kind):
     if started:
         window.statusBar().showMessage(
             "Click the area your lines close with the part's edges: its "
-            "window opens (Shift+click to take several, then Done).", 8000)
+            "window opens (Shift+click to take several).", 8000)
     else:
         group.params[KEY] = kind
     return bool(started)

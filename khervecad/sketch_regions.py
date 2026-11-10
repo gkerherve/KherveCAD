@@ -891,7 +891,7 @@ def start_3d(window, container=None, make_only=False, cut=False,
     the first click makes the feature and opens its window, where the
     direction and depth are set (the user had nowhere to reverse it);
     Shift+click collects several areas first."""
-    from . import mesh
+    from . import mesh, region_panel
     container = container or sketch_container(window)
     if container is None:
         window.statusBar().showMessage(
@@ -932,16 +932,17 @@ def start_3d(window, container=None, make_only=False, cut=False,
             return ("Create Region: click the regions to keep (%d picked) "
                     "· Esc or right-click makes it" % len(picked))
         if cut:
-            return ("Extruded Cut — Selected Contours: click the areas "
-                    "to cut away (%d picked) · Esc or right-click cuts"
+            return ("Extruded Cut — Selected Contours: click the area to "
+                    "cut away (%d picked) · OK in its window cuts"
                     % len(picked))
         return ("Extruded Boss/Base — Selected Contours: click the "
-                "regions to extrude (%d picked) · Esc or right-click "
+                "regions to extrude (%d picked) · OK in its window "
                 "makes it" % len(picked))
 
     def on_pick(desc, key):
         nonlocal shapes
         if desc is None:                       # done
+            region_panel.close(window)
             view.set_highlight_mesh([])
             if not picked and on_nothing is not None:
                 on_nothing()
@@ -1006,8 +1007,17 @@ def start_3d(window, container=None, make_only=False, cut=False,
     def arm():
         view.pick_lines = lines        # every region's edges, seen
         view.start_pick(on_pick, groups=groups, banner=banner(),
-                        labeler=lambda _d, k: "Region — click to %s" % (
+                        done=make_only, labeler=lambda _d, k: "Region — click to %s" % (
                             "drop" if k in picked else "keep"))
+        region_panel.update(window, len(picked))
+
+    def cancel():
+        picked.clear()
+        view.cancel_pick()
+    if not make_only:
+        # the Extrude window, not a Done button over the view (2026-11-10,
+        # the user: "we don't want to see Done — it's the window")
+        region_panel.open(window, cut, ok=view.cancel_pick, cancel=cancel)
     arm()
     if window_at_once:
         # lines closing a loop by themselves: THAT area, nothing to ask

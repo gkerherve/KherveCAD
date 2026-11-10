@@ -22,6 +22,7 @@ from PyQt5.QtWidgets import (QAction, QApplication, QPushButton, QTabBar,
                              QToolButton)
 
 from khervecad import analysis, mesh, plane_pick, sketch_mode, toolbar_style
+from khervecad import region_panel
 from khervecad import sketch_regions as R
 
 _APP = QApplication.instance() or QApplication([])
@@ -232,8 +233,7 @@ def test_the_lever_by_mouse_comes_out_one_solid_with_two_holes(win):
         _move(v3, p)
         QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
         QTest.qWait(20)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(100)
     ext = [n for n in win.model.root.walk() if n.type == "linear_extrude"]
@@ -299,8 +299,7 @@ def test_extruded_boss_on_a_triangle_of_lines_by_mouse(win):
     p = QPoint(int(round(q[0])), int(round(q[1])))
     _move(v3, p)
     QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(100)
     _drag_arrow(win, 5.0)
@@ -538,8 +537,7 @@ def test_the_lever_on_the_front_plane_by_mouse(win):
         _move(v3, p)
         QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
         QTest.qWait(20)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(100)
     ext = [n for n in win.model.root.walk() if n.type == "linear_extrude"]
@@ -595,8 +593,7 @@ def test_a_line_across_a_part_cuts_its_top_away_by_mouse(win):
     _move(v3, p)
     QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
     QTest.qWait(30)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(100)
     panel = extrude_panel._panel(win)
@@ -652,8 +649,7 @@ def test_extruded_cut_offers_the_areas_a_line_makes(win):
     _move(v3, p)
     QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
     QTest.qWait(30)
-    done = next(b for b in v3.findChildren(QPushButton)
-                if b.isVisible() and "Done" in b.text())
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(100)
     panel = extrude_panel._panel(win)

@@ -107,8 +107,8 @@ def _click_areas(win, container, points):
         _move(v3, p)
         QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
         QTest.qWait(30)
-    done = next((b for b in v3.findChildren(QPushButton)
-                 if b.isVisible() and "Done" in b.text()), None)
+    from khervecad import region_panel
+    done = region_panel.ok_button(win)   # the Extrude window's OK
     if done is not None:             # else the pick ended by itself
         QTest.mouseClick(done, Qt.LeftButton)
     QTest.qWait(150)
