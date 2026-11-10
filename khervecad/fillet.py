@@ -54,6 +54,9 @@ HAIRPIN = 150.0
 #: edge may drift from a crease and still be the same edge
 #: params key of the picks' places in the part (fraction)
 PLACES = "fillet_places"
+#: the NAMES of the faces at each picked edge / of each picked face
+#: (face_names): the edge is found by them after any rebuild
+NAMES = "fillet_names"
 FIND_TOL = 0.5
 FIND_FRAC = 0.01
 
@@ -146,11 +149,12 @@ class Edge:
     face R traverses it the other way. *angle* is the dihedral in
     degrees, *convex* True for an outside corner."""
 
-    __slots__ = ("a", "b", "nl", "nr", "angle", "convex")
+    __slots__ = ("a", "b", "nl", "nr", "angle", "convex", "il", "ir")
 
-    def __init__(self, a, b, nl, nr, angle, convex):
+    def __init__(self, a, b, nl, nr, angle, convex, il=-1, ir=-1):
         self.a, self.b, self.nl, self.nr = a, b, nl, nr
         self.angle, self.convex = angle, convex
+        self.il, self.ir = il, ir        # the two triangles (face_names)
 
     @property
     def mid(self):
@@ -190,7 +194,7 @@ def crease_edges(tris, min_angle: float = MIN_ANGLE) -> list:
             continue
         angle = math.degrees(math.acos(cos))
         convex = _dot(_cross(nl, nr), _sub(b, a)) > 0.0
-        out.append(Edge(a, b, nl, nr, angle, convex))
+        out.append(Edge(a, b, nl, nr, angle, convex, i, j))
     return out
 
 
@@ -578,6 +582,7 @@ def face_edges(tris, edges, row, tol=1e-3, box=None, found=None):
         found["centre"] = _mul(
             [sum(c[k] for c in cs) for k in range(3)], 1.0 / len(cs))
         found["normal"] = list(normals[start])
+        found["start"] = start
     tri_of = {}
     for i, t in enumerate(tris):
         keys = [_vkey(v) for v in t]
@@ -596,9 +601,19 @@ def _place_key(values):
     return ",".join("%g" % round(v, 4) for v in values[:6])
 
 
+def _pair(names, e):
+    """The names of the two faces meeting at crease *e*, or None."""
+    if names is None or e.il < 0 or e.ir < 0:
+        return None
+    a, b = names[e.il], names[e.ir]
+    if a is None or b is None or a == b:
+        return None
+    return sorted((a, b))
+
+
 def compute(tris, seeds, radius: float, kind: str = "round",
             detail: int = 6, min_angle: float = MIN_ANGLE,
-            faces=(), places=None) -> dict:
+            faces=(), places=None, names=None, named=None) -> dict:
     """``{"cuts": [tris...], "adds": [tris...], "missing": [seed...],
     "chains": n}`` for the remembered *seeds* on the mesh *tris*."""
     edges = crease_edges(tris, min_angle)
@@ -618,6 +633,15 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             missing.append(seed)
             continue
         key = _place_key(values)
+        want = (named or {}).get(key) if names is not None else None
+        if want and len(want) == 2:
+            # by NAME: every crease between the two faces it lies between,
+            # wherever the rebuilt part put them
+            hits = [y for y in edges if _pair(names, y) == sorted(want)]
+            if hits:
+                for y in hits:
+                    chosen[id(y)] = y
+                continue
         known = (places or {}).get(key) or \
             (values[6:9] if len(values) == 9 else None)
         e = find_edge(edges, values[:6], size)
@@ -635,6 +659,9 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             mid = _mul(_add(e.a, e.b), 0.5)
             places[key] = [round(v, 6) for v in fraction(mid, box)] + \
                 _faces_of(e)
+        pair = _pair(names, e)
+        if named is not None and pair and key not in named:
+            named[key] = pair
         for x in chain(edges, e)["edges"]:
             key = frozenset((_vkey(x.a), _vkey(x.b)))
             for y in edges:
@@ -647,6 +674,16 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             missing.append(row)
             continue
         key = _place_key(values)
+        want = (named or {}).get(key) if names is not None else None
+        if want and len(want) == 1:
+            # by NAME: the face(s) the feature made, however it moved
+            region = {i for i, n in enumerate(names) if n == want[0]}
+            hits = [y for y in edges
+                    if (y.il in region) != (y.ir in region)]
+            if hits:
+                for y in hits:
+                    chosen[id(y)] = y
+                continue
         known = (places or {}).get(key)
         probe = values[:6] + list(known) if known and len(values) == 6 \
             else values
@@ -661,6 +698,11 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             places[key] = [round(v, 6) for v in
                            fraction(where["centre"], box)] + \
                 [round(v, 6) for v in where["normal"]]
+            start = where.get("start", -1)
+            if named is not None and names is not None and \
+                    key not in named and 0 <= start < len(names) and \
+                    names[start] is not None:
+                named[key] = [names[start]]
         for y in found:
             chosen[id(y)] = y
     picked = list(chosen.values())
@@ -865,11 +907,20 @@ def baked(node, env) -> dict:
         places = p.get(PLACES)
         if not isinstance(places, dict):
             places = p[PLACES] = {}
+        named = p.get(NAMES)
+        if not isinstance(named, dict):
+            named = p[NAMES] = {}
+        try:                      # each face named by what made it
+            from . import face_names
+            names = face_names.names(node, env, src)
+        except Exception:
+            names = None
         result = compute(src, p.get("edges") or [],
                          _num(p.get("radius", 2.0), env, 2.0),
                          str(p.get("kind", "round")),
                          int(_num(p.get("detail", 6), env, 6.0)),
-                         faces=p.get("faces") or [], places=places)
+                         faces=p.get("faces") or [], places=places,
+                         names=names, named=named)
         result["cut_polys"] = [bake.to_polyhedron(t) for t in result["cuts"]]
         result["add_polys"] = [bake.to_polyhedron(t) for t in result["adds"]]
         hit = _CACHE[key] = result

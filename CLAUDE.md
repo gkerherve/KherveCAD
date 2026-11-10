@@ -5256,6 +5256,25 @@ into a new module and import.
                        same planes, and the preview's cut is cleaned by
                        `_weld_slivers` (2.5 % of the radius) of the micron
                        fins the near-coplanar boolean leaves.
+  - `face_names.py`  — **faces named by what made them** (2026-11-10, the
+                       user: redo the history, don't guess where the clicked
+                       edge went — CAD's topological naming problem). Every
+                       triangle of a fillet's input is named after its
+                       generator, tested geometrically after Manifold's
+                       booleans (a face stays on the surface it was made
+                       on): a Linear extrude's side by the sketch entity it
+                       swept ("<feature_order>:<shape index>.<entity>", a
+                       Regions outline by the line / side / circle it lies
+                       on — a line is a band, so half its width off), its
+                       caps cap0 / cap1; a revolve's surfaces by profile
+                       segment; cube faces, cylinder side / caps.
+                       Vectorised (numpy): ~60 ms for 10k triangles.
+                       fillet.py keeps `params["fillet_names"]` {pick key:
+                       [face, face]} per edge / [face] per face, and after a
+                       rebuild takes EVERY crease between faces of those
+                       names first; the coordinates (`fillet_places`: box
+                       fraction + the faces' directions) are the fallback
+                       for meshes and imports.
   - `fillet_pick.py` — the click flow: `start(window, node)` arms
                        `View3D.start_pick` on the fillet's part
                        (groups=[(node, world tris)]) and re-arms after
