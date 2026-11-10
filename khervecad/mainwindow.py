@@ -824,6 +824,8 @@ class MainWindow(QMainWindow):
 
     def _build_status_bar(self):
         u = self._unit()
+        from . import recent_combo
+        recent_combo.install(self)
         self._cursor_label = QLabel(f"x: 0.0 {u}  y: 0.0 {u}")
         self.statusBar().addWidget(self._cursor_label)
         self._measure_label = QLabel("")
@@ -2379,6 +2381,8 @@ class MainWindow(QMainWindow):
     def _set_recent_files(self, files):
         from PyQt5.QtCore import QSettings
         QSettings("Kherve", "KherveCAD").setValue("recent_files", files)
+        if getattr(self, "_recent_combo", None) is not None:
+            self._recent_combo.refresh()
 
     def _add_recent(self, path):
         if not path:
