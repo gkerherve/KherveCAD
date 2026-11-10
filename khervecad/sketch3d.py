@@ -756,6 +756,32 @@ class Sketch3DTool:
             step = 1.0
         return step if step > 0 else 1.0
 
+    #: the finest the grid gets on screen (pixels a step)
+    GRID_PX = 10.0
+
+    def grid_at(self, lx, ly):
+        """The snap step at a sketch point: the scene's grid, made FINER
+        while that is coarse on screen — the largest 1-2-5 step not above
+        it that is still `GRID_PX` pixels wide (2026-11-10, the user: a
+        0.84 x 0.5 mm face under a 0.5 mm grid — every click jumped to
+        one of its corners and a circle could not be put on it). Zoom in
+        and the step gets finer, as the grid lines of a CAD view do."""
+        step = self._grid()
+        try:
+            mm = self._mm_per_px(lx, ly)
+        except Exception:
+            mm = None
+        if not mm:
+            return step
+        want = mm * self.GRID_PX             # mm that span GRID_PX pixels
+        if want >= step:
+            return step
+        k = 10.0 ** math.floor(math.log10(want))
+        for f in (1.0, 2.0, 5.0, 10.0):
+            if f * k >= want - 1e-12:
+                return min(step, tidy(f * k))
+        return step
+
     def local_of(self, x, y, free=False):
         """The point on the sketch plane under the screen point, in the
         sketch's own (x, y), snapped to the grid unless *free*."""
@@ -774,7 +800,7 @@ class Sketch3DTool:
             got = self.snap_local(lx, ly)
             if got is not None:
                 return (tidy(got[0]), tidy(got[1]))
-            step = self._grid()
+            step = self.grid_at(lx, ly)
             lx, ly = snap(lx, step), snap(ly, step)
         return (tidy(lx), tidy(ly))
 

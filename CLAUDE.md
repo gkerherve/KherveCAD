@@ -3812,6 +3812,14 @@ into a new module and import.
                        that only crosses it on screen (`_corner_near`,
                        `_passes_through`). Tests:
                        test_dimension_while_extruding.py.
+  - 3D sketch grid (same day, the user: a circle "impossible" on a
+                       0.84 x 0.5 mm face): the snap step was the scene's
+                       grid (0.5 mm) whatever the zoom, so every click off
+                       a snap jumped to a face corner. `Sketch3DTool.
+                       grid_at` makes it finer while it is coarse on
+                       screen: the largest 1-2-5 step, not above the
+                       scene's, still `GRID_PX` (10) pixels wide. Tests:
+                       test_sketch3d_fine_grid.py.
   - `viewbar3d.py`   — the 3D view's bar, like SolidWorks' Heads-Up View
                        toolbar (same day, the user: bottom centre, fewer
                        buttons, wireframe on the left, no Exploded View /
