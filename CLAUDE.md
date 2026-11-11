@@ -3266,7 +3266,8 @@ into a new module and import.
                        3D) that drags the whole line, its ends snapping onto
                        other shapes' points / edges (`_move_line`,
                        `LineShapeItem._move_whole`); and the Point tool makes
-                       a "Point" group — the point and two construction
+                       an "Origin n" group (numbered, renamed through the
+                       model so the tree shows it at once) — the point and two construction
                        centerlines along X and Y (`sketch_tools2.point`,
                        `origin_relations`: Coincident with each line's
                        middle, Horizontal, Vertical), like a small origin;

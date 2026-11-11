@@ -169,7 +169,7 @@ def test_a_point_is_an_origin_with_two_centerlines(app):
                      view.mapFromScene(QPointF(5, 3)))
     QApplication.processEvents()
     m = scene.model
-    group = next(n for n in m.root.walk() if n.name == "Point")
+    group = next(n for n in m.root.walk() if n.name == "Origin 1")
     dot, h, v = group.children
     assert dot.type == "circle" and h.type == v.type == "line"
     assert all(n.params.get("modifier") == "%" for n in (dot, h, v))
@@ -219,3 +219,32 @@ def test_a_points_centerline_lengths_in_properties(app):
     assert panel._origin is not None
     panel.set_node(m.add_node("line", {}))        # a plain line: no rows
     assert panel._origin is None
+
+
+def test_origins_are_numbered_and_the_tree_says_so(app):
+    from PyQt5.QtCore import Qt
+    from khervecad import sketch_tools2 as s2
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        scene = win.view2d.scene()
+        for x in (0, 30):
+            made = [win.model.add_node(t, p) for t, p, _k in s2.point((x, 0))]
+            s2.origin_relations(scene, made)
+        QApplication.processEvents()
+        names = [n.name for n in win.model.root.walk()
+                 if n.params.get(s2.ORIGIN_KEY)]
+        assert names == ["Origin 1", "Origin 2"]
+        tree = win.builder.tree
+        texts = []
+
+        def walk(item):
+            texts.append(item.text(0))
+            for i in range(item.childCount()):
+                walk(item.child(i))
+        for i in range(tree.topLevelItemCount()):
+            walk(tree.topLevelItem(i))
+        assert any("Origin 2" in t for t in texts), texts
+    finally:
+        win._dirty = False
+        win.close()

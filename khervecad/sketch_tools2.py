@@ -133,7 +133,7 @@ def point(p, arm=POINT_ARM):
                           width=0.5, modifier="%"), None)]
 
 
-#: on the "Point" group: a point with its X / Y centerlines
+#: on the "Origin n" group: a point with its X / Y centerlines
 ORIGIN_KEY = "origin_point"
 #: a new point's centerlines reach this far on screen each way
 ARM_PX = 50
@@ -180,7 +180,7 @@ def set_arms(model, group, x_len=None, y_len=None, emit=True):
 
 
 def origin_relations(scene, made):
-    """The point and its two centerlines as one "Point" group: each line
+    """The point and its two centerlines as one "Origin n" group: each line
     centred on the point (Coincident with its middle), one Horizontal,
     one Vertical — drag the point and its axes come with it."""
     from . import sketch_constraints as sc
@@ -188,8 +188,14 @@ def origin_relations(scene, made):
     group = scene.model.wrap_nodes(made, "union")
     if group is None:
         return dot
-    group.name = "Point"
     group.params[ORIGIN_KEY] = True
+    # "Origin 1", "Origin 2"… (the user), through the model so the tree
+    # shows it at once (a plain .name left "Group (union) 1" on screen)
+    taken = {n.name for n in scene.model.root.walk()}
+    k = 1
+    while "Origin %d" % k in taken:
+        k += 1
+    scene.model.rename(group, "Origin %d" % k)
     # the centerlines a size that reads at this zoom, not always 10 mm
     try:
         from .polygon_draw import px_to_scene
