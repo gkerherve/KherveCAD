@@ -3269,7 +3269,10 @@ into a new module and import.
                        a "Point" group — the point and two construction
                        centerlines along X and Y (`sketch_tools2.point`,
                        `origin_relations`: Coincident with each line's
-                       middle, Horizontal, Vertical), like a small origin.
+                       middle, Horizontal, Vertical), like a small origin;
+                       its lines are `ARM_PX` long on screen when made and
+                       their lengths are Properties rows on the group or any
+                       of its shapes (`set_arms`, `params["origin_point"]`).
                        tests/test_snap_intersections.py.
   - `sketch_trim.py` / `sketch_convert.py` — SolidWorks' **Trim Entities**
                        and **Convert Entities** (2026-11-11, the user, with

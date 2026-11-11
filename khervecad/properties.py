@@ -385,6 +385,26 @@ class PropertiesPanel(QScrollArea):
             # scale, slices
             from . import extrude_props
             extrude_props.build(self, form, node)
+        self._origin = None
+        from . import sketch_tools2 as _s2
+        if _s2.origin_parts(node) is not None:
+            # a Point with its X / Y centerlines: their lengths (the user:
+            # "not easily available")
+            group = _s2.origin_parts(node)[0]
+            boxes = {}
+            for key, label in (("x", "X centerline length (mm)"),
+                               ("y", "Y centerline length (mm)")):
+                spin = QDoubleSpinBox()
+                spin.setRange(0.01, 1e6)
+                spin.setDecimals(3)
+                spin.setKeyboardTracking(False)
+                spin.valueChanged.connect(
+                    lambda v, k=key, g=group: None if self._updating else
+                    _s2.set_arms(self.model, g, v if k == "x" else None,
+                                 v if k == "y" else None))
+                form.addRow(language.tr(label), spin)
+                boxes[key] = spin
+            self._origin = (group, boxes)
         from . import pattern_props
         self._pattern = None
         pattern_loop = pattern_props.loop_for(node)
@@ -538,6 +558,13 @@ class PropertiesPanel(QScrollArea):
         if getattr(self, "_construction", None) is not None:
             self._construction.setChecked(
                 self.node.params.get("modifier") == "%")
+        if getattr(self, "_origin", None):
+            from . import sketch_tools2 as _s2
+            group, boxes = self._origin
+            if group.parent is not None and _s2.origin_parts(group):
+                xl, yl = _s2.arm_lengths(group)
+                boxes["x"].setValue(xl)
+                boxes["y"].setValue(yl)
         if getattr(self, "_pattern", None):
             from . import pattern_props
             pattern_props.load(self)

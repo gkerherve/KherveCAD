@@ -189,3 +189,33 @@ def test_a_point_is_an_origin_with_two_centerlines(app):
     q, _info = sketch_line.snap(scene, QPointF(12.04, -3.96))
     assert (round(q.x(), 3), round(q.y(), 3)) == (12, -4)
     view.close()
+
+
+def test_a_points_centerline_lengths_in_properties(app):
+    """X / Y centerline lengths typed in Properties, on the group or on a
+    line, the lines staying centred on the point (2026-11-11, the user)."""
+    from khervecad import sketch_tools2 as s2
+    from khervecad.properties import PropertiesPanel
+
+    class Scene:                         # origin_relations needs a model
+        pass
+    m = DocumentModel()
+    made = [m.add_node(t, p) for t, p, _k in s2.point((4, 2))]
+    sc_ = Scene()
+    sc_.model = m
+    group = s2.origin_relations(sc_, made)
+    assert s2.arm_lengths(group) == (20, 20)       # (no view: 10 mm arms)
+    panel = PropertiesPanel(m)
+    for node in (group, made[1]):
+        panel.set_node(node)
+        assert panel._origin is not None
+    _g, boxes = panel._origin
+    boxes["x"].setValue(50)
+    boxes["y"].setValue(6)
+    h, v = made[1], made[2]
+    assert (h.params["x1"], h.params["x2"], h.params["y1"]) == (-21, 29, 2)
+    assert (v.params["y1"], v.params["y2"], v.params["x1"]) == (-1, 5, 4)
+    panel.set_node(made[0])                       # the dot too
+    assert panel._origin is not None
+    panel.set_node(m.add_node("line", {}))        # a plain line: no rows
+    assert panel._origin is None

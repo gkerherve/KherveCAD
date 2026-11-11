@@ -133,6 +133,52 @@ def point(p, arm=POINT_ARM):
                           width=0.5, modifier="%"), None)]
 
 
+#: on the "Point" group: a point with its X / Y centerlines
+ORIGIN_KEY = "origin_point"
+#: a new point's centerlines reach this far on screen each way
+ARM_PX = 50
+
+
+def origin_parts(node):
+    """(group, dot, x line, y line) when *node* is a Point group or one of
+    its three shapes, else None."""
+    g = node if node is not None and node.params.get(ORIGIN_KEY) else (
+        node.parent if node is not None and node.parent is not None and
+        node.parent.params.get(ORIGIN_KEY) else None)
+    if g is None or len(g.children) != 3:
+        return None
+    dot, h, v = g.children
+    if dot.type != "circle" or h.type != "line" or v.type != "line":
+        return None
+    return g, dot, h, v
+
+
+def arm_lengths(group):
+    _g, _d, h, v = origin_parts(group)
+    def length(n):
+        p = n.params
+        return math.hypot(float(p["x2"]) - float(p["x1"]),
+                          float(p["y2"]) - float(p["y1"]))
+    return length(h), length(v)
+
+
+def set_arms(model, group, x_len=None, y_len=None, emit=True):
+    """The X and Y centerlines made *x_len* / *y_len* long, still centred
+    on the point (so their relations hold)."""
+    _g, dot, h, v = origin_parts(group)
+    cx, cy = float(dot.params.get("x", 0)), float(dot.params.get("y", 0))
+    if x_len is not None and x_len > 0:
+        a = x_len / 2
+        h.params.update(x1=_r(cx - a), y1=_r(cy), x2=_r(cx + a), y2=_r(cy))
+        if emit:
+            model.node_changed.emit(h)
+    if y_len is not None and y_len > 0:
+        a = y_len / 2
+        v.params.update(x1=_r(cx), y1=_r(cy - a), x2=_r(cx), y2=_r(cy + a))
+        if emit:
+            model.node_changed.emit(v)
+
+
 def origin_relations(scene, made):
     """The point and its two centerlines as one "Point" group: each line
     centred on the point (Coincident with its middle), one Horizontal,
@@ -143,6 +189,15 @@ def origin_relations(scene, made):
     if group is None:
         return dot
     group.name = "Point"
+    group.params[ORIGIN_KEY] = True
+    # the centerlines a size that reads at this zoom, not always 10 mm
+    try:
+        from .polygon_draw import px_to_scene
+        arm = px_to_scene(scene, ARM_PX)
+        if arm and arm > 0:
+            set_arms(scene.model, group, 2 * arm, 2 * arm, emit=False)
+    except Exception:
+        pass
     parent = group
     for kind, refs in (
             ("coincident", [sc.ref_of(parent, dot, "c"),
