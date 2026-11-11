@@ -37,14 +37,16 @@ TIPS = {
         "Any line can be switched to a centerline afterwards with "
         "Construction (Modify panel)."),
     "point": (
-        "Point",
-        "A sketch point: a small construction mark to dimension to, to "
-        "make other shapes Coincident with, or to mark a hole's centre.",
+        "Origin",
+        "An origin of your own: a point with an X and a Y centerline "
+        "through it (Origin 1, 2, 3…) — to dimension from, and to snap "
+        "shapes onto: a circle centred on it, or on one of its lines, "
+        "follows it when it moves.",
         [_IN_SKETCH,
-         "Click where the point goes — it snaps to ends, middles, "
-         "centres and the origin.",
+         "Click where the origin goes — it snaps to ends, middles, "
+         "centres, crossings and the sketch origin.",
          "Smart Dimension it from an edge or the origin to place it "
-         "exactly."],
+         "exactly; the centerline lengths are in Properties."],
         "It is construction geometry: an extrude ignores it."),
     "polyline": (
         "Polyline",

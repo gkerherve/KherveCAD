@@ -14,7 +14,7 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
-from PyQt5.QtGui import QPainterPath
+from PyQt5.QtGui import QColor, QPainterPath
 
 from .icons_cad import draws
 
@@ -140,11 +140,14 @@ def _construction(d):
 
 @draws("point")
 def _point(d):
-    d.line(QPointF(0.5, 0.24), QPointF(0.5, 0.76), d.pal.edge, 0.035,
-           [2, 2])
-    d.line(QPointF(0.24, 0.5), QPointF(0.76, 0.5), d.pal.edge, 0.035,
-           [2, 2])
-    d.dot(QPointF(0.5, 0.5), d.pal.sketch, 0.11)
+    """An ORIGIN (2026-11-11, the user: thin grey dashes read as a
+    disabled point): X and Y centerlines in full colour with arrow
+    heads, the point a bold dot where they cross."""
+    d.arrow(QPointF(0.1, 0.62), QPointF(0.94, 0.62), QColor("#d32f2f"), 0.06,
+            0.13)
+    d.arrow(QPointF(0.38, 0.92), QPointF(0.38, 0.08), QColor("#2e7d32"), 0.06,
+            0.13)
+    d.disc(QPointF(0.38, 0.62), 0.12, QColor("#1f1f1f"))
 
 
 @draws("polyline")

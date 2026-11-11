@@ -43,7 +43,7 @@ CONST_LINE = "construction_line"
 
 TOOLS = [
     (CONST_LINE, "mdi.vector-line", "Construction line", ""),
-    (POINT, "mdi.circle-small", "Point", ""),
+    (POINT, "mdi.axis-arrow", "Origin", ""),
     (POLYLINE, "mdi.vector-polyline", "Polyline", ""),
     (RECT_3PT, "mdi.vector-rectangle", "3-point rectangle", ""),
     (CIRCLE_2PT, "mdi.circle-outline", "2-point circle", ""),
