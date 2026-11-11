@@ -973,7 +973,16 @@ class MainWindow(QMainWindow):
         top = node
         while top.parent is not None and top.parent is not self.model.root:
             top = top.parent             # a Front / Side sketch's turn
-        comp = self.model.enclose_as_part(top)
+        name = ""
+        from . import sketch_tools2
+        parts = sketch_tools2.origin_parts(node)
+        if parts is not None and parts[1].parent is self.model.root:
+            # an origin: its point AND both centerlines into the new
+            # Object, with their relations (only the point went, and the
+            # origin was split in two — 2026-11-11)
+            top = self.model.wrap_nodes(list(parts[1:]), "union")
+            name = "Sketch part"
+        comp = self.model.enclose_as_part(top, name)
         self.builder.open_component(comp)
         self.builder.object_tab.tree.select_nodes([node])
         self.statusBar().showMessage(

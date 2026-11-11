@@ -364,3 +364,44 @@ def test_an_origin_shows_as_one_folder_row(app, history):
         tree_history.set_enabled(False)
         win._dirty = False
         win.close()
+
+
+def test_the_origin_folder_shows_as_soon_as_it_is_drawn(app):
+    """Drawn with the Origin tool, the folder row is there at once — it
+    waited for the next shape to rebuild the tree (the user)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtTest import QTest
+    from khervecad import sketch_tools2 as s2
+    from khervecad.mainwindow import MainWindow
+    from khervecad.treepanel import ROLE_ORIGIN
+    win = MainWindow()
+    try:
+        view = win.view2d
+        view.resize(600, 500)
+        view.set_tool(s2.POINT)
+        QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier,
+                         view.mapFromScene(QPointF(5, 3)))
+        QApplication.processEvents()
+        tree = win.builder.active_tree()
+
+        def folders(item):
+            out = [item] if item.data(0, ROLE_ORIGIN) else []
+            for i in range(item.childCount()):
+                out += folders(item.child(i))
+            return out
+        found = folders(tree.invisibleRootItem())
+        assert [f.text(0) for f in found] == ["Origin 1"]
+        # drawn outside an Object: all three went into the new Object,
+        # with their relations
+        from khervecad import sketch_constraints as sc
+        members = [n for n in win.model.root.walk()
+                   if n.params.get(s2.ORIGIN_KEY)]
+        parents = {id(n.parent) for n in members}
+        assert len(members) == 3 and len(parents) == 1
+        comp = members[0].parent
+        assert comp.type == "component"
+        kinds = [r["kind"] for r in sc.rows(comp)]
+        assert {"coincident", "horizontal", "vertical"} <= set(kinds)
+    finally:
+        win._dirty = False
+        win.close()

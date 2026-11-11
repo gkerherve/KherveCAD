@@ -261,6 +261,10 @@ def origin_relations(scene, made):
             sc.add(model, parent, kind, refs)
         except (ValueError, KeyError):
             pass
+    # the tree drew the three shapes before they were marked as one
+    # origin: draw it again now, so the "Origin n" folder shows at once
+    # (it waited for the next shape — 2026-11-11, the user)
+    model.structure_changed.emit()
     return dot
 
 
