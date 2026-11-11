@@ -189,3 +189,12 @@ def _delete_asks_nothing(monkeypatch):
     behaviour (tests of the question set their own answer)."""
     from khervecad import delete_ui
     monkeypatch.setattr(delete_ui, "ask_hook", lambda nodes: delete_ui.ALL)
+
+
+@pytest.fixture(autouse=True)
+def _boss_cut_asks_nothing(monkeypatch):
+    """Extruded Boss / Cut ask where to sketch in a modal window, which
+    would hang an offscreen test: no question, the old behaviour (tests
+    of the question set their own answer)."""
+    from khervecad import sketch_choice
+    monkeypatch.setattr(sketch_choice, "ask_hook", lambda label, sel: None)

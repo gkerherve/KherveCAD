@@ -1024,6 +1024,35 @@ class MainWindow(QMainWindow):
             self.view2d.centerOn(centre)
         return True
 
+    def _boss_elsewhere(self, nodes):
+        """Extruded Boss: ask what to use (the selection, a face, a plane)
+        and where to sketch (3D or 2D) — `sketch_choice`, the user's
+        decision, not a guess. True when a new sketch was started (or
+        the question cancelled): nothing more to do here. Not asked
+        while a sketch is open: Boss then extrudes that sketch."""
+        from . import cut_feature, sketch_choice, sketch_mode, \
+            sketch_regions
+        if sketch_mode.sketching(self) or sketch_mode._in_3d(self) or \
+                getattr(self, "_face_sketch", None) is not None:
+            return False
+        usable = None
+        if nodes:
+            usable = sketch_choice.describe(nodes)
+        else:
+            free = sketch_regions.free_shapes(self)
+            if free:
+                usable = "the sketch not yet used (%s)" % \
+                    sketch_choice.describe(free)
+        choice = sketch_choice.ask(self, "Extruded Boss/Base", usable)
+        if choice is False:
+            self.statusBar().showMessage(
+                language.tr("Extruded Boss/Base cancelled."), 4000)
+            return True
+        if not choice or choice["source"] == "selection":
+            return False                 # as before: the selection
+        cut_feature.start(self, "extruded_boss", choice)
+        return True
+
     def _apply_operation(self, op: str):
         tree = self.builder.active_tree()
         nodes = tree.selected_nodes()
@@ -1060,6 +1089,8 @@ class MainWindow(QMainWindow):
             # nothing selected: click the edge / face in the 3D view
             from . import round_ui
             round_ui.start(self, op, "round")
+            return
+        if op == "linear_extrude" and self._boss_elsewhere(nodes):
             return
         if op in ("linear_extrude", "rotate_extrude") and nodes:
             # the 2D content inside the sketch plane's rotate, never the

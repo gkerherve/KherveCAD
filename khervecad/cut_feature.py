@@ -311,12 +311,57 @@ def _back_to_sketch(window, group, kind):
                         "still open.", 8000)
 
 
-def start(window, kind):
+def _usable(window, kind, nodes):
+    """What of the selection a Boss / Cut could use, as a few names
+    (None: nothing) — the choice window offers it first."""
+    from . import face_sketch, sketch_choice
+    from .model import SHAPE_2D
+    if not nodes:
+        return None
+    if any(face_sketch.group_of(n) is not None or n.category == SHAPE_2D
+           or n.type == "regions" for n in nodes):
+        return sketch_choice.describe(nodes)
+    picked = _selected_parts(window, nodes)
+    if picked:
+        return "a face of " + sketch_choice.describe(
+            [p for p, _t in picked])
+    return None
+
+
+def _selected_parts(window, nodes):
+    """The pickable parts the selection is, holds or lies in."""
+    from . import meshedit_ui
+    out = []
+    for part, tris in meshedit_ui._parts(window):
+        if any(_inside(n, part) or _inside(part, n) for n in nodes):
+            out.append((part, tris))
+    return out
+
+
+def start(window, kind, choice=None):
     """Extruded Cut and the others: a selected face sketch is cut at
-    once; else click a face, sketch, leave the sketch."""
-    from . import face_sketch, sketch_regions
+    once; else click a face, sketch, leave the sketch. First the choice
+    window (`sketch_choice`): the selection, a face or a plane, sketched
+    in 3D or 2D. *choice* given: asked already."""
+    from . import face_sketch, sketch_choice, sketch_regions
     tree = window.builder.active_tree()
     nodes = tree.selected_nodes()
+    if choice is None:
+        choice = sketch_choice.ask(window, ALL[kind][0],
+                                   _usable(window, kind, nodes))
+        if choice is False:
+            window.statusBar().showMessage(
+                "%s cancelled." % ALL[kind][0], 4000)
+            return None
+    source = choice["source"] if choice else None
+    in_3d = IN_3D if not choice else choice["where"] == "3d"
+    only = None
+    if source == "selection":
+        only = _selected_parts(window, nodes) or None
+    if source in ("face", "plane"):
+        nodes = []                       # a new sketch, whatever is picked
+    if source == "plane":
+        return _on_plane(window, kind, in_3d)
     for n in nodes:
         group = face_sketch.group_of(n)
         part = _part_below(window, group) if group is not None else None
@@ -340,7 +385,7 @@ def start(window, kind):
         except Exception:
             pass
     from . import meshedit_ui
-    parts = meshedit_ui._parts(window)
+    parts = only or meshedit_ui._parts(window)
     if not parts:
         window.statusBar().showMessage("Nothing to cut yet.", 5000)
         return None
@@ -354,7 +399,6 @@ def start(window, kind):
         pass
     label = ALL[kind][0]
     verb = "extrude from" if kind in BOSS else "cut into"
-    end = "to extrude it" if kind in BOSS else "to cut"
 
     def picked(desc, node):
         if desc is None or node is None:
@@ -363,44 +407,103 @@ def start(window, kind):
         if desc.get("kind") != "face":
             window.statusBar().showMessage(
                 "%s: click a flat FACE to sketch on." % label, 5000)
-            start(window, kind)
+            start(window, kind, choice or {
+                "source": "face", "where": "3d" if in_3d else "2d"})
             return
         group = face_sketch.make(window, node, desc["pos"], desc["dir"],
-                                 open_2d=not IN_3D)
-        group.params[KEY] = kind
-        window.__dict__.setdefault("_cut_parts", {})[id(group)] = node
-        if IN_3D:
-            # drawn ON the face, where the user is looking (2026-11-01,
-            # the user: going to the 2D view and back loses them)
-            from . import sketch3d
-            window._chosen_face = list(desc.get("tris") or [])
-            view = window.view3d          # looking straight at the face
-            yaw, pitch = face_sketch.camera_for(desc["dir"])
-            view.user_moved = True
-            # (where the user was looking: back there for the depth)
-            window._cut_view_before = dict(
-                yaw=view.yaw, pitch=view.pitch, face=(yaw, pitch))
-            from . import view_anim
-            view_anim.glide_3d(view, dict(
-                yaw=yaw, pitch=pitch, target=list(view.target),
-                distance=view.distance))
-            tool = sketch3d.Sketch3DTool(window, "rect")
-            tool.use_group(group)
-            window.view3d.edit_tool = tool
-            tool.begin()
-            ribbon = getattr(window, "ribbon", None)
-            if ribbon is not None:
-                ribbon.show_tab("sketch")
-            return
-        window.statusBar().showMessage(
-            "%s: draw the shape (circle, slot, rectangle…), dimension "
-            "it, then leave the sketch %s." % (label, end), 10000)
+                                 open_2d=not in_3d)
+        _open(window, kind, group, node, desc["dir"],
+              desc.get("tris") or [], in_3d)
     window.statusBar().showMessage(
         "%s: click the face of the part to %s." % (label, verb), 10000)
     window.view3d.start_pick(
         picked, groups=parts,
         banner="%s: click the face to %s · Esc cancels" % (label, verb),
         labeler=lambda desc, node: getattr(node, "name", ""), done=False)
+    return None
+
+
+def _open(window, kind, group, part, normal, face_tris, in_3d):
+    """The new sketch for a Boss / Cut is open: in 3D, the drawing tool
+    on it with the view turned square on; in 2D, it opened itself."""
+    from . import face_sketch
+    group.params[KEY] = kind
+    window.__dict__.setdefault("_cut_parts", {})[id(group)] = part
+    label = ALL[kind][0]
+    if in_3d:
+        # drawn ON the face, where the user is looking (2026-11-01,
+        # the user: going to the 2D view and back loses them)
+        from . import sketch3d
+        window._chosen_face = list(face_tris)
+        view = window.view3d          # looking straight at the face
+        yaw, pitch = face_sketch.camera_for(normal)
+        view.user_moved = True
+        # (where the user was looking: back there for the depth)
+        window._cut_view_before = dict(
+            yaw=view.yaw, pitch=view.pitch, face=(yaw, pitch))
+        from . import view_anim
+        view_anim.glide_3d(view, dict(
+            yaw=yaw, pitch=pitch, target=list(view.target),
+            distance=view.distance))
+        tool = sketch3d.Sketch3DTool(window, "rect")
+        tool.use_group(group)
+        window.view3d.edit_tool = tool
+        tool.begin()
+        ribbon = getattr(window, "ribbon", None)
+        if ribbon is not None:
+            ribbon.show_tab("sketch")
+        return
+    end = "to extrude it" if kind in BOSS else "to cut"
+    window.statusBar().showMessage(
+        "%s: draw the shape (circle, slot, rectangle…), dimension "
+        "it, then leave the sketch %s." % (label, end), 10000)
+
+
+#: a main plane -> its normal (towards the viewer of that view)
+PLANE_NORMALS = {"Front (XZ)": (0.0, -1.0, 0.0),
+                 "Top (XY)": (0.0, 0.0, 1.0),
+                 "Side (YZ)": (1.0, 0.0, 0.0)}
+
+
+def _crossing(parts, normal):
+    """The part the plane through the origin passes through most (a cut
+    on that plane cuts it), else the first."""
+    best, best_n = None, -1
+    for part, tris in parts:
+        n = 0
+        for t in tris:
+            ds = [sum(v[i] * normal[i] for i in range(3)) for v in t[:3]]
+            if min(ds) < 0 < max(ds):
+                n += 1
+        if n > best_n:
+            best, best_n = part, n
+    return best
+
+
+def _on_plane(window, kind, in_3d):
+    """A new sketch on Front / Top / Right, clicked in the 3D view."""
+    from . import face_sketch, meshedit_ui, plane_pick
+    label = ALL[kind][0]
+    parts = meshedit_ui._parts(window)
+    if not parts:
+        window.statusBar().showMessage(
+            "%s: there is no part yet — draw a sketch and extrude it "
+            "first." % label, 6000)
+        return None
+
+    def chosen(plane):
+        normal = PLANE_NORMALS.get(plane)
+        if normal is None:
+            return
+        part = _crossing(parts, normal)
+        group = face_sketch.make(window, part, (0.0, 0.0, 0.0), normal,
+                                 open_2d=not in_3d)
+        window.model.rename(group, "Sketch on " + plane_pick.name_of(plane))
+        _open(window, kind, group, part, normal, [], in_3d)
+    plane_pick.start(window, on_plane=chosen)
+    window.statusBar().showMessage(
+        "%s: click the Front, Top or Right plane to sketch on." % label,
+        10000)
     return None
 
 

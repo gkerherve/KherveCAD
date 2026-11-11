@@ -248,6 +248,18 @@ class OptionsDialog(QDialog):
                                         "dimension"))
         self.scale_first.setChecked(sc.scale_first_enabled())
         form.addRow("", self.scale_first)
+        from . import sketch_choice
+        self.ask_where = QCheckBox(tr(
+            "Ask where to sketch for a Boss / Cut (selection, face or "
+            "plane; 3D or 2D)"))
+        self.ask_where.setChecked(sketch_choice.asks())
+        form.addRow("", self.ask_where)
+        self.where_3d = QComboBox()
+        self.where_3d.addItem(tr("3D view"), "3d")
+        self.where_3d.addItem(tr("2D sketch view"), "2d")
+        self.where_3d.setCurrentIndex(
+            0 if sketch_choice.where() == "3d" else 1)
+        form.addRow(tr("Sketch a Boss / Cut in:"), self.where_3d)
         return page
 
     def _page_view(self):
@@ -388,6 +400,9 @@ class OptionsDialog(QDialog):
         s.setValue(user_library_dialog.AUTOSAVE_KEY,
                    self.autosave.isChecked())
         s.setValue(sc.SCALE_FIRST, self.scale_first.isChecked())
+        from . import sketch_choice
+        sketch_choice.set_asks(self.ask_where.isChecked())
+        s.setValue("sketch/feature_where", self.where_3d.currentData())
         try:
             grid = float(self.grid.text().replace(",", "."))
             if grid > 0 and abs(grid - win.scene.grid_size) > 1e-12:
@@ -421,7 +436,8 @@ class OptionsDialog(QDialog):
 
     def _widgets(self):
         boxes = [self.lang, self.theme, self.style, self.autosave,
-                 self.scale_first, self.grid, self.history, self.unit,
+                 self.scale_first, self.ask_where, self.where_3d,
+                 self.grid, self.history, self.unit,
                  self.scale, self.fn, self.decimals, self.zeros,
                  self.material]
         boxes += [b for b, _a in self._checks]

@@ -3463,6 +3463,22 @@ into a new module and import.
                        node draws NOTHING (`keep_of` -> "none": a rolled-
                        back Group passed its cut through). The History
                        view names a cutting extrude Cut-Extrude.
+  - `sketch_choice.py` — Extruded Boss / every Cut ASK first (2026-11-11,
+                       the user: "a pop-up … select this model or create a
+                       new sketch … 3D or 2D so that I make a final
+                       decision"): What to use — the selection (a sketch is
+                       used as it is; a selected PART means click a face of
+                       it, the pick limited to it), a face of the model, or
+                       Front / Top / Right (`cut_feature._on_plane`: a face
+                       sketch through the origin on the part the plane
+                       crosses most) — and Sketch in 3D view / 2D sketch
+                       view (`cut_feature._open`, replacing the fixed
+                       `IN_3D`, which stays the default when not asked).
+                       Not asked while a sketch is open. "Don't ask again"
+                       = QSettings `sketch/feature_ask` / `feature_where`,
+                       Edit ▸ Options ▸ Sketch turns it back on. Tests:
+                       conftest's `ask_hook` answers None (old behaviour);
+                       tests/test_sketch_choice.py.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into
