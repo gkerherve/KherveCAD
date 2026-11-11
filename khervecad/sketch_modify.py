@@ -128,31 +128,12 @@ def _at(line, t):
 
 
 def trim(model, line, click):
-    """Remove the piece of *line* under *click*. Returns what happened:
-    'deleted', 'shortened' or 'split'."""
-    ts = [0.0] + cuts(line) + [1.0]
-    t = min(max(_t_of(line, click), 0.0), 1.0)
-    i = max(k for k in range(len(ts) - 1) if ts[k] <= t)
-    lo, hi = ts[i], ts[i + 1]
-    if lo == 0.0 and hi == 1.0:
-        model.remove_node(line)
-        return "deleted"
-    keep_a, keep_b = _at(line, lo), _at(line, hi)
-    a, b = _ends(line)
-    p = line.params
-    if lo == 0.0:
-        p["x1"], p["y1"] = keep_b
-    elif hi == 1.0:
-        p["x2"], p["y2"] = keep_a
-    else:
-        # split: this line keeps a -> lo, a copy takes hi -> b
-        p["x2"], p["y2"] = keep_a
-        twin = _insert(model, "line", dict(p), line)
-        twin.params.update(x1=keep_b[0], y1=keep_b[1], x2=b[0], y2=b[1])
-        model.node_changed.emit(line)
-        return "split"
-    model.node_changed.emit(line)
-    return "shortened"
+    """Remove the piece of *line* (a line, an arc or a circle) under
+    *click*, between the nearest crossings of the sketch's other shapes.
+    Returns 'deleted', 'shortened', 'split' or 'opened' (a circle left as
+    an arc) — sketch_trim.trim_piece."""
+    from . import sketch_trim
+    return sketch_trim.trim_piece(model, line, click)
 
 
 def extend(model, line, click):
@@ -430,7 +411,10 @@ def press(scene, event):
         if tr.mode() == tr.POWER:
             scene._power_last = pos       # the stroke starts here
             return
-        want = "curve" if tr.mode() in (tr.INSIDE, tr.OUTSIDE) else "line"
+        # lines, arcs AND circles (a circle's piece between two
+        # crossings goes, the rest stays an arc)
+        want = "curve" if tr.mode() in (tr.INSIDE, tr.OUTSIDE,
+                                        tr.CLOSEST) else "line"
         hit = scu.pick(scene, pos, want)
         if hit is None:
             scene.status.emit(tr.MESSAGES[tr.mode()])
@@ -441,6 +425,8 @@ def press(scene, event):
                                       _frame_point(scene, node, pos)))
         except ValueError as exc:
             scene.status.emit("Trim: %s." % exc)
+        scene._trim_hover = []            # that piece is gone
+        scene.update()
         panel = tr._panel(scene.views()[0], create=False) \
             if scene.views() else None
         if panel is not None:
@@ -529,7 +515,7 @@ def power_move(scene, event):
         return False
     pos = event.scenePos()
     lines = [it.node for it in scu._shape_items(scene)
-             if it.node.type == "line"]
+             if it.node.type in ("line", "circle")]
     n = 0
     for line in lines:
         a = _frame_point(scene, line, last)

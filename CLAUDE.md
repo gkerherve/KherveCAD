@@ -3294,7 +3294,16 @@ into a new module and import.
                        on screen), Corner (two lines run to meet, clicked
                        sides kept), Trim away inside / outside (two
                        boundaries, then lines), Trim to closest (the old
-                       Trim). Convert: click a part's edge -> its WHOLE edge
+                       Trim). Lines, ARCS and CIRCLES (2026-11-11, the user's
+                       flange): `curve_of` / `meet_points` / `cuts` /
+                       `piece` / `trim_piece` — a circle's piece between two
+                       crossings goes and the rest becomes an open arc (a
+                       bulged line) that keeps its relations: an arc line
+                       has entities "c" and "o" (sketch_constraints
+                       `_arc_of`), so Ø and Coincident-centre rows still
+                       hold. The piece a click would remove is drawn orange
+                       under the cursor (`hover_2d` / `paint_2d`,
+                       `Modify3D._trim_hover` / `paint_3d`). Convert: click a part's edge -> its WHOLE edge
                        (`whole_edge`: a straight side, or every piece of its
                        arc — a piece is on an arc only if its MIDDLE is too)
                        as a line, a bulged line (partial arc) or a circle;

@@ -208,6 +208,11 @@ def _entities(node):
     t = node.type
     if t == "line":
         # a wide line is a slot: its round ends are circles to dimension
+        from . import sketch_arc
+        if sketch_arc.is_arc(node):
+            # an arc: its ends, centre and the circle it lies on
+            return [("p1", "point"), ("p2", "point"), ("c", "point"),
+                    ("o", "circle")]
         ends = [("a1", "circle"), ("a2", "circle")] \
             if float(node.params.get("width", 0) or 0) > 1e-6 else []
         return [("p1", "point"), ("p2", "point"), ("m", "point"),

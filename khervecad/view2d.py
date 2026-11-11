@@ -2387,10 +2387,11 @@ class SketchScene(QGraphicsScene):
             sketch_tools.move(self, event)
             return
         if self.tool == "sk_trim":
-            from . import sketch_modify
+            from . import sketch_modify, sketch_trim
             if sketch_modify.power_move(self, event):
                 event.accept()
                 return
+            sketch_trim.hover_2d(self, event.scenePos())
         if self.tool == LINE:
             from . import sketch_line
             sketch_line.move(self, event)
@@ -2870,6 +2871,11 @@ class SketchView(QGraphicsView):
         try:                            # a sketch pattern's copies
             from . import sketch_pattern
             sketch_pattern.paint(self.scene(), painter)
+        except Exception:               # never raise out of a paint
+            pass
+        try:                            # the piece Trim would remove
+            from . import sketch_trim
+            sketch_trim.paint_2d(self, painter)
         except Exception:               # never raise out of a paint
             pass
         self._dim_hits = []           # every clickable value, this paint

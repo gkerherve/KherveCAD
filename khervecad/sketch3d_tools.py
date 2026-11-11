@@ -281,9 +281,8 @@ class Modify3D(constrain3d.Constrain3D):
     def _allowed(self):
         if self.tool == sm.TRIM:
             from . import sketch_trim as tr
-            return ("line", "circle") if tr.mode() in (tr.INSIDE,
-                                                       tr.OUTSIDE) \
-                else ("line",)
+            return ("line",) if tr.mode() == tr.CORNER \
+                else ("line", "circle")
         if self.tool == sm.EXTEND:
             return ("line",)
         if self.tool in (sm.FILLET, sm.CHAMFER):
@@ -363,7 +362,11 @@ class Modify3D(constrain3d.Constrain3D):
             return self._mirror(hit)
         if tool == sm.TRIM:
             from . import sketch_trim as tr
-            p = self._along(hit, x, y) if node.type == "line" else (0, 0)
+            p = self._local(x, y)
+            if p is None:
+                p = self._along(hit, x, y) if node.type == "line" \
+                    else (0, 0)
+            self._hover_piece = []            # that piece is going
             self._say(tr.pick(model, node, p))
             panel = tr._panel(self.view, create=False)
             if panel is not None:
@@ -428,6 +431,41 @@ class Modify3D(constrain3d.Constrain3D):
         self.view.update()
         return made
 
+    def _trim_hover(self, x, y):
+        """The piece a click would remove, kept for paint (the user:
+        "that quarter circle should be highlighted")."""
+        from . import sketch_trim as tr
+        pts = []
+        if tr.mode() == tr.CLOSEST:
+            hit = self.pick_at(x, y)
+            p = self._local(x, y)
+            if hit is not None and p is not None:
+                pts = tr.piece_points(hit[0], p)
+        if pts or getattr(self, "_hover_piece", None):
+            self._hover_piece = pts
+            self.view.update()
+
+    def paint(self, painter, project):
+        super().paint(painter, project)
+        pts = getattr(self, "_hover_piece", None)
+        sk = getattr(self.window, "_sketch3d_tool", None)
+        if pts and sk is not None and sk.group is not None:
+            from . import sketch_trim as tr
+            try:
+                tr.paint_3d(painter, project, sk.group, pts)
+            except Exception:           # never raise out of a paint
+                pass
+
+    def _local(self, x, y):
+        """The screen point on the sketch's plane, in its own (x, y)."""
+        sk = getattr(self.window, "_sketch3d_tool", None)
+        if sk is None or sk.group is None:
+            return None
+        try:
+            return sk.local_of(x, y, True)
+        except Exception:
+            return None
+
     # -- Power trim: a drag across the lines on screen ---------------
     def _power(self):
         from . import sketch_trim as tr
@@ -443,6 +481,8 @@ class Modify3D(constrain3d.Constrain3D):
     def mouse_move(self, event):
         last = getattr(self, "_stroke", None)
         if last is None or not self._power():
+            if self.tool == sm.TRIM:
+                self._trim_hover(event.pos().x(), event.pos().y())
             return super().mouse_move(event)
         now = (event.pos().x(), event.pos().y())
         n = self.power_stroke(last, now)
@@ -459,7 +499,15 @@ class Modify3D(constrain3d.Constrain3D):
         return super().mouse_release(event)
 
     def power_stroke(self, a, b):
-        """Trim every sketch line the screen stroke a -> b crosses."""
+        """Trim every sketch line, arc and circle the screen stroke
+        a -> b crosses."""
+        sk = getattr(self.window, "_sketch3d_tool", None)
+        la, lb = self._local(*a), self._local(*b)
+        if sk is not None and la is not None and lb is not None:
+            from . import sketch_trim as tr
+            holder = sk.holder or sk.group
+            return tr.power(self.window.model, list(holder.children),
+                            la, lb)
         project = self._project()
         n = 0
         model = self.window.model

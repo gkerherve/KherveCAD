@@ -206,6 +206,10 @@ def _point(node, name, vals):
         if name == "m":                  # its midpoint (the user)
             return ((_f(node, "x1", vals) + _f(node, "x2", vals)) / 2,
                     (_f(node, "y1", vals) + _f(node, "y2", vals)) / 2)
+        if name == "c":                  # an ARC's centre (a trimmed circle)
+            g = _arc_of(node, vals)
+            if g is not None:
+                return g[0], g[1]
     if t == "circle" and name == "c":
         return _f(node, "x", vals), _f(node, "y", vals)
     if t == "rect":
@@ -236,9 +240,27 @@ def _line(node, name, vals):
     raise KeyError(name)
 
 
+def _arc_of(node, vals):
+    """(cx, cy, r) of a line with a bulge, or None for a straight one."""
+    from . import sketch_arc
+    b = vals.get((node.id, "bulge"), node.params.get("bulge", 0.0))
+    try:
+        b = float(b)
+    except (TypeError, ValueError):
+        return None
+    g = sketch_arc.geometry(_f(node, "x1", vals), _f(node, "y1", vals),
+                            _f(node, "x2", vals), _f(node, "y2", vals), b)
+    return None if g is None else (g[0], g[1], g[2])
+
+
 def _circle(node, name, vals):
     if node.type == "circle":
         return _point(node, "c", vals), _f(node, "radius", vals, 1.0)
+    if node.type == "line" and name == "o":
+        # an ARC: a circle trimmed keeps its Ø and centre relations
+        g = _arc_of(node, vals)
+        if g is not None:
+            return (g[0], g[1]), g[2]
     if node.type == "line" and name in ("a1", "a2"):
         # a slot's round end: centred on that end, half its width
         # (SolidWorks' slot R from the end's centre, 2026-10-25)

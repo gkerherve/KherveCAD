@@ -8,6 +8,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 import pytest
 from PyQt5.QtCore import QPointF, Qt
 from PyQt5.QtTest import QTest
@@ -124,3 +126,88 @@ def test_power_trim_drags_across(view):
     ends = sorted(_ends(n) for n in m.root.children
                   if n.type == "line" and n is not b)
     assert ends == [(0, 0, 10, 0), (0, 4, 10, 4)]  # both lost x > 10
+
+
+def test_circles_trim_inside_each_other_like_the_flange(app):
+    """SolidWorks' exercise: the Ø80 and the Ø30 overlap; trimming each
+    inside the other leaves two open arcs that meet at the crossings —
+    and their Ø dimensions and centres still drive them."""
+    import math
+    from khervecad import sketch_arc, sketch_constraints as sc
+    m = DocumentModel()
+    big = m.add_node("circle", dict(x=0, y=0, radius=40), name="Big")
+    small = m.add_node("circle", dict(x=-46, y=0, radius=15), name="Small")
+    sc.add(m, m.root, "diameter", [sc.ref_of(m.root, big, "o")], value=80)
+    sc.add(m, m.root, "fix", [sc.ref_of(m.root, big, "c")])
+    sc.add(m, m.root, "fix", [sc.ref_of(m.root, small, "c")])
+    # the piece of the big circle inside the small one, near (-40, 0)
+    assert tr.trim_piece(m, big, (-40, 0.5)) == "opened"
+    assert big.type == "line" and sketch_arc.is_arc(big)
+    assert tr.trim_piece(m, small, (-31, 0.2)) == "opened"
+    # both end where the two circles cross
+    d, r0, r1 = 46.0, 40.0, 15.0
+    a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
+    h = math.sqrt(r0 * r0 - a * a)
+    cross = {(round(-a, 3), round(h, 3)), (round(-a, 3), round(-h, 3))}
+    for n in (big, small):
+        ends = {(round(n.params["x1"], 3), round(n.params["y1"], 3)),
+                (round(n.params["x2"], 3), round(n.params["y2"], 3))}
+        assert ends == cross
+    # the big arc stays round the origin, the small round (-46, 0), and
+    # the arcs left are the OUTER parts (a point far out lies on them)
+    g = tr.curve_of(big)
+    assert (round(g[1], 4), round(g[2], 4), round(g[3], 4)) == (0, 0, 40)
+    assert tr._on(g, (40, 0)) is not None
+    g2 = tr.curve_of(small)
+    assert (round(g2[1], 4), round(g2[3], 4)) == (-46, 15)
+    assert tr._on(g2, (-61, 0)) is not None
+    # its Ø dimension still holds on the arc
+    report = sc.solve(m.root)
+    assert report["ok"]
+    rows = [r for r in sc.rows(m.root) if r["kind"] == "diameter"]
+    assert rows and sc._circle(big, "o", {})[1] == pytest.approx(40, abs=1e-6)
+
+
+def test_a_line_through_a_circle_trims_to_its_crossings(app):
+    m = DocumentModel()
+    m.add_node("circle", dict(x=0, y=0, radius=10))
+    line = _line(m, (-30, 0), (30, 0), "L")
+    assert tr.trim_piece(m, line, (0, 0)) == "split"
+    ends = sorted(_ends(n) for n in m.root.children if n.type == "line")
+    assert ends == [(-30, 0, -10, 0), (10, 0, 30, 0)]
+
+
+def test_the_piece_under_the_cursor_is_found_for_the_highlight(app):
+    m = DocumentModel()
+    big = m.add_node("circle", dict(x=0, y=0, radius=40))
+    m.add_node("circle", dict(x=-46, y=0, radius=15))
+    pts = tr.piece_points(big, (-40, 0))
+    assert len(pts) > 2
+    assert all(math.hypot(x + 46, y) <= 15.01 for x, y in pts)
+
+
+def test_hover_shows_the_piece_and_a_click_removes_it(view):
+    """The flange by mouse: the cursor over the big circle's piece
+    inside the small one lights that piece; a click opens the circle."""
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtCore import QEvent
+    from khervecad import sketch_arc, sketch_modify
+    tr.set_mode(tr.CLOSEST)
+    m = view.scene().model
+    big = m.add_node("circle", dict(x=0, y=0, radius=40))
+    m.add_node("circle", dict(x=-46, y=0, radius=15))
+    QApplication.processEvents()
+    view.resetTransform()
+    view.scale(4, -4)
+    view.centerOn(-20, 0)
+    view.set_tool(sketch_modify.TRIM)
+    at = view.mapFromScene(QPointF(-40, 0))
+    QApplication.sendEvent(view.viewport(), QMouseEvent(
+        QEvent.MouseMove, at, Qt.NoButton, Qt.NoButton, Qt.NoModifier))
+    hover = view.scene()._trim_hover
+    assert len(hover) > 2
+    assert all(math.hypot(p.x() + 46, p.y()) <= 15.05 for p in hover)
+    view.viewport().repaint()                      # paints, never raises
+    _click(view, -40, 0)
+    assert big.type == "line" and sketch_arc.is_arc(big)
+    assert view.scene()._trim_hover == []
