@@ -169,8 +169,10 @@ def test_a_point_is_an_origin_with_two_centerlines(app):
                      view.mapFromScene(QPointF(5, 3)))
     QApplication.processEvents()
     m = scene.model
-    group = next(n for n in m.root.walk() if n.name == "Origin 1")
-    dot, h, v = group.children
+    dot = next(n for n in m.root.walk() if n.name == "Origin 1")
+    h = next(n for n in m.root.walk() if n.name == "Origin 1 X")
+    v = next(n for n in m.root.walk() if n.name == "Origin 1 Y")
+    group = dot.parent                         # loose in the sketch
     assert dot.type == "circle" and h.type == v.type == "line"
     assert all(n.params.get("modifier") == "%" for n in (dot, h, v))
     assert (h.params["y1"], h.params["y2"]) == (3, 3)
@@ -234,7 +236,8 @@ def test_origins_are_numbered_and_the_tree_says_so(app):
         QApplication.processEvents()
         names = [n.name for n in win.model.root.walk()
                  if n.params.get(s2.ORIGIN_KEY)]
-        assert names == ["Origin 1", "Origin 2"]
+        assert names == ["Origin 1", "Origin 1 X", "Origin 1 Y",
+                         "Origin 2", "Origin 2 X", "Origin 2 Y"]
         tree = win.builder.tree
         texts = []
 
@@ -248,3 +251,37 @@ def test_origins_are_numbered_and_the_tree_says_so(app):
     finally:
         win._dirty = False
         win.close()
+
+
+
+def test_a_circle_snapped_on_an_origin_or_a_crossing_follows_it(app):
+    """Drawn with its centre ON an origin, a circle is Coincident with it;
+    at the crossing of two lines, On both — and follows when they move
+    (2026-11-11, the user)."""
+    from khervecad import sketch_constraints as sc, sketch_touch
+    from khervecad import sketch_tools2 as s2
+
+    class Scene:
+        pass
+    m = DocumentModel()
+    sk = Scene()
+    sk.model = m
+    made = [m.add_node(t, p) for t, p, _k in s2.point((10, 10))]
+    dot = s2.origin_relations(sk, made)
+    a = m.add_node("line", dict(x1=-20, y1=-5, x2=40, y2=-5, width=0.2))
+    b = m.add_node("line", dict(x1=0, y1=-30, x2=0, y2=20, width=0.2))
+    c1 = m.add_node("circle", dict(x=10, y=10, radius=2))
+    c2 = m.add_node("circle", dict(x=0, y=-5, radius=1))
+    for c in (c1, c2):
+        sketch_touch.relate(m, c)
+    # the origin moved: the first circle comes with it
+    dot.params.update(x=15.0, y=4.0)
+    sc.refresh(m, edited=(dot.id,))
+    assert (c1.params["x"], c1.params["y"]) == pytest.approx((15, 4),
+                                                             abs=1e-4)
+    # the crossing moved: the second circle stays on it
+    a.params.update(y1=3.0, y2=3.0)
+    b.params.update(x1=7.0, x2=7.0)
+    sc.refresh(m, edited=(a.id, b.id))
+    assert (c2.params["x"], c2.params["y"]) == pytest.approx((7, 3),
+                                                             abs=1e-3)

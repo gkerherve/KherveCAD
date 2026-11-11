@@ -133,28 +133,53 @@ def point(p, arm=POINT_ARM):
                           width=0.5, modifier="%"), None)]
 
 
-#: on the "Origin n" group: a point with its X / Y centerlines
+#: on an origin's three shapes: its name ("Origin 1"), so they are found
+#: together. They sit loose in the sketch, NOT in a group of their own:
+#: a relation ties only shapes of one container, and a circle snapped onto
+#: an origin in a group could not be tied to it (2026-11-11, the user: "if
+#: it changes position I expected it to follow"). A group made before is
+#: still read (`origin_parts`).
 ORIGIN_KEY = "origin_point"
 #: a new point's centerlines reach this far on screen each way
 ARM_PX = 50
 
 
 def origin_parts(node):
-    """(group, dot, x line, y line) when *node* is a Point group or one of
-    its three shapes, else None."""
-    g = node if node is not None and node.params.get(ORIGIN_KEY) else (
-        node.parent if node is not None and node.parent is not None and
-        node.parent.params.get(ORIGIN_KEY) else None)
-    if g is None or len(g.children) != 3:
+    """(holder, dot, x line, y line) when *node* is one of an origin's
+    shapes (or an older origin group), else None. *holder* is the dot."""
+    if node is None:
         return None
-    dot, h, v = g.children
-    if dot.type != "circle" or h.type != "line" or v.type != "line":
+    label = node.params.get(ORIGIN_KEY)
+    if label is True and len(node.children) == 3:       # an older group
+        dot, h, v = node.children
+        if dot.type == "circle" and h.type == v.type == "line":
+            return node, dot, h, v
         return None
-    return g, dot, h, v
+    if label is None and node.parent is not None and \
+            node.parent.params.get(ORIGIN_KEY) is True:
+        return origin_parts(node.parent)
+    if not isinstance(label, str) or node.parent is None:
+        return None
+    mine = [n for n in node.parent.children
+            if n.params.get(ORIGIN_KEY) == label]
+    dots = [n for n in mine if n.type == "circle"]
+    lines = [n for n in mine if n.type == "line"]
+    if len(dots) != 1 or len(lines) != 2:
+        return None
+
+    def level(n):
+        return abs(float(n.params.get("y2", 0)) -
+                   float(n.params.get("y1", 0))) < \
+            abs(float(n.params.get("x2", 0)) - float(n.params.get("x1", 0)))
+    h = next((n for n in lines if n.name.endswith(" X")), None) or \
+        next((n for n in lines if level(n)), lines[0])
+    v = next(n for n in lines if n is not h)
+    return dots[0], dots[0], h, v
 
 
 def arm_lengths(group):
     _g, _d, h, v = origin_parts(group)
+
     def length(n):
         p = n.params
         return math.hypot(float(p["x2"]) - float(p["x1"]),
@@ -180,31 +205,30 @@ def set_arms(model, group, x_len=None, y_len=None, emit=True):
 
 
 def origin_relations(scene, made):
-    """The point and its two centerlines as one "Origin n" group: each line
-    centred on the point (Coincident with its middle), one Horizontal,
-    one Vertical — drag the point and its axes come with it."""
+    """The point and its two centerlines named "Origin n", "Origin n X",
+    "Origin n Y", loose in the sketch: each line centred on the point
+    (Coincident with its middle), one Horizontal, one Vertical — drag the
+    point and its axes come with it; a shape drawn on them is tied."""
     from . import sketch_constraints as sc
     dot, h, v = made
-    group = scene.model.wrap_nodes(made, "union")
-    if group is None:
-        return dot
-    group.params[ORIGIN_KEY] = True
-    # "Origin 1", "Origin 2"… (the user), through the model so the tree
-    # shows it at once (a plain .name left "Group (union) 1" on screen)
-    taken = {n.name for n in scene.model.root.walk()}
+    model = scene.model
+    taken = {n.name for n in model.root.walk()}
     k = 1
     while "Origin %d" % k in taken:
         k += 1
-    scene.model.rename(group, "Origin %d" % k)
+    label = "Origin %d" % k
+    for node, name in ((dot, label), (h, label + " X"), (v, label + " Y")):
+        node.params[ORIGIN_KEY] = label
+        model.rename(node, name)        # the tree shows it at once
     # the centerlines a size that reads at this zoom, not always 10 mm
     try:
         from .polygon_draw import px_to_scene
         arm = px_to_scene(scene, ARM_PX)
         if arm and arm > 0:
-            set_arms(scene.model, group, 2 * arm, 2 * arm, emit=False)
+            set_arms(model, dot, 2 * arm, 2 * arm, emit=False)
     except Exception:
         pass
-    parent = group
+    parent = dot.parent
     for kind, refs in (
             ("coincident", [sc.ref_of(parent, dot, "c"),
                             sc.ref_of(parent, h, "m")]),
@@ -213,10 +237,10 @@ def origin_relations(scene, made):
             ("horizontal", [sc.ref_of(parent, h, "l")]),
             ("vertical", [sc.ref_of(parent, v, "l")])):
         try:
-            sc.add(scene.model, parent, kind, refs)
+            sc.add(model, parent, kind, refs)
         except (ValueError, KeyError):
             pass
-    return group
+    return dot
 
 
 def rect_3pt_corners(a, b, c):

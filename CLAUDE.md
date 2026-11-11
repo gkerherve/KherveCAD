@@ -3266,15 +3266,21 @@ into a new module and import.
                        3D) that drags the whole line, its ends snapping onto
                        other shapes' points / edges (`_move_line`,
                        `LineShapeItem._move_whole`); and the Point tool makes
-                       an "Origin n" group (numbered, renamed through the
-                       model so the tree shows it at once) — the point and two construction
+                       an origin — "Origin n", "Origin n X", "Origin n Y",
+                       LOOSE in the sketch (`params["origin_point"]` = the
+                       label; a relation ties only shapes of one container,
+                       so in a group nothing snapped on it could follow it)
+                       — — the point and two construction
                        centerlines along X and Y (`sketch_tools2.point`,
                        `origin_relations`: Coincident with each line's
                        middle, Horizontal, Vertical), like a small origin;
                        its lines are `ARM_PX` long on screen when made and
                        their lengths are Properties rows on the group or any
                        of its shapes (`set_arms`, `params["origin_point"]`).
-                       tests/test_snap_intersections.py.
+                       A point DROPPED by a drag (2D handle, 3D grip) gets
+                       the relations `sketch_touch.relate` gives a drawn one
+                       (Coincident on a point, On curve on each line through
+                       it — a crossing is On both). tests/test_snap_intersections.py.
   - `sketch_trim.py` / `sketch_convert.py` — SolidWorks' **Trim Entities**
                        and **Convert Entities** (2026-11-11, the user, with
                        SolidWorks' Trim window), the two LARGE buttons

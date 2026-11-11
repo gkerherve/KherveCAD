@@ -1341,6 +1341,17 @@ class SketchScene(QGraphicsScene):
         relation when you drop a point on a line."""
         self._handle_drag = False
         self._set_snap_hint(None)
+        if got is not None and moving is not None and \
+                getattr(moving, "node", None) is not None and \
+                moving.node.parent is not None:
+            # dropped ON a point, an intersection, a line: tied there, as
+            # it would be if drawn there (2026-11-11, the user: "if it
+            # changes position I expected it to follow")
+            from . import sketch_touch
+            try:
+                sketch_touch.relate(self.model, moving.node)
+            except Exception:
+                pass
         if got is None or got[1] != "on_line" or role != "center" or \
                 moving is None or got[2] is None:
             return

@@ -1127,7 +1127,15 @@ class Sketch3DTool:
     def mouse_release(self, event):
         from PyQt5.QtCore import Qt
         if self._drag is not None:
-            self._drag = None
+            dragged, self._drag = self._drag[0], None
+            if getattr(self, "_drag_moved", False) and \
+                    dragged.parent is not None:
+                # dropped on a point / crossing / line: tied there
+                from . import sketch_touch
+                try:
+                    sketch_touch.relate(self.window.model, dragged)
+                except Exception:
+                    pass
             start = getattr(self, "_drag_from", None)
             if start is None or getattr(self, "_drag_moved", True) or \
                     event.button() != Qt.LeftButton:
