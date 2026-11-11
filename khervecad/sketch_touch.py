@@ -44,6 +44,12 @@ def _curves(node):
             return []
         return ["l"]
     if t == "circle":
+        # a sketch POINT (an origin's dot) is a point, never a curve to
+        # land on: the Ø30 drawn on Origin 2 went On its 0.25 mm rim and
+        # stood a quarter of a millimetre off (2026-11-11, the user)
+        from .view2d import is_sketch_point
+        if is_sketch_point(node):
+            return []
         return [] if node.params.get("angle", 360) not in (360, 360.0) \
             else ["o"]
     if t == "rect":

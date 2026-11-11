@@ -285,3 +285,47 @@ def test_a_circle_snapped_on_an_origin_or_a_crossing_follows_it(app):
     sc.refresh(m, edited=(a.id, b.id))
     assert (c2.params["x"], c2.params["y"]) == pytest.approx((7, 3),
                                                              abs=1e-3)
+
+
+def test_a_circle_drawn_on_an_origin_is_tied_not_pinned(app):
+    """The user's 70 that would not change: a circle drawn at Origin 2's
+    point was FIXED there (the origin's dot counted as a centre to pin
+    to), which froze the origin. Now it is Coincident, and a distance
+    to the origin moves both."""
+    from khervecad import face_outline, sketch_constraints as sc, \
+        sketch_touch
+    from khervecad import sketch_tools2 as s2
+    scene = SketchScene(DocumentModel())
+    m = scene.model
+    o1 = s2.origin_relations(scene, [m.add_node(t, p) for t, p, _k
+                                     in s2.point((0, 0))])
+    o2 = s2.origin_relations(scene, [m.add_node(t, p) for t, p, _k
+                                     in s2.point((-70, 0))])
+    hole = m.add_node("circle", dict(x=-70, y=0, radius=8))
+    face_outline.pin(scene, m, hole)
+    sketch_touch.relate(m, hole)
+    rows = sc.rows(m.root)
+    me = sc.ref_of(m.root, hole, "c")
+    assert not any(r["kind"] == "fix" and me in r["refs"] for r in rows)
+    assert any(r["kind"] == "coincident" and me in r["refs"] for r in rows)
+    sc.add(m, m.root, "fix", [sc.ref_of(m.root, o1, "c")])
+    sc.add(m, m.root, "distance", [sc.ref_of(m.root, o1, "c"),
+                                   sc.ref_of(m.root, o2, "c")], value=46)
+    assert (hole.params["x"], hole.params["y"]) == pytest.approx((-46, 0),
+                                                                 abs=1e-3)
+
+
+def test_a_centre_near_a_point_is_coincident_not_on_its_rim(app):
+    """Drawn 0.25 mm off an origin's dot, a circle went On the dot's rim
+    (and stayed off by that much): a sketch point is never a curve."""
+    from khervecad import sketch_constraints as sc, sketch_touch
+    from khervecad import sketch_tools2 as s2
+    scene = SketchScene(DocumentModel())
+    m = scene.model
+    dot = s2.origin_relations(scene, [m.add_node(t, p) for t, p, _k
+                                      in s2.point((-70, 0))])
+    ring = m.add_node("circle", dict(x=-69.75, y=0, radius=15))
+    sketch_touch.relate(m, ring)
+    me = sc.ref_of(m.root, ring, "c")
+    assert not any(me in r["refs"] and sc.ref_of(m.root, dot, "o")
+                   in r["refs"] for r in sc.rows(m.root))

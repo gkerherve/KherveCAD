@@ -501,8 +501,14 @@ def pin(scene, model, node):
     try:
         # the sketch's own centres and corners too, hidden or not (not
         # the shape just drawn: it would pin to itself)
+        # ... but never a shape of THIS sketch: that is a Coincident
+        # (sketch_touch.relate), which moves with it. Pinned in place,
+        # a circle drawn on an origin froze the origin and every
+        # dimension to it (2026-11-11, the user's 70 that would not
+        # change)
         targets += [(x, y) for x, y, kind, owner in scope_points(scene)
-                    if id(owner) not in mine and kind == "centre"]
+                    if id(owner) not in mine and kind == "centre"
+                    and getattr(owner, "parent", None) is not node.parent]
     except Exception:
         pass
     if not targets and not (info or {}).get("segments"):
