@@ -297,6 +297,8 @@ def pick(model, node, click):
 # between two crossings goes and the rest stays as an open arc; and
 # "hovering … that quarter circle should be highlighted")
 TWO_PI = 2 * math.pi
+#: how near two curves must come to count as touching (relative)
+TANGENT_TOL = 1e-6
 
 
 def curve_of(node):
@@ -394,8 +396,15 @@ def meet_points(c1, c2):
         B = 2 * (f[0] * d[0] + f[1] * d[1])
         C = f[0] ** 2 + f[1] ** 2 - rad ** 2
         disc = B * B - 4 * A * C
-        if A < 1e-18 or disc < 0:
+        if A < 1e-18:
             return []
+        if disc < 0:
+            # a line TANGENT to the circle touches it once; rounding made
+            # it miss by a hair (2026-11-11, the user's trim ran past)
+            if disc > -TANGENT_TOL * B * B - 1e-12:
+                disc = 0.0
+            else:
+                return []
         sq = math.sqrt(disc)
         return [(a[0] + d[0] * t, a[1] + d[1] * t)
                 for t in ((-B - sq) / (2 * A), (-B + sq) / (2 * A))]
@@ -403,7 +412,10 @@ def meet_points(c1, c2):
     _k, x1, y1, r1, _a, _s = c2
     dx, dy = x1 - x0, y1 - y0
     d = math.hypot(dx, dy)
-    if d < 1e-12 or d > r0 + r1 + 1e-9 or d < abs(r0 - r1) - 1e-9:
+    # circles that only TOUCH (tangent, outside or inside) meet at one
+    # point: rounding put them a hair apart and the trim ran past it
+    tol = TANGENT_TOL * max(r0, r1, 1.0)
+    if d < 1e-12 or d > r0 + r1 + tol or d < abs(r0 - r1) - tol:
         return []
     a = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
     h = math.sqrt(max(r0 * r0 - a * a, 0.0))

@@ -233,3 +233,19 @@ def test_a_trim_shows_and_can_be_restored(app):
     tr.restore(m, pieces[1])
     lines = [n for n in m.root.children if n.type == "line"]
     assert len(lines) == 1 and _ends(lines[0]) == (-60, 30, 60, 30)
+
+
+def test_a_circle_trims_at_the_point_where_another_only_touches_it(app):
+    """The user's picture: a small circle tangent INSIDE the big one —
+    the trim must stop at that touching point, not run past it."""
+    m = DocumentModel()
+    big = m.add_node("circle", dict(x=0, y=0, radius=80), name="Big")
+    # tangent inside at (0, -80), centre placed by a solver (a hair off)
+    m.add_node("circle", dict(x=0, y=-64.99999, radius=15),
+               name="Touching")
+    cutter = _line(m, (-100, -40), (100, -40), "Chord")
+    tr.trim_piece(m, big, (30, -74))           # the bottom-right piece
+    g = tr.curve_of(big)
+    ends = {(round(p[0], 3), round(p[1], 3))
+            for p in (tr.point_at(g, 0), tr.point_at(g, 1))}
+    assert any(abs(x) < 0.05 and abs(y + 80) < 0.001 for x, y in ends)
