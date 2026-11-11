@@ -365,7 +365,10 @@ def finish(scene):
         made.append(node)
         for ktype, kparams, _ in kids or []:
             scene.model.add_node(ktype, kparams, parent=node)
-    if len(made) > 1 and all(n.type == "line" for n in made):
+    if tool == sketch_tools2.POINT and len(made) == 3:
+        # a point with its X and Y centerlines, tied to it
+        node = sketch_tools2.origin_relations(scene, made)
+    elif len(made) > 1 and all(n.type == "line" for n in made):
         # one Polyline group (one row, one Object in Main), each line's
         # end joined to the next one's start
         from . import sketch_constraints as sc

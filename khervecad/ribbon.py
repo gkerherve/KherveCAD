@@ -556,10 +556,15 @@ def _panel_actions(win, key):
     if key == "sketch_modify":
         ops = {a.data(): a for _k, fam in parts["families"] for a in fam}
         from . import sketch_modify, sketch_tools2
-        return title, [sketch_tools2.construction_action(win)] + \
+        acts = [sketch_tools2.construction_action(win)] + \
             list(sketch_modify.panel_actions(win)) + [
             sketch_extra(win)["offset"]] + [
             ops[k] for k in SKETCH_MODIFY if k in ops]
+        # SolidWorks' order: Trim Entities and Convert Entities first,
+        # right after the sketch shapes (2026-11-11, the user)
+        lead = [a for k in (sketch_modify.TRIM, "sk_convert")
+                for a in acts if a.data() == k]
+        return title, lead + [a for a in acts if a not in lead]
     if key == "sketch_constrain":
         from . import sketch_constrain_ui
         acts = list(sketch_constrain_ui.panel_actions(win))
@@ -864,6 +869,9 @@ class Ribbon(QWidget):
         if key == "sketch" and len(actions) > 1 and \
                 actions[1].data() == "con_dimension":
             large = actions[:2]          # Sketch and Smart Dimension
+        if key == "sketch_modify" and len(actions) > 1 and \
+                actions[1].data() == "sk_convert":
+            large = actions[:2]          # Trim and Convert Entities
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
             b.setObjectName("large")

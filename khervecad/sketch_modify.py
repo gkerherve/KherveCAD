@@ -36,6 +36,7 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
          ("sk_mirror", "mdi.flip-horizontal", "Mirror Entities"),
+         ("sk_convert", "mdi.vector-square-plus", "Convert Entities"),
          ("sk_lpattern", "mdi.dots-grid", "Linear Sketch Pattern"),
          ("sk_cpattern", "mdi.rotate-3d-variant", "Circular Sketch Pattern"),
          # (no Extrude regions button: Extruded Boss/Base on overlapping
@@ -364,7 +365,7 @@ def _band(pts, width):
 def handles(tool):
     return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
                     "sk_construction", "sk_mirror", "sk_lpattern",
-                    "sk_cpattern")
+                    "sk_cpattern", "sk_convert")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -408,6 +409,42 @@ def press(scene, event):
     if tool in ("regions", "make_region"):
         from . import sketch_regions
         sketch_regions.press(scene, event)
+        return
+    if tool == "sk_convert":
+        from . import sketch_convert
+        from .polygon_draw import px_to_scene
+        outline = getattr(scene, "face_outline", None) or {}
+        made = sketch_convert.click(
+            scene.model, None, outline.get("segments") or [],
+            (pos.x(), pos.y()), px_to_scene(scene, 8),
+            create=scene._create)
+        scene.status.emit(
+            "Converted %d entit%s." % (len(made), "y" if len(made) == 1
+                                       else "ies") if made else
+            "Convert Entities: click an edge of the part, or inside the "
+            "face for its whole outline.")
+        return
+    if tool == TRIM:
+        # Trim Entities: the option in its window (sketch_trim)
+        from . import sketch_trim as tr
+        if tr.mode() == tr.POWER:
+            scene._power_last = pos       # the stroke starts here
+            return
+        want = "curve" if tr.mode() in (tr.INSIDE, tr.OUTSIDE) else "line"
+        hit = scu.pick(scene, pos, want)
+        if hit is None:
+            scene.status.emit(tr.MESSAGES[tr.mode()])
+            return
+        node = hit[0]
+        try:
+            scene.status.emit(tr.pick(scene.model, node,
+                                      _frame_point(scene, node, pos)))
+        except ValueError as exc:
+            scene.status.emit("Trim: %s." % exc)
+        panel = tr._panel(scene.views()[0], create=False) \
+            if scene.views() else None
+        if panel is not None:
+            panel.refresh()
         return
     if tool in (TRIM, EXTEND):
         hit = scu.pick(scene, pos, "line")
@@ -484,8 +521,33 @@ def _ask(scene, tool):
     return v if v > 0 else None
 
 
+def power_move(scene, event):
+    """Power trim: the stroke so far crosses lines — trim them."""
+    from . import sketch_trim as tr, sketch_constrain_ui as scu
+    last = getattr(scene, "_power_last", None)
+    if last is None or not (event.buttons() & 1):
+        return False
+    pos = event.scenePos()
+    lines = [it.node for it in scu._shape_items(scene)
+             if it.node.type == "line"]
+    n = 0
+    for line in lines:
+        a = _frame_point(scene, line, last)
+        b = _frame_point(scene, line, pos)
+        n += tr.power(scene.model, [line], a, b)
+    scene._power_last = pos
+    if n:
+        scene.status.emit("Power trim: %d piece(s) trimmed." % n)
+    return True
+
+
 def drop(scene):
     scene._sk_first = None
+    scene._power_last = None
+    from . import sketch_trim
+    sketch_trim.state.clear()
+    for v in scene.views():
+        sketch_trim.close_panel(v)
     if getattr(scene, "_mirror", None) is not None:
         from . import sketch_mirror
         sketch_mirror.drop(scene)
@@ -546,6 +608,8 @@ def panel_actions(win):
     tooltips.TIPS.update(sketch_mirror.TIPS)
     from . import sketch_pattern
     tooltips.TIPS.update(sketch_pattern.TIPS)
+    from . import sketch_convert
+    tooltips.TIPS.update(sketch_convert.TIPS)
     acts = []
     for tool, glyph, label in TOOLS:
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
@@ -559,6 +623,9 @@ def panel_actions(win):
         elif tool == "sk_mirror":
             act.triggered.connect(
                 lambda _=False: sketch_mirror.start(win))
+        elif tool == TRIM:
+            from . import sketch_trim
+            act.triggered.connect(lambda _=False: sketch_trim.start(win))
         elif tool in sketch_pattern.TOOLS:
             act.triggered.connect(
                 lambda _=False, t=tool: sketch_pattern.start(win, t))

@@ -431,10 +431,45 @@ class LineShapeItem(ShapeItem, QGraphicsLineItem):
             mx, my = sketch_arc.middle(x1, y1, self.rv("x2"), self.rv("y2"),
                                        sketch_arc.bulge_of(self.node.params))
             out.append(("mid", QPointF(mx - x1, my - y1)))
+        else:
+            # its middle moves the WHOLE line, its ends snapping onto
+            # other shapes (2026-11-11, the user)
+            out.append(("move", (line.p1() + line.p2()) / 2.0))
         return out
+
+    def _move_whole(self, pos):
+        """The line moved so its middle is at *pos* (frame coords); an
+        end near another shape's point snaps onto it."""
+        from .view2d_edit import Frame
+        p = self.node.params
+        a = QPointF(self.rv("x1"), self.rv("y1"))
+        b = QPointF(self.rv("x2"), self.rv("y2"))
+        d = pos - (a + b) / 2.0
+        a2, b2 = a + d, b + d
+        frame = self.parentItem()
+        frame = frame if isinstance(frame, Frame) else None
+        to_s = frame.mapToScene if frame else (lambda q: QPointF(q))
+        from_s = frame.mapFromScene if frame else (lambda q: QPointF(q))
+        best = None
+        for end in (a2, b2):
+            got = self._scene.snap_handle(to_s(end), self)
+            if got is None or got[1] != "point" and got[1] != "origin":
+                continue
+            q = from_s(got[0])
+            dist = math.hypot(q.x() - end.x(), q.y() - end.y())
+            if best is None or dist < best[0]:
+                best = (dist, q - end)
+        if best is not None:
+            a2, b2 = a2 + best[1], b2 + best[1]
+        p["x1"], p["y1"] = a2.x(), a2.y()
+        p["x2"], p["y2"] = b2.x(), b2.y()
+        self._scene.model.node_changed.emit(self.node)
 
     def handle_dragged(self, role, scene_pos):
         p = self.node.params
+        if role == "move":
+            self._move_whole(scene_pos)
+            return
         if role == "mid":
             from . import sketch_arc
             p["bulge"] = round(sketch_arc.bulge_through(
@@ -1376,6 +1411,11 @@ class SketchScene(QGraphicsScene):
         for item in self.items():
             if isinstance(item, (ShapeItem, PartItem)):
                 pts += self._item_feature_points(item)
+        try:                             # where the shapes cross
+            from . import sketch_line
+            pts += sketch_line.crossings(self)
+        except Exception:
+            pass
         return pts
 
     def snap_feature(self, scene_pos):
@@ -2335,6 +2375,11 @@ class SketchScene(QGraphicsScene):
         if sketch_tools.handles(self.tool):
             sketch_tools.move(self, event)
             return
+        if self.tool == "sk_trim":
+            from . import sketch_modify
+            if sketch_modify.power_move(self, event):
+                event.accept()
+                return
         if self.tool == LINE:
             from . import sketch_line
             sketch_line.move(self, event)
@@ -2390,6 +2435,7 @@ class SketchScene(QGraphicsScene):
 
     def _release(self, event):
         from . import sketch_tools
+        self._power_last = None            # a power-trim stroke ends
         if sketch_tools.handles(self.tool):
             sketch_tools.release(self, event)
             return

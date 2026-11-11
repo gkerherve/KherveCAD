@@ -518,7 +518,8 @@ def test_a_selected_shape_has_no_dashed_box(view):
     for x, y in ((0, 30), (20, 0), (0, 15), (10, 30), (20, 15), (10, 0)):
         assert not any(dark(x + dx, y + dy) for dx in (-0.1, 0, 0.1)
                        for dy in (-0.1, 0, 0.1)), (x, y)
-    # the line itself is drawn in the accent blue
-    p = view.mapFromScene(QPointF(10, 15))
+    # the line itself is drawn in the accent blue (a quarter along: its
+    # middle holds the grip that moves the whole line)
+    p = view.mapFromScene(QPointF(5, 7.5))
     c = QColor(img.pixel(p.x(), p.y()))
     assert c.blue() > c.red() + 60

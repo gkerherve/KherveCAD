@@ -187,12 +187,16 @@ def test_sketch_tab_has_create_modify_insert(window):
     for tool, *_ in st.TOOLS:
         assert tool in data
     _t, modify = ribbon.panel_actions(window, "sketch_modify")
-    assert [a.data() for a in modify][:8] == [
-        "construction", "sk_trim", "sk_extend", "sk_fillet", "sk_chamfer",
-        "sk_mirror", "make_region", "offset"]
+    # Trim and Convert Entities first, as SolidWorks (2026-11-11); the
+    # sketch's own Linear / Circular Pattern, not the feature pattern
+    assert [a.data() for a in modify][:11] == [
+        "sk_trim", "sk_convert", "construction", "sk_extend", "sk_fillet",
+        "sk_chamfer", "sk_mirror", "sk_lpattern", "sk_cpattern",
+        "make_region", "offset"]
     assert "regions" not in data
     assert "make_region" in data            # among the drawing tools too
-    assert {"mirror", "pattern"} <= {a.data() for a in modify}
+    got = {a.data() for a in modify}
+    assert "mirror" in got and "pattern" not in got
     _t, insert = ribbon.panel_actions(window, "sketch_insert")
     assert [a.data() for a in insert] == ["import_2d"]
 

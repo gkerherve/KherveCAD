@@ -116,9 +116,46 @@ def const_line(a, b):
                           y2=_r(b[1]), width=0.5, modifier="%"), None)]
 
 
-def point(p):
-    return [("circle", dict(x=_r(p[0]), y=_r(p[1]), radius=POINT_R,
-                            modifier="%"), None)]
+#: half the length of a point's two centerlines (mm)
+POINT_ARM = 10.0
+
+
+def point(p, arm=POINT_ARM):
+    """A point like the sketch origin (2026-11-11, the user): the point
+    and two construction centerlines through it along X and Y, to snap
+    to and dimension from (`origin_relations` ties them to it)."""
+    x, y = _r(p[0]), _r(p[1])
+    a = _r(arm)
+    return [("circle", dict(x=x, y=y, radius=POINT_R, modifier="%"), None),
+            ("line", dict(x1=_r(x - a), y1=y, x2=_r(x + a), y2=y,
+                          width=0.5, modifier="%"), None),
+            ("line", dict(x1=x, y1=_r(y - a), x2=x, y2=_r(y + a),
+                          width=0.5, modifier="%"), None)]
+
+
+def origin_relations(scene, made):
+    """The point and its two centerlines as one "Point" group: each line
+    centred on the point (Coincident with its middle), one Horizontal,
+    one Vertical — drag the point and its axes come with it."""
+    from . import sketch_constraints as sc
+    dot, h, v = made
+    group = scene.model.wrap_nodes(made, "union")
+    if group is None:
+        return dot
+    group.name = "Point"
+    parent = group
+    for kind, refs in (
+            ("coincident", [sc.ref_of(parent, dot, "c"),
+                            sc.ref_of(parent, h, "m")]),
+            ("coincident", [sc.ref_of(parent, dot, "c"),
+                            sc.ref_of(parent, v, "m")]),
+            ("horizontal", [sc.ref_of(parent, h, "l")]),
+            ("vertical", [sc.ref_of(parent, v, "l")])):
+        try:
+            sc.add(scene.model, parent, kind, refs)
+        except (ValueError, KeyError):
+            pass
+    return group
 
 
 def rect_3pt_corners(a, b, c):

@@ -25,7 +25,7 @@ from . import sketch_tools as st
 #: a click this near (px) a polygon's first point closes it
 CLOSE_PX = 10.0
 MODIFY = (sm.TRIM, sm.EXTEND, sm.FILLET, sm.CHAMFER, "sk_mirror",
-          "sk_construction")
+          "sk_construction", "sk_convert")
 REGIONS = ("regions", "make_region")
 
 
@@ -279,7 +279,12 @@ class Modify3D(constrain3d.Constrain3D):
         self.axis_next = False
 
     def _allowed(self):
-        if self.tool in (sm.TRIM, sm.EXTEND):
+        if self.tool == sm.TRIM:
+            from . import sketch_trim as tr
+            return ("line", "circle") if tr.mode() in (tr.INSIDE,
+                                                       tr.OUTSIDE) \
+                else ("line",)
+        if self.tool == sm.EXTEND:
             return ("line",)
         if self.tool in (sm.FILLET, sm.CHAMFER):
             return ("point", "line")
@@ -294,6 +299,9 @@ class Modify3D(constrain3d.Constrain3D):
                     "(Enter first to use any line).")
         if self.tool == "sk_construction":
             return "Construction (3D): click a sketch shape."
+        if self.tool == "sk_convert":
+            return ("Convert Entities (3D): click an edge of the part, or "
+                    "inside the face for its whole outline.")
         return sm.PROMPTS[self.tool] + " (3D)"
 
     def key_press(self, event):
@@ -327,6 +335,8 @@ class Modify3D(constrain3d.Constrain3D):
         return ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
 
     def click(self, x, y):
+        if self.tool == "sk_convert":
+            return self._convert(x, y)
         hit = self.pick_at(x, y)
         if hit is None:
             self._say(self._prompt())
@@ -351,6 +361,14 @@ class Modify3D(constrain3d.Constrain3D):
             return node
         if tool == "sk_mirror":
             return self._mirror(hit)
+        if tool == sm.TRIM:
+            from . import sketch_trim as tr
+            p = self._along(hit, x, y) if node.type == "line" else (0, 0)
+            self._say(tr.pick(model, node, p))
+            panel = tr._panel(self.view, create=False)
+            if panel is not None:
+                panel.refresh()
+            return node
         if tool in (sm.TRIM, sm.EXTEND):
             if node.type != "line":
                 self._say("%s works on lines." % tool[3:].capitalize())
@@ -384,6 +402,82 @@ class Modify3D(constrain3d.Constrain3D):
         if size is not None:
             sm.line_corner(model, first, node, size, round_)
         return node
+
+    def _convert(self, x, y):
+        """Convert Entities on the sketch drawn in 3D: the part's edge
+        under the click, or the whole face when the click is inside."""
+        from . import sketch3d, sketch_convert
+        sk = getattr(self.window, "_sketch3d_tool", None)
+        if sk is None or sk.group is None:
+            self._refuse("Convert Entities: open a sketch on a face first.")
+            return None
+        p = sk.local_of(x, y, True)
+        if p is None:
+            return None
+        mm = sk._mm_per_px(*p) or 0.1
+        parent = sk.holder or sk.group
+        made = sketch_convert.click(
+            self.window.model, parent, sk.info.get("segments") or [],
+            p, sketch3d.EDGE_PX * mm)
+        if made:
+            self._say("Converted %d entit%s." % (
+                len(made), "y" if len(made) == 1 else "ies"))
+        else:
+            self._say("Convert Entities: click an edge of the part, or "
+                      "inside the face for its whole outline.")
+        self.view.update()
+        return made
+
+    # -- Power trim: a drag across the lines on screen ---------------
+    def _power(self):
+        from . import sketch_trim as tr
+        return self.tool == sm.TRIM and tr.mode() == tr.POWER
+
+    def mouse_press(self, event):
+        from PyQt5.QtCore import Qt
+        if self._power() and event.button() == Qt.LeftButton:
+            self._stroke = (event.pos().x(), event.pos().y())
+            return True                  # the drag trims, it never orbits
+        return super().mouse_press(event)
+
+    def mouse_move(self, event):
+        last = getattr(self, "_stroke", None)
+        if last is None or not self._power():
+            return super().mouse_move(event)
+        now = (event.pos().x(), event.pos().y())
+        n = self.power_stroke(last, now)
+        self._stroke = now
+        if n:
+            self._say("Power trim: %d piece(s) trimmed." % n)
+            self.view.update()
+        return True
+
+    def mouse_release(self, event):
+        if getattr(self, "_stroke", None) is not None and self._power():
+            self._stroke = None
+            return True
+        return super().mouse_release(event)
+
+    def power_stroke(self, a, b):
+        """Trim every sketch line the screen stroke a -> b crosses."""
+        project = self._project()
+        n = 0
+        model = self.window.model
+        for node, name, kind, g in list(self.entities()):
+            if kind != "line" or node.type != "line" or node.parent is None:
+                continue
+            qa, qb = project(g[0]), project(g[1])
+            if qa is None or qb is None:
+                continue
+            t = sm._seg_hit((qa[0], qa[1]), (qb[0], qb[1]), a, b)
+            if t is None:
+                continue
+            la, lb = sc._line(node, name, {})
+            t = min(max(t, 0.0), 1.0)
+            sm.trim(model, node, (la[0] + (lb[0] - la[0]) * t,
+                                  la[1] + (lb[1] - la[1]) * t))
+            n += 1
+        return n
 
     def _mirror(self, hit):
         from . import sketch_mirror, sketch_tools2
@@ -420,6 +514,10 @@ def start_modify(window, tool):
                 except Exception:      # pragma: no cover
                     pass
                 break
+    from . import sketch_trim
+    sketch_trim.state.clear()
+    if tool != sm.TRIM:
+        sketch_trim.close_panel(view)
     t = Modify3D(window, tool)
     view.edit_tool = t
     view.setMouseTracking(True)

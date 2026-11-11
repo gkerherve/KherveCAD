@@ -62,7 +62,66 @@ def sketch_points(scene, skip=None):
             q = QPointF(x, y)
             out.append((frame.mapToScene(q) if frame is not None else q,
                         node, name))
+    out += [(q, None, "intersection") for q in crossings(scene, skip)]
     return out
+
+
+def _segments(item):
+    """The shape of a sketch item as segments, in scene coordinates."""
+    from PyQt5.QtCore import QPointF
+    from . import mesh
+    node = item.node
+    frame = item.parentItem()
+    to = (lambda x, y: frame.mapToScene(QPointF(x, y))) if frame is not \
+        None else (lambda x, y: QPointF(x, y))
+    if node.type == "line":
+        from . import sketch_arc
+        p = node.params
+        try:
+            a = (float(p["x1"]), float(p["y1"]))
+            b = (float(p["x2"]), float(p["y2"]))
+        except (KeyError, TypeError, ValueError):
+            return []
+        run = sketch_arc.points(*a, *b, sketch_arc.bulge_of(p)) \
+            if sketch_arc.is_arc(node) else [a, b]
+    else:
+        try:
+            loops = mesh.node_outlines(node, {}) or []
+        except Exception:
+            return []
+        out = []
+        for loop in loops:
+            pts = [to(x, y) for x, y in loop]
+            out += [((pts[i].x(), pts[i].y()),
+                     (pts[(i + 1) % len(pts)].x(),
+                      pts[(i + 1) % len(pts)].y()))
+                    for i in range(len(pts))]
+        return out
+    pts = [to(x, y) for x, y in run]
+    return [((pts[i].x(), pts[i].y()), (pts[i + 1].x(), pts[i + 1].y()))
+            for i in range(len(pts) - 1)]
+
+
+def crossings(scene, skip=None):
+    """[QPointF] where the sketch's shapes cross each other or the part's
+    edges under the sketch (the user: snap to intersections too)."""
+    from PyQt5.QtCore import QPointF
+    from . import sketch_constrain_ui as scu, snap_cross
+    groups = [_segments(item) for item in scu._shape_items(scene)
+              if skip is None or item.node is not skip]
+    outline = getattr(scene, "face_outline", None) or {}
+    segs = [tuple(map(tuple, s)) for s in outline.get("segments", ())]
+    if segs:
+        groups.append(segs)
+    groups = [g for g in groups if g]
+    key = tuple(len(g) for g in groups) + tuple(
+        g[0] + g[-1] for g in groups)
+    cache = getattr(scene, "_cross_cache", None)
+    if cache is not None and cache[0] == key:
+        return cache[1]
+    got = [QPointF(x, y) for x, y in snap_cross.crossings(groups)]
+    scene._cross_cache = (key, got)
+    return got
 
 
 def _px(scene, pixels):

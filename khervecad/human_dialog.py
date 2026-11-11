@@ -172,7 +172,15 @@ class HumanBuilder(QDialog):
         self._timer.setSingleShot(True)
         self._timer.setInterval(250)
         self._timer.timeout.connect(self._rebuild)
-        self._thread = QThread(self)
+        # the thread is NOT the dialog's child: torn down with the main
+        # window while still running, a child QThread aborts the app
+        # ("QThread: Destroyed while thread is still running" — the
+        # ribbon tests, 2026-11-11). Kept here, stopped when the dialog
+        # goes and when the app quits.
+        self._thread = QThread()
+        _THREADS.append(self._thread)
+        self.destroyed.connect(self._thread.quit)
+        _stop_all_at_exit()
         self._worker = _Worker()
         self._worker.moveToThread(self._thread)
         self._ask.connect(self._worker.request)
@@ -299,6 +307,26 @@ class HumanBuilder(QDialog):
     def shutdown(self):
         self._thread.quit()
         self._thread.wait(3000)
+
+
+_THREADS = []
+_HOOKED = []
+
+
+def _stop_all_at_exit():
+    if _HOOKED:
+        return
+    from PyQt5.QtWidgets import QApplication
+    app = QApplication.instance()
+    if app is None:
+        return
+
+    def stop():
+        for t in _THREADS:
+            t.quit()
+            t.wait(3000)
+    app.aboutToQuit.connect(stop)
+    _HOOKED.append(True)
 
 
 def selected_character(window):

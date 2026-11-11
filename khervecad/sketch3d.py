@@ -193,7 +193,11 @@ class Sketch3DTool:
         while any(n.type == "union" for n in shapes):   # a Polyline's group
             shapes = [k for n in shapes for k in (
                 n.children if n.type == "union" else [n])]
+        marks = []                       # where each shape's segments start
+        skip = getattr(self, "_snap_skip", None)
+        shapes = [n for n in shapes if n is not skip]   # the one dragged
         for shape in shapes:
+            marks.append(len(segs))
             if shape.type == "line" and not slot2d.is_slot(shape):
                 p = shape.params        # one line, not a band's two sides
                 try:
@@ -245,7 +249,28 @@ class Sketch3DTool:
                         continue
                     pts += [(x, y, "corner"),
                             ((ax + bx) / 2, (ay + by) / 2, "middle")]
+        marks.append(len(segs))
+        self._own_groups = [segs[marks[i]:marks[i + 1]]
+                            for i in range(len(marks) - 1)]
         return segs, pts
+
+    def _crossings(self, own_groups):
+        """Where this sketch's shapes cross each other or the part's
+        edges (the user: snap to intersections too)."""
+        from . import snap_cross
+        groups = [g for g in own_groups if g]
+        outline = list(self.info.get("segments") or [])
+        if outline:
+            groups.append(outline)
+        key = tuple(tuple(map(tuple, s)) for g in groups for s in g[:1]) + \
+            (sum(len(g) for g in groups),)
+        cache = getattr(self, "_cross_cache", None)
+        if cache is not None and cache[0] == key:
+            return cache[1]
+        got = [(x, y, "intersection")
+               for x, y in snap_cross.crossings(groups)]
+        self._cross_cache = (key, got)
+        return got
 
     def aimed(self, pt):
         """(*pt* moved onto the direction it nearly has, what that direction
@@ -522,7 +547,8 @@ class Sketch3DTool:
             return None
         own_segs, own_pts = self._own()
         segs = list(self.info.get("segments") or []) + own_segs
-        pts = list(self.info.get("points") or []) + own_pts
+        pts = list(self.info.get("points") or []) + own_pts + \
+            self._crossings(getattr(self, "_own_groups", []))
         best = None
         for x, y, kind in pts:
             d = math.hypot(x - lx, y - ly)
@@ -923,8 +949,16 @@ class Sketch3DTool:
             p = n.params
             try:
                 if n.type == "line":
-                    out += [(n, "p1", (float(p["x1"]), float(p["y1"]))),
-                            (n, "p2", (float(p["x2"]), float(p["y2"])))]
+                    a = (float(p["x1"]), float(p["y1"]))
+                    b = (float(p["x2"]), float(p["y2"]))
+                    out += [(n, "p1", a), (n, "p2", b)]
+                    from . import sketch_arc
+                    if not sketch_arc.is_arc(n):
+                        # its middle: drag the WHOLE line (the user: "take
+                        # it from its middle point and snap it to another
+                        # line")
+                        out.append((n, "move", ((a[0] + b[0]) / 2,
+                                                (a[1] + b[1]) / 2)))
                 elif n.type == "rect":
                     x, y = float(p["x"]), float(p["y"])
                     w, h = float(p["width"]), float(p["height"])
@@ -959,7 +993,9 @@ class Sketch3DTool:
         """Move one point of a drawn shape; the model's constraints
         re-solve at once (MainWindow._model_edited)."""
         p = node.params
-        if node.type == "line":
+        if node.type == "line" and role == "move":
+            self._move_line(node, pt)
+        elif node.type == "line":
             kx, ky = ("x1", "y1") if role == "p1" else ("x2", "y2")
             p[kx], p[ky] = pt
         elif node.type == "rect":
@@ -976,6 +1012,36 @@ class Sketch3DTool:
                     pt[0] - float(p["x"]), pt[1] - float(p["y"])), 0.01))
         self.window.model.node_changed.emit(node)
         self.view.update()
+
+    def _move_line(self, node, pt):
+        """The whole line moved so its middle follows *pt*; then an END
+        that comes near another shape's point or edge snaps onto it (the
+        nearer end wins), else the middle snaps."""
+        p = node.params
+        a = (float(p["x1"]), float(p["y1"]))
+        b = (float(p["x2"]), float(p["y2"]))
+        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+        dx, dy = pt[0] - mid[0], pt[1] - mid[1]
+        a2, b2 = (a[0] + dx, a[1] + dy), (b[0] + dx, b[1] + dy)
+        self._snap_skip = node
+        try:
+            best = None
+            for end in (a2, b2, pt):
+                got = self.snap_local(*end)
+                if got is None:
+                    continue
+                d = math.hypot(got[0] - end[0], got[1] - end[1])
+                if best is None or d < best[0]:
+                    best = (d, got[0] - end[0], got[1] - end[1],
+                            self.snapped, self.lit)
+            if best is not None:
+                _d, sx, sy, self.snapped, self.lit = best
+                a2 = (a2[0] + sx, a2[1] + sy)
+                b2 = (b2[0] + sx, b2[1] + sy)
+        finally:
+            self._snap_skip = None
+        p["x1"], p["y1"] = (tidy(a2[0]), tidy(a2[1]))
+        p["x2"], p["y2"] = (tidy(b2[0]), tidy(b2[1]))
 
     # -- the view's hooks -----------------------------------------
     def wants_key(self, event):
@@ -1103,8 +1169,10 @@ class Sketch3DTool:
                     and (event.pos() - start[0]).manhattanLength() <= DRAG_PX:
                 return True
             self._drag_moved = True
-            pt = self.local_of(x, y, bool(event.modifiers() &
-                                          Qt.AltModifier))
+            # a whole line moved by its middle snaps by its own ends
+            # (`_move_line`), so its middle follows the cursor unsnapped
+            pt = self.local_of(x, y, self._drag[1] == "move" or bool(
+                event.modifiers() & Qt.AltModifier))
             if pt is not None:
                 self.drag_to(self._drag[0], self._drag[1], pt)
             return True

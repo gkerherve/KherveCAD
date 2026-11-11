@@ -3256,6 +3256,38 @@ into a new module and import.
                        (the sketch Modify panel lost the feature "pattern",
                        which turned about an unseen origin). 2D sketch only:
                        in a 3D sketch it says so. tests/test_sketch_pattern.py.
+  - `snap_cross.py` — sketch snaps at INTERSECTIONS (2026-11-11, the
+                       user): where segments of two different shapes (or a
+                       shape and the part's outline) cross, in the 3D sketch
+                       (`Sketch3DTool._crossings`, kind "intersection") and
+                       the 2D one (`sketch_line.crossings`, also in
+                       `SketchScene.feature_points`). Same day: a straight
+                       line has a third grip at its MIDDLE ("move", 2D and
+                       3D) that drags the whole line, its ends snapping onto
+                       other shapes' points / edges (`_move_line`,
+                       `LineShapeItem._move_whole`); and the Point tool makes
+                       a "Point" group — the point and two construction
+                       centerlines along X and Y (`sketch_tools2.point`,
+                       `origin_relations`: Coincident with each line's
+                       middle, Horizontal, Vertical), like a small origin.
+                       tests/test_snap_intersections.py.
+  - `sketch_trim.py` / `sketch_convert.py` — SolidWorks' **Trim Entities**
+                       and **Convert Entities** (2026-11-11, the user, with
+                       SolidWorks' Trim window), the two LARGE buttons
+                       opening the Sketch tab's Modify panel ("just after
+                       sketch"). Trim keeps one option in its window (QSettings
+                       `sketch/trim_mode`): Power trim (drag across: 2D
+                       `sketch_modify.power_move`, 3D `Modify3D.power_stroke`
+                       on screen), Corner (two lines run to meet, clicked
+                       sides kept), Trim away inside / outside (two
+                       boundaries, then lines), Trim to closest (the old
+                       Trim). Convert: click a part's edge -> its WHOLE edge
+                       (`whole_edge`: a straight side, or every piece of its
+                       arc — a piece is on an arc only if its MIDDLE is too)
+                       as a line, a bulged line (partial arc) or a circle;
+                       click inside the face -> its whole outline. "sk_convert"
+                       is a Modify3D tool in 3D (`_convert`). Tests:
+                       test_sketch_trim.py, test_sketch_convert.py.
   - `tool_panel.py` / `extrude_panel.py` — **tool windows** (2026-10-28,
                        the user, from SolidCraft: "very easy, very
                        descriptive ... for many types of tools"): a

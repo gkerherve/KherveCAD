@@ -461,3 +461,14 @@ def _sk_cpattern(d):
         a = math.radians(90 + 60 * i)
         c = (0.5 + 0.33 * math.cos(a), 0.5 - 0.33 * math.sin(a))
         _circle(d, c, 0.09, d.pal.sketch if i == 0 else d.pal.make)
+
+
+@draws("sk_convert")
+def _sk_convert(d):
+    """A part's face edge (grey) and the same edge drawn into the sketch
+    (make colour) with an arrow between: an edge brought in."""
+    d.poly([P(0.12, 0.88), P(0.12, 0.42), P(0.55, 0.42)],
+           color=d.pal.edge, width=0.09)
+    d.poly([P(0.4, 0.62), P(0.4, 0.16), P(0.88, 0.16)],
+           color=d.pal.make, width=0.06)
+    d.arrow(P(0.2, 0.36), P(0.36, 0.22), d.pal.make, 0.04, 0.07)
