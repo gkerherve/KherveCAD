@@ -16,6 +16,7 @@ import math
 import pytest
 from PyQt5.QtCore import Qt
 from PyQt5.QtTest import QTest
+from PyQt5.QtWidgets import QApplication
 
 from khervecad import mesh, sketch_arc
 from test_clevis_by_mouse import (_click_areas, _frame, _ids, _shot, _sketch,
@@ -193,9 +194,34 @@ def test_deleting_keeps_the_view(win):
     tree = win.builder.active_tree()
     tree.select_nodes([rects[0]])
     QTest.qWait(50)
-    assert view() != start                     # the pick framed it
+    # a pick only highlights: the view stays where it was (2026-11-11)
+    assert view() == start
     tree.setFocus()
     QTest.keyClick(tree, Qt.Key_Delete)
     QTest.qWait(100)
     assert rects[0].parent is None
     assert view() == start
+
+
+def test_selecting_a_shape_does_not_zoom_the_2d_view():
+    """The user: a click on an item must highlight it, never re-zoom."""
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        v2 = win.view2d
+        a = win.model.add_node("rect", dict(x=200, y=200, width=4,
+                                            height=3))
+        win.model.add_node("rect", dict(x=0, y=0, width=10, height=10))
+        QApplication.processEvents()
+
+        def view():
+            c = v2.mapToScene(v2.viewport().rect().center())
+            return (round(v2.transform().m11(), 4), round(c.x(), 2),
+                    round(c.y(), 2))
+        start = view()
+        win.builder.active_tree().select_nodes([a])
+        QTest.qWait(50)
+        assert view() == start
+    finally:
+        win._dirty = False
+        win.close()

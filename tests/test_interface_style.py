@@ -313,17 +313,23 @@ def test_the_3d_view_shows_the_sketch_in_its_corner(window, app):
     assert not mini.isVisible()
 
 
-def test_picking_in_the_tree_frames_it_in_the_sketch(window, app):
+def test_picking_in_the_tree_keeps_the_sketch_zoom(window, app):
+    """A pick highlights; it no longer re-frames the sketch (2026-11-11,
+    the user: "no change in the zooming") — Focus does that on request."""
     a = window.model.add_node("rect")
     b = window.model.add_node("circle")
     window.model.set_param(b, "x", 900.0)
     app.processEvents()
     view = window.view2d
-    for node, x in ((a, 20), (b, 900)):
+
+    def where():
+        c = view.mapToScene(view.viewport().rect().center())
+        return round(view.transform().m11(), 4), round(c.x(), 2)
+    start = where()
+    for node in (a, b):
         window.builder.tree.select_nodes([node])
         app.processEvents()
-        centre = view.mapToScene(view.viewport().rect().center())
-        assert abs(centre.x() - x) < 40, (node.name, centre.x())
+        assert where() == start, node.name
 
 
 def _orange_share(pixmap):

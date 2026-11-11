@@ -1312,8 +1312,10 @@ class MainWindow(QMainWindow):
             # A click in the sketch itself never re-zooms.
             # Not while drawing: a line just made is selected through the
             # tree, and that pulled the view onto it (the user, twice)
+            # ... not any more (2026-11-11, the user): a pick highlights,
+            # the zoom stays — Focus on the 2D bar frames on request
             from .view2d import SELECT
-            if nodes and self.scene.isolated_bounds() is None and \
+            if False and nodes and self.scene.isolated_bounds() is None and \
                     getattr(self.scene, "tool", SELECT) == SELECT and \
                     not self._view_after_delete() and \
                     not getattr(self, "_just_deleted", False):
@@ -1367,9 +1369,11 @@ class MainWindow(QMainWindow):
         # an edited profile) so it is framed and centred, not clipped
         # — but not while drawing: a line just drawn must not pull the
         # view onto itself (the user, 2026-10-21); clicking it later does
-        from .view2d import SELECT
-        drawing = getattr(self.scene, "tool", SELECT) != SELECT
-        rect = None if drawing else self.scene.isolated_bounds()
+        # ... no longer (2026-11-11, the user: "when I click on an item
+        # the 2D view zooms onto the part — I want it highlighted, but
+        # no change in the zooming"): a selection only highlights; Focus
+        # (the 2D bar) still frames it on request
+        rect = None
         if self._view_after_delete() or getattr(self, "_just_deleted", False):
             rect = None      # the tree's next row: not framed either
         if rect is not None:
