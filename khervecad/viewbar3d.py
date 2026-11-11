@@ -187,11 +187,10 @@ def add_window_controls(win):
         if act is not None:
             menu.addAction(act)
             bar.actions[key] = act
-    show = QToolButton(bar)
-    show.setMenu(menu)
-    show.setPopupMode(QToolButton.InstantPopup)
-    _icon(show, "mdi.eye-outline", "◉")
-    viewnav.set_tip(show, "nav3d_show")
+    # SolidWorks' Hide/Show Items: the glasses, a grid of toggles
+    # (2026-11-11, the user) — the same one as the 2D sketch's bar
+    from . import hide_show
+    show = hide_show.button(win, bar)
     layout.insertWidget(layout.count() - 1, show)
     bar.buttons["show"] = show
 

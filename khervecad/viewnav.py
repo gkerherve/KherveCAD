@@ -467,6 +467,11 @@ def add_sketch_controls(win, bar):
         sync()
         layout.addWidget(dims)
         bar.buttons["dims"] = dims
+    # SolidWorks' Hide/Show Items (the glasses), as on the 3D bar
+    from . import hide_show
+    show = hide_show.button(win, bar)
+    layout.addWidget(show)
+    bar.buttons["show"] = show
     win._sync_grid_step()
     bar.place()
 

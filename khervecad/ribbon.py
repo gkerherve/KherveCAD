@@ -233,6 +233,7 @@ MENU_PANELS = {
                   ("view/show dimensions", "mdi.ruler"),
                   ("view/show smart dimensions", "mdi.ruler-square"),
                   ("view/sketch relations", "mdi.vector-line"),
+                  ("view/construction geometry", "mdi.vector-line"),
                   ("view/clear dimensions", "mdi.eraser")],
 }
 #: panels whose tools all show, names under the icons (few, big tools)
@@ -383,6 +384,7 @@ PAINT = {
     "view/show dimensions": "dims_selection",
     "view/show smart dimensions": "con_dimension",
     "view/sketch relations": "con_parallel",
+    "view/construction geometry": "construction",
     "view/clear dimensions": "dims_clear",
     "insert/subd box (smooth, edit its cage)": "subd_box",
     "tools/convert to subd (smooth cage)": "subd_convert",

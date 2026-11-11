@@ -497,6 +497,8 @@ class MainWindow(QMainWindow):
         view_menu.addAction(self._smart_dims_act)
         from . import relation_marks
         view_menu.addAction(relation_marks.action(self))
+        from . import hide_show
+        view_menu.addAction(hide_show.construction_action(self))
         view_menu.addAction(self.tr("Clear &Dimensions"),
                             lambda: self._clear_said(
                                 self.model.dimensions,

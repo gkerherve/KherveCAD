@@ -136,9 +136,14 @@ def test_hide_show_holds_the_dimensions_planes_axes_and_scale_bar(app):
     win = MainWindow()
     try:
         bar = win.view3d.nav_bar
-        shown = bar.buttons["show"].menu().actions()
-        assert shown[:4] == [win._smart_dims_act, win._ref_planes_act,
-                             win._axes_act, win._scale_bar_act]
+        # (SolidWorks' Hide/Show Items since 2026-11-11: a grid of the
+        # window's own actions)
+        menu = bar.buttons["show"].menu()
+        menu.aboutToShow.emit()
+        acts = [b.defaultAction() for b in menu._items.values()]
+        for act in (win._smart_dims_act, win._ref_planes_act,
+                    win._axes_act, win._scale_bar_act):
+            assert act in acts
     finally:
         win._dirty = False
         win.close()

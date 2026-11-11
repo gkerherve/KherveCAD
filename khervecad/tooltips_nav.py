@@ -184,12 +184,17 @@ NAV_TIPS = {
          "or Bottom, or a small turn left or right."],
         "Drag in the view to turn it freely."),
     "nav3d_show": (
-        "Hide / show items",
-        "What is drawn over the model besides the model itself. None of "
-        "it changes the part.",
-        ["Click to open the list and tick what you want to see:",
-         "Smart Dimensions, the Front / Top / Right planes, the origin "
-         "axes and the scale bar."],
+        "Hide / Show Items",
+        "SolidWorks' glasses: what is drawn besides the part itself, on "
+        "the 3D view and the 2D sketch alike. None of it changes the "
+        "part.",
+        ["Click to open the grid of switches:",
+         "Smart Dimensions, automatic sizes, sketch relations, "
+         "construction geometry (centerlines, points, origins), the "
+         "main planes, the origin axes, the sketch grid, the scale bar "
+         "and the view cube.",
+         "Each is the View menu's own switch: ticking it here ticks it "
+         "there, and on the other view's bar."],
         None),
     "nav3d_stage": (
         "Surface & shadow",
