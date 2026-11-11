@@ -286,7 +286,7 @@ class Modify3D(constrain3d.Constrain3D):
         if self.tool == sm.EXTEND:
             return ("line",)
         if self.tool in (sm.FILLET, sm.CHAMFER):
-            return ("point", "line")
+            return ("point", "line", "circle")   # (an arc is a circle)
         if self.tool == "sk_mirror" and self.axis_next:
             return ("line",)
         return ("point", "line", "circle")
@@ -294,8 +294,9 @@ class Modify3D(constrain3d.Constrain3D):
     def _prompt(self):
         if self.tool == "sk_mirror":
             return ("Mirror (3D): click the mirror line." if self.axis_next
-                    else "Mirror (3D): click the shapes, then a centerline "
-                    "(Enter first to use any line).")
+                    else "Mirror (3D): click what to mirror (centerlines "
+                    "and origins too), then Enter or right-click and the "
+                    "mirror line.")
         if self.tool == "sk_construction":
             return "Construction (3D): click a sketch shape."
         if self.tool == "sk_convert":
@@ -393,6 +394,14 @@ class Modify3D(constrain3d.Constrain3D):
             if size is not None:
                 sm.corner(model, node, int(hit[1][1:]), size, round_)
             return node
+        from . import sketch_arc, sketch_corner
+        if node.type == "line" and hit[1] in ("p1", "p2"):
+            other = sketch_corner.partner(node, hit[1])
+            if other is not None:
+                size = sm._ask(scene, tool)
+                if size is not None:
+                    sketch_corner.corner(model, node, other, size, round_)
+                return node
         if node.type != "line":
             self._say(sm.PROMPTS[tool])
             return None
@@ -403,7 +412,11 @@ class Modify3D(constrain3d.Constrain3D):
         first, self.first = self.first, None
         size = sm._ask(scene, tool)
         if size is not None:
-            sm.line_corner(model, first, node, size, round_)
+            if sketch_arc.is_arc(first) or sketch_arc.is_arc(node) or \
+                    sketch_corner.shared_end(first, node) is not None:
+                sketch_corner.corner(model, first, node, size, round_)
+            else:
+                sm.line_corner(model, first, node, size, round_)
         return node
 
     def _convert(self, x, y):
@@ -449,6 +462,16 @@ class Modify3D(constrain3d.Constrain3D):
         super().paint(painter, project)
         pts = getattr(self, "_hover_piece", None)
         sk = getattr(self.window, "_sketch3d_tool", None)
+        if sk is not None and sk.group is not None and \
+                self.tool in (sm.FILLET, sm.CHAMFER):
+            from . import sketch_corner
+            try:
+                sketch_corner.paint_3d(
+                    painter, project, sk.group,
+                    [self.first] if self.first is not None else [],
+                    getattr(self, "_corner_hover", None))
+            except Exception:           # never raise out of a paint
+                pass
         if pts and sk is not None and sk.group is not None:
             from . import sketch_trim as tr
             try:
@@ -476,6 +499,11 @@ class Modify3D(constrain3d.Constrain3D):
         if self._power() and event.button() == Qt.LeftButton:
             self._stroke = (event.pos().x(), event.pos().y())
             return True                  # the drag trims, it never orbits
+        if self.tool == "sk_mirror" and event.button() == Qt.RightButton \
+                and self.shapes and not self.axis_next:
+            self.axis_next = True        # box 2: now the mirror line
+            self._say(self._prompt())
+            return True
         return super().mouse_press(event)
 
     def mouse_move(self, event):
@@ -483,6 +511,14 @@ class Modify3D(constrain3d.Constrain3D):
         if last is None or not self._power():
             if self.tool == sm.TRIM:
                 self._trim_hover(event.pos().x(), event.pos().y())
+            elif self.tool in (sm.FILLET, sm.CHAMFER):
+                from . import sketch_corner
+                hit = self.pick_at(event.pos().x(), event.pos().y())
+                was = getattr(self, "_corner_hover", None)
+                self._corner_hover = sketch_corner.hovered(
+                    hit[0], hit[1]) if hit is not None else []
+                if self._corner_hover or was:
+                    self.view.update()
             return super().mouse_move(event)
         now = (event.pos().x(), event.pos().y())
         n = self.power_stroke(last, now)
@@ -530,13 +566,17 @@ class Modify3D(constrain3d.Constrain3D):
     def _mirror(self, hit):
         from . import sketch_mirror, sketch_tools2
         node = hit[0]
-        is_axis = hit[2] == "line" and node.type == "line" and (
-            self.axis_next or sketch_tools2.is_construction(node))
+        # every click is an entity to mirror (centerlines and origins
+        # too) until Enter asks for the mirror line (the user)
+        is_axis = hit[2] == "line" and node.type == "line" and \
+            self.axis_next
         if not is_axis or not self.shapes:
-            if node not in self.shapes:
-                self.shapes.append(node)
-            self._say("Mirror (3D): %d shape(s); now the centerline (Enter "
-                      "first to use any line)." % len(self.shapes))
+            for n in sketch_mirror.expand(node):
+                if n not in self.shapes:
+                    self.shapes.append(n)
+            self._say("Mirror (3D): %d shape(s); more, or Enter / "
+                      "right-click then the mirror line."
+                      % len(self.shapes))
             return None
         shapes, self.shapes, self.axis_next = self.shapes, [], False
         copies, skipped = sketch_mirror.mirror(self.window.model, shapes,

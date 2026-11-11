@@ -156,6 +156,36 @@ def _relate(model, container, orig, copy, mirror):
             pass
 
 
+def expand(node):
+    """A click on any of an origin's three shapes takes all three."""
+    from . import sketch_tools2
+    parts = sketch_tools2.origin_parts(node)
+    return list(parts[1:]) if parts is not None else [node]
+
+
+def _new_origins(model, pairs):
+    """A mirrored origin is a NEW origin ("Origin n" + its own centre
+    and level / upright relations), not two loose centerlines."""
+    from . import sketch_tools2 as s2
+    done = set()
+    for orig, copy in pairs:
+        label = getattr(copy, "_mirrored_origin", None)
+        if not isinstance(label, str) or label in done:
+            continue
+        parts = s2.origin_parts(orig)
+        order = {id(o): c for o, c in pairs}
+        if parts is None or any(id(p) not in order for p in parts[1:]):
+            continue
+        made = [order[id(p)] for p in parts[1:]]
+
+        class _S:
+            pass
+        holder = _S()
+        holder.model = model
+        s2.origin_relations(holder, made)
+        done.add(label)
+
+
 def mirror(model, shapes, line, relate=True):
     """Mirror *shapes* about the line node *line* (all in one sketch).
     Returns (copies, skipped names)."""
@@ -175,12 +205,16 @@ def mirror(model, shapes, line, relate=True):
             skipped.append(s.name)
             continue
         t, params = got
+        from .sketch_tools2 import ORIGIN_KEY
+        origin = params.pop(ORIGIN_KEY, None)   # the copy: a NEW origin
         copy = model.add_node(t, params, parent=container)
+        copy._mirrored_origin = origin
         copy.visible = s.visible
         copies.append((s, copy))
     if relate:
         for s, copy in copies:
             _relate(model, container, s, copy, line)
+    _new_origins(model, copies)
     return [c for _s, c in copies], skipped
 
 
@@ -229,8 +263,9 @@ def ready(scene):
 def prompt(scene):
     st = _state(scene)
     if st["active"] == SHAPES:
-        return ("Mirror Entities — 1: click the lines, circles and shapes "
-                "to mirror (%d picked), then the centerline."
+        return ("Mirror Entities — 1: click the lines, circles, "
+                "centerlines and origins to mirror (%d picked); then box 2 "
+                "(or Enter / right-click) and the line to mirror about."
                 % len(st["shapes"]))
     if st["line"] is None:
         return "Mirror Entities — 2: click the centerline (or any line)."
@@ -349,14 +384,19 @@ def press(scene, event):
         scene.status.emit(prompt(scene))
         return
     node = hit[0]
-    if _is_centerline(node) and st["shapes"] and node not in st["shapes"]:
-        st["line"], st["active"] = node, LINE    # box 2 filled by itself
-    elif node is st["line"]:
+    # box 1 takes EVERY click — centerlines and origins too (2026-11-11,
+    # the user: "not able to mirror origins or centre lines … continue
+    # selecting and then go to number 2"); box 2 is chosen by clicking
+    # it, Enter or a right-click
+    group = expand(node)
+    if node is st["line"]:
         st["line"] = None
     elif node in st["shapes"]:
-        st["shapes"].remove(node)
+        for n in group:
+            if n in st["shapes"]:
+                st["shapes"].remove(n)
     else:
-        st["shapes"].append(node)
+        st["shapes"].extend(n for n in group if n not in st["shapes"])
     _show(scene)
     scene.status.emit(prompt(scene))
 

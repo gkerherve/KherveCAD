@@ -500,6 +500,13 @@ class ObjectTree(QTreeWidget):
             item.setData(0, ROLE_MODIFIER, language.tr(
                 "(suppressed)") if node.params.get(suppress.KEY)
                 else language.tr("(rolled back)"))
+        elif isinstance(node.params.get("sketch_corner"), dict):
+            # a sketch fillet / chamfer: what it is and its size now
+            from . import sketch_corner
+            item.setData(0, ROLE_MODIFIER, sketch_corner.label(node))
+        elif isinstance(node.params.get("untrimmed"), dict):
+            # Trim Entities changed it: say so, right-click restores it
+            item.setData(0, ROLE_MODIFIER, language.tr("(trimmed)"))
         # dim + italic if hidden by itself OR by an ancestor
         font = item.font(0)
         font.setStrikeOut(off)
@@ -1163,6 +1170,16 @@ class ObjectTree(QTreeWidget):
             act.setToolTip(language.tr(
                 "Switch it off without deleting it (struck through in "
                 "the tree); Unsuppress brings it back."))
+        from . import sketch_trim
+        cut = [n for n in nodes if sketch_trim.trimmed(n)]
+        if cut:
+            act = menu.addAction(
+                icons.icon("mdi.restore"),
+                language.tr("Restore Untrimmed"),
+                lambda: [sketch_trim.restore(self.model, n) for n in cut])
+            act.setToolTip(language.tr(
+                "Undo Trim Entities on it: the whole circle or line back, "
+                "the pieces it was split into joined again."))
         holders = [n for n in nodes if n.is_container() and n.children]
         if holders:
             act = menu.addAction(

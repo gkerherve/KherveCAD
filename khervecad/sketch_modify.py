@@ -351,10 +351,10 @@ def handles(tool):
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
            EXTEND: "Extend: click near the end of a line to run on.",
-           FILLET: "Sketch fillet: click a polygon / rectangle corner, "
-                   "or two lines that meet.",
-           CHAMFER: "Sketch chamfer: click a polygon / rectangle corner, "
-                    "or two lines that meet.",
+           FILLET: "Sketch fillet: click a corner (polygon, rectangle, "
+                   "or where lines / arcs meet), or the two lines / arcs.",
+           CHAMFER: "Sketch chamfer: click a corner (polygon, rectangle, "
+                    "or where lines / arcs meet), or the two lines / arcs.",
     "regions": "Extrude regions: click inside the regions to keep, then "
                "Enter or right-click.",
     "make_region": "Create region: click inside the regions to keep, then "
@@ -459,20 +459,40 @@ def press(scene, event):
         except ValueError as exc:
             scene.status.emit(str(exc))
         return
-    line = scu.pick(scene, pos, "line")
+    from . import sketch_corner, sketch_arc
+    # a click ON a corner where two lines / arcs meet: that corner
+    # (SolidWorks: "select a sketch vertex", 2026-11-11, the user)
+    if hit is not None and hit[0].type == "line" and \
+            hit[1] in ("p1", "p2"):
+        other = sketch_corner.partner(hit[0], hit[1])
+        if other is not None:
+            size = _ask(scene, tool)
+            if size is None:
+                return
+            try:
+                sketch_corner.corner(scene.model, hit[0], other, size,
+                                     round_)
+            except ValueError as exc:
+                scene.status.emit(str(exc))
+            return
+    line = scu.pick(scene, pos, "curve")
     if line is None or line[0].type != "line":
         scene.status.emit(PROMPTS[tool])
         return
     if first is None or first is line[0]:
         scene._sk_first = line[0]
-        scene.status.emit("Now click the other line.")
+        scene.status.emit("Now click the other line or arc.")
         return
     scene._sk_first = None
     size = _ask(scene, tool)
     if size is None:
         return
     try:
-        line_corner(scene.model, first, line[0], size, round_)
+        if sketch_arc.is_arc(first) or sketch_arc.is_arc(line[0]) or \
+                sketch_corner.shared_end(first, line[0]) is not None:
+            sketch_corner.corner(scene.model, first, line[0], size, round_)
+        else:
+            line_corner(scene.model, first, line[0], size, round_)
     except ValueError as exc:
         scene.status.emit(str(exc))
 

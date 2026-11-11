@@ -3310,6 +3310,51 @@ into a new module and import.
                        click inside the face -> its whole outline. "sk_convert"
                        is a Modify3D tool in 3D (`_convert`). Tests:
                        test_sketch_trim.py, test_sketch_convert.py.
+  - `hide_show.py` — SolidWorks' **Hide/Show Items** (the glasses,
+                       2026-11-11, the user): ONE button on the 3D view's bar
+                       (replacing its eye menu) and the 2D sketch's bar, a
+                       popup grid (filled on `aboutToShow`) of the window's
+                       OWN actions — Smart Dimensions, automatic sizes,
+                       relations, construction geometry, main planes, origin
+                       axes, sketch grid, scale bar, view cube. New switch
+                       View ▸ Construction Geometry (QSettings
+                       `sketch/show_construction`): off, view2d builds no
+                       `%` shape. tests/test_hide_show.py.
+  - Trims are kept (same day, the user: "can't see where the trimming has
+                       happened … something so that we can remove it"):
+                       `sketch_trim.remember` stores the shape before its
+                       first trim in `params["untrimmed"]` {key, type,
+                       params} (split pieces share the key; in
+                       `mesh._TEXT_PARAMS`); the tree tags it "(trimmed)"
+                       and right-click ▸ Restore Untrimmed (`restore`)
+                       brings the whole circle / line back, the other pieces
+                       removed.
+  - `sketch_corner.py` — Sketch Fillet / Chamfer where ARCS meet (same day,
+                       the user's 8 mm fillets on the flange): `corner(a,
+                       b, size, round_)` for any two curves sharing an end —
+                       the fillet centre where their offsets meet (a line's
+                       parallels, an arc's r ± size circles), tangent points
+                       nearest the corner, both curves cut back, a new arc;
+                       a chamfer cuts each `size` ALONG its curve. The
+                       corner's Coincident is dropped first; new Coincidents
+                       join the pieces. A click on the corner point
+                       (`partner`) or on the two curves, 2D and 3D. A fillet
+                       keeps Tangent rows to both curves and a RADIUS
+                       dimension (a chamfer a length), so its size changes
+                       later like any Smart Dimension; an arc tied by "c" /
+                       "o" has its bulge free in the solver. Named "Sketch
+                       fillet R8" with a live tree tag (`label`,
+                       `params["sketch_corner"]`). While picking, the curve
+                       under the cursor is orange and the first pick blue
+                       (`hover_2d` / `paint_2d`, Modify3D._corner_hover).
+                       tests/test_sketch_corner.py.
+  - Mirror Entities, picking (same day, the user: "not able to mirror
+                       origins or centre lines"): every click fills box 1
+                       — a centerline too, and a click on any of an
+                       origin's shapes takes all three (`sketch_mirror.
+                       expand`); box 2 only by its box, Enter or a
+                       right-click (3D: Enter / right-click). A mirrored
+                       origin is a NEW "Origin n" (`_new_origins`).
   - `tool_panel.py` / `extrude_panel.py` — **tool windows** (2026-10-28,
                        the user, from SolidCraft: "very easy, very
                        descriptive ... for many types of tools"): a

@@ -126,6 +126,11 @@ def test_mirror_about_a_centerline(sketch):
     sketch_tools2.toggle_construction(sketch.window.model, [c])
     tool = constrain_tool(sketch, "sk_mirror")
     tool.click(*_at(tool, (15, 12.5)))
+    # a centerline click adds it to what is mirrored; Enter first makes
+    # the next click the mirror line (2026-11-11, the user)
+    from PyQt5.QtCore import QEvent, Qt
+    from PyQt5.QtGui import QKeyEvent
+    tool.key_press(QKeyEvent(QEvent.KeyPress, Qt.Key_Return, Qt.NoModifier))
     tool.click(*_at(tool, (30, 30)))
     assert len(sketch.group.children) == 3
 

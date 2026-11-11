@@ -526,6 +526,7 @@ def trim_piece(model, node, click):
     got = piece(node, click)
     if cv is None or got is None:
         return "nothing to trim"
+    remember(node)
     lo, hi = got
     if _closed(cv):
         span = hi - lo
@@ -537,7 +538,7 @@ def trim_piece(model, node, click):
         a, b = point_at(cv, hi % 1.0), point_at(cv, lo)
         old = node.params
         params = {k: v for k, v in old.items()
-                  if k in ("modifier", "origin_point", "collection")}
+                  if k in ("modifier", "origin_point", "collection", KEY)}
         params["width"] = 0.2
         _set_arc(params, a, b, TWO_PI * keep)
         node.type = "line"
@@ -650,3 +651,44 @@ def paint_3d(painter, project, group, local):
         painter.setPen(QPen(QColor(HOVER_INK), 3.0))
         painter.drawPolyline(QPolygonF(scr))
         painter.restore()
+
+
+# ---------------------------------------- what a trim did, undoable
+# (2026-11-11, the user: "can't see where the trimming has happened … I
+# can't see it in the history … something so that we can remove it")
+KEY = "untrimmed"
+
+
+def remember(node):
+    """Before the first trim: what the shape was (its type and params),
+    under a key its split pieces share. Later trims keep the first."""
+    if isinstance(node.params.get(KEY), dict):
+        return
+    import uuid
+    node.params[KEY] = {
+        "key": uuid.uuid4().hex[:12], "type": node.type,
+        "params": {k: v for k, v in node.params.items() if k != KEY}}
+
+
+def trimmed(node) -> bool:
+    return isinstance(node.params.get(KEY), dict)
+
+
+def restore(model, node):
+    """The shape as it was before its trims: the whole circle or line
+    back, its other pieces (from a split) removed. Returns the node."""
+    rec = node.params.get(KEY)
+    if not isinstance(rec, dict):
+        return None
+    parent = node.parent
+    if parent is not None:
+        for other in list(parent.children):
+            if other is not node and isinstance(other.params.get(KEY),
+                                                dict) and \
+                    other.params[KEY].get("key") == rec.get("key"):
+                model.remove_node(other)
+    node.type = rec.get("type", node.type)
+    node.params = dict(rec.get("params") or {})
+    model.structure_changed.emit()
+    model.node_changed.emit(node)
+    return node

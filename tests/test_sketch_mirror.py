@@ -67,7 +67,10 @@ def test_click_the_shapes_then_the_centerline(view):
     _click(view, -26, 0)                    # the polygon's side
     assert [n.name for n in M._state(view.scene())["shapes"]] == \
         [line.name, circle.name, poly.name]
-    _click(view, 0, 5)                      # the centerline: box 2
+    # (a click on the centerline now adds it to box 1: box 2 first —
+    # a right-click, Enter or its box — 2026-11-11)
+    _click(view, 0, -9, Qt.RightButton)     # box 2: the mirror line
+    _click(view, 0, 5)                      # the centerline
     st = M._state(view.scene())
     assert st["line"] is centre and M.ready(view.scene())
     panel = view._mirror_panel
@@ -283,3 +286,43 @@ def test_a_centerline_is_not_drawn_in_3d(app):
     cube.params["modifier"] = "%"
     ghost = mesh.tessellate_colored(cube)
     assert ghost and ghost[0][1][0] == mesh.MODIFIER_TINT["%"][0]
+
+
+
+def test_centerlines_and_origins_mirror_too(view):
+    """Box 1 takes centerlines and whole origins (one click takes the
+    point and both lines); box 2 by a right-click; the copied origin is
+    a new origin with its own relations (2026-11-11, the user)."""
+    from khervecad import sketch_tools2 as s2
+    m = view.scene().model
+    axis = m.add_node("line", dict(x1=0, y1=-30, x2=0, y2=30, width=0.2,
+                                   modifier="%"), name="Axis")
+    guide = m.add_node("line", dict(x1=-20, y1=-10, x2=-10, y2=10,
+                                    width=0.2, modifier="%"), name="Guide")
+
+    class _S:
+        pass
+    sk = _S()
+    sk.model = m
+    dot = s2.origin_relations(sk, [m.add_node(t, p) for t, p, _k
+                                   in s2.point((-15, 20))])
+    QApplication.processEvents()
+    view.set_tool(M.TOOL)
+    _click(view, -15, 0)                    # the guide centerline
+    _click(view, -15, 20)                   # the origin's point
+    st = M._state(view.scene())
+    assert guide in st["shapes"] and dot in st["shapes"]
+    assert len(st["shapes"]) == 4           # guide + point + 2 lines
+    _click(view, 5, -25, Qt.RightButton)    # box 2
+    _click(view, 0, -20)                    # the axis
+    assert st["line"] is axis
+    QTest.mouseClick(view._mirror_panel.ok, Qt.LeftButton)
+    origins = sorted({n.params.get(s2.ORIGIN_KEY) for n in m.root.children
+                      if n.params.get(s2.ORIGIN_KEY)})
+    assert origins == ["Origin 1", "Origin 2"]
+    new = next(n for n in m.root.children if n.name == "Origin 2")
+    assert (new.params["x"], new.params["y"]) == pytest.approx((15, 20))
+    copied = [n for n in m.root.children
+              if n.type == "line" and n.params.get("modifier") == "%"
+              and n.params.get("x1") == pytest.approx(20)]
+    assert copied                            # the guide's mirror

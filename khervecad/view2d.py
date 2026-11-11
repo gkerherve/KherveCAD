@@ -1572,9 +1572,11 @@ class SketchScene(QGraphicsScene):
             # and the circle a Difference cuts from it): shown with it,
             # the cut ones dashed — the circle was invisible (2026-10-21)
             focus_ids = {n.id for n in focus}
+            from . import hide_show
             for node in _profile_shapes(focus):
                 cls = _ITEM_CLASSES.get(node.type)
-                if cls is None:
+                if cls is None or (node.params.get("modifier") == "%"
+                                   and not hide_show.shows_construction()):
                     continue
                 item = cls(node, self)
                 _construction_look(item, node)
@@ -1621,7 +1623,11 @@ class SketchScene(QGraphicsScene):
         if True:
             # sketch mode: individual 2D shapes are editable — every one
             # lying in the plane on show (a Front sketch in Front)
+            from . import hide_show
+            hide_cons = not hide_show.shows_construction()
             for node in scope.walk():
+                if hide_cons and node.params.get("modifier") == "%":
+                    continue          # Hide/Show Items: construction off
                 if node.category == SHAPE_2D and \
                         node.type in _ITEM_CLASSES and \
                         self._branch_visible(node, stop=iso) and \
@@ -2392,6 +2398,9 @@ class SketchScene(QGraphicsScene):
                 event.accept()
                 return
             sketch_trim.hover_2d(self, event.scenePos())
+        if self.tool in ("sk_fillet", "sk_chamfer"):
+            from . import sketch_corner
+            sketch_corner.hover_2d(self, event.scenePos())
         if self.tool == LINE:
             from . import sketch_line
             sketch_line.move(self, event)
@@ -2876,6 +2885,11 @@ class SketchView(QGraphicsView):
         try:                            # the piece Trim would remove
             from . import sketch_trim
             sketch_trim.paint_2d(self, painter)
+        except Exception:               # never raise out of a paint
+            pass
+        try:                            # what a fillet / chamfer takes
+            from . import sketch_corner
+            sketch_corner.paint_2d(self, painter)
         except Exception:               # never raise out of a paint
             pass
         self._dim_hits = []           # every clickable value, this paint

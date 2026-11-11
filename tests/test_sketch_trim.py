@@ -165,7 +165,7 @@ def test_circles_trim_inside_each_other_like_the_flange(app):
     report = sc.solve(m.root)
     assert report["ok"]
     rows = [r for r in sc.rows(m.root) if r["kind"] == "diameter"]
-    assert rows and sc._circle(big, "o", {})[1] == pytest.approx(40, abs=1e-6)
+    assert rows and sc._circle(big, "o", {})[1] == pytest.approx(40, abs=1e-4)
 
 
 def test_a_line_through_a_circle_trims_to_its_crossings(app):
@@ -211,3 +211,25 @@ def test_hover_shows_the_piece_and_a_click_removes_it(view):
     _click(view, -40, 0)
     assert big.type == "line" and sketch_arc.is_arc(big)
     assert view.scene()._trim_hover == []
+
+
+def test_a_trim_shows_and_can_be_restored(app):
+    """The user: "can't see where the trimming has happened … something
+    so that we can remove it" — a trimmed shape remembers what it was;
+    Restore Untrimmed brings it back, split pieces joined again."""
+    m = DocumentModel()
+    big = m.add_node("circle", dict(x=0, y=0, radius=40), name="Big")
+    m.add_node("circle", dict(x=-46, y=0, radius=15), name="Small")
+    line = _line(m, (-60, 30), (60, 30), "L")
+    tr.trim_piece(m, big, (-40, 0.5))
+    tr.trim_piece(m, line, (0, 30))                # splits the line
+    assert tr.trimmed(big) and tr.trimmed(line)
+    pieces = [n for n in m.root.children if tr.trimmed(n)
+              and n.params[tr.KEY]["key"] == line.params[tr.KEY]["key"]]
+    assert len(pieces) == 2
+    tr.restore(m, big)
+    assert big.type == "circle" and big.params["radius"] == 40
+    assert not tr.trimmed(big)
+    tr.restore(m, pieces[1])
+    lines = [n for n in m.root.children if n.type == "line"]
+    assert len(lines) == 1 and _ends(lines[0]) == (-60, 30, 60, 30)

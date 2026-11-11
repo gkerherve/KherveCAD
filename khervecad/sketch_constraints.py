@@ -501,6 +501,11 @@ def solve(container, rs=None, prefer=(), env=None, write=True, dof=True,
                 slots.add(idx)
             if row.get("kind") == "arc_length" and not row.get("driven"):
                 arcs.add(idx)
+            # an ARC tied by its centre or circle (a trimmed circle, a
+            # sketch fillet): its bend is free too, so a Ø, a radius or a
+            # moved centre can be held while its ends slide round
+            if name in ("c", "o"):
+                arcs.add(idx)
     keys, x0, w = [], [], []
     for node in nodes:
         try:
