@@ -385,8 +385,16 @@ class PropertiesPanel(QScrollArea):
             # scale, slices
             from . import extrude_props
             extrude_props.build(self, form, node)
+        from . import pattern_props
+        self._pattern = None
+        pattern_loop = pattern_props.loop_for(node)
+        if pattern_loop is not None:
+            # a Sketch Pattern: its numbers, not the loop's From / To
+            # and an "i * 360 / 6" to type (2026-11-11, the user)
+            pattern_props.build(self, form, pattern_loop)
         for key, label, kind, minimum, maximum in (
-                [] if slot or node.type == "linear_extrude"
+                [] if slot or node.type == "linear_extrude" or
+                pattern_loop is not None
                 else spec["schema"]):
             editor = self._make_editor(key, kind, minimum, maximum)
             if editor is not None:
@@ -530,6 +538,9 @@ class PropertiesPanel(QScrollArea):
         if getattr(self, "_construction", None) is not None:
             self._construction.setChecked(
                 self.node.params.get("modifier") == "%")
+        if getattr(self, "_pattern", None):
+            from . import pattern_props
+            pattern_props.load(self)
         if getattr(self, "_extrude", None):
             from . import extrude_props
             extrude_props.load(self)

@@ -36,6 +36,8 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (FILLET, "mdi.vector-curve", "Sketch fillet"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
          ("sk_mirror", "mdi.flip-horizontal", "Mirror Entities"),
+         ("sk_lpattern", "mdi.dots-grid", "Linear Sketch Pattern"),
+         ("sk_cpattern", "mdi.rotate-3d-variant", "Circular Sketch Pattern"),
          # (no Extrude regions button: Extruded Boss/Base on overlapping
          # shapes picks the regions itself — the user, 2026-10-25)
          ("make_region", "mdi.vector-union", "Create region")]
@@ -361,7 +363,8 @@ def _band(pts, width):
 # ------------------------------------------------------- the 2D view
 def handles(tool):
     return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
-                    "sk_construction", "sk_mirror")
+                    "sk_construction", "sk_mirror", "sk_lpattern",
+                    "sk_cpattern")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -383,6 +386,10 @@ def press(scene, event):
     if scene.tool == "sk_mirror":
         from . import sketch_mirror
         sketch_mirror.press(scene, event)
+        return
+    if scene.tool in ("sk_lpattern", "sk_cpattern"):
+        from . import sketch_pattern
+        sketch_pattern.press(scene, event)
         return
     if scene.tool in ("regions", "make_region") and \
             event.button() == Qt.RightButton:
@@ -485,6 +492,9 @@ def drop(scene):
     if getattr(scene, "_regions", None) is not None:
         from . import sketch_regions
         sketch_regions.drop(scene)
+    if getattr(scene, "_pattern", None) is not None:
+        from . import sketch_pattern
+        sketch_pattern.drop(scene)
 
 
 TIPS = {
@@ -534,6 +544,8 @@ def panel_actions(win):
     tooltips.TIPS.update(TIPS)
     from . import sketch_mirror
     tooltips.TIPS.update(sketch_mirror.TIPS)
+    from . import sketch_pattern
+    tooltips.TIPS.update(sketch_pattern.TIPS)
     acts = []
     for tool, glyph, label in TOOLS:
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
@@ -547,6 +559,9 @@ def panel_actions(win):
         elif tool == "sk_mirror":
             act.triggered.connect(
                 lambda _=False: sketch_mirror.start(win))
+        elif tool in sketch_pattern.TOOLS:
+            act.triggered.connect(
+                lambda _=False, t=tool: sketch_pattern.start(win, t))
         else:
             act.triggered.connect(lambda _=False, t=tool: win._set_tool(t))
         win._tool_group.addAction(act)

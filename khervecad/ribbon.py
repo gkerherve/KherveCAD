@@ -244,7 +244,10 @@ FUSION_SHOWN_MANY = 4
 #: icons shown by panels with a count of their own
 PANEL_SHOWN = {"sketch": 12, "sketch_modify": 10, "sketch_constrain": 15}
 #: the sketch MODIFY panel: operations from the families, in this order
-SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror", "pattern"]
+# (no "pattern": the sketch's own Linear / Circular Sketch Pattern are in
+# sketch_modify.TOOLS — the feature pattern turned about an origin
+# nobody could see, 2026-11-11, the user)
+SKETCH_MODIFY = ["translate", "rotate", "scale", "mirror"]
 
 #: tips for the analysis actions made here (the menu items they copy
 #: have none of their own)

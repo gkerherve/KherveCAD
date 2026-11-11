@@ -3234,6 +3234,28 @@ into a new module and import.
                        (`sketch_modify.TOOLS`), MCP `sketch_modify` action
                        `mirror`. A Symmetric mark shows on its two points
                        only, not piled on the centerline.
+  - `sketch_pattern.py` — **Linear / Circular Sketch Pattern** (2026-11-11,
+                       the user, with SolidWorks' Circular Pattern window:
+                       "I do not see what is the centre of rotation"): a
+                       ToolPanel like Mirror Entities' — Entities to pattern
+                       (clicks), Centre of rotation (a box: a clicked point,
+                       a circle's centre, or typed X / Y; the origin by
+                       default), Angle, Equal spacing, Instances; Linear:
+                       angle / spacing / instances and an optional Direction
+                       2. The copies are drawn dashed and the centre in
+                       orange while it is open (`paint`, from SketchView.
+                       drawForeground); OK makes a FOR LOOP round the shapes
+                       (the user: "using the loop"): `for (i) rotate([0, 0,
+                       i * step], pivot = centre)` / `for (i) [for (j)]
+                       translate(...)`, the window's numbers on the loop as
+                       `params["sketch_pattern"]` — select it and press the
+                       button to change it. The sketch draws the other
+                       instances (`_paint_made`); cut_feature._shapes takes
+                       the loop. Tools
+                       "sk_lpattern" / "sk_cpattern" in sketch_modify.TOOLS
+                       (the sketch Modify panel lost the feature "pattern",
+                       which turned about an unseen origin). 2D sketch only:
+                       in a 3D sketch it says so. tests/test_sketch_pattern.py.
   - `tool_panel.py` / `extrude_panel.py` — **tool windows** (2026-10-28,
                        the user, from SolidCraft: "very easy, very
                        descriptive ... for many types of tools"): a

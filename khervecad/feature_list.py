@@ -78,6 +78,20 @@ def is_plumbing(node):
     if node.type == "difference":
         return len(node.children) >= 2 and \
             all(_tool(c) for c in node.children[1:])
+    if node.type in ("rotate", "translate", "for_loop") and \
+            node.parent is not None:
+        # a Sketch Pattern's turn / move (and its Direction 2 loop):
+        # the inside of the pattern, not a feature (2026-11-11, the user:
+        # "body rotate should go inside repeat — we should not see it")
+        from . import sketch_pattern
+        p = node.parent
+        if p.type == "for_loop" and \
+                isinstance(p.params.get(sketch_pattern.KEY), dict):
+            return True
+        if node.type != "for_loop" and p.type == "for_loop" and \
+                p.parent is not None and isinstance(
+                    p.parent.params.get(sketch_pattern.KEY), dict):
+            return True
     if node.type == "rotate":
         return (node.name or "").endswith("(about the sketch's Y axis)")
     if node.type == "multmatrix":

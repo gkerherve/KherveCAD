@@ -2810,6 +2810,11 @@ class SketchView(QGraphicsView):
             sketch_dims3d.paint_references_2d(self, painter)
         except Exception:               # never raise out of a paint
             pass
+        try:                            # a sketch pattern's copies
+            from . import sketch_pattern
+            sketch_pattern.paint(self.scene(), painter)
+        except Exception:               # never raise out of a paint
+            pass
         self._dim_hits = []           # every clickable value, this paint
         from . import sketch_constrain_ui
         try:
@@ -3299,6 +3304,10 @@ class SketchView(QGraphicsView):
             pass
         elif scene.tool == "sk_mirror" and \
                 __import__("khervecad.sketch_mirror",
+                           fromlist=["key"]).key(scene, event):
+            pass
+        elif scene.tool in ("sk_lpattern", "sk_cpattern") and \
+                __import__("khervecad.sketch_pattern",
                            fromlist=["key"]).key(scene, event):
             pass
         elif sketch_constrain_ui.handles(scene.tool) and \

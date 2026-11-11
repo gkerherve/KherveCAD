@@ -438,3 +438,26 @@ def _hole_wizard(d):
         d.p.setPen(d.pen(_QC("#e0a100"), 0.05))
         d.p.drawLine(QPointF(star.x() - dx, star.y() - dy),
                      QPointF(star.x() + dx, star.y() + dy))
+
+
+@draws("sk_lpattern")
+def _sk_lpattern(d):
+    """A sketched circle and two copies in a row (make colour), a
+    dashed direction arrow under them."""
+    _circle(d, (0.18, 0.42), 0.11, d.pal.sketch)
+    _circle(d, (0.5, 0.42), 0.11, d.pal.make)
+    _circle(d, (0.82, 0.42), 0.11, d.pal.make)
+    d.arrow(P(0.1, 0.78), P(0.9, 0.78), d.pal.make, 0.04, 0.08)
+
+
+@draws("sk_cpattern")
+def _sk_cpattern(d):
+    """Six small circles round a centre cross: one sketched, the rest
+    copies (make colour)."""
+    import math
+    d.line(P(0.42, 0.5), P(0.58, 0.5), d.pal.edge, 0.05)
+    d.line(P(0.5, 0.42), P(0.5, 0.58), d.pal.edge, 0.05)
+    for i in range(6):
+        a = math.radians(90 + 60 * i)
+        c = (0.5 + 0.33 * math.cos(a), 0.5 - 0.33 * math.sin(a))
+        _circle(d, c, 0.09, d.pal.sketch if i == 0 else d.pal.make)

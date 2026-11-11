@@ -351,6 +351,12 @@ def _features(tree, node, parent_item, selected, counts):
     inner = [c for c in node.children if not _is_2d(c)
              and not (node.type in feature_list.EXTRUDES
                       and c.type == "regions")]
+    from . import sketch_pattern
+    if sketch_pattern.loop_of(node) is node:
+        # a Sketch Pattern: ONE row, the shapes it repeats under it — its
+        # turn / move is its inside, not an earlier feature (the user)
+        sketch = [n for n in node.walk() if n is not node and _is_2d(n)]
+        inner = []
     for child in feature_list.ordered(inner):
         _features(tree, child, parent_item, selected, counts)
     item = _row(tree, node, parent_item, selected, _label(node, counts))

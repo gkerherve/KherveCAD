@@ -53,9 +53,12 @@ def _shapes(group):
     def flat(c):
         # an ELLIPSE is a circle under a scale: a sketch shape too (it
         # was left out — an ellipse drawn for a cut or boss made nothing)
+        # ... and a Linear / Circular Sketch Pattern: its for loop
         return c.category == SHAPE_2D or c.type == "regions" or (
             c.type == "scale" and c.children and
-            all(k.category == SHAPE_2D for k in c.children))
+            all(k.category == SHAPE_2D for k in c.children)) or (
+            c.type == "for_loop" and
+            isinstance(c.params.get("sketch_pattern"), dict))
     return [c for c in group.children if flat(c)]
 
 
