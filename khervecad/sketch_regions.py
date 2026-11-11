@@ -1269,6 +1269,47 @@ def _closest(p, a, b):
     return t, (a[0] + t * dx, a[1] + t * dy)
 
 
+#: mm: two line / arc ENDS this close are one point. Trimming, mirroring
+#: and filleting round each piece's ends on their own, so a loop the user
+#: closed came back a few hundredths apart (0.012 mm where an arc met its
+#: neighbour) and the picker never saw the area it closed
+END_JOIN = 0.05
+
+
+def _join_ends(segs, loose):
+    """*segs* with the free ends of the loose segments that lie within
+    END_JOIN of another loose segment's end moved onto one point."""
+    segs = [list(s) for s in segs]
+    # an end shared by two pieces of one curve is not free
+    count = {}
+    for i in loose:
+        for k in (0, 1):
+            key = (round(segs[i][k][0] / JOIN), round(segs[i][k][1] / JOIN))
+            count[key] = count.get(key, 0) + 1
+    free = [(i, k) for i in loose for k in (0, 1)
+            if count[(round(segs[i][k][0] / JOIN),
+                      round(segs[i][k][1] / JOIN))] == 1]
+    done = set()
+    for a, (i, k) in enumerate(free):
+        if (i, k) in done:
+            continue
+        p = segs[i][k]
+        best = None
+        for j, m in free[a + 1:]:
+            if j == i or (j, m) in done:
+                continue
+            d = math.dist(p, segs[j][m])
+            if d < END_JOIN and (best is None or d < best[0]):
+                best = (d, j, m)
+        if best is not None:
+            _d, j, m = best
+            q = segs[j][m]
+            mid = ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+            segs[i][k] = segs[j][m] = mid
+            done.update({(i, k), (j, m)})
+    return [tuple(s) for s in segs]
+
+
 def arrangement(segs, loose, inside=None):
     """The bounded faces [loop counter-clockwise] the segments cut the
     plane into. *segs* [(a, b)]; *loose* the indices of segments whose
@@ -1278,6 +1319,7 @@ def arrangement(segs, loose, inside=None):
     segs = [(tuple(map(float, a)), tuple(map(float, b))) for a, b in segs
             if math.dist(a, b) > SNAP]
     n = len(segs)
+    segs = _join_ends(segs, [i for i in loose if i < n])
     cuts = [[0.0, 1.0] for _ in range(n)]
     ends = [list(s) for s in segs]
     # a loose end stopping short of another segment is carried on to
