@@ -373,6 +373,17 @@ def add_sketch_controls(win, bar):
     line = QFrame(bar)
     line.setFrameShape(QFrame.VLine)
     bar.layout().insertWidget(0, line)
+    win._plane_line = line
+    # in the SolidWorks / Fusion layouts the sketch's plane is the one
+    # the 3D view chose: Exit Sketch stands where the planes were
+    # (2026-11-11, the user) — sketch_mode._show swaps them
+    from . import sketch_mode
+    exit_btn = QToolButton(bar)
+    exit_btn.setDefaultAction(sketch_mode.create_action(win))
+    exit_btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+    exit_btn.setVisible(False)
+    bar.layout().insertWidget(0, exit_btn)
+    win._exit_sketch_btn = exit_btn
     for plane in reversed([p for p in order if p in PLANES]):
         label, tip = names[plane]
         button = QToolButton(bar)

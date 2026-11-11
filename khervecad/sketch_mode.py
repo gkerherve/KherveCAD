@@ -135,6 +135,23 @@ def _button(win):
     return b
 
 
+def _plane_buttons_shown(win, on):
+    """The 2D bar's Front / Top / Right buttons, or Exit Sketch."""
+    for w in list((getattr(win, "_plane_buttons", None) or {}).values()) \
+            + [getattr(win, "_plane_line", None)]:
+        try:
+            if w is not None:
+                w.setVisible(on)
+        except RuntimeError:
+            pass
+    b = getattr(win, "_exit_sketch_btn", None)
+    if b is not None:
+        try:
+            b.setVisible(not on)
+        except RuntimeError:
+            pass
+
+
 def _show(win, sketch: bool):
     vibe = bool(getattr(win, "_vibe_act", None)
                 and win._vibe_act.isChecked())
@@ -146,12 +163,9 @@ def _show(win, sketch: bool):
     b.setVisible(False)
     # on a face the sketch has its own plane: the Front / Top / Right
     # buttons are not for it ("Top" stood lit on a front face)
-    on_face = sketch and getattr(win, "_face_sketch", None) is not None
-    for button in (getattr(win, "_plane_buttons", None) or {}).values():
-        try:
-            button.setVisible(not on_face)
-        except RuntimeError:
-            pass
+    # ... nor for any sketch here: the 3D view chose the plane, so the
+    # 2D bar offers Exit Sketch instead (2026-11-11, the user)
+    _plane_buttons_shown(win, not sketch)
     bar = getattr(win.view2d, "nav_bar", None)
     if bar is not None:
         bar.place()
@@ -342,6 +356,7 @@ def apply(win, style):
         _show(win, sketching(win))
         return
     win._sketching = False
+    _plane_buttons_shown(win, True)       # the classic 2D view: planes
     for name in ("_finish_sketch", "_sketch_inset", "_sketch_mini2d"):
         b = getattr(win, name, None)
         if b is not None:

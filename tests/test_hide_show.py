@@ -68,3 +68,32 @@ def test_construction_geometry_hides_from_the_sketch(app):
         act.setChecked(True)
         win._dirty = False
         win.close()
+
+
+def test_the_2d_bar_shows_exit_sketch_not_planes_while_sketching(app):
+    """SolidWorks / Fusion: the 3D view chose the plane, so the 2D bar
+    has Exit Sketch where Front / Top / Right were (the user); the
+    classic layout keeps its planes."""
+    from khervecad import sketch_mode, toolbar_style
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win.show()
+        toolbar_style.apply(win, "SolidWorks", remember=False)
+        sketch_mode.enter(win)
+        QApplication.processEvents()
+        planes = list(win._plane_buttons.values())
+        assert planes and not any(b.isVisible() for b in planes)
+        exit_btn = win._exit_sketch_btn
+        assert exit_btn.isVisible()
+        assert "exit" in exit_btn.text().lower()
+        exit_btn.click()
+        QApplication.processEvents()
+        assert not sketch_mode.sketching(win)
+        toolbar_style.apply(win, "KherveCAD", remember=False)
+        QApplication.processEvents()
+        assert all(b.isVisible() for b in planes)
+        assert not exit_btn.isVisible()
+    finally:
+        win._dirty = False
+        win.close()
