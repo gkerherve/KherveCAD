@@ -343,6 +343,18 @@ class PropertiesPanel(QScrollArea):
         name_edit.editingFinished.connect(
             lambda: self._rename(name_edit.text()))
         form.addRow(language.tr("Name"), name_edit)
+        self._construction = None
+        if node.category == "2d" and node.type != "text":
+            # SolidWorks' Line / Circle properties: "For construction"
+            # (2026-11-11, the user) — dashed, left out of the solid
+            # (OpenSCAD's %), still used by relations and dimensions
+            box = QCheckBox(language.tr("For construction"))
+            box.setToolTip(language.tr(
+                "Construction geometry: drawn dashed, used by relations "
+                "and dimensions, never part of the solid."))
+            box.toggled.connect(self._set_construction)
+            self._construction = box
+            form.addRow("", box)
 
         if slot:
             # a slot's own sizes, not the line's two ends (the user)
@@ -515,6 +527,9 @@ class PropertiesPanel(QScrollArea):
                 editor.setPlainText(str(value))
             elif isinstance(editor, QLineEdit):
                 editor.setText(str(value))
+        if getattr(self, "_construction", None) is not None:
+            self._construction.setChecked(
+                self.node.params.get("modifier") == "%")
         if getattr(self, "_extrude", None):
             from . import extrude_props
             extrude_props.load(self)
@@ -531,6 +546,11 @@ class PropertiesPanel(QScrollArea):
     def _set_param(self, key, value):
         if not self._updating and self.node is not None:
             self.model.set_param(self.node, key, value)
+
+    def _set_construction(self, on):
+        if not self._updating and self.node is not None and \
+                (self.node.params.get("modifier") == "%") != bool(on):
+            self.model.set_modifier(self.node, "%" if on else "")
 
     def _set_slot(self, key, value):
         if not self._updating and self.node is not None:
