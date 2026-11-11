@@ -329,3 +329,38 @@ def test_a_centre_near_a_point_is_coincident_not_on_its_rim(app):
     me = sc.ref_of(m.root, ring, "c")
     assert not any(me in r["refs"] and sc.ref_of(m.root, dot, "o")
                    in r["refs"] for r in sc.rows(m.root))
+
+
+@pytest.mark.parametrize("history", [False, True])
+def test_an_origin_shows_as_one_folder_row(app, history):
+    """Its three shapes stay loose in the sketch (relations reach them)
+    but the tree shows ONE "Origin 1" row holding them (the user)."""
+    from PyQt5.QtCore import Qt
+    from khervecad import sketch_tools2 as s2, tree_history
+    from khervecad.mainwindow import MainWindow
+    from khervecad.treepanel import ROLE_ORIGIN
+    win = MainWindow()
+    tree_history.set_enabled(history)
+    try:
+        scene = win.view2d.scene()
+        made = [win.model.add_node(t, p) for t, p, _k in s2.point((3, 4))]
+        dot = s2.origin_relations(scene, made)
+        win.model.add_node("circle", dict(x=20, y=0, radius=2))
+        tree = win.builder.tree
+        tree.rebuild()
+        rows = [tree.topLevelItem(i)
+                for i in range(tree.topLevelItemCount())]
+        rows = [r for r in rows if not r.data(0, tree_history.ROLE_FIXED)]
+        folders = [r for r in rows if r.data(0, ROLE_ORIGIN)]
+        assert [f.text(0) for f in folders] == ["Origin 1"]
+        kids = [folders[0].child(i).data(0, Qt.UserRole)
+                for i in range(folders[0].childCount())]
+        assert kids == [n.id for n in made]
+        assert not any(r.data(0, Qt.UserRole) in kids[1:] for r in rows)
+        assert dot.parent is win.model.root         # still loose
+        folders[0].setSelected(True)                # selects the point
+        assert dot in tree.selected_nodes()
+    finally:
+        tree_history.set_enabled(False)
+        win._dirty = False
+        win.close()

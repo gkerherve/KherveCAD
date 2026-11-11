@@ -49,6 +49,7 @@ HIDDEN_COLOR_DARK = "#697079"
 ROLE_TAG = Qt.UserRole + 1         # True -> paint a "(hidden)" tag
 ROLE_MODIFIER = Qt.UserRole + 7    # "# highlight" etc. -> painted tag
 from .tree_history import ROLE_FIXED, ROLE_SHOWN  # noqa: E402
+ROLE_ORIGIN = Qt.UserRole + 31   # an origin's folder row: its label
 ROLE_PLACEMENT = Qt.UserRole + 2   # True -> synthetic Position/Rotation
 #                                    row under a part (selects the part)
 
@@ -244,15 +245,17 @@ class ObjectTree(QTreeWidget):
         if self.history:
             tree_history.build_history(self, selected)
         else:
-            for child in self._top_nodes():
-                self._build_node(child, self.invisibleRootItem(),
-                                 selected)
+            self._build_children(self._top_nodes(),
+                                 self.invisibleRootItem(), selected)
         self._updating = False
         self._emit_selection()
 
     def _remember_expanded(self, item):
         if not self._updating and item.data(0, ROLE_FIXED) == "origin":
             self._expand_state["__origin__"] = True
+        if not self._updating and item.data(0, ROLE_ORIGIN):
+            self._expand_state["origin:" + item.data(0, ROLE_ORIGIN)] = True
+            return
         if not self._updating:
             node = self.node_of(item)
             if node is not None:
@@ -261,6 +264,9 @@ class ObjectTree(QTreeWidget):
     def _remember_collapsed(self, item):
         if not self._updating and item.data(0, ROLE_FIXED) == "origin":
             self._expand_state["__origin__"] = False
+        if not self._updating and item.data(0, ROLE_ORIGIN):
+            self._expand_state["origin:" + item.data(0, ROLE_ORIGIN)] = False
+            return
         if not self._updating:
             node = self.node_of(item)
             if node is not None:
@@ -404,8 +410,45 @@ class ObjectTree(QTreeWidget):
                 item.setExpanded(True)
         if node.id in selected:
             item.setSelected(True)
-        for child in node.children:
-            self._build_node(child, item, selected)
+        self._build_children(node.children, item, selected)
+
+    def _build_children(self, children, parent_item, selected):
+        """Rows for *children*; an origin's point and two centerlines go
+        under ONE "Origin n" folder row (`sketch_tools2.tree_rows`)."""
+        from . import sketch_tools2
+        for entry in sketch_tools2.tree_rows(children):
+            if isinstance(entry, tuple):
+                self._origin_folder(entry, parent_item, selected)
+            else:
+                self._build_node(entry, parent_item, selected)
+
+    def _origin_folder(self, entry, parent_item, selected,
+                       build=None):
+        """The folder row of one origin: its name, the axes icon; a
+        click selects the point (so Properties shows the centerline
+        lengths). Not renamed or dragged by itself."""
+        label, members = entry
+        item = QTreeWidgetItem(parent_item)
+        item.setText(0, label)
+        item.setIcon(0, icons.icon("mdi.axis-arrow"))
+        item.setData(0, Qt.UserRole, members[0].id)
+        item.setData(0, ROLE_ORIGIN, label)
+        item.setFlags((item.flags() | Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                      & ~(Qt.ItemIsEditable | Qt.ItemIsDragEnabled
+                          | Qt.ItemIsDropEnabled | Qt.ItemIsUserCheckable))
+        item.setToolTip(0, "The point and its X / Y centerlines — shapes "
+                           "drawn on them follow them.")
+        for m, word in zip(members, ("Point", "X centerline",
+                                     "Y centerline")):
+            if build is not None:
+                build(m, item)
+            else:
+                self._build_node(m, item, selected)
+            row = item.child(item.childCount() - 1)
+            row.setData(0, ROLE_SHOWN, language.tr(word))
+            row.setText(0, language.tr(word))   # the folder says whose
+        item.setExpanded(self._expand_state.get("origin:" + label, False))
+        return item
 
     def _visibility_root(self):
         """Ancestor at which the effective-visibility walk stops

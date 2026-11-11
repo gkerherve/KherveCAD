@@ -3270,7 +3270,10 @@ into a new module and import.
                        LOOSE in the sketch (`params["origin_point"]` = the
                        label; a relation ties only shapes of one container,
                        so in a group nothing snapped on it could follow it)
-                       — — the point and two construction
+                       but SHOWN as one "Origin n" folder row in Structure
+                       and History (`sketch_tools2.tree_rows`, `ObjectTree.
+                       _origin_folder`, ROLE_ORIGIN; rows Point / X / Y
+                       centerline; a click selects the point) — — the point and two construction
                        centerlines along X and Y (`sketch_tools2.point`,
                        `origin_relations`: Coincident with each line's
                        middle, Horizontal, Vertical), like a small origin;

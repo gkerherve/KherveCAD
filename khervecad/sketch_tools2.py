@@ -177,6 +177,27 @@ def origin_parts(node):
     return dots[0], dots[0], h, v
 
 
+def tree_rows(children):
+    """*children* in order, an origin's three shapes gathered into one
+    entry where the first of them stands: ``node`` or ``(label,
+    [point, x line, y line])`` — the tree shows them under one "Origin
+    n" folder row (2026-11-11, the user) while they stay loose in the
+    sketch, where relations can tie a shape snapped on them."""
+    out, seen = [], set()
+    for c in children:
+        label = c.params.get(ORIGIN_KEY)
+        if isinstance(label, str):
+            if label in seen:
+                continue
+            parts = origin_parts(c)
+            if parts is not None:
+                seen.add(label)
+                out.append((label, list(parts[1:])))
+                continue
+        out.append(c)
+    return out
+
+
 def arm_lengths(group):
     _g, _d, h, v = origin_parts(group)
 

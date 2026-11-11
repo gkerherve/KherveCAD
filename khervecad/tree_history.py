@@ -267,9 +267,22 @@ def build_history(tree, selected):
     from . import feature_list
     feature_list.stamp(tree.model)
     counts = {}
-    for node in feature_list.ordered(tree._top_nodes()):
-        _features(tree, node, tree.invisibleRootItem(), selected, counts)
+    _each(tree, feature_list.ordered(tree._top_nodes()),
+          tree.invisibleRootItem(), selected, counts)
     _rollback_bar(tree)
+
+
+def _each(tree, nodes, parent_item, selected, counts):
+    """Rows for *nodes*; an origin's point and two centerlines under ONE
+    "Origin n" folder row, as in Structure."""
+    from . import sketch_tools2
+    for entry in sketch_tools2.tree_rows(nodes):
+        if isinstance(entry, tuple):
+            tree._origin_folder(
+                entry, parent_item, selected,
+                build=lambda m, item: _row(tree, m, item, selected, m.name))
+        else:
+            _features(tree, entry, parent_item, selected, counts)
 
 
 def _is_2d(node):
@@ -334,8 +347,8 @@ def _features(tree, node, parent_item, selected, counts):
             _row(tree, node, parent_item, selected, node.name)
             return
         folder = _row(tree, node, parent_item, selected, node.name)
-        for child in feature_list.ordered(node.children):
-            _features(tree, child, folder, selected, counts)
+        _each(tree, feature_list.ordered(node.children), folder, selected,
+              counts)
         folder.setExpanded(tree._expand_state.get(node.id, True))
         return
     if tree._is_opaque(node) or node.type == "reference":
