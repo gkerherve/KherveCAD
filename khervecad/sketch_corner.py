@@ -239,6 +239,22 @@ def corner(model, a, b, size, round_=True):
     return new
 
 
+def between(model, a, b, size, round_=True):
+    """The two curves clicked: an arc's corner by `corner`; two straight
+    lines by `corner` when they meet end to end, else by the older
+    `sketch_modify.line_corner`, which also finds where lines that only
+    nearly meet (or cross) would meet."""
+    from . import sketch_arc, sketch_modify
+    arcs = sketch_arc.is_arc(a) or sketch_arc.is_arc(b)
+    if arcs or shared_end(a, b) is not None:
+        try:
+            return corner(model, a, b, size, round_)
+        except ValueError:
+            if arcs:
+                raise
+    return sketch_modify.line_corner(model, a, b, size, round_)
+
+
 #: on a fillet / chamfer line: what it is and its size (the tree's tag)
 MARK = "sketch_corner"
 

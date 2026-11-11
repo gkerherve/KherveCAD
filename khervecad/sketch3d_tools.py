@@ -412,11 +412,7 @@ class Modify3D(constrain3d.Constrain3D):
         first, self.first = self.first, None
         size = sm._ask(scene, tool)
         if size is not None:
-            if sketch_arc.is_arc(first) or sketch_arc.is_arc(node) or \
-                    sketch_corner.shared_end(first, node) is not None:
-                sketch_corner.corner(model, first, node, size, round_)
-            else:
-                sm.line_corner(model, first, node, size, round_)
+            sketch_corner.between(model, first, node, size, round_)
         return node
 
     def _convert(self, x, y):

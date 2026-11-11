@@ -139,7 +139,11 @@ def test_the_s_bracket_by_mouse(win):
     _constrain(win, "fix", (-12.5 * w, 0))
     _fillet_lines(win, (75 * w, 90), (50 * w, 0), 50)        # outer R50
     _fillet_lines(win, (25 * w, 100), (5 * w, 50), 25)       # inner R25
-    arcs = [n for n in web.children if n.type not in ("line",)]
+    # (a sketch fillet is a real ARC since 2026-11-11 — a line with a
+    # bulge, tangent to both sides — where it was a filled band polygon)
+    from khervecad import sketch_arc
+    arcs = [n for n in web.children if n.type != "line"
+            or sketch_arc.is_arc(n)]
     assert len(arcs) == 2, [n.type for n in web.children]
     _shot(win, "s3a-s-sketch")
     _extruded_boss(win)

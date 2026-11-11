@@ -3355,6 +3355,15 @@ into a new module and import.
                        expand`); box 2 only by its box, Enter or a
                        right-click (3D: Enter / right-click). A mirrored
                        origin is a NEW "Origin n" (`_new_origins`).
+  - `circle_snap.py` — a new circle like SolidWorks (2026-11-11, the
+                       user): its centre (any first point, while no draft)
+                       snaps ON a line / arc / circle after points and
+                       centres (`on_curve`, in `SketchScene.snap`) and
+                       `sketch_touch` ties it Point on curve; its dragged
+                       radius snaps to touch a circle (outside or inside)
+                       or a line (`tangent_radius`, `SketchScene.
+                       _tangent_radius`; 3D `Sketch3DTool._tangent3d`) and
+                       `tie` adds the Tangent row. tests/test_circle_snap.py.
   - `tool_panel.py` / `extrude_panel.py` — **tool windows** (2026-10-28,
                        the user, from SolidCraft: "very easy, very
                        descriptive ... for many types of tools"): a

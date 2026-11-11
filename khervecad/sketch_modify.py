@@ -488,11 +488,7 @@ def press(scene, event):
     if size is None:
         return
     try:
-        if sketch_arc.is_arc(first) or sketch_arc.is_arc(line[0]) or \
-                sketch_corner.shared_end(first, line[0]) is not None:
-            sketch_corner.corner(scene.model, first, line[0], size, round_)
-        else:
-            line_corner(scene.model, first, line[0], size, round_)
+        sketch_corner.between(scene.model, first, line[0], size, round_)
     except ValueError as exc:
         scene.status.emit(str(exc))
 

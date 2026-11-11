@@ -1220,6 +1220,16 @@ class SketchScene(QGraphicsScene):
             if got is not None:
                 hint = got
                 return got[0]
+            # then ON a line, arc or circle — a centre placed there slides
+            # along it (Point on curve; 2026-11-11, the user: "the centre
+            # on the line, not fixed to a point")
+            if getattr(self, "tool", SELECT) != SELECT and \
+                    self._draft is None:
+                from . import circle_snap
+                on = circle_snap.on_curve(self, pos)
+                if on is not None:
+                    hint = (on[0], "on_line")
+                    return on[0]
         finally:
             self._set_snap_hint(hint)
         if not self.snap_enabled:
@@ -1366,6 +1376,20 @@ class SketchScene(QGraphicsScene):
                     sc.ref_of(parent, line, "l")])
         except Exception:                       # a conflict: leave it
             pass
+
+    def _tangent_radius(self, centre, radius):
+        """The dragged radius, snapped to touch a nearby circle, arc or
+        line (remembered for the Tangent relation)."""
+        from . import circle_snap
+        got = circle_snap.tangent_radius(self, centre, radius)
+        if got is None:
+            self._circle_tangent = None
+            return radius
+        r, node, ent = got
+        self._circle_tangent = (node, ent)
+        self.status.emit(language.tr("Tangent to {name}").format(
+            name=node.name))
+        return r
 
     def _set_snap_hint(self, hint):
         """What the cursor snaps to now, drawn by the view (a marker and
@@ -2434,6 +2458,7 @@ class SketchScene(QGraphicsScene):
             elif self.tool == CIRCLE:
                 radius = ((pos.x() - start.x()) ** 2 +
                           (pos.y() - start.y()) ** 2) ** 0.5
+                radius = self._tangent_radius(start, radius)
                 self._draft.setRect(start.x() - radius,
                                     start.y() - radius,
                                     2 * radius, 2 * radius)
@@ -2523,9 +2548,14 @@ class SketchScene(QGraphicsScene):
         elif self.tool == CIRCLE:
             radius = ((pos.x() - start.x()) ** 2 +
                       (pos.y() - start.y()) ** 2) ** 0.5
+            radius = self._tangent_radius(start, radius)
+            target = getattr(self, "_circle_tangent", None)
+            self._circle_tangent = None
             if radius > tiny:
                 node = self._create("circle", dict(
                     x=start.x(), y=start.y(), radius=radius))
+                from . import circle_snap      # touching what it snapped to
+                circle_snap.tie(self.model, node, target)
         if node is not None:
             self.node_created.emit(node)
 

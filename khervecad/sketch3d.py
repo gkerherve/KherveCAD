@@ -272,6 +272,38 @@ class Sketch3DTool:
         self._cross_cache = (key, got)
         return got
 
+    def _tangent3d(self, centre, radius):
+        """The radius snapped to touch another circle, arc or line of
+        this sketch (2026-11-11, the user), and what it touches."""
+        from . import circle_snap, sketch_trim
+        mm = self._mm_per_px(*centre) or 0.0
+        tol = circle_snap.SNAP_PX * mm
+        best = None
+        holder = self.holder or self.group
+        for node in (list(holder.children) if holder is not None else []):
+            cv = sketch_trim.curve_of(node)
+            if cv is None or getattr(node, "params", {}).get(
+                    "radius") == 0.25:
+                continue
+            if cv[0] == "seg":
+                a, b = cv[1], cv[2]
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                L = math.hypot(dx, dy)
+                if L < 1e-12:
+                    continue
+                cands = [(abs((centre[0] - a[0]) * dy -
+                              (centre[1] - a[1]) * dx) / L, "l")]
+            else:
+                d = math.hypot(centre[0] - cv[1], centre[1] - cv[2])
+                cands = [(d + cv[3], "o"), (abs(d - cv[3]), "o")]
+            for r, ent in cands:
+                if r > 1e-9 and abs(r - radius) <= tol and \
+                        (best is None or abs(r - radius) < best[0]):
+                    best = (abs(r - radius), r, (node, ent))
+        if best is None:
+            return radius, None
+        return best[1], best[2]
+
     def aimed(self, pt):
         """(*pt* moved onto the direction it nearly has, what that direction
         is): level, upright, 45° or square to the last line. A corner it
@@ -880,8 +912,12 @@ class Sketch3DTool:
             self.points = []
         elif self.mode == "circle" and len(self.points) == 2:
             par = circle_params(*self.points)
+            r, target = self._tangent3d(self.points[0], par["radius"])
+            par["radius"] = tidy(r)
             if par["radius"] > 0:
                 node = model.add_node("circle", par, parent=self.holder or self.group)
+                from . import circle_snap       # touching what it met
+                circle_snap.tie(model, node, target)
             self.points = []
         elif self.mode == "line" and len(self.points) >= 2:
             a, b = self.points[-2], self.points[-1]
@@ -1305,6 +1341,7 @@ class Sketch3DTool:
                                      f"{w:g} × {ht:g}")
             elif self.mode == "circle":
                 r = math.hypot(h[0] - a[0], h[1] - a[1])
+                r, _t = self._tangent3d(a, r)     # snapped to touch
                 ring = [scr((a[0] + r * math.cos(t * math.pi / 24),
                              a[1] + r * math.sin(t * math.pi / 24)))
                         for t in range(49)]

@@ -280,6 +280,14 @@ def pick(scene, scene_pos, want=None, midpoints=False):
                     c, r = sc._circle(node, name, {})
                     d = abs(math.hypot(p[0] - c[0], p[1] - c[1]) - r)
                     rank = 1
+                    if node.type == "line" and name == "o":
+                        # an ARC: how far from the arc itself, not from
+                        # its whole circle (a fillet's circle ran through
+                        # a click meant for a line — 2026-11-11)
+                        from . import sketch_arc
+                        pts = sketch_arc.node_points(node)
+                        d = min(_seg_dist(p, q0, q1)
+                                for q0, q1 in zip(pts, pts[1:]))
                     if not _on_end_arc(node, name, p):
                         continue        # inside the slot, not its end
             except (KeyError, ValueError, IndexError):
