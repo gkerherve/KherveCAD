@@ -71,6 +71,13 @@ def mirrored_params(node, axis):
         a = reflect((_num(p.get("x1")), _num(p.get("y1"))), axis)
         b = reflect((_num(p.get("x2")), _num(p.get("y2"))), axis)
         p.update(x1=_r(a[0]), y1=_r(a[1]), x2=_r(b[0]), y2=_r(b[1]))
+        # an arc is a line with a bulge on its left: a reflection turns
+        # left into right, so the bulge changes sign (kept, the copy
+        # bowed the other way and was no mirror image)
+        bulge = p.get("bulge")
+        if isinstance(bulge, (int, float)) and bulge:
+            p["bulge"] = -bulge
+        p.pop("untrimmed", None)
         return t, p
     if t == "circle":
         c = reflect((_num(p.get("x")), _num(p.get("y"))), axis)

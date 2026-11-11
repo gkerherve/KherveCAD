@@ -326,3 +326,16 @@ def test_centerlines_and_origins_mirror_too(view):
               if n.type == "line" and n.params.get("modifier") == "%"
               and n.params.get("x1") == pytest.approx(20)]
     assert copied                            # the guide's mirror
+
+
+def test_a_mirrored_arc_bows_the_mirror_way():
+    from types import SimpleNamespace
+    from khervecad import sketch_mirror, sketch_trim
+    node = SimpleNamespace(type="line", params=dict(
+        x1=-10, y1=20, x2=10, y2=20, bulge=0.5, d=0.5))
+    t, p = sketch_mirror.mirrored_params(node, ((0, 0), (1, 0)))
+    assert p["bulge"] == -0.5
+    a = sketch_trim.curve_of(SimpleNamespace(type="line", params=node.params))
+    b = sketch_trim.curve_of(SimpleNamespace(type="line", params=p))
+    # the arc's centre reflects too
+    assert abs(a[1] - b[1]) < 1e-6 and abs(a[2] + b[2]) < 1e-6
