@@ -1669,6 +1669,14 @@ def all_sketches(window):
                 continue
             if faces(shapes_of(n)):
                 out.append(n)
+                continue
+            # lines that close areas only WITH the part's edges at their
+            # plane (the user's trimmed rectangle ending on a boss's ring)
+            from . import sketch_section
+            shapes, ghost = sketch_section.with_section(
+                window, n, shapes_of(n))
+            if ghost is not None and faces(shapes):
+                out.append(n)
         except Exception:
             continue
     return out

@@ -764,6 +764,21 @@ def _apply(params, s, e, sweep, cv):
 HOVER_INK = "#ff8c00"
 
 
+def _side_as_line(node, entity):
+    """A stand-in line for side *entity* of a rectangle / polygon, in its
+    sketch (not added): what Trim will cut once the shape is lines."""
+    from . import sketch_constraints as sc
+    from .model import CadNode
+    try:
+        a, b = sc._line(node, entity, {})
+    except (KeyError, ValueError, IndexError, TypeError):
+        return None
+    line = CadNode("line", "side", dict(x1=a[0], y1=a[1], x2=b[0],
+                                        y2=b[1], width=0.2))
+    line.parent = node.parent            # its sketch, for the cutters
+    return line
+
+
 def _hover_piece(node, click):
     m = mode()
     if m == CLOSEST:
@@ -785,7 +800,12 @@ def hover_2d(scene, pos):
         item = next((it for it in scu._shape_items(scene)
                      if it.node is node), None)
         q = in_frame_coords(item, pos) if item is not None else pos
-        local = _hover_piece(node, (q.x(), q.y()))
+        target = node
+        if node.type in ("rect", "polygon") and \
+                str(hit[1]).startswith("e"):
+            # a rectangle's side lights up as the line it will become
+            target = _side_as_line(node, str(hit[1])) or node
+        local = _hover_piece(target, (q.x(), q.y()))
         frame = item.parentItem() if item is not None else None
         to_s = frame.mapToScene if isinstance(frame, Frame) else \
             (lambda p: QPointF(p))

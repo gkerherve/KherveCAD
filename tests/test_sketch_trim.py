@@ -307,3 +307,18 @@ def test_trimming_a_rectangle_side_leaves_the_rest_where_it_was():
     assert (left.params["x2"], left.params["y2"]) == (-24.0, -40.0)
     assert not any("1.l" in r["refs"] and r["kind"] == "length"
                    for r in sc.rows(obj))
+
+
+def test_a_rectangle_side_lights_up_before_its_first_trim():
+    from khervecad import sketch_trim as tr
+    from khervecad.model import CadNode
+    sketch = CadNode("union", "S")
+    sketch.add(CadNode("circle", "Ring", {"x": 0, "y": 30, "radius": 20}))
+    rect = CadNode("rect", "Plate", {"x": -24, "y": -40, "width": 48,
+                                     "height": 70})
+    sketch.add(rect)
+    side = tr._side_as_line(rect, "e2")            # the top side
+    tr.set_mode(tr.CLOSEST)
+    pts = tr._hover_piece(side, (-22.0, 30.0))
+    xs = sorted(p[0] for p in pts)
+    assert pts and abs(xs[0] + 24) < 1e-6 and xs[-1] < -19   # to the ring
