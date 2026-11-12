@@ -102,6 +102,8 @@ class MainWindow(QMainWindow):
             lambda painter, project: __import__(
                 "khervecad.wireframe", fromlist=["paint"]).paint(
                     self, painter, project)]
+        from . import free_sketch3d       # unused sketches as lines
+        free_sketch3d.install(self)
         from . import dim_link, feature_dims
         self.view3d.click_hooks = [
             lambda pos: plane_pick.press(self, pos),
@@ -610,7 +612,7 @@ class MainWindow(QMainWindow):
             "Draw the reference pictures over the model as well as behind "
             "it: from the plane's square-on view (Front, Top, Right) the "
             "model's outline is checked against the photo"))
-        self._overlay_act.triggered.connect(self.view3d.set_overlay)
+        self._overlay_act.triggered.connect(self._overlay_clicked)
         self._gl_act = QAction(self.tr("3D &Hardware Rendering (OpenGL)"),
                                self, checkable=True)
         self._gl_act.setChecked(self.view3d.hardware)
@@ -2308,8 +2310,7 @@ class MainWindow(QMainWindow):
         self._explode_act.setStatusTip(self.tr(
             "Push every part away from the centre to show how the "
             "assembly goes together — the model itself does not move"))
-        self._explode_act.triggered.connect(
-            lambda on: self.set_explode(bool(on)))
+        self._explode_act.triggered.connect(self._explode_clicked)
         menu.addAction(self._explode_act)
         menu.addSeparator()
         self._explode_amounts = QActionGroup(self)
@@ -2335,6 +2336,33 @@ class MainWindow(QMainWindow):
             self._explode_modes.addAction(act)
             menu.addAction(act)
         self._sync_explode_menu()
+
+    def _explode_clicked(self, on):
+        """The button / menu item: an exploded view of ONE part moves
+        nothing, and the button stayed lit over a model that had not
+        changed (2026-11-12) — say why on the view and switch it off."""
+        self.set_explode(bool(on))
+        plan = getattr(self, "_explode_plan", None)
+        if on and (plan is None or plan.group is None):
+            self.set_explode(False)
+            message = language.tr(
+                "Exploded View needs two or more parts — this model "
+                "is one part.")
+            self.statusBar().showMessage(message, 8000)
+            self.view3d.flash(message)
+
+    def _overlay_clicked(self, on):
+        """Compare to Reference Image with no picture to compare to did
+        nothing one could see: say what is missing."""
+        if on and not getattr(self.model, "reference_images", None):
+            self._overlay_act.setChecked(False)
+            message = language.tr(
+                "No reference image yet — add one first: View ▸ Add "
+                "Reference Image…")
+            self.statusBar().showMessage(message, 8000)
+            self.view3d.flash(message)
+            return
+        self.view3d.set_overlay(bool(on))
 
     def _sync_explode_menu(self):
         if not hasattr(self, "_explode_act"):
