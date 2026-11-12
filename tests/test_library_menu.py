@@ -192,3 +192,22 @@ def test_no_part_falls_into_an_other_menu(window):
     assert _texts(_menu(home, "Detailed parts"))
     assert _texts(_menu(_menu(library, "Nature & garden"), "Garden"))
     assert "Maze" in _texts(_menu(library, "Games"))
+
+
+def test_a_library_part_goes_into_the_open_object(window):
+    # the user: inside Exercise 8, a part from the Library landed in the
+    # Main assembly instead of the Object
+    from khervecad import library
+    pid = next(p for p in library.PARTS if library.insert_hook(p) is None
+               and "Fasteners" in str(library.PARTS[p].get("category", "")))
+    obj = window.model.add_node("component", {}, name="Exercise 8")
+    window.builder.open_component(obj)
+    QApplication.processEvents()
+    assert window.library_target() is obj
+    before = len(obj.children)
+    window._insert_library_part(pid)
+    assert len(obj.children) == before + 1
+    # in Main it still lands in the assembly
+    window.builder.setCurrentWidget(window.builder.widget(0))
+    QApplication.processEvents()
+    assert window.library_target() is window.model.root

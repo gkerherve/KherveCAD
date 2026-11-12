@@ -823,12 +823,28 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, APP_NAME,
                                 language.tr("Could not build the part:\n{exc}").format(exc=exc))
             return
-        self.model.root.add(node)
+        target = self.library_target()
+        target.add(node)
         self.model.structure_changed.emit()
-        self.builder.tree.select_nodes([])
+        if target is self.model.root:
+            self.builder.tree.select_nodes([])
+        else:
+            note = (note + "  " if note else "") + language.tr(
+                "Added inside '{name}'.").format(name=target.name)
         self.view3d.fit()
         if note:
             self.statusBar().showMessage(note, 10000)
+
+    def library_target(self):
+        """Where a Library part lands: the Object open in the Object tab
+        (2026-11-12, the user: "when I am in an object ... I expect the
+        part from the library to go inside the object"), else the Main
+        assembly."""
+        try:
+            obj = self.builder.isolated_component()
+        except Exception:
+            obj = None
+        return obj if obj is not None else self.model.root
 
     def _load_example(self, build):
         if not self._confirm_discard():
