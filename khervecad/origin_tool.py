@@ -73,3 +73,16 @@ def set_origin(model, comp, pos):
         comp.children[0].params[sc.KEY] = rows
         comp.params.pop(sc.KEY, None)
     model.structure_changed.emit()
+
+
+TIPS = {TOOL: (
+    "Set Origin Here",
+    "Makes a point of the sketch the Object's 0, 0, 0. Everything inside "
+    "the Object shifts so nothing moves on screen or in the assembly.",
+    ["Open the Object in the Object tab and its sketch in the 2D view.",
+     "Click this, then click the point: a corner, a centre or the middle "
+     "of a side snaps.",
+     "That point is now 0, 0, 0 — the axes, planes and dimensions read "
+     "from it. Ctrl+Z puts the origin back."],
+    "The Object turns and attaches about its origin, so set it where the "
+    "part should pivot or mate.")}

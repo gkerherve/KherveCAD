@@ -649,6 +649,8 @@ def panel_actions(win):
     tooltips.TIPS.update(sketch_pattern.TIPS)
     from . import sketch_convert
     tooltips.TIPS.update(sketch_convert.TIPS)
+    from . import origin_tool
+    tooltips.TIPS.update(origin_tool.TIPS)
     acts = []
     for tool, glyph, label in TOOLS:
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
