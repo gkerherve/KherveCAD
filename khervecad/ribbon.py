@@ -539,6 +539,13 @@ def _panel_actions(win, key):
                 act.setProperty("kc_paint", PAINT[path])
                 act.setProperty("kc_painted", None)   # paint it afresh
             if glyph and glyph.startswith("!"):
+                # ONCE: the panels are read again by the search box, and
+                # the glyph then went back over the painted icon while
+                # the action still said "painted" — the Surfaces tab
+                # showed blue glyphs and its long names (2026-11-12)
+                if act.property("kc_glyph"):
+                    acts.append(act)
+                    continue
                 act.setIcon(icons.icon(glyph[1:], icons.family_color(
                     "extrude")))
             elif glyph and glyph.startswith("kc:"):
@@ -554,6 +561,16 @@ def _panel_actions(win, key):
                 act.setIcon(icons.icon(glyph, icons.family_color(family)))
                 toolbars.remember_glyph(act, glyph, family)
             acts.append(act)
+        if key == "dimension" and style_of(win) in ("Fusion",
+                                                    "SolidWorks"):
+            # the old Add dimension tool is a 2D sketch-view ruler: on
+            # Evaluate it threw the window into a Top-plane sketch
+            # without a word. The real Smart Dimension works in the 3D
+            # view (2026-11-12)
+            smart = [a for a in win._tool_group.actions()
+                     if a.data() == "con_dimension"][:1]
+            if smart:
+                acts = smart + [a for a in acts if a.data() != "dimension"]
         return title, acts
     if key == "sketch_modify":
         ops = {a.data(): a for _k, fam in parts["families"] for a in fam}

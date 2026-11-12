@@ -328,6 +328,23 @@ def tool_chosen(win, tool):
     if drag_feature.pause_for(win, tool):
         return
     constrain3d.end(win)
+    if active(win) and not sketching(win) and tool == MEASURE:
+        # the 2D ruler measures in the sketch view, which is not on
+        # show: Evaluate ▸ Measure did nothing one could see. Measure in
+        # 3D instead — click a face or an edge, then another (the user,
+        # 2026-11-12)
+        from . import measure3d
+        select = [a for a in win._tool_group.actions()
+                  if a.data() == SELECT]
+        if select:
+            select[0].setChecked(True)
+        win.view2d.set_tool(SELECT)
+        if not measure3d.start(win):
+            message = language.tr(
+                "Measure: there is no part to click yet")
+            win.statusBar().showMessage(message, 8000)
+            win.view3d.flash(message)
+        return
     if active(win) and not sketching(win) and \
             sketch_constrain_ui.handles(tool) and \
             constrain3d.start(win, tool):

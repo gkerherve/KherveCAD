@@ -3589,6 +3589,29 @@ into a new module and import.
                        really happens. `python -m khervecad.tools.
                        ribbon_guide` writes `docs/RIBBON_TOOLS.md` from
                        TIPS. `tests/test_ribbon_walkthrough.py`.
+  - Evaluate walk-through (2026-11-12, the user: "check them manually
+                       ... like for a human", "surface icons seem to have
+                       changed"). Every Evaluate button pressed on an empty
+                       document, one part, one selected, two parts. Fixed:
+                       the Surfaces icons went back to blue glyphs and long
+                       names once the panels were read again (the search
+                       box: a "!" glyph in `MENU_PANELS` is now set ONCE);
+                       Measure chose the 2D ruler of a view not on show —
+                       in the one-canvas styles it is `measure3d.start`
+                       (`sketch_mode.tool_chosen`), its card under the view
+                       cube; the Mass window with no material blamed the
+                       millimetres; Explode with one part and Compare to
+                       Reference Image with no picture stayed lit and did
+                       nothing (`_explode_clicked`, `_overlay_clicked`
+                       switch off and flash why); Evaluate's Smart
+                       Dimension was the old 2D Add dimension tool (now
+                       the `con_dimension` one, in 3D).
+                       `tests/test_evaluate_ribbon.py`. Not in KherveCAD
+                       yet, from SolidWorks' Evaluate: Section Properties,
+                       Sensors, Check / Geometry Analysis, Undercut and
+                       Parting-line analysis, Symmetry Check, Compare
+                       Documents, Clearance Verification, Hole Alignment,
+                       Performance Evaluation, Design Study.
   - `ribbon_library.py` / `icons_cad_library.py` — the ribbon's
                        **LIBRARY** tab (same day, the user): every button
                        IS a submenu of the Library menu (`menuAction`), one

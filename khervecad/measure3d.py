@@ -182,7 +182,8 @@ def show(window, lines):
     card.setText("<b>" + language.tr("Measure") + "</b><br>"
                  + "<br>".join(lines))
     card.adjustSize()
-    card.move(max(8, window.view3d.width() - card.width() - 12), 52)
+    # under the view cube, which it used to cover (2026-11-12)
+    card.move(max(8, window.view3d.width() - card.width() - 12), 130)
     card.show()
     window.statusBar().showMessage("  ·  ".join(x for x in lines if x),
                                    15000)

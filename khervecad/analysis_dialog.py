@@ -92,6 +92,11 @@ def mass_html(props, material, price, currency, unit="mm") -> str:
              language.tr("about {hours:.1f} h at {rate:g} mm³/s").format(
                  hours=hours, rate=analysis.PRINT_MM3_PER_S)),
         ]
+    elif units.printable(unit):
+        # no material yet: say THAT (it blamed the millimetres, the
+        # unit every printer works in — 2026-11-12)
+        rows.append((language.tr("Cost, print time"), language.tr(
+            "choose a material above to estimate them")))
     else:
         rows.append((language.tr("Cost, print time"), language.tr(
             "not estimated — the model is in {unit}, a scale no "
