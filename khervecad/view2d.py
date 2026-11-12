@@ -195,7 +195,11 @@ class ShapeItem:
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionChange and \
                 not self._scene.updating:
-            value = self._scene.snap(value)
+            # the shape's own corners, centre and edge middles snap onto
+            # the origin and other shapes' points (2026-11-12, the user);
+            # else the grid as before
+            got = self._scene.snap_shape(self, value)
+            value = got if got is not None else self._scene.snap(value)
         elif change == QGraphicsItem.ItemPositionHasChanged and \
                 not self._scene.updating:
             self._scene.push_move(self)
@@ -1301,6 +1305,55 @@ class SketchScene(QGraphicsScene):
             pts.append(item.boundingRect().center())
         return [item.mapToScene(p) for p in pts]
 
+    def snap_shape(self, item, value):
+        """A whole shape dragged to item position *value*: the position
+        that puts one of ITS feature points (corner, centre, middle of a
+        side, a line's ends) on the origin or on another shape's point,
+        nearest first within FEATURE_SNAP_PX; None when nothing is near
+        (the caller then snaps to the grid)."""
+        views = self.views()
+        if not views or not self.snap_enabled:
+            return None
+        if len([i for i in self.selectedItems()
+                if isinstance(i, ShapeItem)]) > 1:
+            return None        # several move together: each snapping
+                               # on its own would pull them apart
+        try:
+            own = self._item_feature_points(item)
+        except Exception:
+            return None
+        if not own:
+            return None
+        parent = item.parentItem()
+        to_s = parent.mapToScene if parent is not None else (lambda p: p)
+        from_s = parent.mapFromScene if parent is not None else (
+            lambda p: p)
+        shift = to_s(value) - to_s(item.pos())
+        moved = [p + shift for p in own]
+        targets = [(QPointF(0, 0), "origin")]
+        for other in self.items():
+            if not isinstance(other, ShapeItem) or other is item or \
+                    not other.isVisible() or other.parentItem() is item:
+                continue
+            try:
+                targets += [(p, "point")
+                            for p in self._item_feature_points(other)]
+            except Exception:
+                continue
+        tol = FEATURE_SNAP_PX / max(views[0].px_per_mm(), 1e-6)
+        best = None
+        for p in moved:
+            for t, kind in targets:
+                d = math.hypot(t.x() - p.x(), t.y() - p.y())
+                if d < tol and (best is None or d < best[0]):
+                    best = (d, p, t, kind)
+        if best is None:
+            self._set_snap_hint(None)
+            return None
+        _d, p, t, kind = best
+        self._set_snap_hint((QPointF(t), kind))
+        return value + (from_s(t) - from_s(p))
+
     def snap_handle(self, pos, moving):
         """Where a dragged handle snaps: another shape's point (end,
         centre, corner, middle) or the origin, else the nearest point ON
@@ -1522,6 +1575,9 @@ class SketchScene(QGraphicsScene):
     def _after_release(self):
         """Run a rebuild that waited for the drag to end — on the next
         event-loop turn, never inside the release event itself."""
+        if self.mouseGrabberItem() is None and \
+                not getattr(self, "_handle_drag", False):
+            self._set_snap_hint(None)          # a dragged shape let go
         if getattr(self, "_rebuild_pending", False) \
                 and self.mouseGrabberItem() is None:
             self._rebuild_pending = False
