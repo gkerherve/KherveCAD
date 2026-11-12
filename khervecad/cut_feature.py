@@ -69,6 +69,11 @@ def apply(model, group, part, kind):
             not _inside(part, group.parent):
         return None
     label, op, _g = ALL[kind]
+    if op == "section_loft" and len(shapes) == 1:
+        # a loft needs two sections: one profile drawn, so its end is the
+        # same shape at half size round its own centre, one depth down —
+        # a tapered pocket to edit (it made nothing at all before)
+        shapes = shapes + [_end_section(model, group, shapes[0])]
     tool = model.wrap_nodes(shapes, op)
     if tool is None:
         return None
@@ -93,7 +98,10 @@ def apply(model, group, part, kind):
         outer.params.update(x=-90.0, y=0.0, z=0.0)
         outer.name = label + " (about the sketch's Y axis)"
     elif op == "section_loft":
-        tool.params["heights"] = [i * DEPTH for i in range(len(shapes))]
+        # one row [z] per section (a flat list was refused: "height 0
+        # needs one value")
+        tool.params["heights"] = [[float(i * DEPTH)]
+                                  for i in range(len(shapes))]
         outer = model.wrap_nodes([tool], "mirror")
         outer.params.update(x=0.0, y=0.0, z=1.0)
     group.params.pop(KEY, None)
@@ -117,6 +125,29 @@ def apply(model, group, part, kind):
             extent.refresh(model)
         model.node_changed.emit(diff)
     return diff
+
+
+def _end_section(model, group, shape):
+    """A half-size copy of *shape* about its own centre, in *group*."""
+    from .document import node_from_dict, node_to_dict
+    from . import mesh
+    try:
+        pts = [p for loop in mesh.collect_outlines(shape) for p in loop]
+        cx = (min(p[0] for p in pts) + max(p[0] for p in pts)) / 2
+        cy = (min(p[1] for p in pts) + max(p[1] for p in pts)) / 2
+    except Exception:
+        cx = cy = 0.0
+    there = model.add_node("translate", {"x": cx, "y": cy, "z": 0},
+                           parent=group, name="Loft end section")
+    half = model.add_node("scale", {"x": 0.5, "y": 0.5, "z": 1},
+                          parent=there, name="Half size")
+    back = model.add_node("translate", {"x": -cx, "y": -cy, "z": 0},
+                          parent=half, name="About its centre")
+    copy = node_from_dict(node_to_dict(shape))
+    copy.name = shape.name + " (end)"
+    back.add(copy)
+    model.structure_changed.emit()
+    return there
 
 
 def _inside(node, scope):
