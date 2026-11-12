@@ -485,6 +485,12 @@ COMMANDS = {
     "mass properties": ("Mass properties", "Volume, surface area, "
                         "centre of mass, bounding box and weight for the "
                         "selection or the whole model.", [], None),
+    "section properties": (
+        "Section properties", "Cuts the part with a plane and gives the "
+        "cut face's area, centroid, moments of inertia, principal axes, "
+        "polar moment, radii of gyration and section moduli.",
+        ["Select a part (or nothing for everything).",
+         "Choose the plane and slide it to where the part is cut."], None),
     "check for 3d printing": (
         "Check for 3D printing", "Tests the part for printing: "
         "watertight, overhangs, thin walls, footprint — each pass, "

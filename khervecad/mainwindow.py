@@ -701,6 +701,10 @@ class MainWindow(QMainWindow):
             icons.icon("mdi.scale-balance"), self.tr("&Mass properties..."),
             lambda: open_analysis(self, "mass"))
         analyse_menu.addAction(
+            icons.icon("mdi.vector-square"),
+            self.tr("&Section properties..."),
+            lambda: open_analysis(self, "section"))
+        analyse_menu.addAction(
             icons.icon("mdi.printer-3d-nozzle-outline"),
             self.tr("Check for 3D &printing..."),
             lambda: open_analysis(self, "print"))

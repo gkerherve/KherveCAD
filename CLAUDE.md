@@ -3607,11 +3607,31 @@ into a new module and import.
                        Dimension was the old 2D Add dimension tool (now
                        the `con_dimension` one, in 3D).
                        `tests/test_evaluate_ribbon.py`. Not in KherveCAD
-                       yet, from SolidWorks' Evaluate: Section Properties,
-                       Sensors, Check / Geometry Analysis, Undercut and
+                       yet, from SolidWorks' Evaluate: Sensors, Check / Geometry Analysis, Undercut and
                        Parting-line analysis, Symmetry Check, Compare
                        Documents, Clearance Verification, Hole Alignment,
                        Performance Evaluation, Design Study.
+  - `section_props.py` — **Section Properties** (2026-11-12, the user,
+                       SolidWorks' Evaluate): the model cut by an axis
+                       plane (`section.section`: solids counter-clockwise,
+                       holes clockwise, so the signed polygon sums subtract
+                       holes by themselves) -> area, perimeter, centroid,
+                       I about both centroid axes, product, principal
+                       I1 >= I2 and their angle in (-90, 90], polar J,
+                       radii of gyration, section moduli; rounding noise
+                       zeroed. `SectionDialog`: plane (Top / Front /
+                       Right) + position (spin and slider over the part,
+                       starting on Cut Through's plane when that is on),
+                       the hatched section with centroid and principal
+                       axes (`section.draw(overlay=)`), Copy the figures,
+                       and Show the cut in the 3D view (Cut Through,
+                       position counted along the WHOLE model, put back on
+                       close). Analyse ▸ Section properties, the Evaluate
+                       ribbon (`analysis_actions`, icon
+                       "section_properties"), both style menus; MCP: the
+                       `section` tool's `properties`.
+                       `tests/test_section_props.py` (rectangle, tube,
+                       turned bar, an I-beam through the window).
   - `ribbon_library.py` / `icons_cad_library.py` — the ribbon's
                        **LIBRARY** tab (same day, the user): every button
                        IS a submenu of the Library menu (`menuAction`), one

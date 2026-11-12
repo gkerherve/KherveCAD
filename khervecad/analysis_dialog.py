@@ -295,6 +295,9 @@ def open_analysis(window, kind, nodes=None):
     if nodes is None:
         tree = window.builder.active_tree()
         nodes = tree.selected_nodes()
+    if kind == "section":
+        from . import section_props
+        return section_props.open_window(window, nodes)
     if kind == "interference":
         chosen = [(n.name, n) for n in nodes]
         if len(chosen) < 2:

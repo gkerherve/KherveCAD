@@ -259,6 +259,18 @@ _TIPS = {
         "(else of the whole document) in the material you pick.",
         ["Select a part (or nothing for everything).",
          "Click Mass properties and pick a material."], None),
+    "section_properties": (
+        "Section properties",
+        "Cuts the part with a plane and gives the cut face's area, "
+        "centroid, moments of inertia, principal axes, polar moment, "
+        "radii of gyration and section moduli — what a beam's stiffness "
+        "and strength are worked out from.",
+        ["Select a part (or nothing for everything).",
+         "Click Section properties.",
+         "Choose the plane (Top, Front, Right) and slide it to where "
+         "the part should be cut.",
+         "Read the figures; 'Show the cut in the 3D view' cuts the model "
+         "there, 'Copy the figures' puts them on the clipboard."], None),
     "print_check": (
         "Check for 3D printing",
         "Is the part watertight, how much overhangs past the angle, "
@@ -286,6 +298,8 @@ def analysis_actions(win):
     for glyph, text, key, kind in (
             ("mdi.scale-balance", "Mass properties", "mass_properties",
              "mass"),
+            ("mdi.vector-square", "Section properties",
+             "section_properties", "section"),
             ("mdi.printer-3d-nozzle-outline", "Print check", "print_check",
              "print"),
             ("mdi.vector-intersection", "Interference", "interference",

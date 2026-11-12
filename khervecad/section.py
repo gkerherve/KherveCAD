@@ -164,7 +164,7 @@ def _nice_step(span: float, lines: int = 8) -> float:
     return 10 * mag
 
 
-def draw(sec: dict, width: int, height: int):
+def draw(sec: dict, width: int, height: int, overlay=None):
     """The section as a QImage: hatched material, outlines, a mm grid
     and a caption naming the plane — how a drawing's section view
     reads."""
@@ -237,5 +237,7 @@ def draw(sec: dict, width: int, height: int):
             pts = [xy(p) for p in outline["points"]]
             for a, b in zip(pts, pts[1:]):
                 painter.drawLine(a, b)
+    if overlay is not None:        # marks on top: overlay(painter, xy)
+        overlay(painter, xy)
     painter.end()
     return img

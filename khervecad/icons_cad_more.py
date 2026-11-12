@@ -463,6 +463,26 @@ def _mass(d):
                 90 * 16)
 
 
+@draws("section_properties")
+def _section_properties(d):
+    """An I-beam's cut face, hatched, with its two centroid axes."""
+    beam = [QPointF(0.18, 0.14), QPointF(0.82, 0.14), QPointF(0.82, 0.30),
+            QPointF(0.58, 0.30), QPointF(0.58, 0.70), QPointF(0.82, 0.70),
+            QPointF(0.82, 0.86), QPointF(0.18, 0.86), QPointF(0.18, 0.70),
+            QPointF(0.42, 0.70), QPointF(0.42, 0.30), QPointF(0.18, 0.30)]
+    d.poly(beam, d.pal.body, width=0.045)
+    for a, b in (((0.24, 0.28), (0.36, 0.16)), ((0.46, 0.28), (0.58, 0.16)),
+                 ((0.66, 0.28), (0.78, 0.16)), ((0.44, 0.52), (0.56, 0.40)),
+                 ((0.44, 0.66), (0.56, 0.54)), ((0.24, 0.84), (0.36, 0.72)),
+                 ((0.46, 0.84), (0.58, 0.72)), ((0.66, 0.84), (0.78, 0.72))):
+        d.line(QPointF(*a), QPointF(*b), d.pal.edge, 0.025)
+    d.line(QPointF(0.04, 0.50), QPointF(0.96, 0.50), d.pal.make, 0.04)
+    d.line(QPointF(0.50, 0.04), QPointF(0.50, 0.96), d.pal.make, 0.04)
+    d.p.setPen(d.pen(d.pal.edge, 0.03))
+    d.p.setBrush(d.pal.paper)
+    d.p.drawEllipse(QPointF(0.50, 0.50), 0.07, 0.07)
+
+
 @draws("print_check")
 def _print_check(d):
     d.box(-0.6, -0.6, 0, 1.2, 1.2, 0.7)

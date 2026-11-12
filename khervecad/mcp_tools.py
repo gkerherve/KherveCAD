@@ -1048,6 +1048,30 @@ class McpToolExecutor:
                   "area": round(sec["area"], 3),
                   "area_mm2": self._in_mm(sec["area"], 2),
                   "source": source, "render_complete": complete}
+        from . import section_props
+        props = section_props.properties(sec)
+        if props:
+            # Section Properties (Analyse menu): the same figures
+            result["properties"] = {
+                "centroid": {u_name: round(props["centroid"][0], 4),
+                             v_name: round(props["centroid"][1], 4)},
+                "perimeter": round(props["perimeter"], 4),
+                "about_centroid": {
+                    "I_" + u_name: units.significant(props["iu"]),
+                    "I_" + v_name: units.significant(props["iv"]),
+                    "I_" + u_name + v_name:
+                        units.significant(props["iuv"]),
+                    "I1": units.significant(props["i1"]),
+                    "I2": units.significant(props["i2"]),
+                    "principal_angle_deg": round(props["angle"], 3),
+                    "polar_J": units.significant(props["j"])},
+                "radius_of_gyration": {
+                    u_name: round(props["ru"], 4),
+                    v_name: round(props["rv"], 4)},
+                "section_modulus": {
+                    u_name: units.significant(props["zu"]),
+                    v_name: units.significant(props["zv"])},
+                "units": "document unit; I in unit^4, modulus unit^3"}
         if sec["bounds"]:
             u0, v0, u1, v1 = sec["bounds"]
             result["bounds"] = {u_name: [round(u0, 3), round(u1, 3)],

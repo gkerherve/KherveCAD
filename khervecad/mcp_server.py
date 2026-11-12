@@ -889,6 +889,9 @@ run check_printability (watertight, overhangs, thin walls, footprint) \
 and fix what it names; after placing or mating parts run \
 check_interference (do they overlap?); mass_properties gives volume, \
 mass and cost when the user asks how heavy or how much.
+- SECTION PROPERTIES of a beam or profile (area, centroid, moments of \
+inertia, principal axes, section moduli): `section` returns them as \
+`properties` for the plane you cut at.
 - ENGINEERING CHECKS: after building or changing a part, run check_sharp_edges (round what it lists with \
 fillet_edges and its fillet_seeds, or add the 'break sharp edges' note \
 to the drawing) and, for parts that fit together, check_fits (gaps, \
