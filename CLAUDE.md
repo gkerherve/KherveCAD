@@ -3539,6 +3539,13 @@ into a new module and import.
                        `multmatrix` carrying the sketch's place (`_reuse`;
                        as a later child of the Difference the user's boss
                        came out a cut); `mesh.node_matrix` knows multmatrix.
+  - `origin_tool.py` — **Set Origin Here** (2026-11-12, the user: "define
+                       the real 0 0 0"): a sketch tool ("sk_origin", Sketch
+                       Modify panel): the clicked, snapped point becomes the
+                       open Object's 0, 0, 0 (`anchors.set_origin`: contents
+                       under "Origin shift", placement the other way, nothing
+                       moves); the Object's sketch relations go into the
+                       shift with its children. Inside an Object only.
   - `cut_feature.py` — SolidWorks' **Cut** panel (2026-10-25): Extruded /
                        Revolved / Swept / Lofted / Boundary Cut. Click a
                        face (a face sketch Group marked `params["cut"]`),

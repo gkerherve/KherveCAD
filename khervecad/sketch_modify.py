@@ -41,7 +41,9 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          ("sk_cpattern", "mdi.rotate-3d-variant", "Circular Sketch Pattern"),
          # (no Extrude regions button: Extruded Boss/Base on overlapping
          # shapes picks the regions itself — the user, 2026-10-25)
-         ("make_region", "mdi.vector-union", "Create region")]
+         ("make_region", "mdi.vector-union", "Create region"),
+         # the Object's 0, 0, 0 moved to a clicked point (origin_tool)
+         ("sk_origin", "mdi.crosshairs-gps", "Set Origin Here")]
 EPS = 1e-6
 ARC_STEPS = 12
 
@@ -346,7 +348,7 @@ def _band(pts, width):
 def handles(tool):
     return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
                     "sk_construction", "sk_mirror", "sk_lpattern",
-                    "sk_cpattern", "sk_convert")
+                    "sk_cpattern", "sk_convert", "sk_origin")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -358,7 +360,9 @@ PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
     "regions": "Extrude regions: click inside the regions to keep, then "
                "Enter or right-click.",
     "make_region": "Create region: click inside the regions to keep, then "
-                   "Enter or right-click."}
+                   "Enter or right-click.",
+    "sk_origin": "Set Origin Here: click the point that becomes 0, 0, 0 — "
+                 "a corner, centre or middle snaps."}
 
 
 def press(scene, event):
@@ -372,6 +376,10 @@ def press(scene, event):
     if scene.tool in ("sk_lpattern", "sk_cpattern"):
         from . import sketch_pattern
         sketch_pattern.press(scene, event)
+        return
+    if scene.tool == "sk_origin":
+        from . import origin_tool
+        origin_tool.press(scene, event)
         return
     if scene.tool in ("regions", "make_region") and \
             event.button() == Qt.RightButton:

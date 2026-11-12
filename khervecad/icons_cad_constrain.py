@@ -14,6 +14,7 @@ the Free Software Foundation, either version 3 of the License, or
 import math
 
 from PyQt5.QtCore import QPointF, QRectF, Qt
+from PyQt5.QtGui import QColor
 
 from .icons_cad import draws
 
@@ -461,6 +462,17 @@ def _sk_cpattern(d):
         a = math.radians(90 + 60 * i)
         c = (0.5 + 0.33 * math.cos(a), 0.5 - 0.33 * math.sin(a))
         _circle(d, c, 0.09, d.pal.sketch if i == 0 else d.pal.make)
+
+
+@draws("sk_origin")
+def _sk_origin(d):
+    """A part's corner (grey) with the origin's red X / green Y arrows
+    and a ring moved onto it: 0, 0, 0 set there."""
+    d.poly([P(0.1, 0.9), P(0.1, 0.3), P(0.7, 0.3)],
+           color=d.pal.edge, width=0.07)
+    d.arrow(P(0.1, 0.3), P(0.9, 0.3), QColor("#d03030"), 0.05, 0.08)
+    d.arrow(P(0.1, 0.3), P(0.1, 0.05), QColor("#30a030"), 0.05, 0.08)
+    _circle(d, (0.1, 0.3), 0.1, d.pal.make)
 
 
 @draws("sk_convert")

@@ -357,4 +357,7 @@ def test_the_2d_toolbar_is_along_the_foot_centred(win):
     QTest.qWait(700)
     normal_to.turn_to(win, "Top (XY)")
     QTest.qWait(900)
-    assert all(b.isVisible() for b in win._plane_buttons.values())
+    # sketching on a plane: Exit Sketch stands where the plane buttons
+    # were (v998, the user: the 3D view already chose the plane)
+    assert not any(b.isVisible() for b in win._plane_buttons.values())
+    assert win._exit_sketch_btn.isVisible()

@@ -143,12 +143,19 @@ def render(window, focus, rect, px_per_mm, pixel_ratio=1.0):
     w2, h2 = width / k, height / k
     cam = camera(focus, (x + w / 2.0, y + h / 2.0), k, width, height)
     ratio = max(1.0, float(pixel_ratio or 1.0))
-    image, _state = window.view3d.snapshot(
-        int(round(width * ratio)), int(round(height * ratio)),
-        yaw=cam["yaw"], pitch=cam["pitch"], distance=cam["distance"],
-        target=cam["target"], projection="Orthographic", clean=True,
-        transparent=True, pixel_ratio=ratio, mesh=tris, colors=cols,
-        edges=True, cavity=False)
+    # no platform / shadow behind a sketch: the disc is solid and hid the
+    # grid round the part (2026-11-12, the user: no grid on the Top plane)
+    view3d = window.view3d
+    stage, view3d.stage = view3d.stage, False
+    try:
+        image, _state = view3d.snapshot(
+            int(round(width * ratio)), int(round(height * ratio)),
+            yaw=cam["yaw"], pitch=cam["pitch"], distance=cam["distance"],
+            target=cam["target"], projection="Orthographic", clean=True,
+            transparent=True, pixel_ratio=ratio, mesh=tris, colors=cols,
+            edges=True, cavity=False)
+    finally:
+        view3d.stage = stage
     # the scene is Y-up: drawn through its flipped transform the picture
     # comes out the right way round only when stored upside down
     rect = (x + (w - w2) / 2.0, y + (h - h2) / 2.0, w2, h2)
