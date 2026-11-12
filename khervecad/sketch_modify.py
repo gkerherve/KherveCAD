@@ -428,9 +428,16 @@ def press(scene, event):
             scene.status.emit(tr.MESSAGES[tr.mode()])
             return
         node = hit[0]
+        click = _frame_point(scene, node, pos)    # before any rebuild
+        if node.type in ("rect", "polygon") and \
+                str(hit[1]).startswith("e"):
+            # a rectangle / polygon side: the shape becomes its lines,
+            # then that side is trimmed
+            lines = tr.explode(scene.model, node)
+            if lines:
+                node = lines[int(str(hit[1])[1:]) % len(lines)]
         try:
-            scene.status.emit(tr.pick(scene.model, node,
-                                      _frame_point(scene, node, pos)))
+            scene.status.emit(tr.pick(scene.model, node, click))
         except ValueError as exc:
             scene.status.emit("Trim: %s." % exc)
         scene._trim_hover = []            # that piece is gone

@@ -424,6 +424,71 @@ def meet_points(c1, c2):
             (mx + h * dy / d, my - h * dx / d)]
 
 
+def explode(model, node):
+    """A rectangle or polygon replaced by its sides as lines, where it
+    stood, joined corner to corner (Coincident), a rectangle's sides kept
+    Horizontal / Vertical, its own relations moved onto the lines (side
+    k -> line k, corner k -> line k's start; the centre's go). The lines,
+    side 0 first, or None. SolidWorks trims a rectangle's side the same
+    way (2026-11-12, the user: nothing of the rectangle could be picked).
+    """
+    from . import sketch_constraints as sc
+    from .model import CadNode
+    parent = node.parent
+    if parent is None or node.type not in ("rect", "polygon"):
+        return None
+    n = 4 if node.type == "rect" else len(node.params.get("points") or [])
+    sides = []
+    for i in range(n):
+        try:
+            sides.append(sc._line(node, "e%d" % i, {}))
+        except (KeyError, ValueError, IndexError, TypeError):
+            return None
+    if len(sides) < 3:
+        return None
+    at = parent.children.index(node)
+    shift = len(sides) - 1
+
+    def remap(ref):
+        idx, _, ent = ref.partition(".")
+        i = int(idx)
+        if i > at:
+            return "%d.%s" % (i + shift, ent)
+        if i < at:
+            return ref
+        if ent.startswith("e") and ent[1:].isdigit():
+            return "%d.l" % (at + int(ent[1:]))
+        if ent.startswith("v") and ent[1:].isdigit():
+            return "%d.p1" % (at + int(ent[1:]))
+        return None                      # the centre: no line has it
+    rows = []
+    for row in sc.rows(parent):
+        refs = [remap(r) for r in row["refs"]]
+        if all(r is not None for r in refs):
+            rows.append(dict(row, refs=refs))
+    keep = {k: v for k, v in node.params.items()
+            if k in ("modifier",)}
+    parent.remove(node)
+    lines = []
+    for i, (a, b) in enumerate(sides):
+        ln = CadNode("line", "%s side %d" % (node.name, i + 1), dict(
+            x1=round(a[0], 6), y1=round(a[1], 6), x2=round(b[0], 6),
+            y2=round(b[1], 6), width=0.2, **keep))
+        parent.add(ln, at + i)
+        lines.append(ln)
+    m = len(lines)
+    for i in range(m):
+        rows.append({"kind": "coincident",
+                     "refs": ["%d.p2" % (at + i),
+                              "%d.p1" % (at + (i + 1) % m)]})
+        if node.type == "rect":
+            rows.append({"kind": "horizontal" if i % 2 == 0
+                         else "vertical", "refs": ["%d.l" % (at + i)]})
+    parent.params[sc.KEY] = rows
+    model.structure_changed.emit()
+    return lines
+
+
 def _cutters(node):
     """The curves of the OTHER shapes of the sketch: lines, arcs,
     circles, rectangle and polygon sides (construction ones too, as
@@ -438,6 +503,62 @@ def _cutters(node):
         if cv is not None:
             if not (o.type == "circle" and _is_point(o)):
                 out.append(cv)
+            continue
+        if o.type in ("rect", "polygon"):
+            n = 4 if o.type == "rect" else len(o.params.get("points") or [])
+            for i in range(n):
+                try:
+                    a, b = sc._line(o, "e%d" % i, {})
+                except (KeyError, ValueError, IndexError, TypeError):
+                    continue
+                out.append(("seg", a, b))
+    return out + _other_sketches(node)
+
+
+def _same(m1, m2, eps=1e-6):
+    return all(abs(m1[i][j] - m2[i][j]) < eps
+               for i in range(4) for j in range(4))
+
+
+def _other_sketches(node):
+    """The curves of the shapes of OTHER sketches of the same Object that
+    lie on the same plane — a feature's sketch, hidden inside it, counts
+    (2026-11-12, the user: the rectangle should stop at circles another
+    extrude had used)."""
+    from . import mesh, sketch_constraints as sc
+    from .model import SHAPE_2D
+    parent = node.parent
+    comp = parent
+    while comp is not None and comp.type != "component":
+        comp = comp.parent
+    if comp is None or parent is None:
+        return []
+    try:
+        here = mesh.mat_mul(mesh.ancestor_matrix(parent, {}, stop=comp),
+                            mesh.node_matrix(parent, {}))
+    except Exception:
+        return []
+    out, frames = [], {}
+    for o in comp.walk():
+        if o.category != SHAPE_2D or o is node or o.parent is parent \
+                or o.parent is None:
+            continue
+        if o.params.get("modifier") == "%" and o.type == "circle" and \
+                _is_point(o):
+            continue
+        key = id(o.parent)
+        if key not in frames:
+            try:
+                frames[key] = _same(here, mesh.mat_mul(
+                    mesh.ancestor_matrix(o.parent, {}, stop=comp),
+                    mesh.node_matrix(o.parent, {})))
+            except Exception:
+                frames[key] = False
+        if not frames[key]:
+            continue
+        cv = curve_of(o)
+        if cv is not None:
+            out.append(cv)
             continue
         if o.type in ("rect", "polygon"):
             n = 4 if o.type == "rect" else len(o.params.get("points") or [])

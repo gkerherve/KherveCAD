@@ -249,3 +249,33 @@ def test_a_circle_trims_at_the_point_where_another_only_touches_it(app):
     ends = {(round(p[0], 3), round(p[1], 3))
             for p in (tr.point_at(g, 0), tr.point_at(g, 1))}
     assert any(abs(x) < 0.05 and abs(y + 80) < 0.001 for x, y in ends)
+
+
+def test_a_rectangle_side_trims_at_another_sketchs_circle():
+    # the user's Exercise 9: a rectangle (could not be picked at all) to
+    # trim where a circle of an earlier feature's sketch crosses it
+    from khervecad import sketch_trim as tr, sketch_constraints as sc
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    obj = CadNode("component", "Ex")
+    m.root.add(obj)
+    ext = CadNode("linear_extrude", "Boss", {"height": 10})
+    obj.add(ext)
+    ext.add(CadNode("circle", "Ring", {"x": 0, "y": 40, "radius": 20}))
+    rect = CadNode("rect", "Plate", {"x": -10, "y": 0, "width": 20,
+                                     "height": 60})
+    obj.add(rect)
+    obj.params[sc.KEY] = [{"kind": "length", "refs": ["1.e0"],
+                           "value": 20.0}]
+    lines = tr.explode(m, rect)
+    assert [ln.type for ln in lines] == ["line"] * 4
+    kinds = sorted(r["kind"] for r in sc.rows(obj))
+    assert kinds.count("coincident") == 4 and "length" in kinds
+    left = lines[3]                              # x = -10, y 60 -> 0
+    tr.set_mode(tr.CLOSEST)
+    tr.pick(m, left, (-10.0, 50.0))              # the piece inside the ring
+    ys = sorted(round(v, 3) for ln in obj.children if ln.type == "line"
+                and ln.params["x1"] == -10 == ln.params["x2"]
+                for v in (ln.params["y1"], ln.params["y2"]))
+    cut = round(40 - (20 ** 2 - 10 ** 2) ** 0.5, 3)
+    assert cut in ys                             # stopped on the circle
