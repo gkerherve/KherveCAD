@@ -48,7 +48,12 @@ module kcad_regions(seeds = [], inside = [], points = [], paths = []) {
 def shapes(node):
     """The sketch shapes the regions are cut from (hidden ones too)."""
     from .model import SHAPE_2D
-    return [c for c in node.children if c.category == SHAPE_2D
+    from .sketch_regions import _pattern_2d
+    # the SAME shapes the pick saw (a sketch pattern's copies too), or the
+    # stored region numbers point at other areas (the user: "the region I
+    # select is not the one that extruded")
+    return [c for c in node.children
+            if (c.category == SHAPE_2D or _pattern_2d(c))
             and c.params.get("modifier") != "%"]
 
 

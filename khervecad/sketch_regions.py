@@ -57,6 +57,23 @@ def shapes_of(container, construction=False):
             and (construction or n.params.get("modifier") != "%")]
 
 
+def _pattern_outlines(node):
+    """The outlines of every copy of a sketch pattern, hidden or not."""
+    from .mesh import collect_outlines
+    hidden = [n for n in node.walk() if not n.visible]
+    mods = [(n, n.params.pop("modifier")) for n in node.walk()
+            if n.params.get("modifier") == "%"]
+    for n in hidden:
+        n.visible = True
+    try:
+        return collect_outlines(node)
+    finally:
+        for n in hidden:
+            n.visible = False
+        for n, mod in mods:
+            n.params["modifier"] = mod
+
+
 def _pattern_2d(node):
     """A sketch pattern (a for loop round 2D shapes, Circular / Linear
     Sketch Pattern): its copies are edges too — the six bolt holes of
@@ -128,7 +145,11 @@ def _faces(shapes, any_state=False):
             loose.append(len(segs))
             segs.append((a, b))
             continue
-        if any_state or s.params.get("modifier") == "%" or not s.visible:
+        if _pattern_2d(s):
+            # every copy of a sketch pattern, shown or not (inside a
+            # Regions the shapes are kept hidden)
+            outlines = _pattern_outlines(s)
+        elif any_state or s.params.get("modifier") == "%" or not s.visible:
             # construction (a regions extrude's sketch): its own outline,
             # which collect_outlines leaves out like OpenSCAD does
             outlines = _oriented(s, node_outlines(s, {}))
