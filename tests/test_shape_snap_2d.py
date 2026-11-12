@@ -58,3 +58,39 @@ def test_a_circle_centre_snaps_onto_a_line_end(win):
     got = scene.snap_shape(item, item.pos() + QPointF(29.8, -10.2))
     c = item.mapToScene(item.rect().center()) + (got - item.pos())
     assert abs(c.x() - 30) < 1e-6 and abs(c.y() - 30) < 1e-6
+
+
+def test_dragging_a_rectangle_by_mouse_snaps_its_centre_and_is_light(win):
+    # the user: moving a rectangle was slow, and its centre could not be
+    # seen to snap. Dragged by mouse onto the origin, with far fewer model
+    # updates than mouse moves
+    import time
+    from PyQt5.QtCore import QEvent, QPoint, Qt
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtTest import QTest
+    m = win.model
+    rect = m.add_node("rect", dict(x=20.3, y=15.1, width=20, height=10))
+    QApplication.processEvents()
+    view = win.view2d
+    scene = view.scene()
+    item = _item(scene, rect)
+    emits = []
+    m.node_changed.connect(lambda n: emits.append(n))
+    start = view.mapFromScene(item.mapToScene(item.rect().center()))
+    end = view.mapFromScene(QPointF(0.4, -0.3))
+    vp = view.viewport()
+    QTest.mousePress(vp, Qt.LeftButton, Qt.NoModifier, start)
+    steps = 30
+    for i in range(1, steps + 1):
+        p = QPoint(start.x() + (end.x() - start.x()) * i // steps,
+                   start.y() + (end.y() - start.y()) * i // steps)
+        QApplication.sendEvent(vp, QMouseEvent(
+            QEvent.MouseMove, QPointF(p), Qt.NoButton, Qt.LeftButton,
+            Qt.NoModifier))
+    assert scene._shape_drag is item           # its points are drawn
+    QTest.mouseRelease(vp, Qt.LeftButton, Qt.NoModifier, end)
+    QApplication.processEvents()
+    p = rect.params
+    assert abs(p["x"] + p["width"] / 2) < 1e-6
+    assert abs(p["y"] + p["height"] / 2) < 1e-6
+    assert len([n for n in emits if n is rect]) < steps / 3

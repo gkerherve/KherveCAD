@@ -1330,16 +1330,22 @@ class SketchScene(QGraphicsScene):
             lambda p: p)
         shift = to_s(value) - to_s(item.pos())
         moved = [p + shift for p in own]
-        targets = [(QPointF(0, 0), "origin")]
-        for other in self.items():
-            if not isinstance(other, ShapeItem) or other is item or \
-                    not other.isVisible() or other.parentItem() is item:
-                continue
-            try:
-                targets += [(p, "point")
-                            for p in self._item_feature_points(other)]
-            except Exception:
-                continue
+        cache = getattr(self, "_drag_targets", None)
+        if cache is None or cache[0] is not item:
+            # gathered ONCE a drag (the other shapes stand still)
+            targets = [(QPointF(0, 0), "origin")]
+            for other in self.items():
+                if not isinstance(other, ShapeItem) or other is item or \
+                        not other.isVisible() or other.parentItem() is item:
+                    continue
+                try:
+                    targets += [(p, "point")
+                                for p in self._item_feature_points(other)]
+                except Exception:
+                    continue
+            cache = self._drag_targets = (item, targets)
+        targets = cache[1]
+        self._shape_drag = item
         tol = FEATURE_SNAP_PX / max(views[0].px_per_mm(), 1e-6)
         best = None
         for p in moved:
@@ -1578,6 +1584,10 @@ class SketchScene(QGraphicsScene):
         if self.mouseGrabberItem() is None and \
                 not getattr(self, "_handle_drag", False):
             self._set_snap_hint(None)          # a dragged shape let go
+            self._shape_drag = None
+            self._drag_targets = None
+            if getattr(self, "_drag_nodes", None):
+                self._flush_drag()             # the final position
         if getattr(self, "_rebuild_pending", False) \
                 and self.mouseGrabberItem() is None:
             self._rebuild_pending = False
@@ -2278,11 +2288,42 @@ class SketchScene(QGraphicsScene):
             probe = probe.parent
         return False
 
+    #: ms between model updates while a shape is dragged: each one runs
+    #: the whole after-edit chain (constraints, references, 3D, code), and
+    #: one per mouse move made a rectangle crawl (2026-11-12, the user)
+    DRAG_EMIT_MS = 100
+
     def push_move(self, item):
         self.updating = True
-        item.push_pos()
+        model = self.model
+        dragging = self.mouseGrabberItem() is not None
+        if dragging:
+            model.blockSignals(True)     # params now, the signal later
+        try:
+            item.push_pos()
+        finally:
+            if dragging:
+                model.blockSignals(False)
         item.apply_node()
         self.updating = False
+        if dragging:
+            self._drag_nodes = getattr(self, "_drag_nodes", None) or []
+            if item.node not in self._drag_nodes:
+                self._drag_nodes.append(item.node)
+            if not getattr(self, "_drag_timer_on", False):
+                self._drag_timer_on = True
+                QTimer.singleShot(self.DRAG_EMIT_MS, self._flush_drag)
+
+    def _flush_drag(self):
+        """The dragged shapes' model update (throttled; the last one on
+        release)."""
+        self._drag_timer_on = False
+        nodes, self._drag_nodes = getattr(self, "_drag_nodes", None) or [], []
+        for n in nodes:
+            try:
+                self.model.node_changed.emit(n)
+            except RuntimeError:
+                pass
 
     def selected_nodes(self):
         return [item.node for item in self.selectedItems()
@@ -2946,8 +2987,44 @@ class SketchView(QGraphicsView):
                              "XYZ"[index])
         painter.setBrush(Qt.NoBrush)
 
+    def _paint_shape_points(self, painter):
+        """The points a selected or dragged shape snaps by — corners,
+        centre (a cross), middles of its sides — as small blue dots
+        (2026-11-12, the user: "center, midpoints of a rectangle is not
+        seen, so I do not know if I snap it")."""
+        scene = self.scene()
+        item = getattr(scene, "_shape_drag", None)
+        items = [item] if item is not None else [
+            i for i in scene.selectedItems() if isinstance(i, ShapeItem)]
+        if not items or len(items) > 4:
+            return
+        k = abs(self.transform().m11()) or 1.0
+        r = 3.0 / k
+        pen = QPen(QColor("#1f7ae0"), 1.5)
+        pen.setCosmetic(True)
+        painter.save()
+        painter.setPen(pen)
+        painter.setBrush(QBrush(QColor(255, 255, 255)))
+        for it in items:
+            try:
+                pts = scene._item_feature_points(it)
+                centre = it.mapToScene(it.boundingRect().center())
+            except Exception:
+                continue
+            for p in pts:
+                painter.drawEllipse(QPointF(p), r, r)
+            painter.drawLine(QPointF(centre.x() - 2 * r, centre.y()),
+                             QPointF(centre.x() + 2 * r, centre.y()))
+            painter.drawLine(QPointF(centre.x(), centre.y() - 2 * r),
+                             QPointF(centre.x(), centre.y() + 2 * r))
+        painter.restore()
+
     def drawForeground(self, painter, rect):
         from . import face_outline       # the face sketched on, grey
+        try:
+            self._paint_shape_points(painter)
+        except Exception:               # never raise out of a paint
+            pass
         try:
             face_outline.paint_hint(self, painter)
         except Exception:               # never raise out of a paint

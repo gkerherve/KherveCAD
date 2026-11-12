@@ -689,7 +689,8 @@ def paint_hint(view, painter):
     scene = view.scene()
     hint = getattr(scene, "_snap_hint", None)
     if not hint or (getattr(scene, "tool", "select") == "select" and
-                    not getattr(scene, "_handle_drag", False)):
+                    not getattr(scene, "_handle_drag", False) and
+                    getattr(scene, "_shape_drag", None) is None):
         return
     p, kind = hint
     k = abs(view.transform().m11()) or 1.0
