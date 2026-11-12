@@ -688,6 +688,11 @@ def trim_piece(model, node, click):
 
     def part(t0, t1):
         return point_at(cv, t0), point_at(cv, t1), sweep * (t1 - t0)
+    # the end(s) that move let go of what held them there (a corner's
+    # Coincident dragged the user's whole rectangle along), and a size
+    # set on the line no longer holds
+    _release(node, start=lo <= 1e-9, end=hi >= 1 - 1e-9 or
+             (lo > 1e-9 and hi < 1 - 1e-9))
     if lo <= 1e-9:
         s, e, sw = part(hi, 1.0)
     elif hi >= 1 - 1e-9:
@@ -708,6 +713,42 @@ def trim_piece(model, node, click):
     _apply(p, s, e, sw, cv)
     model.node_changed.emit(node)
     return "shortened"
+
+
+#: dimensions a trimmed line no longer keeps (its length changed)
+_SIZED = ("length", "distance", "hdistance", "vdistance", "equal",
+          "arc_length", "radius", "diameter")
+
+
+def _release(node, start, end):
+    """Drop *node*'s relations on an end trim moves, and its sizes."""
+    from . import sketch_constraints as sc
+    parent = node.parent
+    if parent is None:
+        return
+    rows = sc.rows(parent)
+    if not rows:
+        return
+    i = str(parent.children.index(node))
+    gone = set()
+    if start:
+        gone.add(i + ".p1")
+    if end:
+        gone.add(i + ".p2")
+    keep = []
+    for row in rows:
+        refs = row.get("refs") or []
+        if any(r in gone for r in refs):
+            continue
+        if row.get("kind") in _SIZED and any(
+                r.partition(".")[0] == i for r in refs):
+            continue
+        keep.append(row)
+    if len(keep) != len(rows):
+        if keep:
+            parent.params[sc.KEY] = keep
+        else:
+            parent.params.pop(sc.KEY, None)
 
 
 def _apply(params, s, e, sweep, cv):

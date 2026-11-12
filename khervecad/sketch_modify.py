@@ -545,8 +545,30 @@ def power_move(scene, event):
     if last is None or not (event.buttons() & 1):
         return False
     pos = event.scenePos()
+    # a rectangle / polygon the stroke crosses becomes its lines first
+    # (power trim skipped them: the user's rectangle could not be cut)
+    from . import sketch_constraints as sc
+    made = []
+    for it in list(scu._shape_items(scene)):
+        shape = it.node
+        if shape.type not in ("rect", "polygon") or shape.parent is None:
+            continue
+        a = _frame_point(scene, shape, last)
+        b = _frame_point(scene, shape, pos)
+        n_sides = 4 if shape.type == "rect" else \
+            len(shape.params.get("points") or [])
+        for i in range(n_sides):
+            try:
+                c, d = sc._line(shape, "e%d" % i, {})
+            except (KeyError, ValueError, IndexError, TypeError):
+                continue
+            if _seg_hit(a, b, c, d) is not None:
+                made += tr.explode(scene.model, shape) or []
+                break
     lines = [it.node for it in scu._shape_items(scene)
              if it.node.type in ("line", "circle")]
+    # (the new lines may have no scene item yet: this stroke cuts them)
+    lines += [ln for ln in made if ln not in lines]
     n = 0
     for line in lines:
         a = _frame_point(scene, line, last)

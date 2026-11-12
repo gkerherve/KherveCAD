@@ -279,3 +279,31 @@ def test_a_rectangle_side_trims_at_another_sketchs_circle():
                 for v in (ln.params["y1"], ln.params["y2"]))
     cut = round(40 - (20 ** 2 - 10 ** 2) ** 0.5, 3)
     assert cut in ys                             # stopped on the circle
+
+
+def test_trimming_a_rectangle_side_leaves_the_rest_where_it_was():
+    # on the user's screen the whole rectangle slid when its top side was
+    # trimmed: the corner's Coincident pulled the side along
+    from khervecad import sketch_trim as tr, sketch_constraints as sc
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    obj = CadNode("component", "Ex")
+    m.root.add(obj)
+    ext = CadNode("linear_extrude", "Boss", {"height": 10})
+    obj.add(ext)
+    ext.add(CadNode("circle", "Ring", {"x": 0, "y": 40, "radius": 20}))
+    rect = CadNode("rect", "Plate", {"x": -24, "y": -40, "width": 48,
+                                     "height": 70})
+    obj.add(rect)
+    obj.params[sc.KEY] = [{"kind": "length", "refs": ["1.e2"],
+                           "value": 48.0}]
+    lines = tr.explode(m, rect)
+    top = lines[2]                              # (24, 30) -> (-24, 30)
+    tr.set_mode(tr.CLOSEST)
+    tr.pick(m, top, (-20.0, 30.0))              # its left piece, to the ring
+    sc.refresh(m, edited=[top.id])               # the solver runs
+    left = lines[3]
+    assert (left.params["x1"], left.params["y1"]) == (-24.0, 30.0)
+    assert (left.params["x2"], left.params["y2"]) == (-24.0, -40.0)
+    assert not any("1.l" in r["refs"] and r["kind"] == "length"
+                   for r in sc.rows(obj))
