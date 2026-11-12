@@ -152,6 +152,17 @@ def node_matrix(node, env=None):
         # along the axis): where a sketch's shapes, dimensions and
         # references really are. Nothing 3D is ever inside one.
         return mat_rotate(90.0, 0.0, 0.0)
+    if t == "multmatrix":
+        rows = [list(r) for r in (node.params.get("matrix") or [])
+                if isinstance(r, (list, tuple))]
+        m = mat_identity()
+        try:
+            for i, row in enumerate(rows[:4]):
+                for j, v in enumerate(row[:4]):
+                    m[i][j] = rv(v, env, m[i][j])
+        except Exception:
+            return mat_identity()
+        return m
     if t == "joint":
         # kcad_joint: translate(pivot) rotate(a) translate(-pivot)
         px, py, pz = num("px"), num("py"), num("pz")

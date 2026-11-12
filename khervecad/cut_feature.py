@@ -381,6 +381,9 @@ def start(window, kind, choice=None):
         # a sketch whose lines split the part's section (a line across
         # the lever): click the areas to cut away (the user)
         try:
+            # nothing selected: every sketch's regions, as Extruded Boss
+            if not nodes and sketch_regions.start_any(window, cut=True):
+                return None
             container = sketch_regions.overlap_container(window, nodes)
             if container is not None and sketch_regions.start_3d(
                     window, container, cut=True):

@@ -563,9 +563,33 @@ def _reuse(model, source, face_list, picked):
     if any(n is not root and n.name == root.name
            for n in model.root.walk()):
         root.name = model.unique_name("regions")       # a name to point at
-    # beside the feature that made the sketch, in its frame
+    # beside the feature that made the sketch, in its frame — but never
+    # as a later child of a Difference (that one is subtracted: the
+    # user's boss came out a CUT), nor inside a fillet / intersection
     anchor = root if root.type == "linear_extrude" else (
         root.parent if root.parent is not None else root)
+    BOOLEANS = ("difference", "intersection", "fillet", "minkowski",
+                "hull", "bevel", "shell")
+    top = anchor
+    while top.parent is not None and top.parent.type not in (
+            "component", "root"):
+        top = top.parent
+    path, p = [], anchor
+    while p is not top and p.parent is not None:
+        path.append(p.parent)
+        p = p.parent
+    frame = None
+    if any(n.type in BOOLEANS for n in path):
+        # out of every boolean, to the Object's top level, in the
+        # sketch's own place (one matrix: the moves / turns in between)
+        from . import mesh
+        stop = top.parent
+        mat = mesh.ancestor_matrix(anchor, {}, stop=stop)
+        if anchor.type == "linear_extrude":
+            mat = mesh.mat_mul(mat, mesh.node_matrix(anchor, {}))
+        frame = [[round(float(mat[r][c]), 9) for c in range(4)]
+                 for r in range(4)]
+        anchor = top
     parent = anchor.parent
     at = parent.children.index(anchor) + 1 if parent is not None else None
     reg = model.add_node("regions", {
@@ -575,6 +599,14 @@ def _reuse(model, source, face_list, picked):
         parent=parent, name=model.unique_name("regions"))
     if at is not None and parent.children.index(reg) != at:
         model.move_node(reg, parent, at)
+    if frame is not None:
+        holder = model.add_node("multmatrix", {"matrix": frame},
+                                parent=parent,
+                                name="Sketch place (%s)" % root.name)
+        model.move_node(holder, parent, parent.children.index(reg))
+        reg.parent.remove(reg)
+        holder.add(reg)
+        model.structure_changed.emit()
     model.node_changed.emit(reg)
     return reg
 
@@ -1658,6 +1690,11 @@ def start_any(window, cut=False):
     picked). False when fewer than two sketches have regions."""
     from . import region_show, sketch_section
     from .fillet_pick import _apply
+    scope = window._render_scope()[0]
+    if scope is window.model.root:
+        # the Main assembly: every part's sketches at once is a jumble
+        # (the user's screenshot) — only inside an Object
+        return False
     sketches = all_sketches(window)
     if len(sketches) < 2:
         return False
@@ -1697,7 +1734,7 @@ def start_any(window, cut=False):
             window, sketches[ci], cut=cut, preselect=k))
 
     view.pick_lines = lines
-    view.start_pick(on_pick, groups=groups,
+    view.start_pick(on_pick, groups=groups, done=False,
                     banner="%s — every sketch's regions: click one to "
                            "start (its sketch is then used)"
                            % ("Extruded Cut" if cut else

@@ -3527,6 +3527,18 @@ into a new module and import.
                        `_reuse` places it beside the first extrude, same
                        frame; `model.rename` follows). Boss's question says
                        "the sketch already extruded — pick other regions".
+  - Every sketch at once (same day): with nothing selected, Extruded
+                       Boss / Cut inside an OBJECT show the regions of every
+                       sketch (`start_any`, `all_sketches`: free sketches,
+                       extruded Regions and older plain extrudes holding
+                       their shapes, `regions2d._extrude_sketch`); the first
+                       click chooses the sketch (`start_3d(preselect=)`). Not
+                       in the Main assembly (a jumble). A reused sketch that
+                       sits under a Difference / fillet / intersection gets
+                       its new extrude at the Object's top level inside a
+                       `multmatrix` carrying the sketch's place (`_reuse`;
+                       as a later child of the Difference the user's boss
+                       came out a cut); `mesh.node_matrix` knows multmatrix.
   - `cut_feature.py` — SolidWorks' **Cut** panel (2026-10-25): Extruded /
                        Revolved / Swept / Lofted / Boundary Cut. Click a
                        face (a face sketch Group marked `params["cut"]`),

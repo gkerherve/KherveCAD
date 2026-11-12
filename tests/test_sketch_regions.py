@@ -119,3 +119,33 @@ def test_an_older_plain_extrude_offers_its_sketch_again():
     assert regions2d.sketch_source(reg) is ext
     assert abs(regions2d._cs(reg)[0].area() - fl[disc][0].area()) < 0.5
     assert second.parent is ext.parent
+
+
+def test_a_reused_sketch_in_a_cut_part_stays_a_boss():
+    # the user: regions of Exercise 1's base sketch (inside a Difference)
+    # extruded as a BOSS came out as a cut
+    from khervecad import sketch_regions as sr, mesh
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    obj = CadNode("component", "Part")
+    m.root.add(obj)
+    diff = CadNode("difference", "Cut")
+    obj.add(diff)
+    move = CadNode("translate", "Up", {"x": 0, "y": 0, "z": 5})
+    diff.add(move)
+    ext = CadNode("linear_extrude", "Base", {"height": 4})
+    move.add(ext)
+    ext.add(CadNode("rect", "Plate", {"x": 0, "y": 0, "width": 40,
+                                      "height": 20}))
+    ext.add(CadNode("circle", "Disc", {"x": 10, "y": 10, "radius": 5}))
+    diff.add(CadNode("cube", "Hole", {"size": 1}))
+    fl = sr.faces(sr.shapes_of(ext))
+    disc = min(range(len(fl)), key=lambda i: fl[i][0].area())
+    new = sr.extrude(m, ext, fl, {disc})
+    p = new.parent
+    while p is not None:
+        assert p.type != "difference"
+        p = p.parent
+    tris = mesh.transform_mesh(mesh.ancestor_matrix(new, {}, stop=obj),
+                               mesh.tessellate(new, {}))
+    assert abs(min(v[2] for t in tris for v in t) - 5) < 1e-6
