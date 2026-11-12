@@ -408,9 +408,11 @@ def start(window, kind, choice=None):
     if kind == "extruded_cut" and nodes and \
             sketch_regions.extrude_selection(window, nodes, cut=True):
         return None                     # the selected shapes, cut whole
-    if kind == "extruded_cut":
+    if kind == "extruded_cut" and source != "face":
         # a sketch whose lines split the part's section (a line across
-        # the lever): click the areas to cut away (the user)
+        # the lever): click the areas to cut away (the user) — never when
+        # a NEW sketch on a face was asked for (2026-11-12, the user: the
+        # region pick took over and no face could be clicked)
         try:
             # nothing selected: every sketch's regions, as Extruded Boss
             if not nodes and sketch_regions.start_any(window, cut=True):
