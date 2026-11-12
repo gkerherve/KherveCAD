@@ -1057,6 +1057,34 @@ def apply_wrap(parent, wrapper, plan):
         parent.params.pop(KEY, None)
 
 
+def apply_unwrap(parent, index, count, inner_rows):
+    """A wrapper at *index* of *parent* was replaced by its *count*
+    children: the parent's own rows re-indexed (later children move by
+    count - 1), and the wrapper's rows (*inner_rows*, over its children)
+    come out with them — dropped, the user's rectangle lost its Smart
+    Dimensions whenever a Revolve round it was removed (2026-11-12)."""
+    out = []
+    for row in rows(parent):
+        idxs = [int(r.partition(".")[0]) for r in row["refs"]]
+        names = [r.partition(".")[2] for r in row["refs"]]
+        if index in idxs:
+            continue                     # it named the wrapper itself
+        out.append(dict(row, refs=["%d.%s" % (
+            i + count - 1 if i > index else i, n)
+            for i, n in zip(idxs, names)]))
+    for row in inner_rows or []:
+        try:
+            out.append(dict(row, refs=["%d.%s" % (
+                int(r.partition(".")[0]) + index, r.partition(".")[2])
+                for r in row["refs"]]))
+        except (TypeError, ValueError):
+            continue
+    if out:
+        parent.params[KEY] = out
+    else:
+        parent.params.pop(KEY, None)
+
+
 def child_inserted(parent, at):
     """A node was inserted at *at* among *parent*'s children."""
     def fn(ref):

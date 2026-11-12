@@ -1791,11 +1791,18 @@ class DocumentModel(QObject):
         if not node.is_container() or node.parent is None:
             return
         parent, index = node.parent, node.index()
+        from . import sketch_constraints
+        inner = [dict(r) for r in sketch_constraints.rows(node)]
+        count = len(node.children)
+        at = index
         parent.remove(node)
         for child in list(node.children):
             node.remove(child)
             parent.add(child, index)
             index += 1
+        if inner or sketch_constraints.rows(parent):
+            # the Smart Dimensions come out with the shapes
+            sketch_constraints.apply_unwrap(parent, at, count, inner)
         self.structure_changed.emit()
 
     def duplicate(self, node: CadNode) -> CadNode:
