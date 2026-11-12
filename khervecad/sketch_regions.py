@@ -53,11 +53,49 @@ def shapes_of(container, construction=False):
     dimensions that drive it)."""
     from .model import SHAPE_2D
     return [n for n in container.children
-            if n.visible and n.category == SHAPE_2D
+            if n.visible and (n.category == SHAPE_2D or _pattern_2d(n))
             and (construction or n.params.get("modifier") != "%")]
 
 
+def _pattern_2d(node):
+    """A sketch pattern (a for loop round 2D shapes, Circular / Linear
+    Sketch Pattern): its copies are edges too — the six bolt holes of
+    the user's flange were no region at all."""
+    from .model import SHAPE_2D
+    if node.type != "for_loop" or not node.children:
+        return False
+    leaves = [n for n in node.walk() if not n.children and n is not node]
+    return bool(leaves) and all(n.category == SHAPE_2D for n in leaves)
+
+
+_FACES = {}                     # content key -> faces(): the regions of a
+_FACES_MAX = 64                 # sketch are asked for many times an edit
+
+
+def _faces_key(shapes, any_state):
+    try:
+        return (bool(any_state), tuple(
+            (s.type, repr(sorted(s.params.items())), s.visible,
+             tuple(_faces_key(s.children, True)[1]) if s.children else ())
+            for s in shapes))
+    except Exception:
+        return None
+
+
 def faces(shapes, any_state=False):
+    """Cached :func:`_faces` (same shapes, same answer)."""
+    key = _faces_key(list(shapes)[:MAX_EDGE_SHAPES], any_state)
+    if key is not None and key in _FACES:
+        return list(_FACES[key])
+    out = _faces(shapes, any_state)
+    if key is not None:
+        if len(_FACES) >= _FACES_MAX:
+            _FACES.pop(next(iter(_FACES)))
+        _FACES[key] = list(out)
+    return out
+
+
+def _faces(shapes, any_state=False):
     """[(CrossSection, [loops], [shapes it lies in])] — every connected
     region the shapes' EDGES cut the plane into. Lines, polygon sides
     and every shape's outline are all edges alike (the user: "a polygon
@@ -464,8 +502,11 @@ def make(model, container, face_list, picked, hide=None):
     # were there solved the wrong lines (a triangle of lines came out
     # squashed to a quarter of its height)
     container.params.pop(sc.KEY, None)
+    # moved in quietly, ONE redraw after: each move_node redrew the whole
+    # window (27 shapes, 40 s on the user's flange)
     for s in shapes:
-        model.move_node(s, reg)
+        s.parent.remove(s)
+        reg.add(s)
         if s not in helpers:
             s.params.pop("modifier", None)
     if moved:
@@ -922,10 +963,18 @@ def start_3d(window, container=None, make_only=False, cut=False,
     from .fillet_pick import _apply
     lift = 0.05                    # just above the sketch, never inside it
     lines = []
-    for _cs, loops, *_m in face_list:
+    shown = []
+    for k, (_cs, loops, *_m) in enumerate(face_list):
+        world = []
         for loop in loops:
             pts = [_apply(mat, (x, y, lift)) for x, y in loop]
             lines.append(pts + pts[:1])
+            world.append(pts)
+        at = seed(_cs)
+        if at:
+            shown.append((world, _apply(mat, (at[0], at[1], lift)), k + 1))
+    from . import region_show
+    region_show.start(window, shown)
 
     def banner():
         if make_only:
@@ -943,6 +992,7 @@ def start_3d(window, container=None, make_only=False, cut=False,
         nonlocal shapes
         if desc is None:                       # done
             region_panel.close(window)
+            region_show.stop(window)
             view.set_highlight_mesh([])
             if not picked and on_nothing is not None:
                 on_nothing()
@@ -995,8 +1045,9 @@ def start_3d(window, container=None, make_only=False, cut=False,
                                                         "cut")
             return
         picked.symmetric_difference_update({key})
-        view.set_highlight_mesh([t for i in sorted(picked)
-                                 for t in tris[i]])
+        # shown as the region filled and numbered (region_show), not a
+        # slab seen only through the holes
+        region_show.set_picked(window, picked)
         arm()
         if window_at_once and picked:
             from PyQt5.QtCore import Qt, QTimer
@@ -1009,7 +1060,8 @@ def start_3d(window, container=None, make_only=False, cut=False,
         view.start_pick(on_pick, groups=groups, banner=banner(),
                         done=make_only, labeler=lambda _d, k: "Region — click to %s" % (
                             "drop" if k in picked else "keep"))
-        region_panel.update(window, len(picked))
+        region_panel.update(window, len(picked),
+                            region_show.label(picked, len(face_list)))
 
     def cancel():
         picked.clear()

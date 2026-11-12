@@ -141,14 +141,49 @@ def built_before(window, container, own=True):
         kids = probe.parent.children
         nodes += kids[:kids.index(probe)]
         probe = probe.parent
+    nodes = [n for n in nodes if n.visible
+             and n.type not in ("assign", "variables")]
+    # the same earlier features are asked for again and again while one
+    # edit settles (every sketch's references, each pass): drawn once
+    key = _built_key(nodes, env, fn, iso)
+    if key is not None and key in _BUILT:
+        return list(_BUILT[key])
     tris = []
     with window._isolated_frame(iso):
         for node in nodes:
-            if not node.visible or node.type in ("assign", "variables"):
-                continue
             m = mesh.ancestor_matrix(node, env, stop=iso)
             tris += mesh.transform_mesh(m, mesh.tessellate(node, env, fn=fn))
+    if key is not None:
+        if len(_BUILT) >= 32:
+            _BUILT.pop(next(iter(_BUILT)))
+        _BUILT[key] = list(tris)
     return tris
+
+
+_BUILT = {}
+
+
+def _built_key(nodes, env, fn, iso):
+    """What built_before's answer depends on: each node's content and
+    where its ancestors put it."""
+    try:
+        from .document import node_to_dict
+        import json
+        parts = []
+        for n in nodes:
+            chain, p = [], n.parent
+            while p is not None and p is not iso:
+                chain.append((p.type, json.dumps(
+                    {k: v for k, v in p.params.items()
+                     if not isinstance(v, (list, dict))},
+                    sort_keys=True, default=str)))
+                p = p.parent
+            parts.append((json.dumps(node_to_dict(n), sort_keys=True,
+                                     default=str), tuple(chain)))
+        return (tuple(parts), json.dumps(env, sort_keys=True, default=str),
+                fn, id(iso))
+    except Exception:
+        return None
 
 
 def _grown(loops, grow=GROW):

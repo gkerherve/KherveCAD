@@ -33,13 +33,13 @@ def open(window, cut, ok, cancel):
     return panel
 
 
-def update(window, count):
+def update(window, count, text=None):
     panel = _panel(window)
     if panel is None:
         return
     panel.boxes["profiles"].set_text(
-        "%d region(s) picked" % count if count else
-        "Click the regions to use")
+        text or ("%d region(s) picked" % count if count else
+                 "Click the regions to use"))
     panel.set_ok_enabled(count > 0)
 
 

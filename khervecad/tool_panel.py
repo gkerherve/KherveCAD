@@ -142,6 +142,11 @@ class ToolPanel(QFrame):
             b.setFocusPolicy(Qt.NoFocus)          # keys stay with the view
             b.setCursor(Qt.PointingHandCursor)
             row.addWidget(b)
+        for b in (self.cancel, self.ok):
+            # the keyboard goes back to the main window after a click on
+            # the tool window (macOS: Return and Esc went nowhere, and the
+            # next click in the view was spent bringing the window back)
+            b.clicked.connect(self._give_back_focus)
         if on_ok is not None:
             self.ok.clicked.connect(on_ok)
         if on_cancel is not None:
@@ -290,6 +295,21 @@ class ToolPanel(QFrame):
         if self._beside and getattr(self, "_placed", False) and \
                 self.isVisible():
             ToolPanel._last_pos = self.pos()
+
+    def _give_back_focus(self, *_a):
+        try:
+            win = self.view.window()
+            if win is not None and win is not self:
+                win.activateWindow()
+                win.raise_()
+            self.view.setFocus(Qt.OtherFocusReason)
+        except RuntimeError:               # the view is already gone
+            pass
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        if getattr(self, "_beside", False):
+            self._give_back_focus()
 
     def closeEvent(self, event):
         """The window's own close button is Cancel."""

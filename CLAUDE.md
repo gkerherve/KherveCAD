@@ -3499,6 +3499,22 @@ into a new module and import.
                        Perimeter circle (`sketch_tools2.build_perimeter`):
                        three clicks on lines / sides -> tangent circle +
                        Tangent relations (`tangent_to_lines`).
+  - `region_show.py` — the regions SHOWN while Extruded Boss / Cut picks
+                       them (2026-11-12, the user: "we would understand what
+                       regions it created"): each area a pale colour and its
+                       number, a picked one filled solid, the Profiles box
+                       "Picked: 1, 3 (of 12)". Same day: a sketch pattern (a
+                       for loop round 2D shapes) is region edges
+                       (`sketch_regions._pattern_2d`), line / arc ends within
+                       `END_JOIN` (0.05 mm) are one point (`_join_ends`:
+                       trimmed and mirrored arcs came back 0.01 mm open), and
+                       the 70 s OK on the user's flange is ~6 s: `faces` is
+                       cached by content (`_FACES`), `make` moves the shapes
+                       in quietly (one redraw, was one per shape), and
+                       `sketch_section.built_before` caches the part built
+                       before a sketch (`_BUILT`). A ToolPanel hands the
+                       keyboard back to the main window after a button or
+                       when it hides (macOS lost key focus).
   - `cut_feature.py` — SolidWorks' **Cut** panel (2026-10-25): Extruded /
                        Revolved / Swept / Lofted / Boundary Cut. Click a
                        face (a face sketch Group marked `params["cut"]`),
