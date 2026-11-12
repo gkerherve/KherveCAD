@@ -57,9 +57,17 @@ def revolve(window, nodes):
     if not flat or len(flat) != len(nodes):
         return None
     container = flat[0].parent
-    if container is None or any(n.parent is not container for n in flat) \
-            or face_sketch.group_of(container) is None:
+    if container is None or any(n.parent is not container for n in flat):
         return None
+    if face_sketch.group_of(container) is None:
+        # a shape drawn straight on the Top plane (no sketch group): in
+        # the SolidWorks / Fusion styles it is a sketch like any other —
+        # revolved about its Y axis, lying in its plane (2026-11-12, the
+        # user: OpenSCAD's own rotate_extrude stood the rectangle up and
+        # spun it about Z). The classic style keeps OpenSCAD's meaning.
+        from . import toolbar_style
+        if toolbar_style.current(window) == toolbar_style.CLASSIC:
+            return None
     model = window.model
     reg = area_of_lines(model, container)
     targets = [reg] if reg is not None else [
