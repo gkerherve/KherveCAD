@@ -1156,6 +1156,10 @@ class MainWindow(QMainWindow):
             # area they close at once — nothing more to click (the user)
             if nodes and sketch_regions.extrude_selection(self, nodes):
                 return
+            # nothing selected and several sketches: show them ALL, each
+            # on its own plane, the first click chooses (the user)
+            if not nodes and sketch_regions.start_any(self):
+                return
             container = sketch_regions.overlap_container(self, nodes)
             if container is not None and \
                     sketch_regions.start_3d(self, container):

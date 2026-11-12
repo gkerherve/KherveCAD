@@ -60,10 +60,19 @@ def sketch_source(node):
     while top.parent is not None:
         top = top.parent
     for n in top.walk():
-        if n is not node and n.type == "regions" and n.name == name \
-                and not n.params.get(SOURCE):
+        if n is not node and n.name == name and not n.params.get(SOURCE) \
+                and (n.type == "regions" or _extrude_sketch(n)):
             return n
     return None
+
+
+def _extrude_sketch(node):
+    """A Linear extrude holding its 2D shapes directly (no Regions): its
+    shapes are a sketch another feature may reuse."""
+    from .model import SHAPE_2D
+    return node.type == "linear_extrude" and any(
+        c.category == SHAPE_2D for c in node.children) and not any(
+        c.type == "regions" for c in node.children)
 
 
 def shapes(node):

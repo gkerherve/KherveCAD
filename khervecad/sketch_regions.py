@@ -52,10 +52,10 @@ def shapes_of(container, construction=False):
     ones a regions extrude turned into construction (they keep the
     dimensions that drive it)."""
     from .model import SHAPE_2D
-    if container.type == "regions":
+    from . import regions2d
+    if container.type == "regions" or regions2d._extrude_sketch(container):
         # an extruded sketch, picked again for another feature: its own
         # shapes (kept hidden inside it), or the sketch it reuses
-        from . import regions2d
         return regions2d.shapes(container)
     return [n for n in container.children
             if n.visible and (n.category == SHAPE_2D or _pattern_2d(n))
@@ -493,7 +493,8 @@ def make(model, container, face_list, picked, hide=None):
     the sketch shapes (*hide*, moved in with their Smart Dimensions) and
     drawing the picked regions' union (regions2d). The Regions node."""
     picked = sorted(set(picked))
-    if container.type == "regions":
+    from . import regions2d
+    if container.type == "regions" or regions2d._extrude_sketch(container):
         return _reuse(model, container, face_list, picked)
     shapes = [s for s in (hide or []) if s.parent is container]
     if not picked or not shapes:
@@ -562,10 +563,9 @@ def _reuse(model, source, face_list, picked):
     if any(n is not root and n.name == root.name
            for n in model.root.walk()):
         root.name = model.unique_name("regions")       # a name to point at
-    owner = root.parent if root.parent is not None else root
-    anchor = owner
-    if source is not root and source.parent is not None:
-        anchor = source.parent
+    # beside the feature that made the sketch, in its frame
+    anchor = root if root.type == "linear_extrude" else (
+        root.parent if root.parent is not None else root)
     parent = anchor.parent
     at = parent.children.index(anchor) + 1 if parent is not None else None
     reg = model.add_node("regions", {
@@ -922,8 +922,9 @@ def reusable(window):
     again, or None."""
     scope = window._render_scope()[0]
     for n in reversed(list(scope.walk())):
-        if n.type == "regions" and not n.params.get("sketch_of") \
-                and len(faces(shapes_of(n))) > 1:
+        from . import regions2d
+        if (n.type == "regions" and not n.params.get("sketch_of")
+                or regions2d._extrude_sketch(n)) and faces(shapes_of(n)):
             return n
     return None
 
@@ -931,6 +932,11 @@ def reusable(window):
 def _regions_of(node):
     """The EXTRUDED Regions *node* is, holds (one extrude round it) or
     sits in — one not yet extruded is simply extruded, never reused."""
+    from . import regions2d
+    if regions2d._extrude_sketch(node):
+        return node
+    if node.parent is not None and regions2d._extrude_sketch(node.parent):
+        return node.parent
     reg = None
     if node.type == "regions":
         reg = node
@@ -1027,7 +1033,7 @@ def overlap_container(window, nodes):
 
 
 def start_3d(window, container=None, make_only=False, cut=False,
-             window_at_once=False, on_nothing=None):
+             window_at_once=False, on_nothing=None, preselect=None):
     """Pick regions on the 3D view: the region under the mouse lights
     up, a click keeps it (again drops it), Esc or right-click extrudes
     what was picked. False when no sketch has regions. *window_at_once*:
@@ -1173,6 +1179,8 @@ def start_3d(window, container=None, make_only=False, cut=False,
         # the user: "we don't want to see Done — it's the window")
         region_panel.open(window, cut, ok=view.cancel_pick, cancel=cancel)
     arm()
+    if preselect is not None and 0 <= preselect < len(face_list):
+        on_pick({"kind": "face"}, preselect)   # the click that chose it
     if window_at_once:
         # lines closing a loop by themselves: THAT area, nothing to ask
         try:
@@ -1608,3 +1616,92 @@ def arrangement(segs, loose, inside=None):
             if area < -1e-9:                  # counter-clockwise: a face
                 loops.append(loop)
     return loops
+
+
+# ------------------------------------------------- every sketch at once
+def all_sketches(window):
+    """Every sketch in the scope with regions to pick: the free ones and
+    the extruded ones (2026-11-12, the user: Exercise 1 showed the regions
+    of one plane only, "it should show all possible planes")."""
+    scope = window._render_scope()[0]
+    out = []
+    for n in scope.walk():
+        try:
+            from . import regions2d
+            if regions2d._extrude_sketch(n):
+                pass                         # an older extrude's shapes
+            elif n.type == "regions":
+                if n.params.get("sketch_of") or not used(n.parent or n):
+                    continue
+            elif used(n) or not shapes_of(n):
+                continue
+            if faces(shapes_of(n)):
+                out.append(n)
+        except Exception:
+            continue
+    return out
+
+
+def _frame(window, container):
+    from . import mesh
+    scope = window._render_scope()[0]
+    iso = scope if scope is not window.model.root else None
+    with window._isolated_frame(iso):
+        mat = mesh.ancestor_matrix(container, {}, stop=iso)
+        return mesh.mat_mul(mat, mesh.node_matrix(container, {}))
+
+
+def start_any(window, cut=False):
+    """Show the regions of EVERY sketch, each on its own plane and
+    numbered across them all; the first click chooses that sketch and
+    the pick goes on there (`start_3d`, the clicked region already
+    picked). False when fewer than two sketches have regions."""
+    from . import region_show, sketch_section
+    from .fillet_pick import _apply
+    sketches = all_sketches(window)
+    if len(sketches) < 2:
+        return False
+    groups, shown, lines = [], [], []
+    number = 0
+    for ci, cont in enumerate(sketches):
+        try:
+            shapes, _ghost = sketch_section.with_section(
+                window, cont, shapes_of(cont))
+            face_list = faces(shapes)
+            mat = _frame(window, cont)
+        except Exception:
+            continue
+        for k, (cs, loops, *_m) in enumerate(face_list):
+            number += 1
+            groups.append(((ci, k), _slab_tris(cs, mat)))
+            world = [[_apply(mat, (x, y, 0.05)) for x, y in lp]
+                     for lp in loops]
+            lines += [w + w[:1] for w in world]
+            at = seed(cs)
+            if at:
+                shown.append((world, _apply(mat, (at[0], at[1], 0.05)),
+                              number))
+    if not groups:
+        return False
+    view = window.view3d
+    region_show.start(window, shown)
+
+    def on_pick(desc, key):
+        region_show.stop(window)
+        view.pick_lines = []
+        if desc is None or key is None:
+            return
+        ci, k = key
+        from PyQt5.QtCore import QTimer
+        QTimer.singleShot(0, lambda: start_3d(
+            window, sketches[ci], cut=cut, preselect=k))
+
+    view.pick_lines = lines
+    view.start_pick(on_pick, groups=groups,
+                    banner="%s — every sketch's regions: click one to "
+                           "start (its sketch is then used)"
+                           % ("Extruded Cut" if cut else
+                              "Extruded Boss/Base"),
+                    labeler=lambda _d, key: "Sketch %d, region — click "
+                    "to use this sketch" % (key[0] + 1))
+    return True

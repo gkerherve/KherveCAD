@@ -94,3 +94,28 @@ def test_a_second_extrude_reuses_the_same_sketch():
     assert abs(regions2d._cs(reg1)[0].area() - fl[ring][0].area()) < 0.5
     m.rename(reg1, "Plate sketch")                 # the link follows
     assert regions2d.sketch_source(reg2) is reg1
+
+
+def test_an_older_plain_extrude_offers_its_sketch_again():
+    # Exercises 1-3: extrudes holding their shapes directly (no Regions)
+    # showed no regions at all
+    from khervecad import sketch_regions as sr, regions2d
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    ext = CadNode("linear_extrude", "Boss", {"height": 10})
+    m.root.add(ext)
+    ext.add(CadNode("square", "Base", {"width": 40, "height": 20})
+            if "square" in __import__("khervecad.model").model.NODE_TYPES
+            else CadNode("rect", "Base", {"x": 0, "y": 0, "width": 40,
+                                          "height": 20}))
+    ext.add(CadNode("circle", "Boss circle", {"x": 20, "y": 10,
+                                              "radius": 5}))
+    assert sr._regions_of(ext) is ext
+    fl = sr.faces(sr.shapes_of(ext))
+    assert len(fl) == 2
+    disc = min(range(2), key=lambda i: fl[i][0].area())
+    second = sr.extrude(m, ext, fl, {disc})
+    reg = second.children[0]
+    assert regions2d.sketch_source(reg) is ext
+    assert abs(regions2d._cs(reg)[0].area() - fl[disc][0].area()) < 0.5
+    assert second.parent is ext.parent
