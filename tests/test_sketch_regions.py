@@ -67,3 +67,30 @@ def test_each_picked_region_is_the_one_extruded():
         ext = sr.extrude(m, c, fl, {k}, hide=shapes)
         reg = next(n for n in ext.walk() if n.type == "regions")
         assert abs(regions2d._cs(reg)[0].area() - want) < 0.5, k
+
+
+def test_a_second_extrude_reuses_the_same_sketch():
+    # the user: once one region was extruded the others disappeared, so
+    # no other thickness could be made from the same sketch
+    from khervecad import sketch_regions as sr, regions2d
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    c = CadNode("union", "Sketch")
+    m.root.add(c)
+    c.add(CadNode("circle", "Plate", {"x": 0, "y": 0, "radius": 40}))
+    c.add(CadNode("circle", "Boss", {"x": 0, "y": 0, "radius": 20}))
+    shapes = sr.shapes_of(c)
+    fl = sr.faces(shapes)
+    ring = next(i for i, f in enumerate(fl) if f[0].area() > 3000)
+    first = sr.extrude(m, c, fl, {ring}, hide=shapes)
+    reg1 = first.children[0]
+    again = sr.faces(sr.shapes_of(reg1))
+    assert len(again) == 2                          # still both regions
+    disc = next(i for i, f in enumerate(again) if f[0].area() < 3000)
+    second = sr.extrude(m, reg1, again, {disc})
+    reg2 = second.children[0]
+    assert regions2d.sketch_source(reg2) is reg1
+    assert abs(regions2d._cs(reg2)[0].area() - again[disc][0].area()) < 0.5
+    assert abs(regions2d._cs(reg1)[0].area() - fl[ring][0].area()) < 0.5
+    m.rename(reg1, "Plate sketch")                 # the link follows
+    assert regions2d.sketch_source(reg2) is reg1

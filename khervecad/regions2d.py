@@ -45,10 +45,34 @@ module kcad_regions(seeds = [], inside = [], points = [], paths = []) {
 }"""
 
 
+#: a Regions that REUSES another one's sketch names it here (2026-11-12,
+#: the user: the other regions disappeared once one was extruded, so a
+#: second thickness could not be made from the same sketch)
+SOURCE = "sketch_of"
+
+
+def sketch_source(node):
+    """The Regions whose sketch *node* reuses, or None."""
+    name = node.params.get(SOURCE) if node is not None else None
+    if not name:
+        return None
+    top = node
+    while top.parent is not None:
+        top = top.parent
+    for n in top.walk():
+        if n is not node and n.type == "regions" and n.name == name \
+                and not n.params.get(SOURCE):
+            return n
+    return None
+
+
 def shapes(node):
     """The sketch shapes the regions are cut from (hidden ones too)."""
     from .model import SHAPE_2D
     from .sketch_regions import _pattern_2d
+    source = sketch_source(node)
+    if source is not None:
+        node = source
     # the SAME shapes the pick saw (a sketch pattern's copies too), or the
     # stored region numbers point at other areas (the user: "the region I
     # select is not the one that extruded")

@@ -1688,6 +1688,10 @@ class DocumentModel(QObject):
                 if other.type == "reference" \
                         and other.params.get("ref") == old:
                     other.params["ref"] = name
+                elif other.type == "regions" \
+                        and other.params.get("sketch_of") == old \
+                        and node.type == "regions":
+                    other.params["sketch_of"] = name      # its sketch
                 elif other.type == "component":
                     mate = other.params.get("mate")
                     if isinstance(mate, dict) \

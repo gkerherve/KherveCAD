@@ -3515,6 +3515,18 @@ into a new module and import.
                        before a sketch (`_BUILT`). A ToolPanel hands the
                        keyboard back to the main window after a button or
                        when it hides (macOS lost key focus).
+  - One sketch, several features (2026-11-12, the user: "the others
+                       regions of the sketch disappear and we cannot select
+                       them to extrude them at different thickness"): the
+                       first extrude still takes the shapes into its
+                       Regions, but a later Extruded Boss / Cut picks that
+                       extruded sketch's regions again (`reusable`,
+                       `_regions_of`, `overlap_container`) and makes a NEW
+                       Regions holding no shapes, `params["sketch_of"]` =
+                       the first one's name (`regions2d.sketch_source`;
+                       `_reuse` places it beside the first extrude, same
+                       frame; `model.rename` follows). Boss's question says
+                       "the sketch already extruded — pick other regions".
   - `cut_feature.py` — SolidWorks' **Cut** panel (2026-10-25): Extruded /
                        Revolved / Swept / Lofted / Boundary Cut. Click a
                        face (a face sketch Group marked `params["cut"]`),

@@ -1054,6 +1054,12 @@ class MainWindow(QMainWindow):
             if free:
                 usable = "the sketch not yet used (%s)" % \
                     sketch_choice.describe(free)
+            elif sketch_regions.reusable(self) is not None:
+                # every sketch extruded: its other regions, at another
+                # thickness (the user: they disappeared after one)
+                usable = "the sketch already extruded — pick other " \
+                    "regions of it"
+
         choice = sketch_choice.ask(self, "Extruded Boss/Base", usable)
         if choice is False:
             self.statusBar().showMessage(
@@ -1159,7 +1165,8 @@ class MainWindow(QMainWindow):
             # sketch on it, leave the sketch — the boss comes out of it
             # (SolidWorks; the user could not reach the plate's side)
             from . import sketch_regions, cut_feature
-            if not sketch_regions.free_shapes(self):
+            if not sketch_regions.free_shapes(self) and \
+                    sketch_regions.reusable(self) is None:
                 cut_feature.start(self, "extruded_boss")
                 return
         if not nodes and op == "linear_extrude":

@@ -52,6 +52,11 @@ def shapes_of(container, construction=False):
     ones a regions extrude turned into construction (they keep the
     dimensions that drive it)."""
     from .model import SHAPE_2D
+    if container.type == "regions":
+        # an extruded sketch, picked again for another feature: its own
+        # shapes (kept hidden inside it), or the sketch it reuses
+        from . import regions2d
+        return regions2d.shapes(container)
     return [n for n in container.children
             if n.visible and (n.category == SHAPE_2D or _pattern_2d(n))
             and (construction or n.params.get("modifier") != "%")]
@@ -488,6 +493,8 @@ def make(model, container, face_list, picked, hide=None):
     the sketch shapes (*hide*, moved in with their Smart Dimensions) and
     drawing the picked regions' union (regions2d). The Regions node."""
     picked = sorted(set(picked))
+    if container.type == "regions":
+        return _reuse(model, container, face_list, picked)
     shapes = [s for s in (hide or []) if s.parent is container]
     if not picked or not shapes:
         return None
@@ -540,6 +547,34 @@ def make(model, container, face_list, picked, hide=None):
         _reindex(container, old)
     # Regions goes where the sketch was
     model.move_node(reg, container, at)
+    model.node_changed.emit(reg)
+    return reg
+
+
+def _reuse(model, source, face_list, picked):
+    """A new Regions drawing *picked* areas of *source*'s sketch, which
+    stays where it is (SolidWorks: one sketch, several features). Placed
+    beside the feature that first used the sketch, in the same frame."""
+    from . import regions2d
+    if not picked:
+        return None
+    root = regions2d.sketch_source(source) or source
+    if any(n is not root and n.name == root.name
+           for n in model.root.walk()):
+        root.name = model.unique_name("regions")       # a name to point at
+    owner = root.parent if root.parent is not None else root
+    anchor = owner
+    if source is not root and source.parent is not None:
+        anchor = source.parent
+    parent = anchor.parent
+    at = parent.children.index(anchor) + 1 if parent is not None else None
+    reg = model.add_node("regions", {
+        "seeds": [seed(face_list[i][0]) for i in picked],
+        "inside": [face_list[i][2] for i in picked],
+        regions2d.SOURCE: root.name},
+        parent=parent, name=model.unique_name("regions"))
+    if at is not None and parent.children.index(reg) != at:
+        model.move_node(reg, parent, at)
     model.node_changed.emit(reg)
     return reg
 
@@ -852,6 +887,11 @@ def sketch_container(window):
     sel = [n for n in window.builder.active_tree().selected_nodes()] \
         if hasattr(window.builder.active_tree(), "selected_nodes") else []
     for n in sel:
+        # an extruded sketch picked again (the feature, its Regions or one
+        # of its shapes): its regions are offered for another feature
+        reg = _regions_of(n)
+        if reg is not None:
+            return reg
         if n.category == SHAPE_2D and n.parent is not None:
             return n.parent
         if len(shapes_of(n)) >= 2:
@@ -869,7 +909,42 @@ def sketch_container(window):
     for n in reversed(list(scope.walk())):
         if not used(n) and shapes_of(n):
             return n
+    # every sketch already used: the latest extruded one, for another
+    # feature at another thickness
+    for n in reversed(list(scope.walk())):
+        if n.type == "regions" and len(faces(shapes_of(n))) > 1:
+            return n
     return None
+
+
+def reusable(window):
+    """The latest extruded sketch in the scope with regions to offer
+    again, or None."""
+    scope = window._render_scope()[0]
+    for n in reversed(list(scope.walk())):
+        if n.type == "regions" and not n.params.get("sketch_of") \
+                and len(faces(shapes_of(n))) > 1:
+            return n
+    return None
+
+
+def _regions_of(node):
+    """The EXTRUDED Regions *node* is, holds (one extrude round it) or
+    sits in — one not yet extruded is simply extruded, never reused."""
+    reg = None
+    if node.type == "regions":
+        reg = node
+    elif node.parent is not None and node.parent.type == "regions":
+        reg = node.parent
+    elif node.type == "linear_extrude" and len(node.children) == 1 and \
+            node.children[0].type == "regions":
+        reg = node.children[0]
+    if reg is not None and reg.params.get("sketch_of"):
+        from . import regions2d             # a reuse: the sketch it reuses
+        return regions2d.sketch_source(reg)
+    if reg is None or not used(reg.parent or reg):
+        return None
+    return reg
 
 
 def overlapping(container):
@@ -909,6 +984,12 @@ def overlap_container(window, nodes):
         c = sketch_container(window)
         cands = [c] if c is not None else []
     for c in cands:
+        reg = _regions_of(c)
+        if reg is not None:
+            # an extruded sketch: its other regions, for another feature
+            if len(faces(shapes_of(reg))) > 1:
+                return reg
+            continue
         if used(c):
             continue
         try:
