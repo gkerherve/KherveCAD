@@ -3376,6 +3376,13 @@ into a new module and import.
                        expand`); box 2 only by its box, Enter or a
                        right-click (3D: Enter / right-click). A mirrored
                        origin is a NEW "Origin n" (`_new_origins`).
+  - Side middles while drawing (2026-11-13, the user): the 2D
+                       `SketchScene._shape_snap` skipped every SELECTED
+                       shape (meant for the one being dragged), and a shape
+                       just drawn stays selected — a circle's centre fell on
+                       the grid beside a rectangle's middle. It now skips
+                       only the shape the mouse is dragging; sketch_touch
+                       ties the point there by Midpoint.
   - `circle_snap.py` — a new circle like SolidWorks (2026-11-11, the
                        user): its centre (any first point, while no draft)
                        snaps ON a line / arc / circle after points and

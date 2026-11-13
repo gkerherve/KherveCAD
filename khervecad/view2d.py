@@ -1472,9 +1472,16 @@ class SketchScene(QGraphicsScene):
         ppm = views[0].px_per_mm()
         tol = FEATURE_SNAP_PX / max(ppm, 1e-6)
         best, best_d, kind_best = None, tol, "point"
+        grabbed = self.mouseGrabberItem()
         for item in self.items():
-            # (not a selected shape: dragging it, it would stick to itself)
-            if not isinstance(item, ShapeItem) or item.isSelected():
+            if not isinstance(item, ShapeItem):
+                continue
+            # (not the shape being dragged: it would stick to itself. Only
+            # that one — a shape just drawn stays SELECTED, and skipping
+            # every selected shape lost the rectangle's side middles to
+            # the next circle, 2026-11-13, the user)
+            if item.isSelected() and grabbed is not None and (
+                    grabbed is item or grabbed.parentItem() is item):
                 continue
             try:
                 pts = self._item_feature_points(item)
