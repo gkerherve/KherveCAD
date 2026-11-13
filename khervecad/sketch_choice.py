@@ -69,26 +69,13 @@ def ask(window, label, selection=None):
     a short description of what is selected and usable (None: nothing)."""
     if ask_hook is not None:
         return ask_hook(label, selection)
-    if not asks():
-        return {"source": "selection" if selection else "face",
-                "where": where()}
-    from . import choice_preview
-    preview = None
-    if window is not None and getattr(window, "view3d", None) is not None:
-        preview = choice_preview.start(window)
-    dlg = ChoiceDialog(window, label, selection,
-                       faces=(preview or {}).get("faces") or [])
-    try:
-        ok = dlg.exec_()
-    finally:
-        dlg.restore_view()
-        if preview is not None:
-            choice_preview.stop(window)
-    if not ok:
-        return False
-    choice = dlg.choice()
-    _remember(choice, dlg.again.isChecked())
-    return choice
+    # no window any more (2026-11-13, the user: "toggles instead of the
+    # choice window ... on the top of the 3D view"): the selection is
+    # used when there is one, else the toggle bar and one click
+    # (`feature_pick`); the dialog below is kept for its tests
+    from . import feature_pick
+    return {"source": "selection" if selection else "pick",
+            "where": feature_pick.where()}
 
 
 def describe(nodes, limit=3):

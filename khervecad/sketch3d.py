@@ -726,6 +726,11 @@ class Sketch3DTool:
             face_outline.clear(self.window)
         except Exception:
             pass
+        try:                               # the 2D | 3D toggles go
+            from . import feature_pick
+            feature_pick.refresh(self.window)
+        except Exception:
+            pass
         v.update()
 
     def cancel(self):

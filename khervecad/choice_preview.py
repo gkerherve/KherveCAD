@@ -110,20 +110,23 @@ def face_name(face, number):
                              "part")
 
 
-def start(window):
-    """Work out what to show; the window's toggles then call :func:`show`."""
+def start(window, parts=None, items=None):
+    """Work out what to show; the toggles then call :func:`show`."""
     from . import meshedit_ui
     state = dict(faces=[], regions=[], show_faces=True, show_regions=True,
                  show_planes=False)
     try:
-        parts = meshedit_ui._parts(window)
+        if parts is None:
+            parts = meshedit_ui._parts(window)
         state["solid"] = [(id(n), [tuple(t[:3]) for t in tris])
                           for n, tris in parts]
         state["faces"] = flat_faces(parts)
     except Exception:
         state["faces"] = []
     try:
-        state["regions"] = sketch_regions_shown(window)
+        if items is None:
+            items = region_items(window)[1]
+        state["regions"] = [(w, at, n) for _c, _k, w, at, n, _t in items]
     except Exception:
         state["regions"] = []
     window._choice_preview = state
@@ -162,16 +165,18 @@ def stop(window):
         window.view3d.update()
 
 
-def sketch_regions_shown(window):
-    """``[(world loops, world label point, number)]`` for every sketch's
-    regions, numbered across them all (as `start_any` numbers them)."""
+def region_items(window):
+    """``(sketches, [(sketch index, region index, world loops, world
+    label point, number, slab triangles)])`` for every sketch's regions,
+    numbered across them all (as `start_any` numbers them)."""
     from . import sketch_regions, sketch_section
     from .fillet_pick import _apply
     scope = window._render_scope()[0]
     if scope is window.model.root:
-        return []                         # the assembly: a jumble
-    shown, number = [], 0
-    for cont in sketch_regions.all_sketches(window):
+        return [], []                     # the assembly: a jumble
+    sketches = sketch_regions.all_sketches(window)
+    items, number = [], 0
+    for ci, cont in enumerate(sketches):
         try:
             shapes, _g = sketch_section.with_section(
                 window, cont, sketch_regions.shapes_of(cont))
@@ -179,15 +184,16 @@ def sketch_regions_shown(window):
             mat = sketch_regions._frame(window, cont)
         except Exception:
             continue
-        for cs, loops, *_m in face_list:
+        for k, (cs, loops, *_m) in enumerate(face_list):
             number += 1
             world = [[_apply(mat, (x, y, 0.05)) for x, y in lp]
                      for lp in loops]
             at = sketch_regions.seed(cs)
             if at:
-                shown.append((world, _apply(mat, (at[0], at[1], 0.05)),
-                              number))
-    return shown
+                items.append((ci, k, world,
+                              _apply(mat, (at[0], at[1], 0.05)), number,
+                              sketch_regions._slab_tris(cs, mat)))
+    return sketches, items
 
 
 def _hidden(window, state, i):

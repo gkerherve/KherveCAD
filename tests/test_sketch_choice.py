@@ -65,19 +65,11 @@ def test_the_window_offers_the_selection_first(app):
     assert plain.source() == "face"
 
 
-def test_dont_ask_again_keeps_the_answer(monkeypatch):
+def test_no_window_any_more_the_toggles_instead(monkeypatch):
     monkeypatch.setattr(sketch_choice, "ask_hook", None)
-    sketch_choice.set_asks(False)
-    try:
-        from PyQt5.QtCore import QSettings
-        QSettings("Kherve", "KherveCAD").setValue("sketch/feature_where",
-                                                  "2d")
-        assert sketch_choice.ask(None, "Extruded Cut", None) == \
-            {"source": "face", "where": "2d"}
-        assert sketch_choice.ask(None, "Extruded Cut", "Block")["source"] \
-            == "selection"
-    finally:
-        sketch_choice.set_asks(True)
+    assert sketch_choice.ask(None, "Extruded Cut", None)["source"] == "pick"
+    assert sketch_choice.ask(None, "Extruded Cut", "Block")["source"] \
+        == "selection"
 
 
 def test_cancel_makes_nothing(win, monkeypatch):

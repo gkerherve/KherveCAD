@@ -3699,6 +3699,20 @@ into a new module and import.
                        Edit ▸ Options ▸ Sketch turns it back on. Tests:
                        conftest's `ask_hook` answers None (old behaviour);
                        tests/test_sketch_choice.py.
+  - `feature_pick.py` — Extruded Boss / every Cut with nothing usable
+                       selected start with TOGGLES on top of the 3D view, not
+                       the choice window (2026-11-13, the user): Faces /
+                       Sketch regions / Planes (off) / 2D | 3D (each Boss /
+                       Cut starts on 2D), a hint under the bar, then ONE
+                       click — a face (numbered F1..) opens a sketch on it,
+                       a region runs `sketch_regions.start_3d` on its
+                       sketch, a plane sketches on it. While a Boss / Cut
+                       sketch is open the bar is on both views and 2D | 3D
+                       moves it between the 2D sketch and the 3D tool
+                       (`switch`, never closing it — that would cut).
+                       `sketch_choice.ask` now returns source "pick" (or
+                       "selection"); its dialog is kept, unused.
+                       tests/test_feature_pick.py.
   - `choice_preview.py` — what the Boss / Cut choice window shows while
                        open (2026-11-13, the user): every flat face of the
                        parts numbered F1.. (largest first, only faces turned

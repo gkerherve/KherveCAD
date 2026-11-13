@@ -439,6 +439,11 @@ def close(window):
         cut_feature.finish(window, group)
     from . import model_refs               # its fixes on the model follow
     model_refs.adopt(window)
+    try:                                   # the 2D | 3D toggles go
+        from . import feature_pick
+        feature_pick.refresh(window)
+    except Exception:
+        pass
     return group
 
 

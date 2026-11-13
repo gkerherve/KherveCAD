@@ -388,6 +388,11 @@ def start(window, kind, choice=None):
                 "%s cancelled." % ALL[kind][0], 4000)
             return None
     source = choice["source"] if choice else None
+    if source == "pick":
+        # the toggles over the 3D view and one click (feature_pick)
+        from . import feature_pick
+        feature_pick.start(window, kind)
+        return None
     in_3d = IN_3D if not choice else choice["where"] == "3d"
     only = None
     face = (choice or {}).get("face") if source == "face" else None
