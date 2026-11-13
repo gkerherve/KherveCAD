@@ -3799,6 +3799,11 @@ into a new module and import.
                        list Material, Front / Top / Right Plane and Origin
                        as rows of their own (the planes were folded under
                        Origin). Undo closes the window (stop_tool.restored).
+                       A plane row SELECTED in the tree is drawn in 3D
+                       (`ObjectTree._planes_selected` -> `plane_pick.
+                       show_selected`, `window._tree_planes`; plane_pick's
+                       `_draw` serves both), and stays selected over a
+                       rebuild.
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

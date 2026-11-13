@@ -150,6 +150,7 @@ class ObjectTree(QTreeWidget):
         self.customContextMenuRequested.connect(self._context_menu)
         self.itemChanged.connect(self._item_changed)
         self.itemSelectionChanged.connect(self._emit_selection)
+        self.itemSelectionChanged.connect(self._planes_selected)
         self.itemExpanded.connect(self._remember_expanded)
         self.itemCollapsed.connect(self._remember_collapsed)
         self.itemDoubleClicked.connect(self._double_clicked)
@@ -231,6 +232,8 @@ class ObjectTree(QTreeWidget):
 
     def rebuild(self):
         selected = {n.id for n in self.selected_nodes()}
+        fixed = {it.data(0, ROLE_FIXED) for it in self.selectedItems()
+                 if it.data(0, ROLE_FIXED)}
         self._updating = True
         self.clear()
         from . import tree_history
@@ -239,6 +242,10 @@ class ObjectTree(QTreeWidget):
         # in both views: the planes are what a sketch starts on
         if self.history or tree_history.planes_shown():
             tree_history.build_fixed(self)
+            for i in range(self.topLevelItemCount()):
+                item = self.topLevelItem(i)
+                if item.data(0, ROLE_FIXED) in fixed:
+                    item.setSelected(True)     # (a plane stays shown)
         # History is another drawing of the same nodes: no drag there
         self.setDragDropMode(QAbstractItemView.NoDragDrop if self.history
                              else QAbstractItemView.InternalMove)
@@ -613,6 +620,23 @@ class ObjectTree(QTreeWidget):
             return
         if item.text(0) and item.text(0) != node.name:
             self.model.rename(node, item.text(0))
+
+    def _planes_selected(self):
+        """Front / Top / Right Plane rows selected: shown in the 3D view
+        (SolidWorks; the user)."""
+        if self._updating:
+            return
+        planes = [r[6:] for r in (it.data(0, ROLE_FIXED) or ""
+                                   for it in self.selectedItems())
+                  if r.startswith("plane:")]
+        win = self.window()
+        if getattr(win, "view3d", None) is None:
+            return
+        try:
+            from . import plane_pick
+            plane_pick.show_selected(win, planes)
+        except Exception:                      # pragma: no cover
+            pass
 
     def _emit_selection(self):
         if not self._updating:

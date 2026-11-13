@@ -106,3 +106,29 @@ def test_esc_or_select_cancels_the_plane_pick(window):
     plane_pick.start(window)
     assert stop_tool.stop(window)
     assert not plane_pick.active(window)
+
+
+def test_a_plane_selected_in_the_tree_shows_in_3d(window, app):
+    """SolidWorks shows a plane picked in the tree (the user)."""
+    from PyQt5.QtGui import QColor
+    tree = window.builder.tree
+    view = window.view3d
+    view.resize(600, 450)
+    tree.clearSelection()
+    app.processEvents()
+    before = view.grab().toImage()
+    tree.topLevelItem(3).setSelected(True)          # Right Plane
+    app.processEvents()
+    assert window._tree_planes["planes"] == {"Side (YZ)"}
+    after = view.grab().toImage()
+    changed = sum(1 for x in range(0, after.width(), 6)
+                  for y in range(0, after.height(), 6)
+                  if QColor(after.pixel(x, y)) != QColor(before.pixel(x, y)))
+    assert changed > 50                              # it is drawn
+    window.model.add_node("cube", {})               # a rebuild keeps it
+    app.processEvents()
+    assert tree.topLevelItem(3).isSelected()
+    assert window._tree_planes["planes"] == {"Side (YZ)"}
+    tree.clearSelection()
+    app.processEvents()
+    assert not getattr(window, "_tree_planes", None)

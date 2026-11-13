@@ -51,12 +51,14 @@ def _half(window):
     return max(MIN_HALF, reach * 1.2, seen)
 
 
-def _polygons(window, project):
+def _polygons(window, project, half=None, only=None):
     from PyQt5.QtCore import QPointF
     from PyQt5.QtGui import QPolygonF
-    h = window._plane_pick["half"]
+    h = window._plane_pick["half"] if half is None else half
     out = []
     for name, plane, (a, b) in PLANES:
+        if only is not None and plane not in only:
+            continue
         pts = []
         for sa, sb in ((-h, -h), (h, -h), (h, h), (-h, h)):
             v = [0.0, 0.0, 0.0]
@@ -134,26 +136,51 @@ def paint(window, painter, project):
     they cross dashed."""
     state = getattr(window, "_plane_pick", None)
     if not state:
+        # no plane is being asked for: the plane(s) selected in the tree,
+        # shown as SolidWorks shows a selected plane (2026-11-13, the
+        # user: "if we select the plane in the tree we should see it")
+        shown = getattr(window, "_tree_planes", None)
+        if shown and shown.get("planes"):
+            _draw(window, painter, project, shown["half"],
+                  only=shown["planes"], hot=shown["planes"])
         return
+    polys = _draw(window, painter, project, state["half"],
+                  hot={state.get("hover"), state.get("chosen")})
+    state["polys"] = polys
+
+
+def show_selected(window, planes):
+    """Show *planes* (keys like 'Side (YZ)') in the 3D view until called
+    with none."""
+    planes = set(planes or ())
+    old = getattr(window, "_tree_planes", None) or {}
+    if planes == set(old.get("planes") or ()):
+        return
+    window._tree_planes = {"planes": planes, "half": _half(window)} \
+        if planes else None
+    window.view3d.update()
+
+
+def _draw(window, painter, project, h, only=None, hot=()):
+    """The planes (all, or *only*), *hot* ones filled stronger; returns
+    their screen polygons."""
     import math
     from PyQt5.QtCore import QLineF, QPointF, Qt
     from PyQt5.QtGui import QColor, QFont, QPen
     from . import language
-    polys = _polygons(window, project)
-    state["polys"] = polys
-    h = state["half"]
+    polys = _polygons(window, project, h, only)
     painter.save()
     painter.setRenderHint(painter.Antialiasing, True)
     edge = QColor(70, 120, 210)
     for plane, name, poly in polys:
-        hot = plane in (state.get("hover"), state.get("chosen"))
-        painter.setPen(QPen(edge, 2.2 if hot else 1.1))
-        painter.setBrush(QColor(110, 160, 235, 95 if hot else 34))
+        lit = plane in hot
+        painter.setPen(QPen(edge, 2.2 if lit else 1.1))
+        painter.setBrush(QColor(110, 160, 235, 95 if lit else 34))
         painter.drawPolygon(poly)
     # where the planes cross: the three axes, dashed
     dash = QPen(QColor(40, 40, 40), 1.0, Qt.DashLine)
     painter.setPen(dash)
-    for axis in range(3):
+    for axis in (range(3) if only is None else ()):
         a, b = [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]
         a[axis], b[axis] = -h, h
         pa, pb = project(a), project(b)
@@ -182,6 +209,7 @@ def paint(window, painter, project):
                          language.tr(name))
         painter.restore()
     painter.restore()
+    return polys
 
 
 def _all_seen(window):
