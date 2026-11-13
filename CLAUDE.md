@@ -2647,6 +2647,15 @@ into a new module and import.
                        stills (default for >= 2 parts), MCP
                        `set_render_options explode/explode_mode` and
                        `export_document exploded`.
+  - `worktree_tab.py` — the browser's first tab, the parts as folders
+                       (Main, Not placed in Main). Its lists can be
+                       ARRANGED (2026-11-13, the user): drag a row onto
+                       another of the same list, Ctrl+Up / Down, right-click
+                       Move Up / Down, Sort A to Z / Z to A (numbers read as
+                       numbers, `natural_key`). The document's own order
+                       changes (`move_among` / `place_by` / `sort_among`, among
+                       the Objects and instances only — assigns keep their
+                       places), so the Object drop-down follows; one undo.
   - `objecttab.py`   — the **Object tab**, where parts are **defined**
                        and edited (the part/assembly split — anchors and
                        mates are a Main-tab concern, not here):
