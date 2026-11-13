@@ -728,11 +728,12 @@ TIPS = {
         "cup, a case, a lid, a lighter print. One side can be left "
         "open.",
         [_SELECTION + " Pick the solid to hollow.",
-         "Click Shell.",
-         "Set the Wall thickness (mm).",
-         "Open side: none keeps it closed; top / bottom / ±x / ±y "
-         "removes the faces looking that way and joins the rims (a "
-         "cup: open = top)."],
+         "Click Shell: its window opens beside the view.",
+         "Set the Thickness (mm).",
+         "Click the faces to remove in the 3D view (the top of a cup); "
+         "click one again to keep it. With no face the part is hollow "
+         "but closed, so it looks the same from outside.",
+         "OK (or Esc) keeps it; Cancel takes the Shell away."],
         "A wall thicker than half the part's smallest dimension leaves "
         "no room for a cavity; the shell turns red and says so."),
     "union": (

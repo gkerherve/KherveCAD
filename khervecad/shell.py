@@ -127,20 +127,87 @@ def inner_surface(tris, thickness: float) -> list:
             for a, b, c in tris]
 
 
+def removed_faces(tris, rows, names=None) -> set:
+    """Indices of the triangles of the faces the user clicked, SolidWorks'
+    "Faces to remove". Each row is [x, y, z, nx, ny, nz] in the part's
+    frame. The face is the whole surface that made the nearest triangle
+    facing that way (`face_names`: a cap, a cylinder's side, one side
+    of a rectangle), so a fillet round its rim is not taken with it;
+    a mesh without names falls back to the flat region joined to it."""
+    out = set()
+    if not rows:
+        return out
+    centres, normals = [], []
+    for tri in tris:
+        centres.append(tuple(sum(v[i] for v in tri) / 3.0 for i in range(3)))
+        normals.append(_normal_area(tri)[0])
+    for row in rows:
+        try:
+            p = [float(v) for v in row[:3]]
+            n = [float(v) for v in row[3:6]]
+        except (TypeError, ValueError):
+            continue
+        best, dist = None, None
+        for i, (c, m) in enumerate(zip(centres, normals)):
+            if m[0] * n[0] + m[1] * n[1] + m[2] * n[2] < 0.5:
+                continue
+            d = sum((c[k] - p[k]) ** 2 for k in range(3))
+            if dist is None or d < dist:
+                best, dist = i, d
+        if best is None:
+            continue
+        name = names[best] if names else None
+        if name is not None:
+            out.update(i for i, nm in enumerate(names) if nm == name)
+        else:
+            out.update(_flat_region(tris, normals, best))
+    return out
+
+
+def _flat_region(tris, normals, seed):
+    """The coplanar triangles joined to *seed* by shared edges."""
+    n = normals[seed]
+    by_edge = {}
+    for i, tri in enumerate(tris):
+        keys = [_key(v) for v in tri]
+        for k in range(3):
+            by_edge.setdefault(frozenset((keys[k], keys[(k + 1) % 3])),
+                               []).append(i)
+    region, todo = {seed}, [seed]
+    plane = sum(tris[seed][0][k] * n[k] for k in range(3))
+    while todo:
+        i = todo.pop()
+        keys = [_key(v) for v in tris[i]]
+        for k in range(3):
+            for j in by_edge[frozenset((keys[k], keys[(k + 1) % 3]))]:
+                if j in region:
+                    continue
+                m = normals[j]
+                if m[0] * n[0] + m[1] * n[1] + m[2] * n[2] > 0.9999 and \
+                        abs(sum(tris[j][0][q] * n[q] for q in range(3))
+                            - plane) < 1e-3:
+                    region.add(j)
+                    todo.append(j)
+    return region
+
+
 def shell(tris, thickness: float, open: str = "none",
-          open_angle: float = 30.0) -> list:
+          open_angle: float = 30.0, remove=None) -> list:
     """Counter-clockwise triangles of the hollow shell. Empty for an
-    empty mesh; the solid itself when the wall would fold (no room)."""
+    empty mesh; the solid itself when the wall would fold (no room).
+    *remove* is a set of triangle indices left open (picked faces)."""
     if not tris or thickness <= 0:
         return list(tris)
     direction = _DIRECTIONS.get(open)
     cos_open = math.cos(math.radians(open_angle))
+    remove = remove or set()
     keep = []
-    for tri in tris:
+    for i, tri in enumerate(tris):
         n, _area = _normal_area(tri)
-        keep.append(direction is None or
-                    n[0] * direction[0] + n[1] * direction[1]
-                    + n[2] * direction[2] < cos_open)
+        keep.append(i not in remove and (
+            direction is None or
+            n[0] * direction[0] + n[1] * direction[1]
+            + n[2] * direction[2] < cos_open))
     if all(keep):
         inner = inner_surface(tris, thickness)
         cavity = -volume(inner)              # its faces point inward

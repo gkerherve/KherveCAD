@@ -266,12 +266,14 @@ NODE_TYPES = {
         label="Shell (hollow)", category=OPERATION,
         icon="mdi.cup-outline",
         params=dict(thickness=2.0, open="none", open_angle=30.0,
-                    detail=2.0),
+                    detail=0.0, remove=[]),
         schema=[("thickness", "Wall thickness (mm)", "float", 0.01, 1e4),
                 ("open", "Open side", "choice",
                  ["none", "top", "bottom", "+x", "-x", "+y", "-y"], None),
                 ("open_angle", "Open faces within (°)", "float",
                  1.0, 89.0),
+                ("remove", "Faces to remove [x, y, z, nx, ny, nz]",
+                 "rows", ["X", "Y", "Z", "NX", "NY", "NZ"], None),
                 ("detail", "Max edge (mm)", "float", 0.05, 1e4)]),
 }
 
@@ -316,7 +318,7 @@ _BAKED = {
                    ("keep", "outside"), ("offset", 0.5), ("detail", 0),
                    ("show_target", True)],
     "shell": [("thickness", 2), ("open", "none"), ("open_angle", 30),
-              ("detail", 2)],
+              ("detail", 2), ("remove", [])],
     "sculpt": [("strokes", []), ("detail", 0), ("mirror", "none"),
                ("region", []), ("noise", 0), ("noise_scale", 4),
                ("seed", 1)],
@@ -710,9 +712,20 @@ def _compute(node, env) -> list:
                              int(num("seed", 1.0)))
     if t == "shell":
         from . import shell
+        rows = [[mesh.rv(v, env) for v in row]
+                for row in p.get("remove") or []
+                if isinstance(row, list) and len(row) == 6]
+        drop = set()
+        if rows:
+            try:                      # each face named by what made it
+                from . import face_names
+                names = face_names.names(node, env, src)
+            except Exception:
+                names = None
+            drop = shell.removed_faces(src, rows, names)
         return shell.shell(src, num("thickness", 2.0),
                            str(p.get("open", "none")),
-                           num("open_angle", 30.0))
+                           num("open_angle", 30.0), remove=drop)
     axis = str(p.get("axis", "z"))
     if t == "bend":
         return deform.bend(src, axis, str(p.get("toward", "x")),
@@ -887,7 +900,7 @@ def _b_baked(kind):
                                if isinstance(row, list) and len(row) == width] \
                     if isinstance(value, list) else []
             elif key in ("offsets", "path", "heights", "strokes", "warp",
-                         "within", "region", "pins", "pushes"):
+                         "within", "region", "pins", "pushes", "remove"):
                 params[key] = ([[_num(v) for v in row] for row in value
                                 if isinstance(row, list)]
                                if isinstance(value, list)
