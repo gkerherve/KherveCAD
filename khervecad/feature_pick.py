@@ -245,6 +245,11 @@ def start(window, kind):
     parts = meshedit_ui._parts(window)
     regions_ok = True
     try:
+        # a Regions a cancelled extrude left in a sketch hid its shapes
+        # from the region finder (the user's Ø32 hole): folded back first
+        from . import sketch_regions
+        if window._render_scope()[0] is not window.model.root:
+            sketch_regions.tidy(window)
         sketches, items = choice_preview.region_items(window)
     except Exception:
         sketches, items = [], []
@@ -563,6 +568,8 @@ def _edit_sketch(window, sketch):
     from . import face_sketch, normal_to, sketch_regions
     group = face_sketch.group_of(sketch)
     if group is not None:
+        from . import cut_feature          # editing, never a feature
+        group.params.pop(cut_feature.KEY, None)
         group._kc_bar_sketch = True
         if _in_3d(window):
             _draw_in_3d(window, group, face_sketch._normal_of(group))

@@ -3738,7 +3738,20 @@ into a new module and import.
                        kind `SKETCH`, planes on): a face opens a plain face
                        sketch, a plane turns to it (2D) or sketches on it
                        (3D), a numbered sketch opens again; its 2D | 3D
-                       moves the open sketch (`_kc_bar_sketch`).
+                       moves the open sketch (`_kc_bar_sketch`). **Stray
+                       Regions** (same day, the user's Exercise 10: no
+                       region round a Ø32 hole): a cancelled region extrude
+                       left its Regions in the sketch and the finder never
+                       saw the circle inside (a Regions is no SHAPE_2D).
+                       `sketch_regions.stray` / `absorb` / `tidy` fold it
+                       back with its dimensions before any region pick
+                       (start_3d, start_any, feature_pick.start), and a
+                       Cancel calls `take_back` (the Boss's Cancel removed
+                       the whole sketch). A Boss / Cut mark left on a sketch
+                       made Exit Sketch Mode extrude it later: Edit Sketch
+                       drops it (`normal_to.edit`, `_edit_sketch`), and while
+                       a feature sketch is open the button reads "Finish
+                       <feature>" (`sketch_mode._feature_of`).
                        tests/test_feature_pick.py.
   - `choice_preview.py` — what the Boss / Cut choice window shows while
                        open (2026-11-13, the user): every flat face of the

@@ -111,6 +111,12 @@ def edit(window, node=None):
     from . import face_sketch
     group = face_sketch.group_of(node)
     if group is not None:                      # drawn on a face
+        # Edit Sketch edits: a Boss / Cut mark left on the sketch (its
+        # feature cancelled or never made) must not extrude it on Exit
+        # Sketch Mode (2026-11-13, the user: "at the end of my sketch
+        # mode it started extruding, and I never asked for it")
+        from . import cut_feature
+        group.params.pop(cut_feature.KEY, None)
         return face_sketch.open_sketch(window, group)
     got = shape_frame(window, node)
     if got is None:

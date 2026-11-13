@@ -91,9 +91,27 @@ def sync_create(win):
     act = getattr(win, "_create_sketch_act", None)
     if act is not None:
         # on two lines: one was too long for the ribbon's big button
-        act.setText(language.tr("Exit Sketch") + "\n" + language.tr("Mode")
-                    if sketching(win) or _in_3d(win)
-                    else language.tr("Sketch Mode"))
+        text = language.tr("Exit Sketch") + "\n" + language.tr("Mode") \
+            if sketching(win) or _in_3d(win) else language.tr("Sketch Mode")
+        kind = _feature_of(win)
+        if kind:
+            # leaving MAKES the feature: say so (2026-11-13, the user was
+            # surprised by an extrude after "Exit Sketch Mode")
+            from . import cut_feature
+            text = language.tr("Finish") + "\n" + \
+                language.tr(cut_feature.ALL[kind][0])
+        act.setText(text)
+
+
+def _feature_of(win):
+    """The Boss / Cut kind the open sketch makes on leaving, or ''."""
+    from . import cut_feature
+    g = getattr(win, "_face_sketch", None)
+    tool = getattr(win, "_sketch3d_tool", None)
+    if g is None and tool is not None:
+        g = getattr(tool, "group", None)
+    kind = g.params.get(cut_feature.KEY) if g is not None else None
+    return kind if kind in cut_feature.ALL else ""
 
 
 class _FinishButton(QPushButton):

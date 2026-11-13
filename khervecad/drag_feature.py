@@ -485,6 +485,17 @@ class DragFeature:
                 if self.created:
                     shape = ext.children[0] if ext.children else None
                     model.ungroup(ext)
+                    from . import sketch_regions
+                    if shape is not None and shape.type == "regions" \
+                            and not shape.params.get("sketch_of") and \
+                            shape.parent is not None and \
+                            shape.parent.type not in \
+                            sketch_regions.EXTRUDERS:
+                        # the region pick's Regions: its shapes go back to
+                        # the sketch, or they hide there from every later
+                        # region pick (the user's Exercise 10)
+                        sketch_regions.absorb(model, shape)
+                        shape = None
                     if shape is not None:
                         self.window.builder.active_tree().select_nodes(
                             [shape])

@@ -552,6 +552,96 @@ def make(model, container, face_list, picked, hide=None):
     return reg
 
 
+#: what a Regions inside it is used by: such a Regions is a feature's
+EXTRUDERS = ("linear_extrude", "rotate_extrude", "sweep", "section_loft")
+
+
+def stray(node):
+    """True for a Regions left in a sketch BESIDE other sketch shapes
+    with no feature using it — what an extrude made from a region pick
+    leaves when it is cancelled (2026-11-13, the user's Exercise 10: the
+    Ø32 circle sat in one, so no region could have it as a hole)."""
+    from .model import SHAPE_2D
+    parent = node.parent
+    if node.type != "regions" or parent is None or \
+            node.params.get("sketch_of") or parent.type in EXTRUDERS:
+        return False
+    return any(c is not node and c.category == SHAPE_2D
+               for c in parent.children)
+
+
+def absorb(model, reg):
+    """*reg*'s shapes back into the sketch it sits in, with their
+    dimensions, and *reg* gone. True when done."""
+    from . import sketch_constraints as sc
+    container = reg.parent
+    if container is None:
+        return False
+    r = container.children.index(reg)
+    n_before = len(container.children)
+    own = [dict(row) for row in sc.rows(reg)]
+    shapes = list(reg.children)
+
+    def moved(ref):                      # a container ref after the move
+        i, dot, rest = ref.partition(".")
+        if not i.isdigit():
+            return ref
+        i = int(i)
+        if i == r:
+            return None                  # (a row on the Regions itself)
+        return "%d%s%s" % (i - 1 if i > r else i, dot, rest)
+    rows = []
+    for row in sc.rows(container):
+        refs = [moved(x) for x in row["refs"]]
+        if None not in refs:
+            rows.append(dict(row, refs=refs))
+    base = n_before - 1                  # where the shapes land: the end
+    for row in own:
+        refs = []
+        for x in row["refs"]:
+            i, dot, rest = x.partition(".")
+            refs.append("%d%s%s" % (base + int(i), dot, rest)
+                        if i.isdigit() else x)
+        rows.append(dict(row, refs=refs))
+    container.params.pop(sc.KEY, None)   # (no re-solve on the old rows)
+    container.remove(reg)
+    for s in shapes:
+        reg.remove(s)
+        container.add(s)
+    if rows:
+        container.params[sc.KEY] = rows
+    model.structure_changed.emit()
+    return True
+
+
+def take_back(model, ext):
+    """Cancel a feature just made from a region pick: the sketch's shapes
+    go back into the sketch as they were (a Boss's Cancel removed the
+    whole sketch; one left their Regions behind, hiding the shapes from
+    every later pick). False when *ext* is not such a feature."""
+    reg = ext.children[0] if len(ext.children) == 1 else None
+    if reg is None or reg.type != "regions" or reg.params.get("sketch_of"):
+        return False
+    from . import drag_feature, extrude_panel
+    if extrude_panel.operation_of(ext) == "cut":
+        extrude_panel.set_operation(model, ext, "join")
+    drag_feature.set_direction(model, ext, False)
+    model.ungroup(ext)
+    if reg.parent is not None and reg.parent.type not in EXTRUDERS:
+        absorb(model, reg)
+    return True
+
+
+def tidy(window, container=None):
+    """Fold every stray Regions of *container* (else the scope) back
+    into its sketch. How many were folded."""
+    scope = container or window._render_scope()[0]
+    found = [n for n in scope.walk() if stray(n)]
+    for reg in found:
+        absorb(window.model, reg)
+    return len(found)
+
+
 def _reuse(model, source, face_list, picked):
     """A new Regions drawing *picked* areas of *source*'s sketch, which
     stays where it is (SolidWorks: one sketch, several features). Placed
@@ -1073,6 +1163,10 @@ def start_3d(window, container=None, make_only=False, cut=False,
     direction and depth are set (the user had nowhere to reverse it);
     Shift+click collects several areas first."""
     from . import mesh, region_panel
+    try:                    # a cancelled extrude's Regions: its shapes
+        tidy(window, container)            # count again (the user)
+    except Exception:
+        pass
     container = container or sketch_container(window)
     if container is None:
         window.statusBar().showMessage(
@@ -1242,8 +1336,8 @@ def _open_window(window, ext, cut):
             model.set_param(ext, "height", HEIGHT)
             drag = drag_feature.start(window, ext, quiet=True, panel=True)
             if drag is not None:
-                drag.on_cancel = lambda: model.remove_node(
-                    extrude_panel._holder(ext))
+                drag.on_cancel = lambda: take_back(model, ext) or \
+                    model.remove_node(extrude_panel._holder(ext))
             return
         if not extrude_panel.set_operation(model, ext, "cut"):
             drag_feature.start(window, ext, quiet=True, created=True)
@@ -1256,6 +1350,8 @@ def _open_window(window, ext, cut):
         drag = drag_feature.start(window, ext, quiet=True, panel=True)
         if drag is not None:
             def undo():
+                if take_back(model, ext):
+                    return
                 diff = holder.parent
                 model.remove_node(holder)
                 if diff is not None and len(diff.children) == 1:
@@ -1703,6 +1799,10 @@ def start_any(window, cut=False):
         # the Main assembly: every part's sketches at once is a jumble
         # (the user's screenshot) — only inside an Object
         return False
+    try:
+        tidy(window)
+    except Exception:
+        pass
     sketches = all_sketches(window)
     if len(sketches) < 2:
         return False

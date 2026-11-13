@@ -516,6 +516,11 @@ def _open(window, kind, group, part, normal, face_tris, in_3d):
     group.params[KEY] = kind
     window.__dict__.setdefault("_cut_parts", {})[id(group)] = part
     label = ALL[kind][0]
+    from . import sketch_mode          # the exit button: "Finish <kind>"
+    try:
+        sketch_mode.sync_create(window)
+    except Exception:
+        pass
     if in_3d:
         # drawn ON the face, where the user is looking (2026-11-01,
         # the user: going to the 2D view and back loses them)
