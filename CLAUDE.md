@@ -3818,10 +3818,14 @@ into a new module and import.
                        `pattern.py` gained the free axis: `axis` "custom" +
                        vx vy vz and a centre cx cy cz (schema-only, written
                        `v = [..], centre = [..]` only when set). Ribbon:
-                       Features ▸ Pattern panel before Move/Copy Bodies, both
-                       large (`icons_cad_constrain` draws them); the old
-                       "Linear / Circular Pattern" op opens the window.
-                       History: CirPattern n / LPattern n.
+                       the Features tab's Move panel starts with Circular
+                       and Linear Pattern, both large, then Move/Copy Bodies
+                       small and the rest, then Snap objects large in a
+                       panel of its own (the user; `icons_cad_constrain`
+                       draws them); the old "Linear / Circular Pattern" op
+                       opens the window. History: CirPattern n / LPattern n.
+                       Selected, the ORIGINAL lights alone and the pattern's
+                       row its copies (`pattern.tess`, as Mirror).
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

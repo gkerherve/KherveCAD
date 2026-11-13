@@ -170,3 +170,22 @@ def test_a_round_face_gives_its_axis(win):
     assert st["centre"][0] == pytest.approx(30, abs=0.05)
     assert st["centre"][1] == pytest.approx(5, abs=0.05)
     assert math.isfinite(st["centre"][2])
+
+
+def test_the_original_and_the_copies_are_selected_apart(win):
+    """Clicking the Boss lights that one boss; the pattern's row lights
+    its copies (the user: "you should have just one of them")."""
+    ext = _boss(win)
+    win.builder.active_tree().select_nodes([ext])
+    pf.start(win, pf.CIRCULAR).ok.click()
+    pat = next(n for n in win.model.root.walk() if n.type == "pattern")
+
+    def xs(node):
+        tris = mesh.selected_world_tris(win.model.root, {node.id})
+        return min(p[0] for t in tris for p in t[:3]), \
+            max(p[0] for t in tris for p in t[:3]), len(tris)
+    lo, hi, n_one = xs(ext)
+    assert lo == pytest.approx(40, abs=1e-6) and hi == pytest.approx(60)
+    lo, hi, n_copies = xs(pat)
+    assert n_copies == 3 * n_one                     # the 3 copies only
+    assert lo == pytest.approx(-60, abs=1e-6)

@@ -126,11 +126,14 @@ def test_a_grid_pattern_counts_in_three_directions(app):
     assert hi == pytest.approx([15 + 10, 40 + 10, 25 + 10])
 
 
-def test_a_selected_child_glows_in_every_copy(app):
+def test_the_original_glows_alone_the_pattern_lights_its_copies(app):
+    """(2026-11-13, the user: clicking the patterned Boss lit every copy
+    — "you should have just one of them".)"""
     doc = DocumentModel()
     node, cube = _pattern(doc, "linear", count=3)
-    tris = mesh.selected_world_tris(doc.root, {cube.id})
-    assert len(tris) == 3 * CUBE_TRIS
+    assert len(mesh.selected_world_tris(doc.root, {cube.id})) == CUBE_TRIS
+    assert len(mesh.selected_world_tris(doc.root, {node.id})) == \
+        2 * CUBE_TRIS
 
 
 def test_parameters_take_expressions_and_loop_variables(app):

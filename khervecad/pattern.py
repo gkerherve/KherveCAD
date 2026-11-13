@@ -327,15 +327,21 @@ def _axis_angle(w, degrees):
 
 
 def tess(node, env, color, sel, selected):
-    """The children's preview mesh, once per copy (the selection flag
-    rides along, so a selected child glows in every copy)."""
+    """The children's preview mesh, once per copy. Selected, the ORIGINAL
+    glows alone and the pattern's own row lights its copies (2026-11-13,
+    the user: clicking the Boss lit every copy, "you should have just one
+    of them, so that we can understand how it is done"); something above
+    the pattern lights it all."""
     from . import mesh
-    kids = mesh._children_mesh(node, env, color, sel, selected)
+    own = node.id in sel
+    kids = mesh._children_mesh(node, env, color, sel,
+                               False if own else selected)
     if not kids:
         return []
     out = []
+    copies = [(t, c, selected) for t, c, _s in kids]
     for i, m in enumerate(matrices(node, env)):
-        out.extend(kids if i == 0 else mesh._transform_colored(m, kids))
+        out.extend(kids if i == 0 else mesh._transform_colored(m, copies))
     return out
 
 

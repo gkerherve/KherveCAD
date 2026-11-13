@@ -52,7 +52,7 @@ TABS = [
     # features, a SURFACE tab, SubD in FORM, figures in CHARACTER, the
     # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
-     ["create", "extrude", "cuts", "mechanical", "pattern", "transform",
+     ["create", "extrude", "cuts", "mechanical", "transform", "snap",
       "combine", "finish", "logic", "assemble", "reference",
       "solid_insert"]),
     # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
@@ -109,6 +109,7 @@ def tab_order(fusion):
 
 #: panels that are not operation families: key -> title
 EXTRA_PANELS = {"reference": "Reference Geometry", "pattern": "Pattern",
+                "snap": "Snap",
                 "sheet_create": "Create", "sheet_modify": "Modify",
                 "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
@@ -493,9 +494,13 @@ def _panel_actions(win, key):
             return language.tr(title), list(families[key]) + [
                 drag_feature.action(win)]
         if key == "transform":
-            # Translate's neighbours: the Gumball and Snap move parts too
-            return language.tr(title), list(families[key]) + \
-                _panel_actions(win, "_move_tools")[1] + [parts["snap"]]
+            # Translate's neighbours: the Gumball and Snap move parts too;
+            # Circular and Linear Pattern first, large, then Move/Copy
+            # Bodies (2026-11-13, the user)
+            from . import pattern_feature
+            return language.tr(title), _painted(
+                win, list(pattern_feature.actions(win))) + \
+                list(families[key]) + _panel_actions(win, "_move_tools")[1]
         return language.tr(title), families[key]
     title = language.tr(EXTRA_PANELS[key])
     if key == "assemble":
@@ -535,6 +540,9 @@ def _panel_actions(win, key):
         # the Hole Wizard sits with the cuts, after Extruded Cut, as on
         # SolidWorks' ribbon (the user)
         return title, acts[:1] + [hole_wizard.action(win)] + acts[1:]
+    if key == "snap":
+        # the two-click Snap: a large button of its own (the user)
+        return title, [parts["snap"]]
     if key == "pattern":
         # SolidWorks' Circular / Linear Pattern of features and bodies,
         # beside Move/Copy Bodies (2026-11-13, the user)
@@ -910,7 +918,8 @@ class Ribbon(QWidget):
         if key == "sketch_modify" and len(actions) > 1 and \
                 actions[1].data() == "sk_convert":
             large = actions[:2]          # Trim and Convert Entities
-        if key == "pattern":
+        if key == "transform" and len(actions) > 1 and \
+                actions[1].data() == "linear_pattern":
             large = actions[:2]          # Circular and Linear Pattern
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
