@@ -226,17 +226,30 @@ def toggled(window, key, on):
 
 
 # ------------------------------------------------------------ the pick
+#: the kinds whose region click picks REGIONS (the others take a sketch)
+EXTRUDED = ("extruded_boss", "extruded_cut")
+
+
 def start(window, kind):
-    """Extruded Boss / Cut (and the other cuts) with nothing to use
-    selected: the bar, the numbers, one click."""
+    """Every Boss and Cut with nothing to use selected: the bar, the
+    numbers, one click."""
     from . import choice_preview, cut_feature, meshedit_ui
     st = state(window)
     st["where"] = "2d"            # every Boss / Cut starts on 2D (the user)
     label = cut_feature.ALL[kind][0]
     parts = meshedit_ui._parts(window)
-    regions_ok = kind in ("extruded_boss", "extruded_cut")
-    sketches, items = (choice_preview.region_items(window)
-                       if regions_ok else ([], []))
+    regions_ok = True
+    try:
+        sketches, items = choice_preview.region_items(window)
+    except Exception:
+        sketches, items = [], []
+    if kind not in EXTRUDED:
+        # a Revolved / Swept / Lofted Boss or Cut takes a WHOLE sketch no
+        # feature uses yet (an extruded one's regions are Extrude's)
+        from . import sketch_regions
+        free = {ci for ci, sk in enumerate(sketches)
+                if not sketch_regions.used(sk)}
+        items = [it for it in items if it[0] in free]
     if not parts and not items:
         # nothing yet: a plane is all there is to sketch on
         st["planes"] = True
@@ -287,7 +300,8 @@ def _banner(window):
     if st["faces"]:
         what.append("a numbered face")
     if st["regions"] and pick["regions_ok"] and pick["items"]:
-        what.append("a sketch region")
+        what.append("a sketch region" if pick["kind"] in EXTRUDED
+                    else "a sketch")
     if st["planes"]:
         what.append("a plane")
     if not what:
@@ -438,9 +452,59 @@ def _use_region(window, pick, ci, k):
     from . import sketch_regions
     kind = pick["kind"]
     sketch = pick["sketches"][ci]
+    if kind not in EXTRUDED:
+        _use_sketch(window, pick, sketch)
+        return
     stop(window)
     QTimer.singleShot(0, lambda: sketch_regions.start_3d(
         window, sketch, cut=kind == "extruded_cut", preselect=k))
+
+
+def _use_sketch(window, pick, sketch):
+    """A Revolved / Swept / Lofted Boss or Cut made from the clicked
+    sketch, whole."""
+    from . import cut_feature, face_sketch, sketch_regions
+    kind = pick["kind"]
+    label = pick["label"]
+    stop(window)
+    model = window.model
+    made = None
+    if kind == "revolved_boss":
+        # revolve_feature knows a sketch with no sketch group too
+        from . import revolve_feature
+        try:
+            made = revolve_feature.revolve(
+                window, sketch_regions.shapes_of(sketch))
+        except Exception:
+            made = None
+    if made is None and kind in cut_feature.BOSS:
+        made = cut_feature.apply(model, sketch, None, kind)
+    elif made is None:
+        group = face_sketch.group_of(sketch) or sketch
+        part = face_sketch.part_of(group) if \
+            group.params.get(face_sketch.KEY) else None
+        if part is None:
+            window.view3d.flash(
+                "%s cuts with a sketch on a face or plane of the part — "
+                "click a face or a plane instead." % label, 6000)
+            start(window, kind)
+            return None
+        made = cut_feature.apply(model, group, part, kind)
+    if made is None:
+        window.view3d.flash("%s: nothing made from that sketch." % label,
+                            5000)
+        return None
+    window.builder.active_tree().select_nodes([made])
+    window.statusBar().showMessage(
+        "%s made from %s — set its numbers in Properties." % (
+            label, sketch.name), 6000)
+    if made.type in ("linear_extrude", "rotate_extrude"):
+        try:
+            from . import drag_feature
+            drag_feature.start(window, made, quiet=True, created=True)
+        except Exception:
+            pass
+    return made
 
 
 # ------------------------------------------- 2D <-> 3D while sketching

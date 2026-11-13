@@ -1057,39 +1057,27 @@ class MainWindow(QMainWindow):
             self.view2d.centerOn(centre)
         return True
 
-    def _boss_elsewhere(self, nodes):
-        """Extruded Boss: ask what to use (the selection, a face, a plane)
-        and where to sketch (3D or 2D) — `sketch_choice`, the user's
-        decision, not a guess. True when a new sketch was started (or
-        the question cancelled): nothing more to do here. Not asked
-        while a sketch is open: Boss then extrudes that sketch."""
-        from . import cut_feature, sketch_choice, sketch_mode, \
-            sketch_regions
+    def _boss_elsewhere(self, nodes, kind="extruded_boss"):
+        """A Boss (Extruded, Revolved, Swept, Lofted): with nothing
+        selected, the toggle bar over the 3D view and one click on a
+        numbered face, a sketch region or a plane (`feature_pick`, via
+        `sketch_choice`) — as every Cut (2026-11-13, the user). True when
+        that started (or was cancelled): nothing more to do here. Not
+        asked while a sketch is open: the Boss then uses that sketch."""
+        from . import cut_feature, sketch_choice, sketch_mode
         if sketch_mode.sketching(self) or sketch_mode._in_3d(self) or \
                 getattr(self, "_face_sketch", None) is not None:
             return False
-        usable = None
-        if nodes:
-            usable = sketch_choice.describe(nodes)
-        else:
-            free = sketch_regions.free_shapes(self)
-            if free:
-                usable = "the sketch not yet used (%s)" % \
-                    sketch_choice.describe(free)
-            elif sketch_regions.reusable(self) is not None:
-                # every sketch extruded: its other regions, at another
-                # thickness (the user: they disappeared after one)
-                usable = "the sketch already extruded — pick other " \
-                    "regions of it"
-
-        choice = sketch_choice.ask(self, "Extruded Boss/Base", usable)
+        label = cut_feature.ALL[kind][0]
+        usable = sketch_choice.describe(nodes) if nodes else None
+        choice = sketch_choice.ask(self, label, usable)
         if choice is False:
             self.statusBar().showMessage(
-                language.tr("Extruded Boss/Base cancelled."), 4000)
+                language.tr("{name} cancelled.").format(name=label), 4000)
             return True
         if not choice or choice["source"] == "selection":
             return False                 # as before: the selection
-        cut_feature.start(self, "extruded_boss", choice)
+        cut_feature.start(self, kind, choice)
         return True
 
     def _apply_operation(self, op: str):
@@ -1129,7 +1117,9 @@ class MainWindow(QMainWindow):
             from . import round_ui
             round_ui.start(self, op, "round")
             return
-        if op == "linear_extrude" and self._boss_elsewhere(nodes):
+        from . import cut_feature
+        boss = cut_feature.BOSS_OF_OP.get(op)
+        if boss and self._boss_elsewhere(nodes, boss):
             return
         if op in ("linear_extrude", "rotate_extrude") and nodes:
             # the 2D content inside the sketch plane's rotate, never the

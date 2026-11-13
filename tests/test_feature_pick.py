@@ -131,3 +131,69 @@ def test_a_region_click_uses_that_sketch(win, monkeypatch):
     for _ in range(3):
         QApplication.processEvents()
     assert calls == [("S1", False, 2)]
+
+
+# ------------------------------------- every Boss, as every Cut (same day)
+@pytest.mark.parametrize("op, kind", [
+    ("linear_extrude", "extruded_boss"), ("rotate_extrude", "revolved_boss"),
+    ("sweep", "swept_boss"), ("section_loft", "lofted_boss")])
+def test_every_boss_button_shows_the_toggles(win, op, kind):
+    win.builder.active_tree().clearSelection()
+    win._apply_operation(op)
+    assert win._feature_pick is not None
+    assert win._feature_pick["kind"] == kind
+    assert feature_pick.bars(win)["view3d"].isVisible()
+    win.view3d.cancel_pick()
+    assert win._feature_pick is None
+
+
+def test_extruded_boss_shows_the_toggles_with_an_old_sketch_there(win):
+    McpToolExecutor(win).execute(
+        "apply_code", {"code": "cube([40, 30, 20]); // Block\n"
+                       "translate([60, 0, 0]) square(5); // Loose\n"})
+    win.builder.active_tree().clearSelection()
+    win._apply_operation("linear_extrude")
+    assert win._feature_pick and \
+        win._feature_pick["kind"] == "extruded_boss"
+    win.view3d.cancel_pick()
+
+
+@pytest.mark.parametrize("kind, made", [
+    ("revolved_boss", "rotate_extrude"), ("swept_boss", "sweep"),
+    ("lofted_boss", "section_loft")])
+def test_a_boss_sketched_on_a_face_is_made_on_leaving(win, kind, made):
+    cut_feature.start(win, kind)
+    top = next(f for f in win._choice_preview["faces"]
+               if f["dir"][2] > 0.99)
+    _click_face(win, top)
+    group = feature_pick.sketch_group(win)
+    assert group.params[cut_feature.KEY] == kind
+    win.model.add_node("rect", {"x": 4.0, "y": 0.0, "width": 6.0,
+                                "height": 5.0}, parent=group)
+    tool = cut_feature.finish(win, group)
+    assert tool is not None and tool.type == made
+    assert not any(n.type == "difference" for n in win.model.root.walk())
+    if kind == "revolved_boss":       # about the sketch's own Y axis
+        assert tool.parent.type == "rotate"
+        assert float(tool.parent.params["x"]) == -90.0
+    if kind == "lofted_boss":         # a second section to loft to
+        assert len(tool.params["heights"]) == 2
+
+
+def test_a_sketch_clicked_for_a_swept_boss_is_used_whole(win):
+    group = win.model.add_node("union", {}, parent=win.model.root)
+    win.model.add_node("circle", {"radius": 3.0}, parent=group)
+    made = feature_pick._use_sketch(
+        win, {"kind": "swept_boss", "label": "Swept Boss/Base"}, group)
+    assert made is not None and made.type == "sweep"
+    assert made.parent is group
+
+
+def test_a_revolved_cut_refuses_a_sketch_on_no_part(win):
+    group = win.model.add_node("union", {}, parent=win.model.root)
+    win.model.add_node("circle", {"radius": 3.0}, parent=group)
+    made = feature_pick._use_sketch(
+        win, {"kind": "revolved_cut", "label": "Revolved Cut"}, group)
+    assert made is None
+    assert win._feature_pick is not None          # the bar again
+    win.view3d.cancel_pick()

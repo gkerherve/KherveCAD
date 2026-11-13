@@ -41,7 +41,16 @@ KINDS = {
 #: Extruded Boss/Base on a face (not on the Cut panel): the same flow,
 #: the sketch pulled OUT of the face and joined to the part
 BOSS = {"extruded_boss": ("Extruded Boss/Base", "linear_extrude",
-                          "mdi.arrow-expand-up")}
+                          "mdi.arrow-expand-up"),
+        # ... and the other Bosses (2026-11-13, the user: the toggles for
+        # every Boss as for every Cut): sketched the same way, joined
+        "revolved_boss": ("Revolved Boss/Base", "rotate_extrude",
+                          "mdi.rotate-orbit"),
+        "swept_boss": ("Swept Boss/Base", "sweep", "mdi.vector-curve"),
+        "lofted_boss": ("Lofted Boss/Base", "section_loft",
+                        "mdi.layers-outline")}
+#: the tree operation behind each Boss button -> its kind
+BOSS_OF_OP = {v[1]: k for k, v in BOSS.items()}
 ALL = dict(KINDS, **BOSS)
 DEPTH = 10.0
 KEY = "cut"                  # on the face sketch Group: the cut it makes
@@ -65,10 +74,22 @@ def _shapes(group):
 def apply(model, group, part, kind):
     """Cut the sketch *group* into *part*. Returns the Difference."""
     shapes = _shapes(group)
-    if not shapes or part is None or group.parent is None or \
-            not _inside(part, group.parent):
+    if not shapes or group.parent is None:
         return None
+    if kind not in BOSS and (part is None or
+                             not _inside(part, group.parent)):
+        return None                      # (a boss needs no part under it)
     label, op, _g = ALL[kind]
+    if op == "rotate_extrude":
+        # loose lines are revolved as the AREA they close, not each as a
+        # hair-thin band; construction lines (the axis) not at all
+        from . import revolve_feature
+        try:
+            reg = revolve_feature.area_of_lines(model, group)
+        except Exception:
+            reg = None
+        shapes = [reg] if reg is not None else [
+            s for s in shapes if s.params.get("modifier") != "%"] or shapes
     if op == "section_loft" and len(shapes) == 1:
         # a loft needs two sections: one profile drawn, so its end is the
         # same shape at half size round its own centre, one depth down —
@@ -81,9 +102,21 @@ def apply(model, group, part, kind):
     if kind in BOSS:
         # out of the face (+Z), beside the part in the same Object: the
         # Object's union joins them — no Difference
-        tool.params["height"] = DEPTH
+        if op == "linear_extrude":
+            tool.params["height"] = DEPTH
+        elif op == "rotate_extrude":
+            from . import revolve_feature
+            outer = model.wrap_nodes([tool], "rotate")  # about sketch Y
+            if outer is not None:
+                outer.params.update(x=-90.0, y=0.0, z=0.0)
+                outer.name = revolve_feature.AXIS_NAME
+        elif op == "section_loft":
+            tool.params["heights"] = [[float(i * DEPTH)]
+                                      for i in range(len(shapes))]
         group.params.pop(KEY, None)
-        group.name = "Boss sketch"
+        from . import face_sketch
+        if group.params.get(face_sketch.KEY):
+            group.name = "Boss sketch"   # (never a loose sketch's Object)
         model.node_changed.emit(tool)
         return tool
     if op == "linear_extrude":
@@ -190,7 +223,8 @@ def finish(window, group):
         window.statusBar().showMessage(
             "%s made — its sketch keeps its dimensions; drag the arrow or "
             "set the depth in Properties." % label, 6000)
-        if kind in BOSS:
+        if kind in BOSS and ALL[kind][1] in ("linear_extrude",
+                                             "rotate_extrude"):
             try:
                 from . import drag_feature
                 drag_feature.start(window, diff, quiet=True,
@@ -450,7 +484,7 @@ def start(window, kind, choice=None):
     except Exception:
         pass
     label = ALL[kind][0]
-    verb = "extrude from" if kind in BOSS else "cut into"
+    verb = "build out from" if kind in BOSS else "cut into"
 
     def picked(desc, node):
         if desc is None or node is None:
@@ -505,7 +539,7 @@ def _open(window, kind, group, part, normal, face_tris, in_3d):
         if ribbon is not None:
             ribbon.show_tab("sketch")
         return
-    end = "to extrude it" if kind in BOSS else "to cut"
+    end = "to make it" if kind in BOSS else "to cut"
     window.statusBar().showMessage(
         "%s: draw the shape (circle, slot, rectangle…), dimension "
         "it, then leave the sketch %s." % (label, end), 10000)

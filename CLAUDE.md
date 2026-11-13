@@ -3711,7 +3711,15 @@ into a new module and import.
                        moves it between the 2D sketch and the 3D tool
                        (`switch`, never closing it — that would cut).
                        `sketch_choice.ask` now returns source "pick" (or
-                       "selection"); its dialog is kept, unused.
+                       "selection"); its dialog is kept, unused. EVERY
+                       Boss too (same day, the user): Revolved / Swept /
+                       Lofted Boss are `cut_feature.BOSS` kinds
+                       (`BOSS_OF_OP`, `MainWindow._boss_elsewhere(kind)`),
+                       made on leaving the sketch (revolve about the
+                       sketch's Y, loft out +Z, no part needed); Extruded
+                       Boss shows the bar even with older sketches there.
+                       For a non-extruded kind a region click takes that
+                       FREE sketch whole (`_use_sketch`).
                        tests/test_feature_pick.py.
   - `choice_preview.py` — what the Boss / Cut choice window shows while
                        open (2026-11-13, the user): every flat face of the
