@@ -1045,50 +1045,56 @@ def test_a_cut_outline_has_no_seam_line():
 
 def test_mirror_keeps_the_part_and_copies_it_about_a_plane(window):
     """SolidWorks' Mirror: the selected part is kept and a mirror copy
-    added about the chosen plane — a standard one, or a picked face."""
-    from khervecad import mesh
+    added about the chosen plane — a standard one, or a picked face —
+    through its window (box 1 the part, box 2 the plane, OK)."""
+    from khervecad import mesh, mirror_feature
     m = window.model
     ear = m.add_node("cube", dict(x=10, y=0, z=0, width=5, depth=5,
                                   height=5))
     window.builder.tree.rebuild()
     window.builder.tree.select_nodes([ear])
-    window.mirror_plane_hook = lambda: "Right Plane (YZ)"
     window._apply_operation("mirror")
+    panel = window._mirror_panel
+    assert window._mirror_state["nodes"] == [ear]
+    mirror_feature.plane_row(window, "Side (YZ)")    # Right Plane row
+    panel.ok.click()
     mir = ear.parent
     assert mir.type == "symmetry" and mir.name == "Mirror"
+    # the Mirror's row lights its copy; the whole thing spans both sides
     tris = mesh.selected_world_tris(m.root, {mir.id})
     xs = sorted({round(v[0], 3) for t in tris for v in t})
-    assert xs[0] == pytest.approx(-15) and xs[-1] == pytest.approx(15)
-    # a face as the plane: the cube's own side at x = 15
+    assert xs[0] == pytest.approx(-15) and xs[-1] == pytest.approx(-10)
+    whole = [v[0] for t in mesh.tessellate(m.root) for v in t[:3]]
+    assert min(whole) == pytest.approx(-15) and max(whole) == \
+        pytest.approx(15)
+    # a face as the plane: the cube's own side at x = 5
     other = m.add_node("cube", dict(x=0, y=20, z=0, width=5, depth=5,
                                     height=5))
     window.builder.tree.rebuild()
     window.builder.tree.select_nodes([other])
-    window.mirror_plane_hook = lambda: "Pick a face in the 3D view…"
-    calls = []
-    window.view3d.start_pick = lambda cb, **k: calls.append(cb)
-    window.view3d.cancel_pick = lambda: None
     window._apply_operation("mirror")
-    calls[-1]({"kind": "face", "pos": (5.0, 22.0, 2.0),
-               "dir": (1.0, 0.0, 0.0)}, other)
+    assert window._mirror_state["active"] == "plane"
+    window.view3d._pick_cb({"kind": "face", "pos": (5.0, 22.0, 2.0),
+                            "dir": (1.0, 0.0, 0.0)}, other)
+    window._mirror_panel.ok.click()
     mir2 = other.parent
     assert mir2.type == "symmetry"
     assert (mir2.params["x"], mir2.params["cx"]) == (1.0, 5.0)
 
 
 def test_mirror_with_nothing_selected_picks_parts_in_3d(window):
+    from khervecad import mirror_feature
     m = window.model
     a = m.add_node("cube", dict(width=5, depth=5, height=5))
     window.builder.tree.rebuild()
     window.builder.tree.clearSelection()
-    window.mirror_plane_hook = lambda: "Top Plane (XY)"
-    calls = []
-    window.view3d.start_pick = lambda cb, **k: calls.append((cb, k))
     window._apply_operation("mirror")
-    cb, k = calls[-1]
-    assert "click the parts to mirror" in k["banner"]
-    cb({"kind": "face"}, a)                 # one part chosen
-    calls[-1][0](None, None)                # Done
+    st = window._mirror_state
+    assert st["active"] == "nodes" and window.view3d._pick_cb is not None
+    window.view3d._pick_cb({"kind": "face"}, a)      # one part clicked
+    assert st["nodes"] == [a]
+    mirror_feature.plane_row(window, "Top (XY)")
+    window._mirror_panel.ok.click()
     assert a.parent.type == "symmetry"
     assert a.parent.params["z"] == 1.0
 
