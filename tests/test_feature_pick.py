@@ -197,3 +197,64 @@ def test_a_revolved_cut_refuses_a_sketch_on_no_part(win):
     assert made is None
     assert win._feature_pick is not None          # the bar again
     win.view3d.cancel_pick()
+
+
+# ----------------------- the bottom bar stays; Sketch Mode too (same day)
+def test_the_bottom_bar_stays_while_the_toggles_show(win):
+    cut_feature.start(win, "extruded_boss")
+    nav = win.view3d.nav_bar
+    assert win.view3d._pick_cb is not None and nav.isVisible()
+    win.view3d.cancel_pick()
+    assert nav.isVisible() and not win.view3d.keep_nav_in_pick
+    # an ordinary pick still clears the view
+    win.view3d.start_pick(lambda *a: None, banner="pick")
+    assert nav.isHidden()
+    win.view3d.cancel_pick()
+
+
+def test_sketch_mode_shows_the_toggles_with_planes_on(win):
+    from khervecad import normal_to
+    win.builder.active_tree().clearSelection()
+    normal_to.create(win)
+    pick = win._feature_pick
+    assert pick and pick["kind"] == feature_pick.SKETCH
+    assert pick["label"] == "Sketch Mode"
+    bar = feature_pick.bars(win)["view3d"]
+    assert bar.isVisible() and bar.buttons["planes"].isChecked()
+    assert bar.buttons["2d"].isChecked()
+    win.view3d.cancel_pick()
+    feature_pick.toggled(win, "planes", False)
+
+
+def test_sketch_mode_on_a_face_opens_a_plain_sketch_2d_and_3d(win):
+    from khervecad import normal_to
+    win.builder.active_tree().clearSelection()
+    normal_to.create(win)
+    top = next(f for f in win._choice_preview["faces"]
+               if f["dir"][2] > 0.99)
+    _click_face(win, top)
+    group = feature_pick.sketch_group(win)
+    assert group is not None and win._face_sketch is group
+    assert not group.params.get(cut_feature.KEY)        # just a sketch
+    assert feature_pick.bars(win)["view2d"].isVisible()
+    feature_pick.toggled(win, "3d", True)
+    assert win._sketch3d_tool is not None and \
+        win._sketch3d_tool.group is group
+    feature_pick.toggled(win, "2d", True)
+    assert win._face_sketch is group
+
+
+def test_sketch_mode_on_a_plane_turns_to_it(win, monkeypatch):
+    from khervecad import normal_to
+    turned = []
+    monkeypatch.setattr(normal_to, "turn_to",
+                        lambda w, plane, *a, **k: turned.append(plane))
+    feature_pick.start(win, feature_pick.SKETCH)
+    monkeypatch.setattr(plane_pick, "hit", lambda w, pos: "Top (XY)")
+    from PyQt5.QtCore import QPoint
+    win._feature_pick["pos"] = QPoint(5, 5)
+    cb = win.view3d._pick_cb
+    win.view3d._pick_cb = None
+    cb(None, None)
+    assert turned == ["Top (XY)"]
+    feature_pick.toggled(win, "planes", False)

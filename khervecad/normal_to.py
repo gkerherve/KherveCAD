@@ -140,8 +140,14 @@ def create(window):
     if picked:
         from . import face_sketch
         return face_sketch.start(window, only=picked)
-    # nothing selected: SolidWorks asks for a plane — show the three
-    from . import plane_pick
+    # nothing selected: the toggles over the 3D view — a numbered face,
+    # a sketch, a plane; 2D or 3D (2026-11-13, the user: "that same
+    # toolbar choice when requesting sketch mode")
+    from . import sketch_choice
+    if sketch_choice.ask(window, "Sketch Mode", None):
+        from . import feature_pick
+        return feature_pick.start(window, "sketch")
+    from . import plane_pick            # (tests: SolidWorks' three planes)
     return plane_pick.start(window)
 
 

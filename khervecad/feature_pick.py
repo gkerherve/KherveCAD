@@ -196,14 +196,16 @@ def refresh(window):
 
 
 def sketch_group(window):
-    """The Boss / Cut sketch open now (2D or 3D), else None."""
+    """The Boss / Cut sketch open now (2D or 3D) — or one Sketch Mode
+    opened from the bar — else None."""
     from . import cut_feature
     g = getattr(window, "_face_sketch", None)
     tool = getattr(window, "_sketch3d_tool", None)
     if g is None and tool is not None:
         g = getattr(tool, "group", None)
-    if g is not None and g.parent is not None and \
-            g.params.get(cut_feature.KEY):
+    if g is not None and g.parent is not None and (
+            g.params.get(cut_feature.KEY) or
+            getattr(g, "_kc_bar_sketch", False)):
         return g
     return None
 
@@ -228,6 +230,9 @@ def toggled(window, key, on):
 # ------------------------------------------------------------ the pick
 #: the kinds whose region click picks REGIONS (the others take a sketch)
 EXTRUDED = ("extruded_boss", "extruded_cut")
+#: Sketch Mode's own kind: a face, a sketch or a plane opens a sketch
+#: and nothing more is made (2026-11-13, the user)
+SKETCH = "sketch"
 
 
 def start(window, kind):
@@ -236,23 +241,23 @@ def start(window, kind):
     from . import choice_preview, cut_feature, meshedit_ui
     st = state(window)
     st["where"] = "2d"            # every Boss / Cut starts on 2D (the user)
-    label = cut_feature.ALL[kind][0]
+    label = "Sketch Mode" if kind == SKETCH else cut_feature.ALL[kind][0]
     parts = meshedit_ui._parts(window)
     regions_ok = True
     try:
         sketches, items = choice_preview.region_items(window)
     except Exception:
         sketches, items = [], []
-    if kind not in EXTRUDED:
+    if kind not in EXTRUDED and kind != SKETCH:
         # a Revolved / Swept / Lofted Boss or Cut takes a WHOLE sketch no
         # feature uses yet (an extruded one's regions are Extrude's)
         from . import sketch_regions
         free = {ci for ci, sk in enumerate(sketches)
                 if not sketch_regions.used(sk)}
         items = [it for it in items if it[0] in free]
-    if not parts and not items:
-        # nothing yet: a plane is all there is to sketch on
-        st["planes"] = True
+    # planes off for a Boss / Cut (the user); on for Sketch Mode, where
+    # they were the whole choice — and whenever there is nothing else
+    st["planes"] = kind == SKETCH or (not parts and not items)
     window._feature_pick = dict(kind=kind, label=label, parts=parts,
                                 sketches=sketches, items=items,
                                 regions_ok=regions_ok)
@@ -347,6 +352,7 @@ def _arm(window):
         return ""
     # (the hint goes under the bar and in the status bar: a banner
     # across the top of the view hid behind the bar)
+    view.keep_nav_in_pick = True       # the bottom bar stays (the user)
     view.start_pick(lambda desc, key: picked(window, desc, key),
                     groups=groups or [], banner="",
                     labeler=labeler, done=False)
@@ -401,6 +407,7 @@ def stop(window):
     from . import choice_preview
     pick = getattr(window, "_feature_pick", None)
     window._feature_pick = None
+    window.view3d.keep_nav_in_pick = False
     if pick:
         window.statusBar().clearMessage()
     pps = getattr(window, "_plane_pick", None)
@@ -427,6 +434,11 @@ def _use_face(window, pick, node, pos, normal, tris):
     kind = pick["kind"]
     stop(window)
     in_3d = _in_3d(window)
+    if kind == SKETCH:
+        group = face_sketch.make(window, node, pos, normal,
+                                 open_2d=not in_3d)
+        _sketch_opened(window, group, normal, tris, in_3d)
+        return
     group = face_sketch.make(window, node, pos, normal, open_2d=not in_3d)
     cut_feature._open(window, kind, group, node, normal, tris, in_3d)
     refresh(window)
@@ -440,9 +452,18 @@ def _use_plane(window, pick, plane):
     in_3d = _in_3d(window)
     normal = cut_feature.PLANE_NORMALS.get(plane)
     part = cut_feature._crossing(parts, normal) if parts else None
+    if kind == SKETCH and not in_3d:
+        # a sketch on a main plane, as SolidWorks: the view turns to it
+        from . import normal_to
+        normal_to.turn_to(window, plane)
+        refresh(window)
+        return
     group = face_sketch.make(window, part, (0.0, 0.0, 0.0), normal,
                              open_2d=not in_3d)
     window.model.rename(group, "Sketch on " + plane_pick.name_of(plane))
+    if kind == SKETCH:
+        _sketch_opened(window, group, normal, [], in_3d)
+        return
     cut_feature._open(window, kind, group, part, normal, [], in_3d)
     refresh(window)
 
@@ -452,6 +473,9 @@ def _use_region(window, pick, ci, k):
     from . import sketch_regions
     kind = pick["kind"]
     sketch = pick["sketches"][ci]
+    if kind == SKETCH:
+        _edit_sketch(window, sketch)
+        return
     if kind not in EXTRUDED:
         _use_sketch(window, pick, sketch)
         return
@@ -505,6 +529,50 @@ def _use_sketch(window, pick, sketch):
         except Exception:
             pass
     return made
+
+
+def _sketch_opened(window, group, normal, tris, in_3d):
+    """Sketch Mode's new face / plane sketch is open: in 2D it opened
+    itself; in 3D the drawing tool goes on it, the view square on."""
+    group._kc_bar_sketch = True         # (the 2D | 3D toggles move it)
+    if in_3d:
+        _draw_in_3d(window, group, normal, tris)
+    refresh(window)
+
+
+def _draw_in_3d(window, group, normal, tris=()):
+    from . import face_sketch, sketch3d, view_anim
+    window._chosen_face = list(tris or [])
+    view = window.view3d
+    yaw, pitch = face_sketch.camera_for(normal)
+    view.user_moved = True
+    view_anim.glide_3d(view, dict(yaw=yaw, pitch=pitch,
+                                  target=list(view.target),
+                                  distance=view.distance))
+    tool = sketch3d.Sketch3DTool(window, "rect")
+    tool.use_group(group)
+    view.edit_tool = tool
+    tool.begin()
+    ribbon = getattr(window, "ribbon", None)
+    if ribbon is not None:
+        ribbon.show_tab("sketch")
+
+
+def _edit_sketch(window, sketch):
+    """Sketch Mode on a numbered sketch: open it again."""
+    from . import face_sketch, normal_to, sketch_regions
+    group = face_sketch.group_of(sketch)
+    if group is not None:
+        group._kc_bar_sketch = True
+        if _in_3d(window):
+            _draw_in_3d(window, group, face_sketch._normal_of(group))
+        else:
+            face_sketch.open_sketch(window, group)
+        refresh(window)
+        return
+    shapes = sketch_regions.shapes_of(sketch)
+    normal_to.edit(window, shapes[0] if shapes else None)
+    refresh(window)
 
 
 # ------------------------------------------- 2D <-> 3D while sketching

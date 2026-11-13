@@ -919,7 +919,10 @@ class View3D(QWidget):
         self._pick_extend = extend
         self._pick_hover = None
         self.lighting_bar.hide()             # nothing between you and the pick
-        if getattr(self, "nav_bar", None) is not None:
+        if getattr(self, "nav_bar", None) is not None and \
+                not getattr(self, "keep_nav_in_pick", False):
+            # (the Boss / Cut / Sketch toggles keep it: turning and
+            # zooming to reach a face is part of choosing one — the user)
             self.nav_bar.hide()
         self.setCursor(Qt.CrossCursor)
         # (one click and it is over — a face to sketch on: no Done)

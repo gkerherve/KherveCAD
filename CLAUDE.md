@@ -3731,7 +3731,14 @@ into a new module and import.
                        sketch's Y, loft out +Z, no part needed); Extruded
                        Boss shows the bar even with older sketches there.
                        For a non-extruded kind a region click takes that
-                       FREE sketch whole (`_use_sketch`).
+                       FREE sketch whole (`_use_sketch`). The bottom bar
+                       stays while the toggles show (`View3D.
+                       keep_nav_in_pick`), and **Sketch Mode** with nothing
+                       selected opens the same bar (`normal_to.create` ->
+                       kind `SKETCH`, planes on): a face opens a plain face
+                       sketch, a plane turns to it (2D) or sketches on it
+                       (3D), a numbered sketch opens again; its 2D | 3D
+                       moves the open sketch (`_kc_bar_sketch`).
                        tests/test_feature_pick.py.
   - `choice_preview.py` — what the Boss / Cut choice window shows while
                        open (2026-11-13, the user): every flat face of the
