@@ -390,6 +390,14 @@ def start(window, kind, choice=None):
     source = choice["source"] if choice else None
     in_3d = IN_3D if not choice else choice["where"] == "3d"
     only = None
+    face = (choice or {}).get("face") if source == "face" else None
+    if face is not None:
+        # a face chosen by its number in the window: no click needed
+        group = face_sketch.make(window, face["node"], face["pos"],
+                                 face["dir"], open_2d=not in_3d)
+        _open(window, kind, group, face["node"], face["dir"],
+              face.get("tris") or [], in_3d)
+        return None
     if source == "selection":
         only = _selected_parts(window, nodes) or None
     if source in ("face", "plane"):

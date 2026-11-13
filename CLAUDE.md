@@ -3699,6 +3699,17 @@ into a new module and import.
                        Edit ▸ Options ▸ Sketch turns it back on. Tests:
                        conftest's `ask_hook` answers None (old behaviour);
                        tests/test_sketch_choice.py.
+  - `choice_preview.py` — what the Boss / Cut choice window shows while
+                       open (2026-11-13, the user): every flat face of the
+                       parts numbered F1.. (largest first, only faces turned
+                       to the eye and not behind the part), every sketch's
+                       regions numbered as start_any numbers them, the main
+                       planes — "Show on the model" checkboxes (planes off).
+                       A face picked by number in the window's combo is
+                       sketched on with no click (`choice["face"]`). Sketch
+                       in starts on 2D; toggling it switches the one canvas
+                       between the 2D sketch and the 3D view, put back when
+                       the window closes. tests/test_sketch_choice.py.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

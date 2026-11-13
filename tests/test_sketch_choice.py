@@ -175,3 +175,72 @@ def test_options_turn_the_question_back_on(win):
         assert sketch_choice.asks()
     finally:
         sketch_choice.set_asks(True)
+
+
+# ---- 2026-11-13: faces numbered, Show toggles, 2D / 3D switches the view
+def test_the_window_numbers_the_faces_and_shows_them(win):
+    from khervecad import choice_preview
+    _block(win)
+    state = choice_preview.start(win)
+    try:
+        faces = state["faces"]
+        assert len(faces) == 6                       # a box: six faces
+        assert faces[0]["area"] >= faces[-1]["area"]
+        # every label sits ON its face
+        for f in faces:
+            n, p = f["dir"], f["pos"]
+            a = f["tris"][0][0]
+            assert abs(sum(n[i] * (p[i] - a[i]) for i in range(3))) < 1e-6
+        assert state["show_faces"] and not state["show_planes"]
+        win.view3d.grab()                            # paints without error
+        dlg = sketch_choice.ChoiceDialog(win, "Extruded Cut", None,
+                                         faces=faces)
+        assert dlg.face_combo.count() == 7
+        dlg.show_planes.setChecked(True)
+        assert win._ref_force_planes and state["show_planes"]
+        dlg.show_faces.setChecked(False)
+        assert not state["show_faces"]
+    finally:
+        choice_preview.stop(win)
+    assert not win._ref_force_planes
+
+
+def test_a_face_chosen_by_its_number_is_sketched_on(win, monkeypatch):
+    from khervecad import choice_preview, face_sketch
+    _block(win)
+    faces = choice_preview.start(win)["faces"]
+    choice_preview.stop(win)
+    top = next(f for f in faces if f["dir"][2] > 0.99)
+    _answer(monkeypatch, {"source": "face", "where": "3d", "face": top})
+    cut_feature.start(win, "extruded_cut")
+    groups = [n for n in win.model.root.walk()
+              if n.params.get("face_sketch")]
+    assert groups and abs(float(groups[-1].params["z"]) - 20) < 1e-6
+    assert win.view3d._pick_cb is None               # no click asked
+
+
+def test_sketch_in_switches_the_view_back_and_forth(win):
+    from khervecad import toolbar_style
+    toolbar_style.apply(win, "SolidWorks", remember=False)
+    win.show()
+    QApplication.processEvents()
+    try:
+        dlg = sketch_choice.ChoiceDialog(win, "Extruded Cut", None)
+        dlg.in3d.setChecked(True)
+        assert win.view3d.isVisible()
+        dlg.in2d.setChecked(True)
+        QApplication.processEvents()
+        assert win.view2d.isVisible() and not win.view3d.isVisible()
+        dlg.in3d.setChecked(True)
+        assert win.view3d.isVisible()
+        dlg.in2d.setChecked(True)
+        dlg.restore_view()
+        assert win.view3d.isVisible()
+    finally:
+        toolbar_style.apply(win, "KherveCAD", remember=False)
+
+
+def test_2d_is_the_default(monkeypatch):
+    from PyQt5.QtCore import QSettings
+    QSettings("Kherve", "KherveCAD").remove("sketch/feature_where")
+    assert sketch_choice.where() == "2d"

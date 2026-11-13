@@ -52,8 +52,9 @@ def set_asks(on: bool):
 
 
 def where() -> str:
-    v = str(_settings().value("sketch/feature_where", "3d"))
-    return v if v in WHERE else "3d"
+    # the 2D sketch view is the default (2026-11-13, the user)
+    v = str(_settings().value("sketch/feature_where", "2d"))
+    return v if v in WHERE else "2d"
 
 
 def _remember(choice, again):
@@ -71,8 +72,19 @@ def ask(window, label, selection=None):
     if not asks():
         return {"source": "selection" if selection else "face",
                 "where": where()}
-    dlg = ChoiceDialog(window, label, selection)
-    if not dlg.exec_():
+    from . import choice_preview
+    preview = None
+    if window is not None and getattr(window, "view3d", None) is not None:
+        preview = choice_preview.start(window)
+    dlg = ChoiceDialog(window, label, selection,
+                       faces=(preview or {}).get("faces") or [])
+    try:
+        ok = dlg.exec_()
+    finally:
+        dlg.restore_view()
+        if preview is not None:
+            choice_preview.stop(window)
+    if not ok:
         return False
     choice = dlg.choice()
     _remember(choice, dlg.again.isChecked())
@@ -89,13 +101,16 @@ def describe(nodes, limit=3):
 
 
 try:
-    from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QDialog,
+    from PyQt5.QtWidgets import (QButtonGroup, QCheckBox, QComboBox, QDialog,
                                  QDialogButtonBox, QGroupBox, QLabel,
                                  QRadioButton, QVBoxLayout)
 
     class ChoiceDialog(QDialog):
-        def __init__(self, window, label, selection):
+        def __init__(self, window, label, selection, faces=()):
             super().__init__(window)
+            self._window = window
+            self._faces = list(faces)
+            self._was_2d = None
             from . import language
             tr = language.tr
             self.setWindowTitle(tr(label))
@@ -128,8 +143,34 @@ try:
                 self.sources.addButton(b)
                 self._source_buttons[key] = b
                 col.addWidget(b)
+                if key == "face":
+                    # or one by its number, as painted on the model
+                    self.face_combo = QComboBox()
+                    self.face_combo.addItem(tr("Click it on the model"))
+                    from .choice_preview import face_name
+                    for i, f in enumerate(self._faces):
+                        self.face_combo.addItem(face_name(f, i + 1))
+                    self.face_combo.setEnabled(bool(self._faces))
+                    self.face_combo.currentIndexChanged.connect(
+                        lambda i: i > 0 and self.set_source("face"))
+                    col.addWidget(self.face_combo)
             self._source_buttons[items[0][0]].setChecked(True)
             lay.addWidget(box)
+
+            show = QGroupBox(tr("Show on the model"))
+            row = QVBoxLayout(show)
+            self.show_faces = QCheckBox(tr("Faces, numbered (F1, F2...)"))
+            self.show_regions = QCheckBox(tr(
+                "Sketch regions, numbered"))
+            self.show_planes = QCheckBox(tr("Planes — Front, Top, Right"))
+            self.show_faces.setChecked(True)
+            self.show_regions.setChecked(True)
+            self.show_planes.setChecked(False)
+            for c in (self.show_faces, self.show_regions,
+                      self.show_planes):
+                row.addWidget(c)
+                c.toggled.connect(lambda _on: self._shown())
+            lay.addWidget(show)
 
             self.where_box = QGroupBox(tr("Sketch in"))
             col = QVBoxLayout(self.where_box)
@@ -139,8 +180,12 @@ try:
                 "2D sketch view — the flat drawing, square on"))
             col.addWidget(self.in3d)
             col.addWidget(self.in2d)
-            (self.in3d if where() == "3d" else self.in2d).setChecked(True)
+            # the 2D sketch view is always offered first (2026-11-13, the
+            # user); "Don't ask again" keeps whatever was chosen
+            self.in2d.setChecked(True)
             lay.addWidget(self.where_box)
+            # the window shows the view chosen, back and forth (the user)
+            self.in2d.toggled.connect(lambda _on: self._switch_view())
 
             self.again = QCheckBox(tr(
                 "Don't ask again (Edit ▸ Options ▸ Sketch asks again)"))
@@ -154,6 +199,43 @@ try:
             for b in self._source_buttons.values():
                 b.toggled.connect(lambda _on: self._sync())
             self._sync()
+
+        def _shown(self):
+            if self._window is None:
+                return
+            from . import choice_preview
+            choice_preview.show(self._window,
+                                faces=self.show_faces.isChecked(),
+                                regions=self.show_regions.isChecked(),
+                                planes=self.show_planes.isChecked())
+
+        def _switch_view(self):
+            """The one canvas shows the 2D sketch or the 3D view as the
+            Sketch in choice says (classic: both are on show)."""
+            win = self._window
+            if win is None:
+                return
+            try:
+                from . import sketch_mode
+                if not sketch_mode.active(win) or \
+                        sketch_mode.sketching(win):
+                    return
+                if self._was_2d is None:
+                    self._was_2d = win.view2d.isVisible() and \
+                        not win.view3d.isVisible()
+                sketch_mode._show(win, self.in2d.isChecked())
+            except Exception:
+                pass
+
+        def restore_view(self):
+            win = self._window
+            if win is None or self._was_2d is None:
+                return
+            try:
+                from . import sketch_mode
+                sketch_mode._show(win, self._was_2d)
+            except Exception:
+                pass
 
         def _sync(self):
             self.where_box.setEnabled(self.source() != "selection" or
@@ -169,7 +251,12 @@ try:
             self._source_buttons[key].setChecked(True)
 
         def choice(self):
-            return {"source": self.source(),
-                    "where": "3d" if self.in3d.isChecked() else "2d"}
+            out = {"source": self.source(),
+                   "where": "3d" if self.in3d.isChecked() else "2d"}
+            i = self.face_combo.currentIndex() \
+                if hasattr(self, "face_combo") else 0
+            if out["source"] == "face" and 0 < i <= len(self._faces):
+                out["face"] = self._faces[i - 1]
+            return out
 except ImportError:                       # Qt-free use (no dialog)
     ChoiceDialog = None
