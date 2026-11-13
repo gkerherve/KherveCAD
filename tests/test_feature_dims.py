@@ -133,3 +133,28 @@ def test_mcp_links_a_revolve_angle_to_an_extrude_depth(win):
         "source_key": "height"})
     name = got["variable"]
     assert rev.params["angle"] == name and ext.params["height"] == name
+
+
+def test_a_selected_feature_shows_its_sketch_dimensions_alone(win):
+    """Clicked in the tree, a feature shows ITS sizes only — every
+    sketch's sizes at once could not be told apart (2026-11-13, the
+    user); nothing selected shows them all again."""
+    ext, rect, rev = _plate(win)
+    sc.add(win.model, ext, "length", ["0.e0"], 40.0)
+    sc.add(win.model, rev, "length", ["0.e1"], 10.0)
+    QTest.qWait(50)
+    tree = win.builder.active_tree()
+
+    def texts():
+        win._dims3d_hits = []
+        _paint(win)
+        return sorted({hit[1].id for hit in win._dims3d_hits})
+    tree.clearSelection()
+    QTest.qWait(50)
+    assert rev.id in texts()        # (the plate's own lie under the plate)
+    tree.select_nodes([ext])
+    QTest.qWait(50)
+    assert texts() == [ext.id]
+    tree.select_nodes([rev])
+    QTest.qWait(50)
+    assert texts() == [rev.id]

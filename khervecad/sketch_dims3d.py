@@ -413,6 +413,14 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
     # its width was written hid the number under itself, and a boss
     # stands on its own sketch (2026-11-10: neither could be clicked)
     front = _selected_sketches(window, [c for c, _m in placed])
+    if front and hits and getattr(window, "_sketch3d_tool", None) is None \
+            and getattr(window.view3d, "_dim3d_editor", None) is None:
+        # a feature clicked in the tree shows ITS dimensions alone, as a
+        # plane clicked there shows that plane (2026-11-13, the user:
+        # with every sketch's sizes on, which were the Boss's could not
+        # be told); nothing selected, a sketch being drawn or a value
+        # being typed (any dimension can be linked) show them all
+        placed = [(c, m) for c, m in placed if id(c) in front]
     through = [False]
 
     def vis(m, p):

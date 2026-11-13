@@ -3811,6 +3811,12 @@ into a new module and import.
                        History names it "Mirror n" and an extrude's Reverse
                        direction mirror (`params["reverse"]`) is plumbing,
                        no row of its own (`feature_list.is_plumbing`).
+                       A feature clicked in the tree shows ITS dimensions
+                       alone in 3D — its depth (feature_dims) and its
+                       sketch's sizes (`sketch_dims3d.paint` keeps only the
+                       `_selected_sketches`) — like a clicked plane; nothing
+                       selected, a sketch being drawn or a value being typed
+                       show them all.
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch
