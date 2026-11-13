@@ -14,6 +14,13 @@ A ``pattern`` wraps whatever it holds and places *count* copies of it:
   axis, so a spring or a spiral stair is one pattern;
 - **grid** — ``count_x × count_y × count_z`` copies at the step.
 
+A polar pattern may turn about ANY axis through ANY point (2026-11-13,
+the user's Circular Pattern window): ``axis`` "custom" takes the
+direction ``vx, vy, vz`` and ``cx, cy, cz`` is the centre it passes
+through. Both are schema-only — written as ``v = [...]`` and
+``centre = [...]`` only when set — so older documents stay
+byte-identical.
+
 Like the organic nodes (organic.py, which registers this module) it
 compiles to ONE call of a ``kcad_pattern`` helper module whose
 definition goes at the top of the program — real OpenSCAD with
@@ -40,6 +47,9 @@ OPERATION = "op"
 
 KINDS = ("linear", "polar", "grid")
 AXES = ("x", "y", "z")
+#: the polar axis given as a direction (vx, vy, vz)
+CUSTOM = "custom"
+AXIS_CHOICES = AXES + (CUSTOM,)
 
 #: the most copies one pattern may make (model.MAX_WHILE_ITERATIONS)
 MAX_COPIES = 1000
@@ -59,7 +69,13 @@ NODE_TYPES = {
                  -1e6, 1e6),
                 ("angle", "Polar angle° (360 = full circle)", "float",
                  -3600.0, 3600.0),
-                ("axis", "Polar axis", "choice", list(AXES), None),
+                ("axis", "Polar axis", "choice", list(AXIS_CHOICES), None),
+                ("vx", "Axis direction X (custom)", "float", -1e6, 1e6),
+                ("vy", "Axis direction Y (custom)", "float", -1e6, 1e6),
+                ("vz", "Axis direction Z (custom)", "float", -1e6, 1e6),
+                ("cx", "Centre X (polar)", "float", -1e6, 1e6),
+                ("cy", "Centre Y (polar)", "float", -1e6, 1e6),
+                ("cz", "Centre Z (polar)", "float", -1e6, 1e6),
                 ("count_x", "Grid count X", "int", 1, MAX_COPIES),
                 ("count_y", "Grid count Y", "int", 1, MAX_COPIES),
                 ("count_z", "Grid count Z", "int", 1, MAX_COPIES)]),
@@ -72,13 +88,15 @@ WRAPPERS = frozenset(NODE_TYPES)
 HELPER = """\
 module kcad_pattern(kind = "linear", count = 1, step = [0, 0, 0],
                     angle = 360, axis = "z", rise = 0,
-                    counts = [1, 1, 1]) {
+                    counts = [1, 1, 1], v = undef, centre = [0, 0, 0]) {
     if (kind == "polar") {
         n = max(floor(count + 0.5), 1);
         per = n < 2 ? 0 : abs(angle) >= 360 ? angle / n : angle / (n - 1);
-        v = axis == "x" ? [1, 0, 0] : axis == "y" ? [0, 1, 0] : [0, 0, 1];
+        w = is_list(v) ? v / norm(v) :
+            axis == "x" ? [1, 0, 0] : axis == "y" ? [0, 1, 0] : [0, 0, 1];
         for (i = [0 : n - 1])
-            translate(v * rise * i) rotate(a = per * i, v = v) children();
+            translate(centre + w * rise * i) rotate(a = per * i, v = w)
+                translate(-centre) children();
     } else if (kind == "grid") {
         for (ix = [0 : max(floor(counts[0] + 0.5), 1) - 1],
              iy = [0 : max(floor(counts[1] + 0.5), 1) - 1],
@@ -113,10 +131,20 @@ def statement(node, fmt, fn) -> str:
     kind = str(p.get("kind", "linear"))
     if kind == "polar":
         axis = str(p.get("axis", "z"))
+        extra = ""
+        if axis == CUSTOM:
+            extra += ", v = [%s, %s, %s]" % tuple(
+                fmt(p.get(k, 0.0)) for k in ("vx", "vy", "vz"))
+            axis = "z"
         axis = axis if axis in AXES else "z"
+        centre = [p.get(k, 0.0) for k in ("cx", "cy", "cz")]
+        if any(isinstance(c, str) or abs(float(c or 0)) > 1e-12
+               for c in centre):
+            extra += ", centre = [%s, %s, %s]" % tuple(
+                fmt(c) for c in centre)
         return (f'kcad_pattern(kind = "polar", count = {fmt(p["count"])}, '
                 f'angle = {fmt(p["angle"])}, axis = "{axis}", '
-                f'rise = {fmt(p["dz"])})')
+                f'rise = {fmt(p["dz"])}{extra})')
     step = f'[{fmt(p["dx"])}, {fmt(p["dy"])}, {fmt(p["dz"])}]'
     if kind == "grid":
         return (f'kcad_pattern(kind = "grid", counts = [{fmt(p["count_x"])}, '
@@ -171,6 +199,12 @@ def build(parser, positional, named):
         params["dz"] = _num(named["rise"], 0.0)
     if kind == "polar" and "step" not in named:
         params["dx"], params["dy"] = 0.0, 0.0
+    if kind == "polar" and isinstance(named.get("v"), list):
+        v = _vec3(named["v"], (0.0, 0.0, 1.0))
+        params.update(axis=CUSTOM, vx=v[0], vy=v[1], vz=v[2])
+    if kind == "polar" and isinstance(named.get("centre"), list):
+        c = _vec3(named["centre"], (0.0, 0.0, 0.0))
+        params.update(cx=c[0], cy=c[1], cz=c[2])
     return CadNode("pattern", "Pattern", params)
 
 
@@ -186,8 +220,8 @@ def check(node, env):
     kind = str(p.get("kind", "linear"))
     if kind not in KINDS:
         return f"kind must be linear, polar or grid, not {kind!r}"
-    if str(p.get("axis", "z")) not in AXES:
-        return f"axis must be x, y or z, not {p.get('axis')!r}"
+    if str(p.get("axis", "z")) not in AXIS_CHOICES:
+        return f"axis must be x, y, z or custom, not {p.get('axis')!r}"
 
     def whole(key, default):
         value = p.get(key, default)
@@ -206,10 +240,16 @@ def check(node, env):
             total = whole("count", 1)
             if total < 1:
                 return "count must be at least 1"
-        for key in ("dx", "dy", "dz", "angle"):
+        for key in ("dx", "dy", "dz", "angle", "vx", "vy", "vz", "cx",
+                    "cy", "cz"):
             value = p.get(key, 0.0)
             if isinstance(value, str):
                 expr.evaluate(value, env)
+        if kind == "polar" and str(p.get("axis")) == CUSTOM:
+            v = [expr.resolve(p.get(k, 0.0), env, 0.0)
+                 for k in ("vx", "vy", "vz")]
+            if sum(float(c) ** 2 for c in v) < 1e-18:
+                return "the axis direction is zero — set vx, vy or vz"
     except expr.ExprError as exc:
         return f"{exc}"
     if total > MAX_COPIES:
@@ -240,14 +280,23 @@ def matrices(node, env) -> list:
                                  else angle / (n - 1))
         rise = num("dz")
         axis = str(p.get("axis", "z"))
-        axis = axis if axis in AXES else "z"
+        if axis == CUSTOM:
+            w = [num("vx"), num("vy"), num("vz", 1.0)]
+        else:
+            w = [0.0, 0.0, 0.0]
+            w[AXES.index(axis if axis in AXES else "z")] = 1.0
+        ln = math.sqrt(sum(c * c for c in w)) or 1.0
+        w = [c / ln for c in w]
+        c = (num("cx"), num("cy"), num("cz"))
         for i in range(n):
-            spin = [0.0, 0.0, 0.0]
-            spin[AXES.index(axis)] = per * i
-            lift = [0.0, 0.0, 0.0]
-            lift[AXES.index(axis)] = rise * i
-            out.append(mesh.mat_mul(mesh.mat_translate(*lift),
-                                    mesh.mat_rotate(*spin)))
+            # translate(centre + w rise i) rotate(per i, w) translate(-centre)
+            m = mesh.mat_mul(
+                mesh.mat_translate(c[0] + w[0] * rise * i,
+                                   c[1] + w[1] * rise * i,
+                                   c[2] + w[2] * rise * i),
+                mesh.mat_mul(_axis_angle(w, per * i),
+                             mesh.mat_translate(-c[0], -c[1], -c[2])))
+            out.append(m)
         return out
     dx, dy, dz = num("dx"), num("dy"), num("dz")
     if kind == "grid":
@@ -262,6 +311,19 @@ def matrices(node, env) -> list:
     for i in range(min(whole("count"), MAX_COPIES)):
         out.append(mesh.mat_translate(i * dx, i * dy, i * dz))
     return out
+
+
+def _axis_angle(w, degrees):
+    """The 4x4 turn by *degrees* about the unit vector *w* (OpenSCAD's
+    rotate(a, v): right-handed)."""
+    a = math.radians(degrees)
+    c, s_ = math.cos(a), math.sin(a)
+    t = 1 - c
+    x, y, z = w
+    return [[t * x * x + c, t * x * y - s_ * z, t * x * z + s_ * y, 0.0],
+            [t * x * y + s_ * z, t * y * y + c, t * y * z - s_ * x, 0.0],
+            [t * x * z - s_ * y, t * y * z + s_ * x, t * z * z + c, 0.0],
+            [0.0, 0.0, 0.0, 1.0]]
 
 
 def tess(node, env, color, sel, selected):

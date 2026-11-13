@@ -241,7 +241,10 @@ are the organic solids; `kcad_pattern(kind = "linear" | "polar" | \
 0, counts = [nx, ny, nz]) { … }` repeats its children — a bolt circle \
 (polar, angle 360 spreads count copies evenly; below 360 they span the \
 angle), a row (linear), a spiral stair (polar with rise), a peg board \
-(grid) — with no loop variable to invent; `kcad_shell(thickness = 2, \
+(grid) — with no loop variable to invent; a polar one turns about ANY \
+axis through ANY point with `v = [vx, vy, vz], centre = [cx, cy, cz]` \
+(holes round a flange whose axis is not the origin's Z); \
+`kcad_shell(thickness = 2, \
 open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
 open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
 kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \

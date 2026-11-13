@@ -3799,6 +3799,29 @@ into a new module and import.
                        when it lies inside an odd number of the other faces'
                        outer outlines (`_enclosed_odd`) — no closed SHAPE held
                        the circle, so the old nesting rule filled it.
+  - `pattern_feature.py` — SolidWorks' **Circular / Linear Pattern** of
+                       features and bodies (2026-11-13, the user: "as nice as
+                       the circular sketch pattern"): a ToolPanel like Mirror's
+                       — what to pattern (tree rows, parts in 3D), the Axis
+                       (round face = its axis, flat face / plane = normal, an
+                       edge, a ref axis / plane; tree plane rows via
+                       `plane_row`) and its Centre point (a click, a ref point
+                       or typed X Y Z), angle, instances, equal spacing,
+                       reverse; Linear: direction, spacing, instances, an
+                       optional Direction 2 (a second `pattern` round the
+                       first, `params["second"]`, History plumbing). The
+                       copies show at once (`_preview`), Cancel ungroups,
+                       the choices ride on the node (`params[KEY]`) so the
+                       button reopens a selected pattern to edit; one pattern
+                       per parent, the axis carried into its frame
+                       (`_to_parent`, a mirrored frame turns the angle).
+                       `pattern.py` gained the free axis: `axis` "custom" +
+                       vx vy vz and a centre cx cy cz (schema-only, written
+                       `v = [..], centre = [..]` only when set). Ribbon:
+                       Features ▸ Pattern panel before Move/Copy Bodies, both
+                       large (`icons_cad_constrain` draws them); the old
+                       "Linear / Circular Pattern" op opens the window.
+                       History: CirPattern n / LPattern n.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

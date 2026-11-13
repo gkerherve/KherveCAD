@@ -248,6 +248,10 @@ def clicked(tree, item):
                     "Origin axes hidden"), 3000)
     elif role == "material":
         fixed_menu(tree, item, tree.visualItemRect(item).bottomLeft())
+    elif role.startswith("plane:") and getattr(win, "_pattern_state",
+                                               None):
+        from . import pattern_feature          # the Pattern window's axis
+        pattern_feature.plane_row(win, role[6:])
     elif role.startswith("plane:") and getattr(win, "_mirror_state",
                                                None):
         from . import mirror_feature          # the Mirror window's plane
@@ -264,7 +268,8 @@ def clicked(tree, item):
 #: beside "Boss-Extrude 2"
 _AUTO_NAMES = {"Extrude regions", "Extruded Boss/Base", "Extruded Cut",
                "Revolved Cut", "Revolved Boss/Base", "Revolve", "Mirror",
-               "Symmetry"}
+               "Symmetry", "Circular Pattern", "Linear Pattern",
+               "Linear Pattern (Direction 2)"}
 
 
 def build_history(tree, selected):
@@ -304,6 +309,10 @@ def _label(node, counts):
         NODE_TYPES[node.type]["label"])
     if node.type == "symmetry":
         base = "Mirror"                # SolidWorks' name for the feature
+    if node.type == "pattern" and isinstance(node.params.get(
+            "pattern_feature"), dict):
+        base = "CirPattern" if node.params.get("kind") == "polar" \
+            else "LPattern"
     if node.type in ("linear_extrude", "rotate_extrude"):
         # SolidWorks calls an extrude that cuts Cut-Extrude (every cut
         # read "Boss-Extrude 2 (Extruded Cut)")

@@ -52,7 +52,7 @@ TABS = [
     # features, a SURFACE tab, SubD in FORM, figures in CHARACTER, the
     # assembly tools, imports, Shell in MODIFY)
     ("features", "SOLID", "Features",
-     ["create", "extrude", "cuts", "mechanical", "transform",
+     ["create", "extrude", "cuts", "mechanical", "pattern", "transform",
       "combine", "finish", "logic", "assemble", "reference",
       "solid_insert"]),
     # SolidCraft's / SolidWorks' SHEET METAL tab (2026-10-27, the user)
@@ -108,7 +108,7 @@ def tab_order(fusion):
 
 
 #: panels that are not operation families: key -> title
-EXTRA_PANELS = {"reference": "Reference Geometry",
+EXTRA_PANELS = {"reference": "Reference Geometry", "pattern": "Pattern",
                 "sheet_create": "Create", "sheet_modify": "Modify",
                 "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
@@ -535,6 +535,11 @@ def _panel_actions(win, key):
         # the Hole Wizard sits with the cuts, after Extruded Cut, as on
         # SolidWorks' ribbon (the user)
         return title, acts[:1] + [hole_wizard.action(win)] + acts[1:]
+    if key == "pattern":
+        # SolidWorks' Circular / Linear Pattern of features and bodies,
+        # beside Move/Copy Bodies (2026-11-13, the user)
+        from . import pattern_feature
+        return title, _painted(win, list(pattern_feature.actions(win)))
     if key == "mechanical":
         # the mechanical parts (gears, threads, knurls…); the Hole Wizard
         # is in the Cut panel now
@@ -905,6 +910,8 @@ class Ribbon(QWidget):
         if key == "sketch_modify" and len(actions) > 1 and \
                 actions[1].data() == "sk_convert":
             large = actions[:2]          # Trim and Convert Entities
+        if key == "pattern":
+            large = actions[:2]          # Circular and Linear Pattern
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
             b.setObjectName("large")

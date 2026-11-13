@@ -92,6 +92,10 @@ def is_plumbing(node):
                 p.parent is not None and isinstance(
                     p.parent.params.get(sketch_pattern.KEY), dict):
             return True
+    if node.type == "pattern" and node.params.get("second"):
+        # a Linear Pattern's Direction 2: the same feature as the
+        # pattern it holds (pattern_feature)
+        return True
     if node.type == "mirror" and node.params.get("reverse"):
         # an extrude's Reverse direction (drag_feature.set_direction): a
         # setting of that extrude, listed as "Mirror 1 (Reverse

@@ -484,3 +484,30 @@ def _sk_convert(d):
     d.poly([P(0.4, 0.62), P(0.4, 0.16), P(0.88, 0.16)],
            color=d.pal.make, width=0.06)
     d.arrow(P(0.2, 0.36), P(0.36, 0.22), d.pal.make, 0.04, 0.07)
+
+
+@draws("circular_pattern")
+def _circular_pattern(d):
+    """A round plate (grey) with six bosses round its axis: one the
+    original, the rest copies (make colour), and the axis dashed."""
+    import math
+    d.cyl(0.0, 0.0, 0.0, 1.0, 0.25, _BODY)
+    for i in range(6):
+        a = math.radians(90 + 60 * i)
+        x, y = 0.68 * math.cos(a), 0.68 * math.sin(a)
+        d.cyl(x, y, 0.25, 0.17, 0.35, _CUT if i == 0 else d.pal.make)
+    top, bottom = d.P(0.0, 0.0, 1.0), d.P(0.0, 0.0, -0.2)
+    d.p.setPen(d.pen(d.pal.edge, 0.04, [3, 2]))
+    d.p.drawLine(top, bottom)
+
+
+@draws("linear_pattern")
+def _linear_pattern(d):
+    """A bar (grey) with three bosses in a row — one the original, two
+    copies (make colour) — and the direction arrow beside them."""
+    _block(d, -0.2, 0.3, 0.0, 2.0, 0.7, 0.25)
+    for i in range(3):
+        d.cyl(0.15 + 0.65 * i, 0.65, 0.25, 0.16, 0.35,
+              _CUT if i == 0 else d.pal.make)
+    d.arrow(d.P(-0.2, 0.0, 0.0), d.P(1.8, 0.0, 0.0), d.pal.make, 0.05,
+            0.12)

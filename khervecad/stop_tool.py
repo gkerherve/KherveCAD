@@ -173,6 +173,11 @@ def restored(window):
         mirror_feature.close(window)
     except Exception:                          # pragma: no cover
         pass
+    try:                      # so does the Pattern window
+        from . import pattern_feature
+        pattern_feature.close(window)
+    except Exception:                          # pragma: no cover
+        pass
     bar = getattr(window, "_feature_pick", None)
     regions = getattr(window, "_region_show", None) is not None or \
         getattr(window, "_region_panel", None) is not None

@@ -1098,6 +1098,12 @@ class MainWindow(QMainWindow):
             from . import mirror_feature
             mirror_feature.start(self)
             return
+        if op == "pattern":
+            # the Circular Pattern window (pattern_feature, 2026-11-13, the
+            # user: the bare pattern wrapper "not working as well")
+            from . import pattern_feature
+            pattern_feature.start(self, pattern_feature.CIRCULAR)
+            return
         from . import toolbar_style
         if op == "bevel" and \
                 toolbar_style.current(self) != toolbar_style.CLASSIC:
