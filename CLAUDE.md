@@ -3781,6 +3781,10 @@ into a new module and import.
                        ("Mirror": original kept + its reflection). The
                        Mirror button (op "mirror") goes here; 2D outlines of
                        a symmetry reflect too (`mesh.collect_outlines`).
+                       Front / Top / Right are the PART's planes, carried into
+                       the mirrored node's frame by `_to_parent` like a face
+                       (2026-11-13: a boss inside a face sketch's turned frame
+                       mirrored onto itself); normals go by M's transpose.
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

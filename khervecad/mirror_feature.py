@@ -11,7 +11,8 @@ about the plane through c square to n), named "Mirror" — the original
 stays, the copy follows every edit of it, and the plane is in the
 node's Properties.
 
-A picked face is given in the scope's frame; it is carried into the
+A picked face, or a main plane (the PART's Front / Top / Right, i.e. the
+scope's), is given in the scope's frame; it is carried into the
 frame the parts live in (`_to_parent`), so a part inside an Object's
 groups mirrors about the face that was clicked.
 
@@ -62,7 +63,11 @@ def _to_parent(window, parent, point, normal):
                               mesh.node_matrix(parent, {})), dtype=float)
     inv = np.linalg.inv(m)
     p = inv @ np.array([point[0], point[1], point[2], 1.0])
-    n = np.linalg.inv(m[:3, :3]).T @ np.array(normal, dtype=float)
+    # a normal goes world -> local by the inverse-transpose of the
+    # world -> local map, i.e. M's own transpose (inv(M)^T turned it the
+    # wrong way: invisible until the frame was rotated, as a face
+    # sketch's is)
+    n = m[:3, :3].T @ np.array(normal, dtype=float)
     ln = float(np.linalg.norm(n)) or 1.0
     return tuple(float(v) for v in p[:3]), tuple(float(v) / ln for v in n)
 
@@ -94,8 +99,14 @@ def _finish(window, nodes):
     if choice is None:
         return None
     if choice != FACE:
-        normal = dict(PLANES)[choice]
-        node = apply(window.model, nodes, normal)
+        # the main plane of the PART (the scope), carried into the frame
+        # the nodes live in like a picked face (2026-11-13, the user's
+        # Boss-Extrude 3: inside its sketch's turned frame on the right
+        # face, "Right" was the boss's own centre plane, and the copy
+        # fell on the original)
+        point, normal = _to_parent(window, nodes[0].parent,
+                                   (0.0, 0.0, 0.0), dict(PLANES)[choice])
+        node = apply(window.model, nodes, normal, point)
         _done(window, node, choice)
         return node
     from . import meshedit_ui
