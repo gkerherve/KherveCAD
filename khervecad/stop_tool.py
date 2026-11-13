@@ -178,6 +178,11 @@ def restored(window):
         pattern_feature.close(window)
     except Exception:                          # pragma: no cover
         pass
+    try:                      # and the Plane window
+        from . import plane_tool
+        plane_tool.close(window)
+    except Exception:                          # pragma: no cover
+        pass
     bar = getattr(window, "_feature_pick", None)
     regions = getattr(window, "_region_show", None) is not None or \
         getattr(window, "_region_panel", None) is not None

@@ -140,3 +140,12 @@ def _show(d):
     fill.setAlpha(60)
     d.poly([d.P(-1.0, 0.0, -0.1), d.P(1.0, 0.0, -0.1), d.P(1.0, 0.0, 1.4),
             d.P(-1.0, 0.0, 1.4)], fill, color=c, width=0.06)
+
+
+@draws("ref_plane_tool")
+def _plane_tool(d):
+    """Plane: a block with a plane laid across it and a click mark on
+    the face that made it."""
+    d.box(-0.8, -0.8, 0, 1.6, 1.6, 0.6, shade(d.pal.body, 0.95))
+    _plane(d, 0.95)
+    d.dot(d.P(0.5, -0.5, 0.6), d.pal.select, 0.1, fill=d.pal.select)

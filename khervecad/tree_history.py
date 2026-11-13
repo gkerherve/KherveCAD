@@ -238,6 +238,10 @@ def clicked(tree, item):
     if not role:
         return False
     win = tree.window()
+    if role == "origin" and getattr(win, "_plane_tool", None):
+        from . import plane_tool              # the origin as a point
+        plane_tool.origin_row(win)
+        return True
     if role == "origin":
         view = getattr(win, "view3d", None)
         if view is not None:
@@ -248,6 +252,9 @@ def clicked(tree, item):
                     "Origin axes hidden"), 3000)
     elif role == "material":
         fixed_menu(tree, item, tree.visualItemRect(item).bottomLeft())
+    elif role.startswith("plane:") and getattr(win, "_plane_tool", None):
+        from . import plane_tool              # a Plane window's reference
+        plane_tool.plane_row(win, role[6:])
     elif role.startswith("plane:") and getattr(win, "_pattern_state",
                                                None):
         from . import pattern_feature          # the Pattern window's axis

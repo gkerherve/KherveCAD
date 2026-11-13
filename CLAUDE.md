@@ -3819,8 +3819,8 @@ into a new module and import.
                        vx vy vz and a centre cx cy cz (schema-only, written
                        `v = [..], centre = [..]` only when set). Ribbon:
                        the Features tab's Move panel starts with Circular
-                       and Linear Pattern, both large, then Move/Copy Bodies
-                       small and the rest, then Snap objects large in a
+                       Pattern large, then Linear Pattern, Move/Copy Bodies
+                       and the rest small, then Snap objects large in a
                        panel of its own (the user; `icons_cad_constrain`
                        draws them); the old "Linear / Circular Pattern" op
                        opens the window. History: CirPattern n / LPattern n.
@@ -4003,6 +4003,21 @@ into a new module and import.
                        ribbon SOLID ▸ Reference Geometry, tree right-click
                        (Sketch on This Plane, Extrude Up To a Face), MCP
                        `reference_geometry`.
+  - `plane_tool.py` — SolidWorks' **Plane** window (2026-11-13, the user:
+                       "click on a face or a plane ... as easy as Extruded
+                       Boss"): up to three references — a face (plane), a
+                       ROUND face (its axis), an edge (line; near an end, the
+                       corner as a point), Front / Top / Right (tree rows or
+                       the planes in 3D), a ref plane / axis / point, Origin
+                       (point) — and `compute` (Qt-free) makes the plane:
+                       offset (Distance, Flip), mid-plane of two parallel,
+                       bisector of two at an angle, through an edge at an
+                       Angle to a plane, parallel through a point, square to
+                       an edge, through edges / points. Shown orange at once;
+                       OK = `refgeom_ui.add_plane`. First item of Insert ▸
+                       Reference Geometry and the large first button of the
+                       ribbon's Reference Geometry panel; the older one-job
+                       plane commands stay after it.
   - `sketch3d.py`    — **Sketch in 3D**: a `View3D.edit_tool`; a click
                        picks the nearest drawn plane or flat face (camera
                        untouched, `user_moved` set so the first shape does

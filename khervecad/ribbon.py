@@ -139,6 +139,7 @@ FUSION_SHOWN = {1: 12, 2: 7}
 MENU_PANELS = {
     # SolidWorks' Reference Geometry (refgeom_ui, 2026-10-27)
     "reference": [
+        ("insert/reference geometry/plane", None),
         ("insert/reference geometry/plane offset from a face", None),
         ("insert/reference geometry/plane through three points", None),
         ("insert/reference geometry/plane at an angle through an edge", None),
@@ -495,8 +496,8 @@ def _panel_actions(win, key):
                 drag_feature.action(win)]
         if key == "transform":
             # Translate's neighbours: the Gumball and Snap move parts too;
-            # Circular and Linear Pattern first, large, then Move/Copy
-            # Bodies (2026-11-13, the user)
+            # Circular Pattern first and large, Linear Pattern, Move/Copy
+            # Bodies and the rest small (2026-11-13, the user)
             from . import pattern_feature
             return language.tr(title), _painted(
                 win, list(pattern_feature.actions(win))) + \
@@ -918,9 +919,6 @@ class Ribbon(QWidget):
         if key == "sketch_modify" and len(actions) > 1 and \
                 actions[1].data() == "sk_convert":
             large = actions[:2]          # Trim and Convert Entities
-        if key == "transform" and len(actions) > 1 and \
-                actions[1].data() == "linear_pattern":
-            large = actions[:2]          # Circular and Linear Pattern
         for act in large:
             b = _button(act, SW_LARGE, Qt.ToolButtonTextUnderIcon, panel)
             b.setObjectName("large")

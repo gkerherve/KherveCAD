@@ -544,7 +544,8 @@ def install(window):
 
 
 #: menu text -> painted icon key (icons_cad_ref)
-KEYS = {'Plane offset from a face': 'ref_plane_offset',
+KEYS = {'Plane': 'ref_plane_tool',
+        'Plane offset from a face': 'ref_plane_offset',
         'Plane through three points': 'ref_plane_3pt',
         'Plane at an angle through an edge': 'ref_plane_angle',
         'Plane parallel to a main plane': 'ref_plane_parallel',
@@ -557,7 +558,10 @@ KEYS = {'Plane offset from a face': 'ref_plane_offset',
 
 
 #: hover help for each command (tooltips.TIPS shape)
+from .plane_tool import TIPS as _PLANE_TIPS  # noqa: E402
+
 TIPS = {
+    **_PLANE_TIPS,
     "ref_plane_offset": ("Plane offset from a face",
         "A reference plane parallel to a flat face, a distance off it — "
         "to sketch above, inside or beside a part.",
@@ -617,7 +621,11 @@ def build_menu(window, menu):
     sub = menu.addMenu(icons.icon("mdi.square-outline"),
                        language.tr("Reference &Geometry"))
     sub.setToolTipsVisible(True)
+    from . import plane_tool
     entries = [
+        # SolidWorks' one Plane window: references clicked, the plane
+        # shown, OK (plane_tool, 2026-11-13, the user)
+        ("Plane", "mdi.square-outline", plane_tool.start),
         ("Plane offset from a face", "mdi.layers-outline",
          plane_offset),
         ("Plane through three points", "mdi.triangle-outline",
