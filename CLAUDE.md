@@ -4231,7 +4231,19 @@ into a new module and import.
                        Menu entries are in `bar.actions` by key, buttons in
                        `bar.buttons`; it stands above the CutBar. Exploded
                        View joined Cut Through on the Evaluate tab
-                       (ribbon "analyse" panel).
+                       (ribbon "analyse" panel). View settings was FUSED
+                       into the glasses (2026-11-13, the user: "almost
+                       doing the same"): `hide_show.button(three_d=True)`
+                       adds View settings and Background sections
+                       (swatches = `win._bg_actions`, the View menu's
+                       own); the bar keeps the menu as `bar.display_menu`.
+                       New backgrounds Sunset, Sunrise, Midnight, Sand,
+                       Snow (`view3d.BACKGROUNDS` takes any number of
+                       colours, top to bottom; the LAST is the ground: the
+                       platform's tint and the text's ink). The view cube
+                       is a rounded ivory DIE (`view_cube`: rounded faces,
+                       lit gradient, shadow, each label turned to read,
+                       triad in its own corner).
   - `ribbon_tabs.py` — which ribbon tabs show (same day, the user: "way
                        too many"; SolidWorks shows ~6 and hides the rest
                        behind a right-click ▸ Tabs): Sculpt, Character,

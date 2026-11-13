@@ -71,6 +71,14 @@ BACKGROUNDS = {
     "Slate": ("#3a4048", "#22262b"),
     "Dark": ("#2b2f33", "#16181b"),
     "Blueprint": ("#123a6b", "#0a1f3d"),
+    # skies and grounds (2026-11-13, the user: "a sunset, sunrise, darker,
+    # sandy and whiter"): any number of colours, top to bottom, evenly
+    # spaced; the LAST is the ground the platform and text read against
+    "Sunset": ("#26244f", "#5b3a73", "#b4557a", "#ec8a5c", "#f7c27a"),
+    "Sunrise": ("#9fc8e8", "#cfd9ee", "#f6cdd0", "#ffd9ae", "#fff0d8"),
+    "Midnight": ("#16181d", "#0b0c0f", "#030304"),
+    "Sand": ("#f7eedb", "#ead8b4", "#d6bd8c"),
+    "Snow": ("#ffffff", "#f6f8fb", "#e9eef4"),
 }
 
 
@@ -585,10 +593,10 @@ class View3D(QWidget):
             painter.fillRect(self.rect(), QColor(tokens["editor"]))
             return
         from PyQt5.QtGui import QLinearGradient
-        top, bottom = pair
         grad = QLinearGradient(0, 0, 0, self.height())
-        grad.setColorAt(0.0, QColor(top))
-        grad.setColorAt(1.0, QColor(bottom))
+        last = max(len(pair) - 1, 1)
+        for i, colour in enumerate(pair):
+            grad.setColorAt(i / last, QColor(colour))
         painter.fillRect(self.rect(), grad)
 
     #: standard camera orientations (yaw, pitch) in degrees — the eye
@@ -1564,7 +1572,7 @@ class View3D(QWidget):
         if pair is None:
             painter.setPen(QColor(t["text"]))
         else:                                  # readable over the chosen bg
-            dark = QColor(pair[1]).lightnessF() < 0.5
+            dark = QColor(pair[-1]).lightnessF() < 0.5
             painter.setPen(QColor("#e8e8e8") if dark else QColor("#333333"))
         if self.scale_bar:                     # true at the orbit centre
             from . import scalebar

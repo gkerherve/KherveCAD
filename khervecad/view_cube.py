@@ -20,9 +20,11 @@ from PyQt5.QtWidgets import QAction, QWidget
 
 SIZE = 110            # the widget, px
 MARGIN = 10           # from the view's top-right corner
-CUBE = 33             # half the cube's side on screen, px
+CUBE = 29             # half the cube's side on screen, px
 EDGE = 0.32           # an edge / corner band, as a fraction of the half side
 DRAG_PX = 4
+#: how much of the half side a die's rounded corner takes
+ROUND = 0.34
 
 #: face normal -> (name, the face's two in-plane axes)
 FACES = {
@@ -99,6 +101,35 @@ def go_to(view, direction):
     view_anim.glide_3d(view, goal)
 
 
+def _mix(a, b, t):
+    """Colour *a* -> *b* at *t* in 0..1."""
+    t = max(0.0, min(1.0, t))
+    return QColor(int(a.red() + (b.red() - a.red()) * t),
+                  int(a.green() + (b.green() - a.green()) * t),
+                  int(a.blue() + (b.blue() - a.blue()) * t),
+                  int(a.alpha() + (b.alpha() - a.alpha()) * t))
+
+
+def _convex_hull(points):
+    """The convex hull of QPointFs as a QPolygonF (monotone chain)."""
+    pts = sorted({(round(q.x(), 2), round(q.y(), 2)) for q in points})
+    if len(pts) < 3:
+        return QPolygonF([QPointF(x, y) for x, y in pts])
+
+    def cross(o, a, b):
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    lower, upper = [], []
+    for q in pts:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], q) <= 0:
+            lower.pop()
+        lower.append(q)
+    for q in reversed(pts):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], q) <= 0:
+            upper.pop()
+        upper.append(q)
+    return QPolygonF([QPointF(x, y) for x, y in lower[:-1] + upper[:-1]])
+
+
 class ViewCube(QWidget):
     """The cube itself, a child of the 3D view (it repaints with it)."""
 
@@ -141,60 +172,159 @@ class ViewCube(QWidget):
         return None
 
     # ------------------------------------------------------------- painting
+    def _face_path(self, normal, u, v):
+        """The face as a rounded square on screen: each corner cut
+        `ROUND` of the half side back along both edges and curved
+        through the true corner, like a die's."""
+        from PyQt5.QtGui import QPainterPath
+
+        def pt(a, b):
+            return self._screen(tuple(normal[k] + a * u[k] + b * v[k]
+                                      for k in range(3)))
+        cs = ((-1, -1), (1, -1), (1, 1), (-1, 1))
+
+        def toward(i, j):            # from corner i, ROUND toward j
+            (a, b), (c, d) = cs[i], cs[j]
+            t = ROUND / 2.0          # (an edge is 2 half sides long)
+            return pt(a + (c - a) * t, b + (d - b) * t)
+        path = QPainterPath()
+        path.moveTo(toward(0, 1))
+        for k in range(1, 5):
+            i = k % 4
+            path.lineTo(toward(i, (i - 1) % 4))
+            path.quadTo(pt(*cs[i]), toward(i, (i + 1) % 4))
+        path.closeSubpath()
+        return path
+
+    def _light(self, normal):
+        """0..1: how much the cube's own light (up, left, towards the
+        eye) falls on a face."""
+        right, up, fwd = self.view._orientation()
+        light = [0.45 * up[k] - 0.35 * right[k] - 0.8 * fwd[k]
+                 for k in range(3)]
+        n = math.sqrt(sum(c * c for c in light)) or 1.0
+        return max(0.0, sum(normal[k] * light[k] for k in range(3)) / n)
+
     def paintEvent(self, event):
+        from PyQt5.QtGui import (QBrush, QLinearGradient, QPainterPath,
+                                 QRadialGradient, QTransform)
         from .style import tokens
         dark = QColor(tokens().get("window", "#ffffff")).lightness() < 128
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing)
-        base = QColor(70, 78, 90, 225) if dark else QColor(236, 239, 244, 235)
-        line = QColor(150, 160, 175) if dark else QColor(120, 128, 140)
-        ink = QColor(230, 234, 240) if dark else QColor(50, 56, 66)
-        light = QColor(60, 140, 230, 200)
+        if dark:
+            hi, lo = QColor(118, 128, 142), QColor(58, 64, 74)
+            ink, rim = QColor(236, 240, 246), QColor(255, 255, 255, 60)
+            body = _mix(lo, hi, 0.35)
+        else:
+            hi, lo = QColor(255, 253, 247), QColor(214, 207, 192)
+            ink, rim = QColor(70, 66, 60), QColor(255, 255, 255, 200)
+            body = _mix(lo, hi, 0.45)
+        light = QColor(47, 123, 216, 150)
         _r, _u, fwd = self.view._orientation()
-        for facing, d, normal, quad in self._visible():
-            poly = QPolygonF([self._screen(pt) for pt in quad])
-            shade = base.darker(int(100 + 22 * (1 - facing)))
-            p.setPen(Qt.NoPen)
-            p.setBrush(light if d == self.hover else shade)
-            p.drawPolygon(poly)
-        # face outlines and names
-        p.setBrush(Qt.NoBrush)
-        font = QFont()
-        font.setPixelSize(10)
-        font.setBold(True)
-        p.setFont(font)
+        faces = []
         for normal, (name, u, v) in FACES.items():
             facing = -sum(normal[k] * fwd[k] for k in range(3))
-            if facing <= 1e-3:
-                continue
-            corners = [tuple(normal[k] + a * u[k] + b * v[k]
-                             for k in range(3))
-                       for a, b in ((-1, -1), (1, -1), (1, 1), (-1, 1))]
-            p.setPen(QPen(line, 1.2))
-            p.drawPolygon(QPolygonF([self._screen(c) for c in corners]))
-            if facing > 0.2:
-                c = self._screen(normal)
-                p.setPen(ink)
+            if facing > 1e-3:
+                faces.append((facing, normal, name, u, v))
+        faces.sort(key=lambda f: f[0])
+        paths = [(f, self._face_path(f[1], f[3], f[4])) for f in faces]
+        # a soft shadow under the die
+        c = QPointF(SIZE / 2, SIZE / 2 + CUBE * 1.55)
+        shadow = QRadialGradient(c, CUBE * 1.3)
+        shadow.setColorAt(0.0, QColor(0, 0, 0, 70 if dark else 55))
+        shadow.setColorAt(1.0, QColor(0, 0, 0, 0))
+        p.setPen(Qt.NoPen)
+        p.setBrush(QBrush(shadow))
+        p.save()
+        p.translate(c)
+        p.scale(1.0, 0.32)
+        p.drawEllipse(QPointF(0, 0), CUBE * 1.3, CUBE * 1.3)
+        p.restore()
+        # the body: what shows between the rounded faces (the die's
+        # rounded corners)
+        hull = QPolygonF()
+        pts = []
+        for _f, path in paths:
+            poly = path.toFillPolygon()
+            pts += [poly.at(i) for i in range(poly.count())]
+        if pts:
+            hull = _convex_hull(pts)
+            p.setBrush(body)
+            p.drawPolygon(hull)
+        font = QFont()
+        font.setPixelSize(9)
+        font.setBold(True)
+        font.setLetterSpacing(QFont.PercentageSpacing, 104)
+        p.setFont(font)
+        for (facing, normal, name, u, v), path in paths:
+            lit = 0.35 + 0.65 * self._light(normal)
+            top = _mix(lo, hi, min(1.0, lit + 0.12))
+            bottom = _mix(lo, hi, max(0.0, lit - 0.18))
+            a = self._screen(tuple(normal[k] + v[k] for k in range(3)))
+            b = self._screen(tuple(normal[k] - v[k] for k in range(3)))
+            grad = QLinearGradient(a, b)
+            grad.setColorAt(0.0, top)
+            grad.setColorAt(1.0, bottom)
+            p.setPen(Qt.NoPen)
+            p.setBrush(QBrush(grad))
+            p.drawPath(path)
+            # the hovered patch, kept inside the rounded face
+            if self.hover is not None:
+                for d, n2, quad in _CELLS:
+                    if n2 == normal and d == self.hover:
+                        cell = QPainterPath()
+                        cell.addPolygon(QPolygonF(
+                            [self._screen(q) for q in quad]))
+                        p.setBrush(light)
+                        p.drawPath(cell.intersected(path))
+            # a bright rim, like light caught on the die's edge
+            p.setBrush(Qt.NoBrush)
+            p.setPen(QPen(rim, 1.0))
+            p.drawPath(path)
+            if facing > 0.25:
+                ink2 = QColor(ink)
+                ink2.setAlphaF(min(1.0, 0.35 + facing))
+                p.setPen(ink2)
                 p.save()
-                p.translate(c)
-                # the label lies on the face: map its u / v axes
-                ua, va = self._screen(u), self._screen(v)
+                p.translate(self._screen(normal))
+                # of the label's four quarter turns on the face, the one
+                # whose baseline runs most to the right reads best
                 o = QPointF(SIZE / 2, SIZE / 2)
-                ux, uy = (ua.x() - o.x()) / CUBE, (ua.y() - o.y()) / CUBE
-                vx, vy = (va.x() - o.x()) / CUBE, (va.y() - o.y()) / CUBE
-                from PyQt5.QtGui import QTransform
+
+                def screen_dir(w):
+                    q = self._screen(w)
+                    return (q.x() - o.x()) / CUBE, (q.y() - o.y()) / CUBE
+                neg = lambda w: tuple(-c for c in w)  # noqa: E731
+                turns = [(u, v), (v, neg(u)), (neg(u), neg(v)),
+                         (neg(v), u)]
+                bu, bv = max(turns, key=lambda t: screen_dir(t[0])[0])
+                ux, uy = screen_dir(bu)
+                vx, vy = screen_dir(bv)
                 p.setTransform(QTransform(ux, uy, -vx, -vy, 0, 0), True)
                 p.drawText(-30, -8, 60, 16, Qt.AlignCenter, name)
                 p.restore()
-        # axis triad at the cube's back-bottom-left corner
-        origin = (-1.25, -1.25, -1.25)
-        for axis in range(3):
-            tip = list(origin)
-            tip[axis] += 1.0
-            p.setPen(QPen(AXIS[axis], 2))
-            a, b = self._screen(origin), self._screen(tip)
-            p.drawLine(a, b)
-            p.drawText(QPointF(b.x() - 3, b.y() + 4), "XYZ"[axis])
+        # a thin outline round the whole die
+        if pts:
+            p.setBrush(Qt.NoBrush)
+            p.setPen(QPen(QColor(0, 0, 0, 70 if dark else 45), 1.0))
+            p.drawPolygon(hull)
+        # a small axis triad in the bottom-left corner, clear of the die
+        # (at the die's own corner it was drawn across its faces)
+        tri = QFont()
+        tri.setPixelSize(9)
+        tri.setBold(True)
+        p.setFont(tri)
+        right, up, fwd = self.view._orientation()
+        o = QPointF(16, SIZE - 16)
+        order = sorted(range(3), key=lambda k: fwd[k])   # far ones first
+        for axis in reversed(order):
+            dx, dy = 13 * right[axis], -13 * up[axis]
+            tip = QPointF(o.x() + dx, o.y() + dy)
+            p.setPen(QPen(AXIS[axis], 2, Qt.SolidLine, Qt.RoundCap))
+            p.drawLine(o, tip)
+            p.drawText(QPointF(tip.x() + dx * 0.35 - 3,
+                               tip.y() + dy * 0.35 + 4), "XYZ"[axis])
         p.end()
 
     # ---------------------------------------------------------------- mouse

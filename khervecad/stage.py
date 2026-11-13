@@ -185,12 +185,22 @@ def palette(view, tokens):
     backgrounds, a slate one on dark ones."""
     from .view3d import BACKGROUNDS
     pair = BACKGROUNDS.get(view.background)
-    ground = QColor(pair[1]) if pair else QColor(tokens["editor"])
+    ground = QColor(pair[-1]) if pair else QColor(tokens["editor"])
+
+    def tint(base, amount):
+        # the slab takes a little of the ground's colour (2026-11-13: a
+        # grey slab on a sandy or sunset sky looked pasted on)
+        if not pair:
+            return QColor(base)
+        b = QColor(base)
+        return QColor(int(b.red() + (ground.red() - b.red()) * amount),
+                      int(b.green() + (ground.green() - b.green()) * amount),
+                      int(b.blue() + (ground.blue() - b.blue()) * amount))
     if ground.lightnessF() < 0.5:
-        return (QColor("#5b636d"), QColor("#3b4148"), QColor("#7d8690"),
-                SHADOW_OPACITY + 0.12)
-    return (QColor("#eceef1"), QColor("#b6bdc5"), QColor("#ffffff"),
-            SHADOW_OPACITY)
+        return (tint("#5b636d", 0.3), tint("#3b4148", 0.3),
+                tint("#7d8690", 0.2), SHADOW_OPACITY + 0.12)
+    return (tint("#eceef1", 0.45), tint("#b6bdc5", 0.45),
+            tint("#ffffff", 0.25), SHADOW_OPACITY)
 
 
 #: sin(elevation) of the default key light: the floor keeps its own
@@ -403,7 +413,7 @@ class Stage:
         horizon = rect.top() if p is None else p[1]
         from .view3d import BACKGROUNDS
         pair = BACKGROUNDS.get(view.background)
-        back = QColor(pair[1]) if pair else QColor(tokens["editor"])
+        back = QColor(pair[-1]) if pair else QColor(tokens["editor"])
         band = max(view.height() * 0.35, 1.0)
         grad = QLinearGradient(0, horizon, 0, horizon + band)
         clear = QColor(back)

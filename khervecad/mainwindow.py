@@ -561,8 +561,14 @@ class MainWindow(QMainWindow):
             style_menu.addAction(act)
         bg_menu = view_menu.addMenu(self.tr("3D &Background"))
         bg_group = QActionGroup(self)
+        # (kept by name: the 3D bar's glasses show them as swatches)
+        self._bg_actions = {}
+        from .hide_show import background_icon
         for name in BACKGROUNDS:
             act = QAction(self.tr(name), self, checkable=True)
+            self._bg_actions[name] = act
+            if BACKGROUNDS[name] is not None:
+                act.setIcon(background_icon(BACKGROUNDS[name]))
             act.setChecked(name == self.view3d.background)
             # every entry explains itself — the interface styles add
             # their own (Fusion, SolidWorks) once used

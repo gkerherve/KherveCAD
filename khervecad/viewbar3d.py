@@ -190,10 +190,6 @@ def add_window_controls(win):
     # SolidWorks' Hide/Show Items: the glasses, a grid of toggles
     # (2026-11-11, the user) — the same one as the 2D sketch's bar
     from . import hide_show
-    show = hide_show.button(win, bar)
-    layout.insertWidget(layout.count() - 1, show)
-    bar.buttons["show"] = show
-
     # ---- view settings: the window's stage action IS the stage switch
     display = bar.buttons["display"].menu()
     own = [bar.actions.pop("stage", None)]
@@ -206,4 +202,18 @@ def add_window_controls(win):
     for act in (win._cavity_act, win._edges_act, win._smooth_act,
                 win._overlay_act, win._gl_act):
         display.addAction(act)
+    for key in ("cavity", "edges", "smooth", "overlay", "gl"):
+        bar.actions[key] = getattr(win, "_%s_act" % key)
+    # ... and fused into the glasses (2026-11-13, the user: the two
+    # buttons were "almost doing the same"): the glasses' popup has View
+    # settings and the backgrounds; the sliders button goes
+    show = hide_show.button(win, bar, three_d=True)
+    old = bar.buttons.pop("display")
+    index = layout.indexOf(old)
+    layout.removeWidget(old)
+    old.hide()
+    bar.display_menu = display             # (kept: its actions live on)
+    # the separator before the old button now stands before the glasses
+    layout.insertWidget(index, show)
+    bar.buttons["show"] = show
     bar.place()

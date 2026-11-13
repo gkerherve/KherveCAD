@@ -86,9 +86,67 @@ def actions(win):
     return out
 
 
-def _fill(win, menu):
+#: the 3D bar's extra sections (2026-11-13, the user: View settings
+#: "almost doing the same" as the glasses — fused into them): (key, the
+#: window's action attribute, icon, short label)
+VIEW_SETTINGS = [
+    ("stage", "_stage_act", "mdi.texture-box", "Platform and shadow"),
+    ("lighting", None, "mdi.lightbulb-outline", "Lighting panel"),
+    ("cavity", "_cavity_act", "mdi.blur", "Cavity shading"),
+    ("edges", "_edges_act", "mdi.vector-polyline", "Edge lines"),
+    ("smooth", "_smooth_act", "mdi.blur-linear", "Smooth shading"),
+    ("overlay", "_overlay_act", "mdi.image-multiple-outline",
+     "Reference overlay"),
+    ("gl", "_gl_act", "mdi.chip", "Hardware rendering"),
+]
+
+
+def background_icon(colours, size=18):
+    """A rounded swatch of a background's gradient."""
+    from PyQt5.QtCore import QRectF, Qt
+    from PyQt5.QtGui import (QColor, QIcon, QLinearGradient, QPainter,
+                             QPen, QPixmap)
+    pix = QPixmap(size, size)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing)
+    grad = QLinearGradient(0, 0, 0, size)
+    last = max(len(colours) - 1, 1)
+    for i, c in enumerate(colours):
+        grad.setColorAt(i / last, QColor(c))
+    p.setBrush(grad)
+    p.setPen(QPen(QColor(0, 0, 0, 90), 1))
+    p.drawRoundedRect(QRectF(0.5, 0.5, size - 1, size - 1), 4, 4)
+    p.end()
+    return QIcon(pix)
+
+
+def view_settings(win):
+    """[(key, action, icon, label)] of the 3D view's look switches."""
+    bar = getattr(win.view3d, "nav_bar", None)
+    acts = getattr(bar, "actions", {}) or {}
+    out = []
+    for key, attr, glyph, label in VIEW_SETTINGS:
+        act = getattr(win, attr, None) if attr else acts.get(key)
+        if act is not None:
+            out.append((key, act, glyph, label))
+    return out
+
+
+def _section(grid, row, text, holder):
+    from PyQt5.QtWidgets import QLabel
+    from . import language
+    title = QLabel("<b>%s</b>" % language.tr(text), holder)
+    if row:
+        title.setContentsMargins(0, 8, 0, 0)
+    grid.addWidget(title, row, 0, 1, 2)
+    return row + 1
+
+
+def _fill(win, menu, three_d=False):
     """The grid of toggles, made afresh each time the menu opens (some
-    switches are made after the bars)."""
+    switches are made after the bars). *three_d*: also the 3D view's
+    look switches and its backgrounds (the 3D bar's glasses)."""
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import (QGridLayout, QLabel, QToolButton, QWidget,
                                  QWidgetAction)
@@ -113,20 +171,35 @@ def _fill(win, menu):
     grid.setContentsMargins(8, 6, 8, 8)
     grid.setHorizontalSpacing(4)
     grid.setVerticalSpacing(2)
-    title = QLabel("<b>%s</b>" % language.tr("Hide / Show Items"), holder)
-    grid.addWidget(title, 0, 0, 1, 2)
     buttons = {}
-    for i, (key, act, glyph, label) in enumerate(actions(win)):
-        b = QToolButton(holder)
-        b.setDefaultAction(act)            # follows the action both ways
-        b.setIcon(icons.icon(glyph))
-        b.setText(language.tr(label))
-        b.setToolTip(act.statusTip() or act.text())
-        b.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        b.setAutoRaise(True)
-        b.setMinimumWidth(170)
-        grid.addWidget(b, 1 + i // 2, i % 2)
-        buttons[key] = b
+
+    def toggles(row, items):
+        for i, (key, act, glyph, label) in enumerate(items):
+            b = QToolButton(holder)
+            b.setDefaultAction(act)        # follows the action both ways
+            if glyph:
+                b.setIcon(icons.icon(glyph))
+            b.setText(language.tr(label))
+            b.setToolTip(act.statusTip() or act.text())
+            b.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+            b.setAutoRaise(True)
+            b.setMinimumWidth(170)
+            grid.addWidget(b, row + i // 2, i % 2)
+            buttons[key] = b
+        return row + (len(items) + 1) // 2
+    row = _section(grid, 0, "Hide / Show Items", holder)
+    row = toggles(row, actions(win))
+    if three_d:
+        looks = view_settings(win)
+        if looks:
+            row = _section(grid, row, "View settings", holder)
+            row = toggles(row, looks)
+        bgs = getattr(win, "_bg_actions", None) or {}
+        if bgs:
+            row = _section(grid, row, "Background", holder)
+            items = [("bg_" + name, act, None, name)
+                     for name, act in bgs.items()]
+            row = toggles(row, items)
     wa = QWidgetAction(menu)
     wa.setDefaultWidget(holder)
     menu.addAction(wa)
@@ -134,15 +207,15 @@ def _fill(win, menu):
     return buttons
 
 
-def button(win, parent, ink="#e6e9ec"):
+def button(win, parent, ink="#e6e9ec", three_d=False):
     """The glasses button: a popup grid of the toggles, two columns,
     each an icon and its name (SolidWorks shows icons alone; the names
     say what each does)."""
     from PyQt5.QtWidgets import QMenu, QToolButton
     from . import icons, language
     menu = QMenu(parent)
-    menu.aboutToShow.connect(lambda: _fill(win, menu))
-    _fill(win, menu)
+    menu.aboutToShow.connect(lambda: _fill(win, menu, three_d))
+    _fill(win, menu, three_d)
     show = QToolButton(parent)
     show.setMenu(menu)
     show.setPopupMode(QToolButton.InstantPopup)

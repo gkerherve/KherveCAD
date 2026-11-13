@@ -111,7 +111,7 @@ def test_exploded_view_and_cut_through_left_the_3d_bar(app):
         bar = win.view3d.nav_bar
         assert "explode" not in bar.buttons and "cut" not in bar.buttons
         assert set(bar.buttons) == {"wireframe", "orientation", "fit",
-                                    "hand", "show", "display"}
+                                    "hand", "show"}
         assert bar.layout().itemAt(0).widget() is bar.buttons["wireframe"]
         toolbar_style.apply(win, "SolidWorks")
         acts = {a for b in win.findChildren(type(bar.buttons["hand"]))
@@ -157,11 +157,25 @@ def test_3d_bar_carries_the_display_options_menu(app):
     win = MainWindow()
     try:
         bar = win.view3d.nav_bar
-        display = bar.buttons["display"]
+        # fused into the glasses (2026-11-13, the user): no sliders
+        # button; its switches are the glasses' View settings
+        assert "display" not in bar.buttons
         expected = [win._stage_act, bar.actions["lighting"],
                     win._cavity_act, win._edges_act, win._smooth_act,
                     win._overlay_act, win._gl_act]
-        assert display.menu().actions() == expected
+        assert bar.display_menu.actions() == expected
+        from khervecad import hide_show
+        items = hide_show._fill(win, bar.buttons["show"].menu(), True)
+        for key in ("stage", "lighting", "cavity", "edges", "smooth",
+                    "overlay", "gl"):
+            assert key in items
+        # ... and the backgrounds, each the View menu's own action
+        for name in ("Sunset", "Sunrise", "Midnight", "Sand", "Snow"):
+            assert items["bg_" + name].defaultAction() is \
+                win._bg_actions[name]
+        items["bg_Sand"].click()
+        assert win.view3d.background == "Sand"
+        win._bg_actions["Slate"].trigger()
         assert win._cavity_act.isChecked()
         win._cavity_act.trigger()               # on by default: switch off
         assert not win.view3d.cavity

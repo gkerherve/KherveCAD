@@ -193,6 +193,10 @@ NAV_TIPS = {
          "construction geometry (centerlines, points, origins), the "
          "main planes, the origin axes, the sketch grid, the scale bar "
          "and the view cube.",
+         "On the 3D view also View settings (platform and shadow, "
+         "lighting panel, cavity shading, edge lines, smooth shading, "
+         "reference overlay, hardware rendering) and the Background: "
+         "Sunset, Sunrise, Midnight, Sand, Snow, Studio, Slate...",
          "Each is the View menu's own switch: ticking it here ticks it "
          "there, and on the other view's bar."],
         None),
