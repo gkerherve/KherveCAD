@@ -250,6 +250,10 @@ into a new module and import.
                        an expression over them as written (`cube(w)`,
                        `h = w * 2`) and still folds what only the parser
                        knows (a user function, a library's variable).
+                       A true/false argument kept as an expression (`left_hand
+                       = lh` in a module) is read by `scadparse.flag` — the
+                       builders' `bool("lh")` made every such flag true (the
+                       user's vice: both nuts left-handed, 2026-11-13).
                        `_components` splits a vector variable
                        (`translate(pos)` -> pos[0..2]); centred squares of
                        expression sizes centre by expression.

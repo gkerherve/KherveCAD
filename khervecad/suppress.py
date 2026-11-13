@@ -192,7 +192,7 @@ def _b_off(parser, positional, named):
     node = CadNode("union", "Group", {})
     node._kcad_off = (str(named.get("statement", positional[0] if
                                      positional else "")),
-                      bool(named.get("rolled", False)))
+                      _flag(parser, named.get("rolled", False)))
     return node
 
 
@@ -241,3 +241,8 @@ def restore_rollbacks(root):
                if getattr(c, "_rolled_back", False)]
         if idx:
             n.params[ROLLBACK] = min(idx)
+
+
+def _flag(parser, value, default=False):
+    from .scadparse import flag
+    return flag(parser, value, default)

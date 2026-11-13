@@ -532,3 +532,30 @@ def test_a_deduped_object_name_still_round_trips(app):
     code = _code_of(root)
     _assert_no_lost_calls(code)
     assert "Wheel" in {n.name for n in root.walk() if n.type == "component"}
+
+
+def test_a_true_false_module_argument_reaches_each_call():
+    """`jaw(false)` and `jaw(true)` passing `left_hand = lh`: the flag was
+    kept as the text "lh", and bool("lh") made BOTH nuts of the user's
+    vice left-handed (2026-11-13)."""
+    from khervecad import scadparse as sp
+    src = """
+module jaw(lh, c) {
+    kcad_thread(kind = "metric", diameter = 10, pitch = 2, length = 18,
+                left_hand = lh, internal = true);
+    cube(5, center = c);
+    kcad_rounded_box(size = [10, 10, 10], r = 1, center = c);
+}
+module A() { jaw(false, false); }
+module B() { jaw(true, true); }
+A();
+B();
+"""
+    root, _w = sp.parse_scad(src)
+    hands = [n.params["left_hand"] for n in root.walk()
+             if n.type == "thread"]
+    assert hands == [False, True]
+    assert [n.params["center"] for n in root.walk()
+            if n.type == "cube"] == [False, True]
+    assert [n.params["center"] for n in root.walk()
+            if n.type == "rounded_box"] == [False, True]

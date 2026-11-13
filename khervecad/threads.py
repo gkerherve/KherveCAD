@@ -178,7 +178,7 @@ def statement(node, fmt, fn) -> str:
 
 def build(parser, positional, named):
     from .model import CadNode
-    from .scadparse import _num
+    from .scadparse import _num, flag
     d = NODE_TYPES["thread"]["params"]
     params = dict(d)
     kind = str(named.get("kind", d["kind"]))
@@ -190,7 +190,7 @@ def build(parser, positional, named):
         if key == "kind" or key not in named:
             continue
         if isinstance(default, bool):
-            params[key] = bool(named[key])
+            params[key] = flag(parser, named[key], default)
         else:
             value = _num(named[key], default)
             if isinstance(default, int) and not isinstance(value, str):

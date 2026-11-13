@@ -405,7 +405,7 @@ def _b_rounded_box(parser, positional, named):
         x=at[0], y=at[1], z=at[2],
         width=size[0], depth=size[1], height=size[2],
         radius=_num(named.get("r", 3.0), 3.0),
-        center=bool(named.get("center", False)),
+        center=_flag(parser, named.get("center", False)),
         segments=_segments(named, 32)))
 
 
@@ -751,3 +751,8 @@ def tess(node, env, color, sel, selected):
                     pts.extend((cx + x, cy + y, cz + z) for x, y, z in ball)
         return mesh._emit(geom3d.convex_hull(pts), color, selected)
     return []                                     # pragma: no cover
+
+
+def _flag(parser, value, default=False):
+    from .scadparse import flag
+    return flag(parser, value, default)

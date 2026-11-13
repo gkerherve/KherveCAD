@@ -1007,6 +1007,28 @@ def _unquote(literal: str) -> str:
     return literal[1:-1].replace('\\"', '"').replace("\\\\", "\\")
 
 
+def flag(parser, value, default=False):
+    """A true / false argument as a bool. It may come as the TEXT of an
+    expression — `left_hand = lh` inside a module, kept as written because
+    lh is a variable the tree defines — and bool("lh") is True whatever
+    lh holds (2026-11-13: both nuts of the user's vice came out
+    left-handed, `jaw(false)` and `jaw(true)` alike). Such text is read
+    in the parser's scope where the call stands."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        text = value.strip()
+        if text in ("true", "false"):
+            return text == "true"
+        try:
+            return bool(expr.evaluate(text, getattr(parser, "scope", {})))
+        except Exception:
+            return default
+    return default if value is None else bool(value)
+
+
 def _num(value, default=0.0):
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
@@ -1172,7 +1194,7 @@ def _b_cube(parser, positional, named):
         w = d = h = _num(size, 10.0)
     return CadNode("cube", "Cube", dict(
         x=0.0, y=0.0, z=0.0, width=w, depth=d, height=h,
-        center=bool(named.get("center", False))))
+        center=flag(parser, named.get("center", False))))
 
 
 def _b_sphere(parser, positional, named):
@@ -1211,7 +1233,7 @@ def _b_cylinder(parser, positional, named):
         segments=_segments(parser, named,
                            max(bottom, top) if isinstance(bottom, (int, float))
                            and isinstance(top, (int, float)) else bottom, 64),
-        center=bool(named.get("center", False))))
+        center=flag(parser, named.get("center", False))))
 
 
 def _components(parser, source, count):
@@ -1276,7 +1298,7 @@ def _b_linear_extrude(parser, positional, named):
                     10.0),
         twist=_num(named.get("twist", 0.0)),
         scale=_num(named.get("scale", 1.0), 1.0),
-        center=bool(named.get("center", False)),
+        center=flag(parser, named.get("center", False)),
         segments=int(_num(named.get("slices", 0), 0) or 0)))
 
 
@@ -1290,7 +1312,7 @@ def _b_offset(parser, positional, named):
     if "delta" in named:
         return CadNode("offset", "Offset", dict(
             radius=_num(named["delta"]),
-            chamfer=bool(named.get("chamfer", False))))
+            chamfer=flag(parser, named.get("chamfer", False))))
     return CadNode("offset", "Offset", dict(
         radius=_num(_get(positional, named, 0, "r", default=1.0), 1.0),
         chamfer=False))
@@ -1298,7 +1320,7 @@ def _b_offset(parser, positional, named):
 
 def _b_projection(parser, positional, named):
     return CadNode("projection", "Projection",
-                   dict(cut=bool(named.get("cut", False))))
+                   dict(cut=flag(parser, named.get("cut", False))))
 
 
 def _b_import(parser, positional, named):

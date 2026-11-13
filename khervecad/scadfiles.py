@@ -268,8 +268,8 @@ def _b_surface(parser, positional, named):
     conv = _num(named.get("convexity", 1), 1.0)
     return CadNode("surface", "Surface", dict(
         file=str(named.get("file", positional[0] if positional else "")),
-        center=bool(named.get("center", False)),
-        invert=bool(named.get("invert", False)),
+        center=_flag(parser, named.get("center", False)),
+        invert=_flag(parser, named.get("invert", False)),
         convexity=conv if isinstance(conv, str) else max(int(conv), 1)))
 
 
@@ -278,7 +278,7 @@ def build_import_2d(parser, positional, named, path):
     from .scadparse import _num
     segments = _num(named.get("$fn", 32), 32.0)
     return CadNode("import_2d", "Import " + os.path.basename(path), dict(
-        path=path, x=0.0, y=0.0, center=bool(named.get("center", False)),
+        path=path, x=0.0, y=0.0, center=_flag(parser, named.get("center", False)),
         dpi=_num(named.get("dpi", 72.0), 72.0),
         layer=str(named.get("layer", "") or ""),
         id=str(named.get("id", "") or ""),
@@ -340,3 +340,8 @@ def tess(node, env, color, sel, selected):
                      (c[0], c[1], 0.0))
                     for a, b, c in mesh._caps(solid, holes))
     return mesh._emit(tris, color, selected)
+
+
+def _flag(parser, value, default=False):
+    from .scadparse import flag
+    return flag(parser, value, default)
