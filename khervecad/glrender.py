@@ -912,7 +912,8 @@ class GLRenderer:
                                  QOpenGLFramebufferObjectFormat)
         if self._fbo_size != (w, h):
             fmt = QOpenGLFramebufferObjectFormat()
-            fmt.setSamples(4)
+            from . import options_more
+            fmt.setSamples(max(0, options_more.get("aa_samples")))
             fmt.setAttachment(QOpenGLFramebufferObject.Depth)
             self._fbo = QOpenGLFramebufferObject(w, h, fmt)
             self._plain = QOpenGLFramebufferObject(w, h)
@@ -1176,7 +1177,9 @@ class GLRenderer:
         prog.enableAttributeArray(0)
         prog.setAttributeBuffer(0, GL_FLOAT, 0, 3, 12)
         f.glDepthFunc(GL_LEQUAL)
-        f.glLineWidth(1.2 * float(getattr(view, "_pixel_ratio", 1.0) or 1.0))
+        from . import options_more
+        f.glLineWidth(options_more.get("edge_width")
+                      * float(getattr(view, "_pixel_ratio", 1.0) or 1.0))
         f.glDrawArrays(GL_LINES, 0, count)
         f.glDepthFunc(GL_LESS)
         prog.disableAttributeArray(0)

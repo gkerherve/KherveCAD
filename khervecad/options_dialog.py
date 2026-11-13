@@ -51,8 +51,12 @@ def save_dimensions(decimals, trailing):
 #: are OptionsDialog._page_<name in lower case, spaces as _>
 TREE = [
     ("System Options", ["General", "Display", "Sketch", "View",
-                        "Performance", "FeatureManager", "File Locations"]),
-    ("Document Properties", ["Units", "Image Quality", "Material"]),
+                        "Performance", "FeatureManager", "File Locations",
+                        # options_more.py (2026-11-13)
+                        "Mouse", "Colors", "Keyboard", "Backup",
+                        "Import Export"]),
+    ("Document Properties", ["Units", "Image Quality", "Material",
+                             "Template", "Drafting Standard"]),
 ]
 
 
@@ -262,6 +266,34 @@ class OptionsDialog(QDialog):
         form.addRow(tr("Sketch a Boss / Cut in:"), self.where_3d)
         return page
 
+    # ── options_more.py's pages ────────────────────────────────────
+    def _more(self, name):
+        if getattr(self, "_more_pages", None) is None:
+            from . import options_more
+            self._more_pages = options_more.add_pages(self)
+        return self._more_pages[name]
+
+    def _page_mouse(self):
+        return self._more("Mouse")
+
+    def _page_colors(self):
+        return self._more("Colors")
+
+    def _page_keyboard(self):
+        return self._more("Keyboard")
+
+    def _page_backup(self):
+        return self._more("Backup")
+
+    def _page_import_export(self):
+        return self._more("Import Export")
+
+    def _page_template(self):
+        return self._more("Template")
+
+    def _page_drafting_standard(self):
+        return self._more("Drafting Standard")
+
     def _page_view(self):
         page, form = self._form()
         self._choice(form, "view/3d projection", "Projection:")
@@ -433,6 +465,8 @@ class OptionsDialog(QDialog):
         from . import massbar
         if self.material.currentData() != massbar.material_of(model):
             massbar.set_material(win, self.material.currentData())
+        from . import options_more
+        options_more.apply_pages(self)
 
     def _widgets(self):
         boxes = [self.lang, self.theme, self.style, self.autosave,
@@ -440,6 +474,8 @@ class OptionsDialog(QDialog):
                  self.grid, self.history, self.unit,
                  self.scale, self.fn, self.decimals, self.zeros,
                  self.material]
+        from . import options_more
+        boxes += options_more.widgets(self)
         boxes += [b for b, _a in self._checks]
         boxes += [c for c, _a in self._choices]
         return boxes
@@ -451,7 +487,7 @@ class OptionsDialog(QDialog):
                 out.append(w.currentIndex())
             elif isinstance(w, QCheckBox):
                 out.append(w.isChecked())
-            elif isinstance(w, QSpinBox):
+            elif hasattr(w, "value"):
                 out.append(w.value())
             else:
                 out.append(w.text())
@@ -463,7 +499,7 @@ class OptionsDialog(QDialog):
                 w.setCurrentIndex(v)
             elif isinstance(w, QCheckBox):
                 w.setChecked(v)
-            elif isinstance(w, QSpinBox):
+            elif hasattr(w, "setValue"):
                 w.setValue(v)
             else:
                 w.setText(v)
@@ -497,6 +533,11 @@ def action(win):
             "interface style in one window (Ctrl+,)"))
         act.triggered.connect(lambda: open_dialog(win))
         win._options_act = act
+        # the preferences that act on their own (undo limit, shortcuts,
+        # backups, the view's look), once the menus are all built
+        from PyQt5.QtCore import QTimer
+        from . import options_more
+        QTimer.singleShot(0, lambda: options_more.start(win))
     return act
 
 

@@ -199,9 +199,19 @@ def number(value: float, digits: int = None) -> str:
     return tidy(value, digits)
 
 
+#: Options ▸ Import Export: lengths in mm and inches together
+DUAL = False
+
+
 def length(value: float, unit, digits: int = None) -> str:
-    """"36.06 nm" — a tidy length with its unit."""
-    return f"{number(value, digits)} {symbol(unit)}"
+    """"36.06 nm" — a tidy length with its unit (and the other of mm /
+    inches in brackets when Options asks for dual dimensions)."""
+    text = f"{number(value, digits)} {symbol(unit)}"
+    if DUAL and coerce(unit) in ("mm", "in"):
+        other = "in" if coerce(unit) == "mm" else "mm"
+        mm_ = value * to_mm(unit)
+        text += f" [{number(mm_ / to_mm(other), digits)} {symbol(other)}]"
+    return text
 
 
 def mm(value: float, unit, power: int = 1) -> float:

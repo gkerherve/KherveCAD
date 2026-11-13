@@ -1243,6 +1243,9 @@ class MainWindow(QMainWindow):
             op_pick.after_wrap(self, op, wrapper)
             if op == "fillet":                # now: which edges?
                 self.start_fillet_pick(wrapper)
+            elif op == "shell":               # now: which faces open?
+                from . import shell_pick
+                shell_pick.start(self, wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
             elif op == "vertex_paint":        # now: where to paint?
@@ -2584,6 +2587,9 @@ class MainWindow(QMainWindow):
         self._fitted = False
         self.view3d.user_moved = False        # fresh document, frame it
         self.builder.show_overview()          # the explorer, no Object
+        from . import options_more            # the default template
+        options_more.new_document(self)
+        self._dirty = False
         self._update_title()
 
     def new_window(self):
@@ -3174,6 +3180,9 @@ class MainWindow(QMainWindow):
                 write_stl(mesh.tessellate(scope), path)
         if factor != 1.0:
             units.scale_mesh_file(path, factor)
+        from . import options_more
+        if options_more.get("stl_y_up"):
+            options_more.y_up_stl(path)
         if iso is not None:
             self.statusBar().showMessage(
                 language.tr("Exported {name} alone to {path}").format(

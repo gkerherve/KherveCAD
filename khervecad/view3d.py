@@ -1190,7 +1190,8 @@ class View3D(QWidget):
         return (rx, ry, rz), (ux, uy, uz), (fx, fy, fz)
 
     def _focal(self):
-        return 1.2 * min(self.width(), self.height())
+        from . import options_more
+        return options_more.focal_factor() * min(self.width(), self.height())
 
     def _camera(self):
         right, up, forward = self._orientation()
@@ -1464,7 +1465,8 @@ class View3D(QWidget):
             sil = shading.silhouette(info, front)
             line = QColor(EDGE_COLOR)
             line_pen = QPen(line)
-            line_pen.setWidthF(1.2)
+            from . import options_more
+            line_pen.setWidthF(options_more.get("edge_width"))
 
             def draw_edges(parent, piece):
                 segs = info.creases.get(parent, ())
@@ -2111,7 +2113,12 @@ class View3D(QWidget):
         self._right_down = event.pos() \
             if event.button() == Qt.RightButton else None
         self._last = event.pos()
-        self._mode = "orbit" if event.button() == Qt.LeftButton else "pan"
+        if event.button() == Qt.LeftButton:
+            self._mode = "orbit"
+        else:                       # by the mouse scheme in Options
+            from . import options_more
+            self._mode = options_more.mode_for(event.button(),
+                                               event.modifiers())
         if event.button() == Qt.MiddleButton and \
                 getattr(self.edit_tool, "middle_orbits", False):
             # a sketch tool draws with the left button: the middle one
@@ -2183,10 +2190,12 @@ class View3D(QWidget):
         self._last = event.pos()
         self.user_moved = True                # you own the view now
         if self._mode == "orbit":
-            self.yaw = (self.yaw - delta.x() * 0.5) % 360.0
+            from . import options_more
+            k = 0.5 * options_more.get("orbit_speed") / 100.0
+            self.yaw = (self.yaw - delta.x() * k) % 360.0
             # free vertical orbit — wrap instead of clamping at the poles
             # so you can tumble the model right over the top
-            self.pitch = (self.pitch + delta.y() * 0.5 + 180.0) \
+            self.pitch = (self.pitch + delta.y() * k + 180.0) \
                 % 360.0 - 180.0
         else:
             _eye, right, up, _fwd = self._camera()
@@ -2200,9 +2209,25 @@ class View3D(QWidget):
         if self.edit_tool is not None and self.edit_tool.wheel(event):
             return
         self.user_moved = True
-        factor = 0.87 if event.angleDelta().y() > 0 else 1.15
+        from . import options_more
+        closer = event.angleDelta().y() > 0
+        if options_more.get("reverse_zoom"):
+            closer = not closer
+        factor = 0.87 if closer else 1.15
+        old = self.distance
         self.distance = max(self.MIN_DISTANCE,
                             min(self.MAX_DISTANCE, self.distance * factor))
+        if options_more.get("zoom_to_cursor") and old > 0:
+            # keep the point under the pointer where it is (on the
+            # target's plane): move the target toward it as we close in
+            _eye, right, up, _fwd = self._camera()
+            pos = event.pos()
+            per_px = old / self._focal()
+            dx = (pos.x() - self.width() / 2.0) * per_px
+            dy = (self.height() / 2.0 - pos.y()) * per_px
+            t = 1.0 - self.distance / old
+            for i in range(3):
+                self.target[i] += (right[i] * dx + up[i] * dy) * t
         self._begin_fast()                # draft while zooming...
         self._idle.start()                # ...back to crisp when it stops
         self.update()
