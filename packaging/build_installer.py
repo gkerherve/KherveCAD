@@ -98,17 +98,20 @@ def write_version() -> str:
     ships the first one's number.
     """
     sys.path.insert(0, str(_ROOT))
-    from khervecad._version import get_version
+    from khervecad._version import get_commit, get_version
 
     (_ROOT / "khervecad" / "VERSION").unlink(missing_ok=True)
     get_version.cache_clear()
+    get_commit.cache_clear()
     full = get_version()
-    if full == "0.1.0":
+    if full in ("0", "0.1.0"):
         raise SystemExit(
-            "refusing to build: version resolved to the 0.1.0 placeholder — "
+            "refusing to build: version resolved to the 0 placeholder — "
             "is this a git checkout with git on PATH?"
         )
-    (_ROOT / "khervecad" / "VERSION").write_text(full + "\n", encoding="utf-8")
+    # the number, then the sha on its own line (the updater's changelog)
+    (_ROOT / "khervecad" / "VERSION").write_text(
+        full + "\n" + get_commit() + "\n", encoding="utf-8")
     numeric = re.match(r"[0-9.]+", full).group(0)
     print(f"{_APP} {full}")
     return numeric

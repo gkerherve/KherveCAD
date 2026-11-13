@@ -9,6 +9,10 @@ the Free Software Foundation, either version 3 of the License, or
 """
 
 APP_NAME = "KherveCAD"
+#: the short name the window and splash show (2026-11-13, the user: "our
+#: big name is KherveCAD but short for kCAD"). Files, installers, settings,
+#: the library folder and the MCP server keep APP_NAME.
+SHORT_NAME = "kCAD"
 
 # drop-down rows in the theme's colours, set when each combo is made
 # (before any module imports QComboBox) — combo_fix.py

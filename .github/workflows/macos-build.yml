@@ -112,7 +112,7 @@ jobs:
       - name: Read the version back
         # From the file the build stamped, not from git again, so the
         # artifact name cannot disagree with the app's own About box.
-        run: echo "VERSION=$(cut -d+ -f1 khervecad/VERSION)" >> "$GITHUB_ENV"
+        run: echo "VERSION=$(head -n1 khervecad/VERSION | cut -d+ -f1)" >> "$GITHUB_ENV"
 
       - name: Check the bundle
         # Not a launch test — a GUI app on a headless runner would just
@@ -128,7 +128,7 @@ jobs:
           test -x "$APP/Contents/MacOS/KherveCAD"
           plutil -p "$APP/Contents/Info.plist" \
             | grep -E 'CFBundleIdentifier|CFBundleShortVersionString'
-          test "$VERSION" != "0.1.0"
+          test "$VERSION" != "0.1.0" && test "$VERSION" != "0"
           codesign --verify --deep --strict "$APP"
           file -b "$APP/Contents/MacOS/KherveCAD" | grep -q '${{ matrix.arch }}'
           test -x "$APP/Contents/Resources/openscad/OpenSCAD.app/Contents/MacOS/OpenSCAD"

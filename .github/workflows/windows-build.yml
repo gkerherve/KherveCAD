@@ -70,7 +70,7 @@ jobs:
         id: ver
         shell: bash
         run: |
-          VERSION=$(cut -d+ -f1 khervecad/VERSION | tr -d '\r\n')
+          VERSION=$(head -n1 khervecad/VERSION | cut -d+ -f1 | tr -d '\r\n')
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -80,7 +80,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$VERSION" != "0.1.0"
+          test "$VERSION" != "0.1.0" && test "$VERSION" != "0"
           test -f dist/KherveCAD/KherveCAD.exe
           ls dist/KherveCAD/openscad/*.exe
           ls dist/KherveCAD/openscad | grep -qi copying

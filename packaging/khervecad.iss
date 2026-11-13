@@ -3,7 +3,7 @@
 ; Not run by hand: packaging/build_installer.py freezes the app, drops the
 ; bundled OpenSCAD into the frozen folder and then calls
 ;
-;   ISCC.exe /DAPP_VERSION=0.1.N /DSRC_DIR=...\dist\KherveCAD /DOUT_DIR=...\dist khervecad.iss
+;   ISCC.exe /DAPP_VERSION=N /DSRC_DIR=...\dist\KherveCAD /DOUT_DIR=...\dist khervecad.iss
 ;
 ; Installs to %LOCALAPPDATA%\Programs\KherveCAD so no elevation prompt is
 ; needed, associates .kcad, and ships OpenSCAD in an openscad\ subfolder

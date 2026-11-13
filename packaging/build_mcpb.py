@@ -76,6 +76,8 @@ def manifest(version):
 def build(out=None):
     from khervecad._version import get_version
     version = get_version().split("+")[0]
+    if "." not in version:          # a manifest version is x.y.z
+        version = "%s.0.0" % version
     out = out or os.path.join(ROOT, "dist", "KherveCAD.mcpb")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:

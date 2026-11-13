@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (QAction, QActionGroup, QApplication,
                              QDockWidget, QFileDialog, QLabel,
                              QMainWindow, QMessageBox, QSplitter)
 
-from . import APP_NAME, __version__, document, icons, language, mesh, units
+from . import APP_NAME, SHORT_NAME, __version__, document, icons, language, mesh, units
 from .engine import ScadEngine, set_openscad_path
 from .model import NODE_TYPES, DocumentModel
 from .properties import PropertiesPanel
@@ -3241,7 +3241,7 @@ class MainWindow(QMainWindow):
         scadlib.DOCUMENT_DIR = str(Path(self._path).parent) \
             if self._path else None
         star = "*" if self._dirty else ""
-        self.setWindowTitle(f"{star}{name} — {APP_NAME} v{__version__}")
+        self.setWindowTitle(f"{star}{name} — {SHORT_NAME} v{__version__}")
         label = getattr(self, "_file_label", None)
         if label is not None:
             if self._path:
@@ -3317,14 +3317,15 @@ class MainWindow(QMainWindow):
                        "tessellator")
 
         box = QMessageBox(self)
-        box.setWindowTitle(f"About {APP_NAME}")
+        box.setWindowTitle(f"About {SHORT_NAME}")
         box.setIconPixmap(icons.app_icon().pixmap(64, 64))
         box.setTextFormat(Qt.RichText)
         box.setText(
             f"<h2 style='margin-bottom:0'>"
-            f"<span style='color:#3776ab'>Kherve</span>"
+            f"<span style='color:#3776ab'>k</span>"
             f"<span style='color:#e07b39'>CAD</span></h2>"
-            f"<p style='color:gray;margin-top:2px'>version {__version__}</p>"
+            f"<p style='color:gray;margin-top:2px'>KherveCAD &middot; "
+            f"v{__version__}</p>"
             f"<p>An easy-to-use CAD program with <b>OpenSCAD as the "
             f"engine</b>: the model is a tree of objects &mdash; 2D shapes, "
             f"3D primitives, extrusions, transforms and booleans &mdash; that "

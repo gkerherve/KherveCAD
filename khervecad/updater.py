@@ -63,7 +63,7 @@ from PyQt5.QtWidgets import (QApplication, QDialog, QDialogButtonBox,
                              QLabel, QMessageBox, QProgressDialog,
                              QTextBrowser, QVBoxLayout)
 
-from . import APP_NAME, __version__
+from . import APP_NAME, SHORT_NAME, __version__
 
 REPO = "gkerherve/KherveCAD"
 API = f"https://api.github.com/repos/{REPO}"
@@ -75,7 +75,7 @@ USER_AGENT = f"{APP_NAME}/{__version__} (+https://github.com/{REPO})"
 SETTINGS = ("Kherve", "KherveCAD")
 KEY_LAST = "update_last_check"     # epoch seconds of the last good check
 KEY_AUTO = "update_auto"           # check by itself (default on)
-KEY_SKIP = "update_skip_version"   # "0.1.N" the user said to skip
+KEY_SKIP = "update_skip_version"   # "vN" the user said to skip
 CHECK_INTERVAL_S = 24 * 3600
 STARTUP_DELAY_MS = 5000
 
@@ -83,19 +83,19 @@ STARTUP_DELAY_MS = 5000
 FAMILIES = {
     "windows": {
         "prefix": "v",
-        "assets": (r"KherveCAD-Setup-\d+\.\d+\.\d+\.exe",
+        "assets": (r"KherveCAD-Setup-(?:\d+\.\d+\.)?\d+\.exe",
                    r"KherveCAD-Setup\.exe"),
     },
     "macos": {
         "prefix": "macos-v",
-        "assets": (r"KherveCAD-\d+\.\d+\.\d+-macOS-arm64\.dmg",
+        "assets": (r"KherveCAD-(?:\d+\.\d+\.)?\d+-macOS-arm64\.dmg",
                    r"KherveCAD-macOS-arm64\.dmg"),
     },
     # Same tags as "macos": one release carries both disk images. A release
     # from before the Intel build has no x86_64 DMG and is skipped here.
     "macos-intel": {
         "prefix": "macos-v",
-        "assets": (r"KherveCAD-\d+\.\d+\.\d+-macOS-x86_64\.dmg",
+        "assets": (r"KherveCAD-(?:\d+\.\d+\.)?\d+-macOS-x86_64\.dmg",
                    r"KherveCAD-macOS-x86_64\.dmg"),
     },
 }
@@ -129,29 +129,39 @@ class DownloadCancelled(UpdateError):
 
 # ------------------------------------------------------------- versions
 
-_VERSION_RE = re.compile(r"v?(\d+)\.(\d+)\.(\d+)(?:\+([0-9A-Za-z.]+))?")
+#: "1025", "v1025", and the old "0.1.1024+abc1234": the version is the
+#: commit count either way (2026-11-13, the user: no more "0.1." and no
+#: letters), so both read as ``(N,)`` and compare
+_VERSION_RE = re.compile(
+    r"v?(?:\d+\.\d+\.)?(\d+)(?:\+([0-9A-Za-z.]+))?")
 
 
-def parse_version(text) -> tuple[tuple[int, int, int], str] | None:
-    """``'0.1.191+abc1234'`` -> ``((0, 1, 191), 'abc1234')``.
-
-    The sha is ``''`` when absent (a release tag, an old VERSION file);
-    anything unparseable gives None.
-    """
+def parse_version(text) -> tuple[tuple[int], str] | None:
+    """``'1025'`` -> ``((1025,), '')``; ``'0.1.191+abc1234'`` ->
+    ``((191,), 'abc1234')``. Anything unparseable gives None."""
     m = _VERSION_RE.fullmatch(str(text or "").strip())
     if not m:
         return None
-    return (int(m[1]), int(m[2]), int(m[3])), m[4] or ""
+    return (int(m[1]),), m[2] or ""
 
 
 def running_version(text: str = __version__):
-    """The running build's (version tuple, sha); the ``0.1.0`` fallback
-    for a string nobody can read, so every release looks newer."""
-    return parse_version(text) or ((0, 1, 0), "")
+    """The running build's (version tuple, sha); ``(0,)`` for a string
+    nobody can read, so every release looks newer. The sha comes from
+    the build itself (`_version.get_commit`), never shown."""
+    got = parse_version(text)
+    if got is None:
+        return (0,), ""
+    version, sha = got
+    if not sha and text == __version__:
+        from ._version import get_commit
+        sha = get_commit()
+    return version, sha
 
 
 def label(version) -> str:
-    return ".".join(str(v) for v in version)
+    """``(1025,)`` -> ``'v1025'``."""
+    return "v%d" % version[-1]
 
 
 def is_newer(candidate, current) -> bool:
@@ -192,8 +202,9 @@ class Release:
 
 def tag_version(tag: str, family: str):
     prefix = FAMILIES[family]["prefix"]
-    m = re.fullmatch(re.escape(prefix) + r"(\d+)\.(\d+)\.(\d+)", tag or "")
-    return (int(m[1]), int(m[2]), int(m[3])) if m else None
+    # the old "v0.1.N" tags and the new "vN" ones
+    m = re.fullmatch(re.escape(prefix) + r"(?:\d+\.\d+\.)?(\d+)", tag or "")
+    return (int(m[1]),) if m else None
 
 
 def pick_asset(assets, family: str) -> dict | None:
@@ -711,7 +722,7 @@ class UpdateDialog(QDialog):
         self.setWindowTitle("Update available")
         self.resize(620, 520)
         lay = QVBoxLayout(self)
-        head = QLabel(f"<b>{APP_NAME} {info.release.label} is available</b>"
+        head = QLabel(f"<b>{SHORT_NAME} {info.release.label} is available</b>"
                       f" (you have {label(info.current)}).")
         head.setWordWrap(True)
         lay.addWidget(head)
@@ -833,7 +844,7 @@ class Updater(QObject):
                           f"{info.release.label}." if info.release else "")
                 QMessageBox.information(
                     self._window, "Check for Updates",
-                    f"{APP_NAME} {label(info.current)} is up to date."
+                    f"{SHORT_NAME} {label(info.current)} is up to date."
                     f"{newest}")
             return
         if not manual and is_skipped(settings, info.release):
@@ -847,7 +858,7 @@ class Updater(QObject):
         dlg.exec_()
         if dlg.choice == UpdateDialog.SKIP:
             skip_version(self.settings(), info.release)
-            self._status(f"{APP_NAME} {info.release.label} skipped — you "
+            self._status(f"{SHORT_NAME} {info.release.label} skipped — you "
                          f"will be told about the next release.")
         elif dlg.choice == UpdateDialog.INSTALL:
             if self._mode == "page":
@@ -876,7 +887,7 @@ class Updater(QObject):
         dlg = QProgressDialog(
             f"Downloading {asset['name']} ({size / 1e6:.0f} MB)...",
             "Cancel", 0, 1000, self._window)
-        dlg.setWindowTitle("Updating " + APP_NAME)
+        dlg.setWindowTitle("Updating " + SHORT_NAME)
         dlg.setMinimumDuration(0)
         dlg.setAutoClose(False)
         dlg.setAutoReset(False)
@@ -891,7 +902,7 @@ class Updater(QObject):
         if total:
             self._progress.setValue(int(1000 * min(done, total) / total))
             self._progress.setLabelText(
-                f"Downloading {APP_NAME} {self._info.release.label}: "
+                f"Downloading {SHORT_NAME} {self._info.release.label}: "
                 f"{done / 1e6:.1f} of {total / 1e6:.1f} MB")
         if total and done >= total and self._mode == "mac-replace":
             self._progress.setLabelText("Opening the disk image...")
@@ -922,8 +933,8 @@ class Updater(QObject):
             subprocess.Popen(["open", str(result)])
             QMessageBox.information(
                 self._window, "Update downloaded",
-                f"The {APP_NAME} {self._info.release.label} disk image is "
-                f"open in Finder. Quit {APP_NAME}, then drag the new "
+                f"The {SHORT_NAME} {self._info.release.label} disk image is "
+                f"open in Finder. Quit {SHORT_NAME}, then drag the new "
                 f"{APP_NAME} onto Applications to replace this one.")
             return
         self._install(result)

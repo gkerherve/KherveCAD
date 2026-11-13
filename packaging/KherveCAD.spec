@@ -160,12 +160,13 @@ coll = COLLECT(
 # --------------------------------------------------------- macOS bundle
 
 if _IS_MAC:
-    # CFBundleShortVersionString has to be dot-separated digits, and the
-    # git-derived string carries a "+sha" suffix Finder rejects.
-    _short_version = "0.1.0"
+    # CFBundleShortVersionString has to be digits: the VERSION file's
+    # first line (the commit count; the sha is on the second)
+    _short_version = "0"
     if os.path.isfile(_version_file):
         with open(_version_file, encoding="utf-8") as _fh:
-            _short_version = _fh.read().strip().split("+")[0] or _short_version
+            _first = (_fh.read().strip().splitlines() or [""])[0]
+            _short_version = _first.split("+")[0] or _short_version
 
     app = BUNDLE(
         coll,
@@ -174,8 +175,11 @@ if _IS_MAC:
         bundle_identifier="com.kerherve.khervecad",
         version=_short_version,
         info_plist={
-            "CFBundleName": "KherveCAD",
-            "CFBundleDisplayName": "KherveCAD",
+            # the short name in the menu bar and Dock (the user: "our big
+            # name is KherveCAD but short for kCAD"); the bundle and the
+            # updater keep KherveCAD.app
+            "CFBundleName": "kCAD",
+            "CFBundleDisplayName": "kCAD",
             "CFBundleShortVersionString": _short_version,
             "CFBundleVersion": _short_version,
             "LSMinimumSystemVersion": "11.0",

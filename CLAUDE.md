@@ -19,12 +19,20 @@ from the tree, so the two can never disagree.
   Without it the built-in tessellator (`mesh.py`) previews
   extrusions/primitives and approximates booleans (first operand).
 - Crash log: `%TEMP%/khervecad_crash.log`.
-- **Version string** is derived at runtime in `_version.py` from
-  `git rev-list --count HEAD` and `git rev-parse --short HEAD`,
-  cached with `lru_cache`. Falls back to `_FALLBACK = "0.1.0"`
-  outside a git checkout. Title bar reads `KherveCAD v0.1.N+sha`.
-  The version bumps automatically on every commit — never edit a
-  version constant by hand.
+- **Name**: the big name is KherveCAD, the SHORT name **kCAD**
+  (2026-11-13, the user): `SHORT_NAME` shows in the title bar, splash,
+  About, update dialogs and the macOS menu bar (CFBundleName); files,
+  installers, release assets, QSettings, the library folder, the MCP
+  server and `.app` keep `APP_NAME` "KherveCAD".
+- **Version** is the plain commit count (`git rev-list --count HEAD`),
+  title bar `kCAD v1025` — no "0.1." and no "+sha" (the user, same day,
+  for every Kherve app). `_version.get_version` returns "1025";
+  `get_commit` keeps the sha apart (VERSION file's second line in a
+  frozen build) for the updater's changelog only. The updater reads old
+  `v0.1.N` tags / assets and new `vN` ones as `(N,)`. Copies from before
+  this change only parse `0.1.N`, so they will not see a `vN` release:
+  they need one manual install. Falls back to "0" outside a git
+  checkout. Never edit a version constant by hand.
 
 ## File size policy
 

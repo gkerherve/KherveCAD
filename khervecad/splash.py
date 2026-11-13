@@ -37,7 +37,7 @@ def _font(size, bold=False):
 def background(ratio=1.0) -> QPixmap:
     """The picture without the progress: slate gradient, the app icon, the
     name, a line of what it is and the version."""
-    from . import APP_NAME, __version__
+    from . import SHORT_NAME, __version__
     from .icons import _paint_kcad
     pm = QPixmap(int(WIDTH * ratio), int(HEIGHT * ratio))
     pm.setDevicePixelRatio(ratio)
@@ -64,12 +64,12 @@ def background(ratio=1.0) -> QPixmap:
     p.setPen(TEXT)
     p.setFont(_font(40, bold=True))
     p.drawText(QRectF(204, 62, WIDTH - 220, 50), Qt.AlignLeft | Qt.AlignVCenter,
-               APP_NAME)
+               SHORT_NAME)
     p.setPen(MUTED)
     p.setFont(_font(15))
     p.drawText(QRectF(206, 112, WIDTH - 220, 24),
                Qt.AlignLeft | Qt.AlignVCenter,
-               "Parametric CAD with OpenSCAD as the engine")
+               "KherveCAD · parametric CAD with OpenSCAD as the engine")
     p.setPen(ACCENT)
     p.setFont(_font(13, bold=True))
     p.drawText(QRectF(206, 142, WIDTH - 220, 20),

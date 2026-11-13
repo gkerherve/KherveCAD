@@ -76,23 +76,26 @@ class FakeSettings:
 # ------------------------------------------------------------ versions
 
 def test_parse_version_with_and_without_sha():
-    assert up.parse_version("0.1.191+abc1234") == ((0, 1, 191), "abc1234")
-    assert up.parse_version("0.1.172") == ((0, 1, 172), "")
-    assert up.parse_version(" v0.1.9 \n") == ((0, 1, 9), "")
+    assert up.parse_version("0.1.191+abc1234") == ((191,), "abc1234")
+    assert up.parse_version("0.1.172") == ((172,), "")
+    assert up.parse_version(" v0.1.9 \n") == ((9,), "")
+    # the new plain commit count (2026-11-13)
+    assert up.parse_version("1025") == ((1025,), "")
+    assert up.parse_version("v1025") == ((1025,), "")
     assert up.parse_version("0.1.N") is None
     assert up.parse_version(None) is None
 
 
 def test_running_version_falls_back_to_zero():
-    assert up.running_version("garbage") == ((0, 1, 0), "")
-    assert up.running_version("0.1.0") == ((0, 1, 0), "")
+    assert up.running_version("garbage") == ((0,), "")
+    assert up.running_version("0.1.0") == ((0,), "")
 
 
 def test_is_newer_compares_the_commit_count():
-    assert up.is_newer((0, 1, 172), (0, 1, 155))
-    assert up.is_newer((0, 1, 1000), (0, 1, 999))      # numeric, not text
-    assert not up.is_newer((0, 1, 172), (0, 1, 172))
-    assert not up.is_newer((0, 1, 9), (0, 1, 10))
+    assert up.is_newer((172,), (155,))
+    assert up.is_newer((1000,), (999,))      # numeric, not text
+    assert not up.is_newer((172,), (172,))
+    assert not up.is_newer((9,), (10,))
 
 
 def test_platform_key():
@@ -115,7 +118,7 @@ def test_windows_release_selection_skips_drafts_prereleases_and_mac():
 def test_macos_release_selection_uses_macos_tags_and_dmg():
     newest = up.newest_release(RELEASES, "macos")
     assert newest.tag == "macos-v0.1.178"
-    assert newest.label == "0.1.178"
+    assert newest.label == "v178"
     assert newest.asset["name"] == "KherveCAD-0.1.178-macOS-arm64.dmg"
     assert newest.asset["size"] == 89
 
@@ -141,10 +144,10 @@ def test_unsupported_platform_reports_the_main_line():
 
 
 def test_notes_between_includes_main_line_for_mac():
-    notes = up.notes_between(RELEASES, "macos", (0, 1, 160), (0, 1, 178))
+    notes = up.notes_between(RELEASES, "macos", (160,), (178,))
     tags = [r.tag for r in notes]
     assert tags == ["macos-v0.1.178", "v0.1.172"]     # 165 has same body
-    notes = up.notes_between(RELEASES, "windows", (0, 1, 160), (0, 1, 180))
+    notes = up.notes_between(RELEASES, "windows", (160,), (180,))
     assert [r.tag for r in notes] == ["v0.1.180", "v0.1.172"]
     md = up.notes_markdown(notes)
     assert md.startswith("## KherveCAD v0.1.180\n\n## Faster")
@@ -212,7 +215,7 @@ def test_check_for_update_finds_newer(monkeypatch):
     assert "Faster" in info.notes and "Connect Claude" in info.notes
     assert "First release" not in info.notes              # not newer
     md = info.markdown()
-    assert "### New" in md and "Every change since 0.1.170" in md
+    assert "### New" in md and "Every change since v170" in md
 
 
 def test_check_for_update_survives_a_failed_compare(monkeypatch):
@@ -335,9 +338,9 @@ def test_skip_version_skips_only_that_version():
     s = FakeSettings()
     r180 = up.newest_release(RELEASES, "windows")
     up.skip_version(s, r180)
-    assert s.values[up.KEY_SKIP] == "0.1.180"
+    assert s.values[up.KEY_SKIP] == "v180"
     assert up.is_skipped(s, r180)
-    newer = up.Release(tag="v0.1.181", version=(0, 1, 181))
+    newer = up.Release(tag="v0.1.181", version=(181,))
     assert not up.is_skipped(s, newer)
 
 
@@ -430,3 +433,27 @@ def test_help_menu_has_update_actions(qapp):
         assert win.updater.auto_action.isCheckable()
     finally:
         win.close()
+
+
+def test_new_plain_number_releases_beat_the_old_style():
+    """2026-11-13: tags and files become "v1030" / "KherveCAD-Setup-1030.exe"
+    with no "0.1."; the old releases still read, and a new one is newer."""
+    data = [
+        {"tag_name": "v0.1.1024", "name": "", "body": "", "draft": False,
+         "prerelease": False, "html_url": "",
+         "assets": [_asset("KherveCAD-Setup-0.1.1024.exe")]},
+        {"tag_name": "v1030", "name": "", "body": "", "draft": False,
+         "prerelease": False, "html_url": "",
+         "assets": [_asset("KherveCAD-Setup-1030.exe")]},
+        {"tag_name": "macos-v1030", "name": "", "body": "", "draft": False,
+         "prerelease": False, "html_url": "",
+         "assets": [_asset("KherveCAD-1030-macOS-arm64.dmg"),
+                    _asset("KherveCAD-1030-macOS-x86_64.dmg")]},
+    ]
+    win = up.newest_release(data, "windows")
+    assert win.tag == "v1030" and win.label == "v1030"
+    assert win.asset["name"] == "KherveCAD-Setup-1030.exe"
+    assert up.newest_release(data, "macos").asset["name"] == \
+        "KherveCAD-1030-macOS-arm64.dmg"
+    assert up.is_newer(win.version, up.running_version("0.1.1024+abc")[0])
+    assert not up.is_newer(win.version, up.running_version("1030")[0])
