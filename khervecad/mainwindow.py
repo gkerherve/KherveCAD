@@ -196,6 +196,9 @@ class MainWindow(QMainWindow):
             lambda step: self._tree_command("step", step))
         self.model.structure_changed.connect(self._model_edited)
         self.model.structure_changed.connect(self._view_after_delete)
+        # undo / redo rebuilt the tree: a region pick or the Boss / Cut
+        # bar holding the old one lets go (stop_tool.restored)
+        self.model.restored.connect(self._after_restore)
         self._edit_session = None          # meshedit_ui.EditSession, if open
         self.view3d.tab_pressed.connect(lambda: self.set_edit_mode(None))
         self.model.node_changed.connect(self._note_sketch_edit)
@@ -1467,6 +1470,13 @@ class MainWindow(QMainWindow):
         self.builder.object_tab.tree.select_nodes([node])
 
     # ---------------------------------------------------- 3D pipeline
+    def _after_restore(self):
+        try:
+            from . import stop_tool
+            stop_tool.restored(self)
+        except Exception:                      # pragma: no cover
+            pass
+
     def _model_edited(self):
         # keep attached Objects glued to their (possibly just moved)
         # parents; the guard makes nested refreshes no-ops

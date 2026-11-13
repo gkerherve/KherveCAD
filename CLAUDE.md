@@ -3753,6 +3753,16 @@ into a new module and import.
                        a feature sketch is open the button reads "Finish
                        <feature>" (`sketch_mode._feature_of`).
                        tests/test_feature_pick.py.
+  - Undo / redo during a pick (2026-11-13, the user: numbered regions
+                       stayed on an empty 3D view): `DocumentModel.restored`
+                       (emitted by `restore_state`) -> `stop_tool.restored`
+                       ends a region pick WITHOUT its callback (it would
+                       extrude the picks into the gone sketch), closes its
+                       panel and overlay, and brings the Boss / Cut toggle
+                       bar back on the new tree (2D | 3D kept); Sketch Mode,
+                       Edit Mode and other tools follow undo as before.
+                       `region_show` paints nothing once `model.root` is not
+                       the tree it started on. tests/test_undo_ends_picks.py.
   - `choice_preview.py` — what the Boss / Cut choice window shows while
                        open (2026-11-13, the user): every flat face of the
                        parts numbered F1.. (largest first, only faces turned

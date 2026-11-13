@@ -19,7 +19,8 @@ PICKED = (0, 120, 215)
 def start(window, regions):
     """Show *regions* [(world loops [[(x, y, z)]], world label point,
     number)] until :func:`stop`."""
-    window._region_show = dict(regions=regions, picked=set())
+    window._region_show = dict(regions=regions, picked=set(),
+                               root=window.model.root)
     if not getattr(window, "_region_show_painter", False):
         window.view3d.overlay_painters.append(
             lambda painter, project: paint(window, painter, project))
@@ -51,6 +52,11 @@ def label(picked, count):
 def paint(window, painter, project):
     state = getattr(window, "_region_show", None)
     if not state:
+        return
+    if state.get("root") is not window.model.root:
+        # undo / redo / open rebuilt the tree: these are the regions of
+        # sketches that are gone (stop_tool.restored ends the pick)
+        window._region_show = None
         return
     from PyQt5.QtCore import QPointF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPainterPath, QPen

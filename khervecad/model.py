@@ -1254,6 +1254,9 @@ class DocumentModel(QObject):
     unit_changed = pyqtSignal(str)
     #: the document's scale against the real thing changed (the N of 1 : N)
     scale_changed = pyqtSignal(float)
+    #: undo / redo put back a whole snapshot: every node was rebuilt, so
+    #: a tool still holding the old ones must let go (stop_tool.restored)
+    restored = pyqtSignal()
 
     #: the placement params a mate drives — typing into one of these
     #: releases the mate (see set_param).
@@ -1372,6 +1375,7 @@ class DocumentModel(QObject):
             scale_moved = scale != self.real_scale
             self.real_scale = scale
             self._last_state = state
+            self.restored.emit()
             self.structure_changed.emit()
             if unit_moved:
                 self.unit_changed.emit(unit)

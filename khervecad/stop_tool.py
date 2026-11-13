@@ -153,3 +153,50 @@ def install_escape(window):
     sc.activated.connect(lambda: escape(window))
     window._stop_escape = sc
     return sc
+
+
+def restored(window):
+    """Undo / redo rebuilt every node (2026-11-13, the user: "after
+    undoing or redoing, things appear or stay in the 3D view where there
+    should be nothing left", the numbered regions over an empty
+    document). A region pick and the Boss / Cut toggle bar hold the OLD
+    tree — its sketches, their regions drawn and numbered, the faces —
+    so they end here, without running their callbacks (the region pick's
+    would extrude what was picked into the gone sketch). The toggle bar
+    comes back on the new tree; a region pick ends with a word why.
+    Sketch Mode, Edit Mode and the other tools follow the undo as before.
+    """
+    from . import choice_preview, feature_pick, region_panel, region_show
+    view = window.view3d
+    bar = getattr(window, "_feature_pick", None)
+    regions = getattr(window, "_region_show", None) is not None or \
+        getattr(window, "_region_panel", None) is not None
+    if bar:
+        kind, where = bar.get("kind"), feature_pick.state(window)["where"]
+        feature_pick.stop(window)
+    if regions:
+        region_panel.close(window)
+        region_show.stop(window)
+    choice_preview.stop(window)
+    if (bar or regions) and getattr(view, "_pick_cb", None) is not None:
+        view._pick_cb = None               # never called: see above
+        view._end_pick_mode()
+        view.set_pick_pinned(None)
+        try:
+            view.set_highlight_mesh([])
+        except Exception:                  # pragma: no cover
+            pass
+    if bar and kind:
+        from PyQt5.QtCore import QTimer
+
+        def again():
+            if getattr(window, "_feature_pick", None) is None:
+                feature_pick.start(window, kind)
+                feature_pick.state(window)["where"] = where
+                feature_pick.refresh(window)
+        QTimer.singleShot(0, again)
+    elif regions:
+        window.statusBar().showMessage(language.tr(
+            "Undo / redo ended the region pick — start the Boss or Cut "
+            "again to pick on the sketch as it is now."), 6000)
+    view.update()
