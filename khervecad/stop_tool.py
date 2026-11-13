@@ -168,6 +168,11 @@ def restored(window):
     """
     from . import choice_preview, feature_pick, region_panel, region_show
     view = window.view3d
+    try:                      # the Mirror window holds the old nodes too
+        from . import mirror_feature
+        mirror_feature.close(window)
+    except Exception:                          # pragma: no cover
+        pass
     bar = getattr(window, "_feature_pick", None)
     regions = getattr(window, "_region_show", None) is not None or \
         getattr(window, "_region_panel", None) is not None

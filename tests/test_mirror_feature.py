@@ -52,9 +52,11 @@ def win(app):
 def test_a_main_plane_is_the_parts_plane(win, plane, check):
     ext = next(n for n in win.model.root.walk()
                if n.type == "linear_extrude")
-    win.mirror_plane_hook = lambda: plane
-    node = mirror_feature._finish(win, [ext])
-    assert node is not None and node.type == "symmetry"
+    key = mirror_feature._BY_NAME[plane]
+    made = mirror_feature.mirror(win, [ext], ("main", key))
+    assert len(made) == 1
+    node = made[0]
+    assert node.type == "symmetry"
     tris = mesh.tessellate(win.model.root)
     pts = [p for t in tris for p in t[:3]]
     if check == "x":
@@ -73,8 +75,114 @@ def test_the_copy_is_not_the_original(win):
     """Before the fix the plane was the boss's own centre plane."""
     ext = next(n for n in win.model.root.walk()
                if n.type == "linear_extrude")
-    win.mirror_plane_hook = lambda: "Right Plane (YZ)"
-    mirror_feature._finish(win, [ext])
+    mirror_feature.mirror(win, [ext], ("main", "Side (YZ)"))
     pts = [p for t in mesh.tessellate(win.model.root) for p in t[:3]
            if p[2] > 15 + 1e-6]
     assert min(p[0] for p in pts) < -39 and max(p[0] for p in pts) > 59
+
+
+# ------------------------------------------------ the Mirror window
+@pytest.fixture
+def shown(app):
+    from PyQt5.QtCore import QSettings
+    QSettings("Kherve", "KherveCAD").setValue("tree/planes", True)
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    McpToolExecutor(w).execute("apply_code", {"code": PART})
+    for _ in range(5):
+        app.processEvents()
+    yield w
+    QSettings("Kherve", "KherveCAD").setValue("tree/planes", False)
+    w._dirty = False
+    w.close()
+
+
+def _plane_item(tree, plane):
+    from khervecad import tree_history
+    for i in range(tree.topLevelItemCount()):
+        item = tree.topLevelItem(i)
+        if item.data(0, tree_history.ROLE_FIXED) == "plane:" + plane:
+            return item
+    return None
+
+
+def test_nothing_selected_opens_the_window_and_the_tree_fills_it(shown):
+    """No menu at the cursor: the window, box 1 from a tree row, box 2
+    from the Right Plane row at the top of the tree, then OK."""
+    from khervecad import tree_history
+    win = shown
+    tree = win.builder.active_tree()
+    tree.clearSelection()
+    panel = mirror_feature.start(win)
+    assert panel is not None and panel.isVisible()
+    st = win._mirror_state
+    assert st["active"] == "nodes" and not panel.ok.isEnabled()
+    assert win.view3d._pick_cb is not None          # parts clickable
+    ext = next(n for n in win.model.root.walk()
+               if n.type == "linear_extrude")
+    tree.select_nodes([ext])
+    assert st["nodes"] == [ext]
+    assert st["active"] == "plane"                  # on to the plane
+    assert win._plane_pick and win._plane_pick.get("mirror")
+    item = _plane_item(tree, "Side (YZ)")
+    assert item is not None
+    tree_history.clicked(tree, item)
+    assert st["plane"] == ("main", "Side (YZ)")
+    assert "Right Plane" in panel.boxes["plane"].body.text()
+    assert panel.ok.isEnabled()
+    panel.ok.click()
+    assert getattr(win, "_mirror_state", None) is None
+    assert win.view3d._pick_cb is None and not win._plane_pick
+    sym = next(n for n in win.model.root.walk() if n.type == "symmetry")
+    assert ext.parent is sym
+    pts = [p for t in mesh.tessellate(win.model.root) for p in t[:3]
+           if p[2] > 15 + 1e-6]
+    assert min(p[0] for p in pts) == pytest.approx(-60, abs=1e-6)
+
+
+def test_a_plane_clicked_in_3d_is_the_mirror_plane(shown):
+    win = shown
+    ext = next(n for n in win.model.root.walk()
+               if n.type == "linear_extrude")
+    win.builder.active_tree().select_nodes([ext])
+    panel = mirror_feature.start(win)
+    st = win._mirror_state
+    assert st["nodes"] == [ext] and st["active"] == "plane"
+    # where the Top plane shows on screen, off the part: the pick callback
+    # is told of empty space at a point inside the Top plane's square
+    from khervecad import plane_pick
+    view = win.view3d
+    view.repaint()
+    polys = win._plane_pick.get("polys") or []
+    pos = None
+    for plane, _n, poly in polys:
+        if plane == "Top (XY)":
+            r = poly.boundingRect()
+            from PyQt5.QtCore import QPoint
+            for fx in (0.08, 0.92, 0.5):
+                for fy in (0.08, 0.92, 0.5):
+                    q = QPoint(int(r.x() + r.width() * fx),
+                               int(r.y() + r.height() * fy))
+                    if plane_pick.hit(win, q) == "Top (XY)":
+                        pos = q
+                        break
+                if pos is not None:
+                    break
+    assert pos is not None
+    st["pos"] = pos
+    view._pick_cb(None, None)
+    assert st["plane"] == ("main", "Top (XY)")
+    assert win._plane_pick.get("chosen") == "Top (XY)"
+    mirror_feature.cancel(win)
+    assert not any(n.type == "symmetry" for n in win.model.root.walk())
+
+
+def test_esc_cancels_and_leaves_nothing(shown):
+    win = shown
+    win.builder.active_tree().clearSelection()
+    mirror_feature.start(win)
+    win.view3d.cancel_pick()                         # what Esc does
+    assert getattr(win, "_mirror_state", None) is None
+    assert getattr(win, "_mirror_panel", None) is None
+    assert not any(n.type == "symmetry" for n in win.model.root.walk())

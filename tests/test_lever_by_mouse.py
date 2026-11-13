@@ -147,13 +147,9 @@ def _history_plane(win, plane):
     item = None
     for i in range(tree.topLevelItemCount()):
         top = tree.topLevelItem(i)
-        if top.data(0, tree_history.ROLE_FIXED) == "origin":
-            top.setExpanded(True)
-            for k in range(top.childCount()):
-                if top.child(k).data(0, tree_history.ROLE_FIXED) == \
-                        "plane:" + plane:
-                    item = top.child(k)
-    assert item is not None, "no %s row under Origin" % plane
+        if top.data(0, tree_history.ROLE_FIXED) == "plane:" + plane:
+            item = top
+    assert item is not None, "no %s row at the top of the tree" % plane
     tree.scrollToItem(item)
     QTest.qWait(100)
     rect = tree.visualItemRect(item)

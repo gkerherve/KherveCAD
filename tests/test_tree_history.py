@@ -48,12 +48,11 @@ def test_fixed_rows_in_history_only(app):
     finally:
         tree_history.set_enabled(False)
     top = _texts(tree.invisibleRootItem())
-    assert top[0] == "Origin" and top[1].startswith("Material")
-    origin = tree.topLevelItem(0)
-    assert _texts(origin) == ["Front Plane", "Top Plane", "Right Plane"]
+    assert top[0].startswith("Material")
+    assert top[1:5] == ["Front Plane", "Top Plane", "Right Plane", "Origin"]
     picked = []
     tree.plane_picked.connect(picked.append)
-    tree._double_clicked(origin.child(1), 0)
+    tree._double_clicked(tree.topLevelItem(2), 0)
     assert picked == ["Top (XY)"]
 
 
@@ -64,15 +63,15 @@ def test_history_lists_features_in_order_and_keeps_groups(app):
         d, e, g = _part(m)
         before = m.to_scad()
         tree = ObjectTree(m)
-        top = _texts(tree.invisibleRootItem())[2:]
+        top = _texts(tree.invisibleRootItem())[5:]   # after the fixed rows
         assert top[:3] == ["Extrude 1", "Cylinder 1", "Cut 1"]
         assert top[3] == "Bolts"                     # the group, a folder
-        assert _texts(tree.topLevelItem(5)) == ["Sphere 1"]
-        assert _texts(tree.topLevelItem(2)) == ["Rectangle"] or \
-            len(_texts(tree.topLevelItem(2))) == 1   # the sketch, tucked
+        assert _texts(tree.topLevelItem(8)) == ["Sphere 1"]
+        assert _texts(tree.topLevelItem(5)) == ["Rectangle"] or \
+            len(_texts(tree.topLevelItem(5))) == 1   # the sketch, tucked
         assert m.to_scad() == before                 # nothing changed
         # a row selects its node
-        tree.topLevelItem(4).setSelected(True)
+        tree.topLevelItem(7).setSelected(True)
         assert tree.selected_nodes() == [d]
     finally:
         tree_history.set_enabled(False)
@@ -92,7 +91,7 @@ def test_material_row_sets_every_part(app):
     tree_history.set_enabled(True)
     try:
         tree.rebuild()
-        assert "Metal" in tree.topLevelItem(1).text(0)
+        assert "Metal" in tree.topLevelItem(0).text(0)
     finally:
         tree_history.set_enabled(False)
 
@@ -107,12 +106,13 @@ def test_origin_and_plane_rows_act_in_the_window():
         w.model.add_node("cube", {})
         tree = w.builder.tree
         tree.rebuild()
-        origin = tree.topLevelItem(0)
+        origin = tree.topLevelItem(4)
+        assert origin.text(0) == "Origin"
         view = w.view3d
         before = view.axes
         tree_history.clicked(tree, origin)
         assert view.axes != before                   # axes toggled
-        tree_history.double_clicked(tree, origin.child(0))
+        tree_history.double_clicked(tree, tree.topLevelItem(1))
         assert w.scene.plane == "Front (XZ)"
         assert (view.yaw, view.pitch) == pytest.approx((-90.0, 0.0))
     finally:

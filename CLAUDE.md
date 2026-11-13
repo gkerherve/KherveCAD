@@ -3785,6 +3785,20 @@ into a new module and import.
                        the mirrored node's frame by `_to_parent` like a face
                        (2026-11-13: a boss inside a face sketch's turned frame
                        mirrored onto itself); normals go by M's transpose.
+                       **Its window** (same day, the user: "similar to
+                       extrude", no menu at the cursor): a ToolPanel, box 1
+                       what to mirror (the tree's selection, rows clicked in
+                       the tree — `tree_selected` via both trees'
+                       selection_changed — or parts clicked in 3D), box 2 the
+                       plane (Front / Top / Right rows of the tree —
+                       `tree_history.clicked` -> `plane_row` —, the planes in
+                       3D through `window._plane_pick` with "mirror" /
+                       "chosen", a flat face, or a ref_plane row); the nearer
+                       of a face and a plane under the cursor wins. `mirror`
+                       makes one Mirror per parent. History/Structure now
+                       list Material, Front / Top / Right Plane and Origin
+                       as rows of their own (the planes were folded under
+                       Origin). Undo closes the window (stop_tool.restored).
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

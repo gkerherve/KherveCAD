@@ -146,7 +146,7 @@ def paint(window, painter, project):
     painter.setRenderHint(painter.Antialiasing, True)
     edge = QColor(70, 120, 210)
     for plane, name, poly in polys:
-        hot = plane == state.get("hover")
+        hot = plane in (state.get("hover"), state.get("chosen"))
         painter.setPen(QPen(edge, 2.2 if hot else 1.1))
         painter.setBrush(QColor(110, 160, 235, 95 if hot else 34))
         painter.drawPolygon(poly)

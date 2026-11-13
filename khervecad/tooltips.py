@@ -390,10 +390,18 @@ TIPS = {
         None),
     "mirror": (
         "Mirror",
-        "Reflects the selection across a plane. (1, 0, 0) swaps left "
-        "and right, (0, 1, 0) front and back, (0, 0, 1) up and down.",
-        [_SELECTION, "Click Mirror.", "Set the plane's normal X/Y/Z."],
-        "The original is not kept — use Symmetry to keep both halves."),
+        "Adds a mirror image of features or bodies about a plane, the "
+        "original kept: the copy follows every edit of it.",
+        ["Click Mirror — its window opens beside the view.",
+         "Features / bodies to mirror: click their rows in the tree "
+         "(History) or the parts in the 3D view (the tree's selection is "
+         "taken at once).",
+         "Mirror plane / face: click Front, Top or Right Plane at the top "
+         "of the tree or in the 3D view, a reference plane in the tree, "
+         "or a flat face of the part.",
+         "OK makes it; Cancel or Esc leaves nothing."],
+        "Front / Top / Right are the part's own planes, wherever the "
+        "feature sits; the plane is in the Mirror's Properties after."),
     "hair_cap": (
         "Hair cap",
         "Grows a thick, curly cap over part of the selection — hair on a "

@@ -39,10 +39,9 @@ def test_the_tree_lists_the_three_planes_by_their_solidworks_names(window):
     names = []
     for i in range(tree.topLevelItemCount()):
         top = tree.topLevelItem(i)
-        for j in range(top.childCount()):
-            role = top.child(j).data(0, ROLE_FIXED) or ""
-            if role.startswith("plane:"):
-                names.append(top.child(j).text(0))
+        role = top.data(0, ROLE_FIXED) or ""
+        if role.startswith("plane:"):
+            names.append(top.text(0))
     assert names == ["Front Plane", "Top Plane", "Right Plane"]
 
 
@@ -50,8 +49,7 @@ def test_a_selected_plane_row_is_where_the_sketch_starts(window,
                                                           monkeypatch):
     got = _turned(monkeypatch)
     tree = window.builder.tree
-    origin = tree.topLevelItem(0)
-    origin.child(2).setSelected(True)          # Right Plane
+    tree.topLevelItem(3).setSelected(True)     # Right Plane
     normal_to.create(window)
     assert got == ["Side (YZ)"]
 

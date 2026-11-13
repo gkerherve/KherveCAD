@@ -11,12 +11,12 @@ Two ways of drawing the SAME nodes — nothing in the document changes:
   the user's Groups kept as FOLDERS of their features. A rolled-back
   container shows the rollback bar where its active features end.
 
-History starts with the fixed rows SolidWorks has (Structure stays
-exactly the tree as built): **Origin** (Front /
-Top / Right planes — a double-click shows that plane in the 2D view) and
-**Material** (click to set it on every part in view); a click on
-Origin shows / hides the origin axes, a double-click on a plane turns
-the 3D view to it and opens a sketch there.
+History starts with the fixed rows SolidWorks has (Structure shows them
+too unless tree/planes is off): **Material** (click to set it on every
+part in view), **Front / Top / Right Plane** — each its own row: a
+double-click turns the 3D view to it and opens a sketch there, a click
+while the Mirror window asks for a plane uses it — and **Origin** (a
+click shows / hides the origin axes).
 
 Rows carry the node id, so selection, Properties, the right-click menu
 and renaming work as in Structure; only drag and drop is off in History.
@@ -99,18 +99,20 @@ def build_fixed(tree):
                       & ~(Qt.ItemIsEditable | Qt.ItemIsDragEnabled
                           | Qt.ItemIsDropEnabled | Qt.ItemIsUserCheckable))
         return item
+    # SolidWorks' order, each plane a row of its own (2026-11-13, the
+    # user: the planes folded under Origin could not be clicked for a
+    # Mirror's plane): Material, Front / Top / Right Plane, Origin
     root = tree.invisibleRootItem()
-    origin = row(root, "Origin", "mdi.axis-arrow", "origin",
-                 "The origin and the three main planes")
-    for label, plane in PLANES:
-        row(origin, label, "mdi.square-outline", "plane:" + plane,
-            "Select it and click Sketch, or double-click, to sketch on "
-            "this plane")
-    origin.setExpanded(tree._expand_state.get("__origin__", False))
     text = language.tr("Material <{m}>").format(m=material_text(tree))
     mat = row(root, "Material", "mdi.texture-box", "material",
               "Right-click to set the material of every part in view")
     mat.setText(0, text)
+    for label, plane in PLANES:
+        row(root, label, "mdi.square-outline", "plane:" + plane,
+            "Select it and click Sketch, or double-click, to sketch on "
+            "this plane; while Mirror asks for a plane, a click uses it")
+    row(root, "Origin", "mdi.axis-arrow", "origin",
+        "The origin: a click shows or hides its axes in 3D")
 
 
 def _parts(tree):
@@ -246,6 +248,10 @@ def clicked(tree, item):
                     "Origin axes hidden"), 3000)
     elif role == "material":
         fixed_menu(tree, item, tree.visualItemRect(item).bottomLeft())
+    elif role.startswith("plane:") and getattr(win, "_mirror_state",
+                                               None):
+        from . import mirror_feature          # the Mirror window's plane
+        mirror_feature.plane_row(win, role[6:])
     elif role.startswith("plane:") and hasattr(win, "statusBar"):
         win.statusBar().showMessage(language.tr(
             "Click Sketch (or double-click) to sketch on this plane"),
