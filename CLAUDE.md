@@ -3783,6 +3783,15 @@ into a new module and import.
                        in starts on 2D; toggling it switches the one canvas
                        between the 2D sketch and the 3D view, put back when
                        the window closes. tests/test_sketch_choice.py.
+  - Boss / Cut of LINES (2026-11-13, the user's lug: a U of lines and an
+                       arc round a Ø47 circle came out as hair-thin walls and
+                       a solid disc): `cut_feature._closed_area` makes a
+                       Regions of the area the sketch closes whenever it has
+                       a sketch line or several shapes, and
+                       `sketch_regions.solid_faces` also calls a face a hole
+                       when it lies inside an odd number of the other faces'
+                       outer outlines (`_enclosed_odd`) — no closed SHAPE held
+                       the circle, so the old nesting rule filled it.
   - `mirror_feature.py` — SolidWorks' **Mirror** (2026-10-25): the tree's
                        selection or parts clicked in 3D, then a plane (Right
                        YZ / Front XZ / Top XY, or a picked face carried into

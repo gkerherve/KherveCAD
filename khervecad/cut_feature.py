@@ -90,6 +90,10 @@ def apply(model, group, part, kind):
             reg = None
         shapes = [reg] if reg is not None else [
             s for s in shapes if s.params.get("modifier") != "%"] or shapes
+    if op == "linear_extrude":
+        reg = _closed_area(model, group, shapes)
+        if reg is not None:
+            shapes = [reg]
     if op == "section_loft" and len(shapes) == 1:
         # a loft needs two sections: one profile drawn, so its end is the
         # same shape at half size round its own centre, one depth down —
@@ -158,6 +162,38 @@ def apply(model, group, part, kind):
             extent.refresh(model)
         model.node_changed.emit(diff)
     return diff
+
+
+def _closed_area(model, group, shapes):
+    """The AREA a sketch's shapes close, as a Regions (holes left out),
+    when extruding them one by one would be wrong (2026-11-13, the user's
+    lug: a U of lines and an arc round a Ø47 circle came out as hair-thin
+    walls and a solid disc, where selecting the same sketch from Sketch
+    Mode extruded the lug with its hole) — any sketch line, or several
+    shapes. None to extrude the shapes as they are (one closed shape, a
+    pattern, nothing closed)."""
+    from .model import SHAPE_2D
+    from . import sketch_regions
+    real = [s for s in shapes if s.visible and
+            s.params.get("modifier") != "%"]
+    if not real or any(s.category != SHAPE_2D for s in real):
+        return None
+    if len(real) < 2 and not any(s.type == "line" for s in real):
+        return None
+    try:
+        face_list = sketch_regions.faces(real)
+        keep = sketch_regions.solid_faces(real, face_list)
+    except Exception:                         # no Manifold, odd shapes
+        return None
+    if not keep:
+        return None
+    try:
+        # (construction shapes come along by themselves, still %; handed
+        # in, make takes them for profile shapes and drops their %)
+        return sketch_regions.make(model, group, face_list, keep,
+                                   hide=real)
+    except Exception:                         # pragma: no cover
+        return None
 
 
 def _end_section(model, group, shape):

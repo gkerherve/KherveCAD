@@ -1397,7 +1397,46 @@ def solid_faces(shapes, face_list):
                                default=0)
         if max(depth.values(), default=1) % 2 == 1:
             out.append(i)
-    return out
+    # a contour inside another is a hole whatever draws it (2026-11-13,
+    # the user's lug: lines and an arc round a Ø47 circle — no shape held
+    # the circle, so it was filled): enclosed by an odd number of the
+    # other faces' outer outlines, a face is a hole
+    try:
+        holes = _enclosed_odd(face_list)
+    except Exception:                          # no Manifold
+        holes = set()
+    return [i for i in out if i not in holes]
+
+
+def _enclosed_odd(face_list):
+    """Indices of the faces lying inside an ODD number of the other
+    faces' outlines (their own holes filled)."""
+    import manifold3d as m
+
+    def signed(loop):
+        return sum(loop[k][0] * loop[(k + 1) % len(loop)][1] -
+                   loop[(k + 1) % len(loop)][0] * loop[k][1]
+                   for k in range(len(loop))) / 2
+    filled = []
+    for cs, loops, _in in face_list:
+        outer = [[(float(x), float(y)) for x, y in lp] for lp in loops
+                 if len(lp) >= 3 and signed(lp) > 0]
+        filled.append(m.CrossSection(outer, m.FillRule.Positive)
+                      if outer else None)
+    holes = set()
+    for i, (cs, _l, _in) in enumerate(face_list):
+        area = cs.area()
+        if area <= 0:
+            continue
+        n = 0
+        for j, f in enumerate(filled):
+            if j == i or f is None or f.area() <= area:
+                continue
+            if (cs - f).area() < 1e-6 * area:
+                n += 1
+        if n % 2 == 1:
+            holes.add(i)
+    return holes
 
 
 #: what may hold a sketch without making it 3D: the plane's rotate, an

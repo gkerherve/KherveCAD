@@ -1,6 +1,7 @@
 # KherveCAD - easy CAD GUI on the OpenSCAD engine.
 # Copyright (C) 2026 Gwilherm Kerherve. GPL-3.0-or-later; see LICENSE.
 """SolidWorks' Cut panel (cut_feature)."""
+import pytest
 
 
 def test_a_lofted_cut_of_one_profile_or_two_really_cuts():
@@ -62,3 +63,49 @@ def test_a_new_sketch_on_a_face_is_never_taken_over_by_regions(
     assert called == []
     assert w.view3d._pick_cb is not None      # waiting for the face
     w.view3d.cancel_pick()
+
+
+LUG = """
+union() {
+    hull() { translate([-50, 105]) circle(d=0.2, $fn=32); translate([50, 105]) circle(d=0.2, $fn=32); };
+    hull() { translate([50, 105]) circle(d=0.2, $fn=32); translate([50, 175]) circle(d=0.2, $fn=32); };
+    hull() { translate([-50, 175]) circle(d=0.2, $fn=32); translate([-50, 105]) circle(d=0.2, $fn=32); };
+    kcad_arc(p1 = [50, 175], p2 = [-50, 175], bulge = 1, d = 0.2);
+    %hull() { translate([-50, 175]) circle(d=0.5, $fn=32); translate([50, 175]) circle(d=0.5, $fn=32); };
+    translate([0, 175]) circle(r=23.5, $fn=64);
+}
+"""
+
+
+def test_a_boss_of_lines_round_a_circle_is_the_lug_with_its_hole():
+    """The user's lug (a SolidWorks exercise): lines and an arc closing
+    a U round a Ø47 circle, finished as an Extruded Boss. It came out as
+    hair-thin walls and a solid disc; it is the closed area, the circle
+    a hole — as the same sketch extruded from Sketch Mode."""
+    import math
+    from khervecad import analysis, cut_feature as cf, mesh, scadparse
+    from khervecad.model import DocumentModel, validate
+    m = DocumentModel()
+    root, _w = scadparse.parse_scad(LUG)
+    for node in list(root.children):
+        m.root.add(node)
+    group = next(n for n in m.root.children if n.type == "union")
+    tool = cf.apply(m, group, None, "extruded_boss")
+    assert tool is not None and tool.type == "linear_extrude"
+    assert [c.type for c in tool.children] == ["regions"]
+    assert not validate(m.root)
+    vol = analysis.mass_properties(mesh.tessellate(m.root, {}))["volume"]
+    area = 100 * 70 + math.pi * 50 ** 2 / 2 - math.pi * 23.5 ** 2
+    assert vol == pytest.approx(area * cf.DEPTH, rel=0.02)
+
+
+def test_one_closed_shape_still_extrudes_as_drawn():
+    from khervecad import cut_feature as cf
+    from khervecad.model import CadNode, DocumentModel
+    m = DocumentModel()
+    g = CadNode("union", "Sketch")
+    m.root.add(g)
+    g.add(CadNode("rect", "R", {"x": 0, "y": 0, "width": 20,
+                                "height": 10}))
+    tool = cf.apply(m, g, None, "extruded_boss")
+    assert [c.type for c in tool.children] == ["rect"]
