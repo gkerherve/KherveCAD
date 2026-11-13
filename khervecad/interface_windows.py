@@ -304,7 +304,15 @@ def style_views(win, style, dark):
     view3d.BACKGROUNDS.update(BACKGROUNDS)
     settings = QSettings("Kherve", "KherveCAD")
     view = win.view3d
-    if style in BACKGROUNDS:
+    view.interface_style = style
+    chosen = settings.value("render_bg_style/" + str(style), "")
+    if chosen and chosen in view3d.BACKGROUNDS and chosen != style:
+        # the user picked a background in this style: keep it
+        if style in BACKGROUNDS:
+            view3d.BACKGROUNDS[style] = (DARK_BACKGROUNDS if dark
+                                         else BACKGROUNDS)[style]
+        view.background = chosen
+    elif style in BACKGROUNDS:
         if view.background not in BACKGROUNDS:
             settings.setValue("render_bg_classic", view.background)
         view3d.BACKGROUNDS[style] = (DARK_BACKGROUNDS if dark

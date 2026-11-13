@@ -95,6 +95,8 @@ os.environ.setdefault("KHERVECAD_INTERFACE_STYLE", "KherveCAD")  # noqa: E402
 #: flattened the shading the contrast test measures. Neutral for the
 #: session, then put back exactly as they were.
 _NEUTRAL_SETTINGS = ("render_stage", "render_style", "render_bg",
+                     "render_bg_style/KherveCAD", "render_bg_style/Fusion",
+                     "render_bg_style/SolidWorks",
                      "render_projection", "render_cavity", "render_edges",
                      "render_scale_bar", "render_grid", "render_axes",
                      "code_wrap",

@@ -480,7 +480,13 @@ class View3D(QWidget):
     def set_background(self, name: str):
         if name in BACKGROUNDS:
             self.background = name
-            QSettings(*_SETTINGS).setValue("render_bg", name)
+            settings = QSettings(*_SETTINGS)
+            settings.setValue("render_bg", name)
+            # remembered per interface style, so the next launch (which
+            # applies the style's own background) keeps the user's pick
+            style = getattr(self, "interface_style", None)
+            if style:
+                settings.setValue("render_bg_style/" + style, name)
             self.update()
 
     def set_projection(self, name: str):
