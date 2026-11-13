@@ -665,7 +665,14 @@ def tess(node, env, color, sel, selected):
     t = node.type
     p = mesh.rp(node, env)
     if t in WRAPPERS:
-        kids = mesh._children_mesh(node, env, color, sel, selected)
+        # Mirror (2026-11-13, the user: original and copy could not be
+        # told apart): the Mirror's row lights its COPY only, the
+        # original's row the original only — the copy is lit when the
+        # Mirror or something above it is selected, never because what
+        # it copies is
+        mirror_sel = t == "symmetry" and node.id in sel
+        kids = mesh._children_mesh(node, env, color, sel,
+                                   False if mirror_sel else selected)
         if t == "paint":
             from . import paint as paint_mod
             raw = node.params
@@ -702,7 +709,8 @@ def tess(node, env, color, sel, selected):
                                       mesh.mat_translate(-cx, -cy, -cz)))
         # mirroring turns faces inside out; _transform_colored
         # reverses their winding, so the copy stays outward
-        return kids + mesh._transform_colored(m, kids)
+        return kids + mesh._transform_colored(
+            m, [(tri, c, selected) for tri, c, _s in kids])
     n = max(mesh._cap(p["segments"]), 4)
     if t == "ellipsoid":
         unit = mesh.sphere_mesh(dict(x=0.0, y=0.0, z=0.0, radius=1.0,

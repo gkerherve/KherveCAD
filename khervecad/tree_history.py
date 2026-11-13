@@ -263,7 +263,8 @@ def clicked(tree, item):
 #: names a feature is given by the tool that made it: not shown again
 #: beside "Boss-Extrude 2"
 _AUTO_NAMES = {"Extrude regions", "Extruded Boss/Base", "Extruded Cut",
-               "Revolved Cut", "Revolved Boss/Base", "Revolve"}
+               "Revolved Cut", "Revolved Boss/Base", "Revolve", "Mirror",
+               "Symmetry"}
 
 
 def build_history(tree, selected):
@@ -301,6 +302,8 @@ def _label(node, counts):
     from .interface_names import tree_base
     base = tree_base(node.type) or FEATURE.get(node.type) or language.tr(
         NODE_TYPES[node.type]["label"])
+    if node.type == "symmetry":
+        base = "Mirror"                # SolidWorks' name for the feature
     if node.type in ("linear_extrude", "rotate_extrude"):
         # SolidWorks calls an extrude that cuts Cut-Extrude (every cut
         # read "Boss-Extrude 2 (Extruded Cut)")

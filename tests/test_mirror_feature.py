@@ -186,3 +186,61 @@ def test_esc_cancels_and_leaves_nothing(shown):
     assert getattr(win, "_mirror_state", None) is None
     assert getattr(win, "_mirror_panel", None) is None
     assert not any(n.type == "symmetry" for n in win.model.root.walk())
+
+
+def test_original_and_copy_are_selected_apart(win):
+    """The original's row lights the original only, the Mirror's row the
+    copy only (the user could not tell them apart)."""
+    ext = next(n for n in win.model.root.walk()
+               if n.type == "linear_extrude")
+    sym = mirror_feature.mirror(win, [ext], ("main", "Side (YZ)"))[0]
+
+    def xs(node):
+        tris = mesh.selected_world_tris(win.model.root, {node.id})
+        return min(p[0] for t in tris for p in t[:3]), \
+            max(p[0] for t in tris for p in t[:3])
+    lo, hi = xs(ext)
+    assert lo == pytest.approx(40, abs=1e-6) and hi == pytest.approx(60)
+    lo, hi = xs(sym)
+    assert lo == pytest.approx(-60, abs=1e-6) and hi == pytest.approx(-40)
+    # something above both: both lit
+    whole = mesh.selected_world_tris(win.model.root, {ext.parent.parent.id})
+    assert min(p[0] for t in whole for p in t[:3]) == pytest.approx(-60)
+    assert max(p[0] for t in whole for p in t[:3]) == pytest.approx(60)
+
+
+def test_history_lists_the_boss_then_mirror_1(app):
+    """History: the extrude, its sketch under it, then "Mirror 1" — the
+    extrude's Reverse direction is no row of its own."""
+    from khervecad import tree_history
+    from khervecad.treepanel import ObjectTree
+    w = MainWindow()
+    try:
+        McpToolExecutor(w).execute("apply_code", {"code": PART})
+        rev = next(n for n in w.model.root.walk() if n.type == "mirror")
+        rev.params["reverse"] = True                 # as Reverse makes it
+        ext = next(n for n in w.model.root.walk()
+                   if n.type == "linear_extrude")
+        mirror_feature.mirror(w, [ext], ("main", "Side (YZ)"))
+        tree_history.set_enabled(True)
+        try:
+            tree = ObjectTree(w.model)
+            rows = []
+
+            def walk(item):
+                if not item.data(0, tree_history.ROLE_FIXED):
+                    rows.append(item.text(0))
+                for k in range(item.childCount()):
+                    walk(item.child(k))
+            for i in range(tree.topLevelItemCount()):
+                walk(tree.topLevelItem(i))
+        finally:
+            tree_history.set_enabled(False)
+        assert not any("Reverse direction" in r for r in rows)
+        assert "Mirror 1" in rows
+        # (Boss-Extrude in the SolidWorks style, Extrude in classic)
+        boss = next(i for i, r in enumerate(rows) if "Extrude" in r)
+        assert boss < rows.index("Mirror 1")
+    finally:
+        w._dirty = False
+        w.close()

@@ -3804,6 +3804,13 @@ into a new module and import.
                        show_selected`, `window._tree_planes`; plane_pick's
                        `_draw` serves both), and stays selected over a
                        rebuild.
+                       Telling original and copy apart (same day, the user):
+                       a Mirror's COPY is lit only when the Mirror (or
+                       something above) is selected — selecting the original
+                       feature lights the original alone (`organic.tess`);
+                       History names it "Mirror n" and an extrude's Reverse
+                       direction mirror (`params["reverse"]`) is plumbing,
+                       no row of its own (`feature_list.is_plumbing`).
   - `sketch_tools2.py` — SolidCraft's other sketch shapes (2026-10-21,
                        "add them all"): construction line + the
                        **Construction** switch (OpenSCAD's `%` on a sketch

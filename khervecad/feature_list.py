@@ -92,6 +92,11 @@ def is_plumbing(node):
                 p.parent is not None and isinstance(
                     p.parent.params.get(sketch_pattern.KEY), dict):
             return True
+    if node.type == "mirror" and node.params.get("reverse"):
+        # an extrude's Reverse direction (drag_feature.set_direction): a
+        # setting of that extrude, listed as "Mirror 1 (Reverse
+        # direction)" beside it (2026-11-13, the user)
+        return True
     if node.type == "rotate":
         return (node.name or "").endswith("(about the sketch's Y axis)")
     if node.type == "multmatrix":
