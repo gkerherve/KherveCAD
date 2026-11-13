@@ -30,8 +30,12 @@ from the tree, so the two can never disagree.
   `get_commit` keeps the sha apart (VERSION file's second line in a
   frozen build) for the updater's changelog only. The updater reads old
   `v0.1.N` tags / assets and new `vN` ones as `(N,)`. Copies from before
-  this change only parse `0.1.N`, so they will not see a `vN` release:
-  they need one manual install. Falls back to "0" outside a git
+  this change only parse `0.1.N`, so the NEXT release is a **bridge**:
+  the workflows' `old_style_names` input (default true;
+  `KHERVECAD_OLD_VERSION_NAMES`) names its tag and files `0.1.N` while
+  the app inside shows `vN` and reads both. Once that bridge release is
+  out on Windows and macOS, set the input's default to false so later
+  releases are `vN`. Falls back to "0" outside a git
   checkout. Never edit a version constant by hand.
 
 ## File size policy

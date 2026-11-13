@@ -109,6 +109,12 @@ def write_version() -> str:
             "refusing to build: version resolved to the 0 placeholder — "
             "is this a git checkout with git on PATH?"
         )
+    if os.environ.get("KHERVECAD_OLD_VERSION_NAMES", "").lower() in (
+            "1", "true", "yes"):
+        # the BRIDGE release (2026-11-13, the user): tag and files named
+        # 0.1.N, which copies from before v1025 can still read; the app
+        # inside shows vN and its updater reads the plain vN tags after
+        full = "0.1." + full
     # the number, then the sha on its own line (the updater's changelog)
     (_ROOT / "khervecad" / "VERSION").write_text(
         full + "\n" + get_commit() + "\n", encoding="utf-8")

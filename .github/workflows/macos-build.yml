@@ -27,6 +27,10 @@ on:
         description: "Report what OpenSCAD publishes, before building"
         type: boolean
         default: false
+      old_style_names:
+        description: "Name tag and files 0.1.N (the bridge release, so copies from before v1025 find it)"
+        type: boolean
+        default: true
   push:
     tags:
       - "macos-v*"
@@ -107,6 +111,8 @@ jobs:
           # API — runners share outbound IPs and the anonymous allowance
           # is small enough to fail a busy afternoon.
           GITHUB_TOKEN: ${{ github.token }}
+          # (a tag push has no inputs: the bridge naming then too)
+          KHERVECAD_OLD_VERSION_NAMES: ${{ github.event.inputs.old_style_names || 'true' }}
         run: python packaging/build_macos.py
 
       - name: Read the version back

@@ -17,6 +17,10 @@ on:
         description: "Publish the v<ver> GitHub release (becomes latest)"
         type: boolean
         default: false
+      old_style_names:
+        description: "Name tag and files 0.1.N (the bridge release, so copies from before v1025 find it)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write          # needed only when release=true
@@ -64,6 +68,7 @@ jobs:
       - name: Build the installer and portable zip
         env:
           GITHUB_TOKEN: ${{ github.token }}   # OpenSCAD source lookup
+          KHERVECAD_OLD_VERSION_NAMES: ${{ inputs.old_style_names }}
         run: python packaging/build_installer.py
 
       - name: Read the version back
