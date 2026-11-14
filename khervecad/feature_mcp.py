@@ -85,11 +85,25 @@ def mirror(window, args) -> dict:
             "names": [m.name for m in made]}
 
 
+def _cut_tool(node):
+    """A Cut-Extrude's Difference (what sketch_feature returns for a cut)
+    stands for its CUT, as the History row does: patterning it must copy
+    the hole, not the part with its hole (2026-11-14, the pattern
+    exercise's Ø24 holes came out as three whole bodies)."""
+    if node.type == "difference" and len(node.children) == 2:
+        tool = node.children[1]
+        if tool.name == "Cut sketch" or tool.name.endswith(
+                "(to the part's frame)"):
+            return tool
+    return node
+
+
 def pattern(window, args) -> dict:
     """MCP `pattern_feature`: SolidWorks' Circular / Linear Pattern —
     the same `pattern_feature.make` its window's OK runs."""
     from . import pattern_feature as pf
-    nodes = [n for n in (_find(window, i) for i in args.get("node_ids", []))
+    nodes = [_cut_tool(n) for n in
+             (_find(window, i) for i in args.get("node_ids", []))
              if n is not None]
     if not nodes:
         return {"error": "node_ids names no node"}

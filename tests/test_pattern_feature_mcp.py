@@ -56,6 +56,31 @@ def test_a_linear_pattern_makes_a_row(win):
     assert _volume(win) == pytest.approx(7000, rel=0.01)
 
 
+def test_a_circular_pattern_of_a_cut_copies_the_hole(win):
+    """The cut feature sketch_feature returns (its Difference) patterns
+    as its HOLE, not as three copies of the holed part."""
+    from khervecad import refgeom_ui
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    ex.execute("apply_code", {"code": "cube([100, 100, 10], center = true);"
+                                      " // Plate\n"})
+    QTest.qWait(50)
+    plate = next(n for n in win.model.root.walk() if n.type == "cube")
+    g = refgeom_ui.sketch_on(win, origin=(0, 0, 5), normal=(0, 0, 1),
+                             label="Sketch", open_2d=False)
+    win.model.add_node("circle", dict(x=30, y=0, radius=5), parent=g)
+    cut = ex.execute("sketch_feature", {
+        "node_id": g.id, "kind": "extruded_cut", "through_all": True,
+        "part_id": plate.id})
+    assert "error" not in cut, cut
+    out = ex.execute("pattern_feature", {
+        "kind": "circular", "node_ids": [cut["feature_id"]], "count": 3})
+    assert "error" not in out, out
+    QTest.qWait(50)
+    hole = 3.14159 * 25 * 10
+    assert _volume(win) == pytest.approx(100000 - 3 * hole, rel=0.01)
+
+
 def test_a_plane_halfway_between_two_faces(win):
     from khervecad.mcp_tools import McpToolExecutor
     out = McpToolExecutor(win).execute("reference_geometry", {
