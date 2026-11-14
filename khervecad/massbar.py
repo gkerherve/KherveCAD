@@ -38,7 +38,7 @@ def readout(tris, unit="mm", material=None):
     if len(tris) > MAX_TRIS:
         return language.tr("Mass: large model — Analyse ▸ Mass "
                            "Properties"), 0.0, 0.0
-    vol = abs(analysis.mass_properties(tris)["volume"])
+    vol = abs(analysis.mass_properties(analysis.united(tris))["volume"])
     mm3 = vol * units.to_mm(unit) ** 3
     grams = analysis.mass(mm3, material)
     cm3 = mm3 / 1000.0

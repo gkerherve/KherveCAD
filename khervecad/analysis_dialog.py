@@ -258,7 +258,7 @@ class AnalysisDialog(QDialog):
             price = self.price.value()
             settings.setValue("analysis/material", material)
             settings.setValue("analysis/price_per_kg", price)
-            self.report = analysis.mass_properties(tris)
+            self.report = analysis.mass_properties(analysis.united(tris))
             self.browser.setHtml(mass_html(self.report, material, price,
                                            self.currency,
                                            self.window_.model.unit))

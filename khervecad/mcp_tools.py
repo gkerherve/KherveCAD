@@ -3393,7 +3393,7 @@ class McpToolExecutor:
             raise ToolError("Unknown material. Choose one of: "
                             + ", ".join(analysis.choices()))
         price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
-        p = analysis.mass_properties(tris)
+        p = analysis.mass_properties(analysis.united(tris))
         unit = self._unit()
         volume_mm3 = units.mm(p["volume"], unit, 3)
         grams = analysis.mass(volume_mm3, material)

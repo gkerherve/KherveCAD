@@ -176,6 +176,27 @@ def bounds(tris):
             [max(p[i] for p in pts) for i in range(3)])
 
 
+def united(tris):
+    """*tris* as ONE solid when Manifold can unite them: parts that
+    overlap (a tube standing in an arm) would otherwise count the shared
+    volume twice. As they were when Manifold is missing or a piece is not
+    a closed solid."""
+    if not tris:
+        return tris
+    try:
+        from . import csg
+        if not csg.available():
+            return tris
+        solid = csg.to_manifold([(tuple(t[:3]), None, False)
+                                 for t in tris], {})
+        if solid is None:
+            return tris
+        out = csg.to_triangles(solid)
+        return out or tris
+    except Exception:
+        return tris
+
+
 def mass_properties(tris) -> dict:
     """Volume (mm³), area (mm²), centre of mass, box — from a closed
     outward mesh. An open mesh gives a volume that is only a guess."""
