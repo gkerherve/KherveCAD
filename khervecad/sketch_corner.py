@@ -142,8 +142,21 @@ def corner(model, a, b, size, round_=True):
     ea = sc.ref_of(parent, a, "p1" if ta < 0.5 else "p2")
     eb = sc.ref_of(parent, b, "p1" if tb < 0.5 else "p2")
     rows = sc.rows(parent)
-    keep = [r for r in rows if not (r.get("kind") == "coincident" and
-                                    set(r.get("refs", ())) == {ea, eb})]
+    # ... and so would any row pinning the corner point to ANOTHER shape:
+    # a Mirror Entities' Symmetric row dragged the mirror image's ends
+    # along and opened the other side's corner (Exercise 53). The point
+    # is gone, as SolidWorks' virtual sharp; rows on a line's own two
+    # ends (horizontal / vertical / length) stay.
+    mine = {sc.ref_of(parent, n, "").rstrip(".") for n in (a, b)}
+
+    def pins_corner(r):
+        refs = list(r.get("refs", ()))
+        if not ({ea, eb} & set(refs)):
+            return False
+        if r.get("kind") == "coincident" and set(refs) == {ea, eb}:
+            return True
+        return any(x.partition(".")[0] not in mine for x in refs)
+    keep = [r for r in rows if not pins_corner(r)]
     if len(keep) != len(rows):
         parent.params[sc.KEY] = keep
     if round_:

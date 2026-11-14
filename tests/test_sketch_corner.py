@@ -183,3 +183,44 @@ def test_the_hovered_curves_and_the_first_pick_light_up():
     assert scene._sk_first is a                    # stays lit (blue)
     view.viewport().repaint()                      # paints, never raises
     view.close()
+
+
+def test_by_mouse_filleting_one_side_of_a_mirrored_sketch_leaves_the_other_closed():
+    """Exercise 53 (wLhqYhJMTXw): lines mirrored about a centerline, then
+    a Sketch Fillet clicked on the LEFT corner. The Symmetric rows on the
+    corner's ends dragged the right side's trimmed ends with it — the
+    right corner came OPEN (one line 3 mm short, the other 3 mm low) and
+    nothing could fillet it any more. The right side must stay as drawn."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtTest import QTest
+    from PyQt5.QtWidgets import QApplication
+    from khervecad import sketch_mirror, sketch_modify
+    from khervecad.view2d import SketchScene, SketchView
+    app = QApplication.instance() or QApplication([])
+    scene = SketchScene(DocumentModel())
+    scene.snap_enabled = False
+    view = SketchView(scene)
+    view.resize(700, 500)
+    view.show()
+    view.resetTransform()
+    view.scale(5, -5)
+    view.centerOn(0, 40)
+    m = scene.model
+    cl = m.add_node("line", dict(x1=0, y1=-10, x2=0, y2=70, width=0.2,
+                                 modifier="%"))
+    h = m.add_node("line", dict(x1=0, y1=35, x2=-35, y2=35, width=0.2))
+    v = m.add_node("line", dict(x1=-35, y1=35, x2=-35, y2=60, width=0.2))
+    copies, _ = sketch_mirror.mirror(m, [h, v], cl)
+    QApplication.processEvents()
+    right = [dict(c.params) for c in copies]
+    scene.ask_value = lambda tool, default: "3"
+    view.set_tool(sketch_modify.FILLET)
+    QTest.mouseClick(view.viewport(), Qt.LeftButton, Qt.NoModifier,
+                     view.mapFromScene(QPointF(-35, 35)))
+    QApplication.processEvents()
+    assert any(n.name.startswith("Sketch fillet") for n in m.root.children)
+    for c, before in zip(copies, right):
+        for k in ("x1", "y1", "x2", "y2"):
+            assert c.params[k] == pytest.approx(before[k], abs=1e-6), \
+                (c.name, k)
+    view.close()
