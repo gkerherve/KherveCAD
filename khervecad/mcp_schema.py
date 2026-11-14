@@ -1179,7 +1179,10 @@ TOOLS = [
         "description": (
             "Create a node. Without a parent it lands in the scope the "
             "user is working in — inside the Object they have open, "
-            "else at the assembly root. Returns the new node's id."
+            "else at the assembly root. Returns the new node's id. A "
+            "sketch's Straight Slot is a line with width = the slot's "
+            "width and slot: true (a closed slot, cut out of an outline "
+            "round it when extruded)."
         ),
         "input_schema": _obj({
             "type": {"type": "string",

@@ -149,6 +149,10 @@ class McpToolExecutor:
         known.add("modifier")
         if type_name in ("component", "reference"):
             known |= {"mate", "anchors"}
+        if type_name == "line":
+            # the Slot tool's marker (slot2d): a closed slot, a hole when
+            # extruded inside an outline, not a wide line (Exercise 50)
+            known.add("slot")
         unknown = [k for k in params if k not in known]
         if unknown:
             raise ToolError(

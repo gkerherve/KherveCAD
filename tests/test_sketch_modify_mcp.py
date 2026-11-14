@@ -9,6 +9,8 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
+import math
+
 import pytest
 from PyQt5.QtWidgets import QApplication
 
@@ -117,3 +119,22 @@ def test_convert_entities_on_a_plane_through_the_part(ex):
     bad = ex.execute("sketch_modify", dict(action="convert", node_id=s2,
                                            point=[500, 500]))
     assert "error" in bad
+
+
+def test_a_straight_slot_through_mcp_is_a_hole_in_the_boss(ex):
+    """Exercise 50: the plate's Straight Slot. add_node refused the
+    `slot` marker the Slot tool sets, so the slot was only a wide line
+    and the extruded plate came out without its slot."""
+    w = ex._w
+    sk = ex.execute("reference_geometry", dict(
+        action="sketch", origin=[0, 0, 0], normal=[0, 0, 1]))["sketch_id"]
+    ex.execute("add_node", dict(type="rect", parent_id=sk, params=dict(
+        x=0, y=0, width=100, height=40)))
+    out = ex.execute("add_node", dict(type="line", parent_id=sk, params=dict(
+        x1=30, y1=20, x2=70, y2=20, width=20, slot=True)))
+    assert "error" not in out, out
+    out = ex.execute("sketch_feature", dict(node_id=sk, depth=10))
+    assert "error" not in out, out
+    m = ex.execute("mass_properties", {})
+    slot = 40 * 20 + math.pi * 10 ** 2
+    assert m["volume"] == pytest.approx((4000 - slot) * 10, rel=0.01)
