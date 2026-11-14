@@ -38,8 +38,10 @@ def run(window, args) -> dict:
     if made is None:
         return {"error": "nothing made: the sketch holds no shape that "
                          "closes an area (or the part is not beside it)"}
+    # the extrude made FROM the sketch (a cut's Difference holds the
+    # part first — its own extrude must not be the one given the depth)
     ext = made if made.type == "linear_extrude" else next(
-        (n for n in made.walk() if n.type == "linear_extrude"), None)
+        (n for n in group.walk() if n.type == "linear_extrude"), None)
     if ext is not None:
         if "depth" in args:
             model.set_param(ext, "height", float(args["depth"]))

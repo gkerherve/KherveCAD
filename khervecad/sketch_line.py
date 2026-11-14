@@ -129,6 +129,40 @@ def _px(scene, pixels):
     return px_to_scene(scene, pixels)
 
 
+def _tangent(scene, start, raw, skip, outline, tol):
+    """(QPointF, circle) where the line from *start* touches a sketch
+    circle / arc or a round edge of the part under the sketch, when the
+    cursor is that near (tangent_snap; SolidWorks' tangent symbol)."""
+    from PyQt5.QtCore import QPointF
+    from . import sketch_constrain_ui as scu
+    from . import tangent_snap
+    circles = []
+    try:
+        for item in scu._shape_items(scene):
+            if skip is not None and item.node is skip:
+                continue
+            frame = item.parentItem()
+            for c in tangent_snap.circles_of([item.node]):
+                q = QPointF(*c["centre"])
+                if frame is not None:
+                    q2 = frame.mapToScene(q)
+                    turn = frame.mapToScene(QPointF(q.x() + 1, q.y())) - q2
+                    c["start"] = (c.get("start", 0.0) + math.degrees(
+                        math.atan2(turn.y(), turn.x()))) % 360.0
+                    q = q2
+                c["centre"] = (q.x(), q.y())
+                circles.append(c)
+        circles += tangent_snap.circles_of([], outline.get("segments")
+                                           or ())
+    except Exception:
+        return None
+    got = tangent_snap.snap((start.x(), start.y()), (raw.x(), raw.y()),
+                            circles, tol)
+    if got is None:
+        return None
+    return QPointF(*got[0]), got[1]
+
+
 def snap(scene, raw, start=None, skip=None):
     """(QPointF, info) for the cursor at scene point *raw*; info holds
     "point" (node, name) or None, "angle" ("h" | "v" | "45" | None) and
@@ -160,6 +194,13 @@ def snap(scene, raw, start=None, skip=None):
         if start is not None:
             info["angle"] = _angle_of(start, q)
         return QPointF(q), info
+    if start is not None:
+        tan = _tangent(scene, start, raw, skip, outline, tol)
+        if tan is not None:
+            q, circle = tan
+            info["tangent"] = circle
+            info["angle"] = None
+            return q, info
     x, y = raw.x(), raw.y()
     if start is not None:
         dx, dy = x - start.x(), y - start.y()
@@ -327,6 +368,8 @@ def draw_overlay(scene, start, pt, info):
         text = readout_text(start, pt, unit)
         tag = {"h": "  H", "v": "  V", "45": "  45°", "perp": "  ⊥"}.get(
             info.get("angle"), "")
+        if info.get("tangent"):
+            tag = "  Tangent ◠"
         label = QGraphicsSimpleTextItem(text + tag)
         f = QFont()
         f.setPointSize(9)
@@ -449,6 +492,9 @@ def _relations(scene, node, info, st):
         r = ref(n, name)
         if r:
             rows.append(("coincident", [ref(node, "p1"), r]))
+    circle = info.get("tangent")
+    if circle and circle.get("node") is not None:
+        rows.append(("tangent", [ref(node, "l"), ref(circle["node"], "o")]))
     end = info.get("point")
     if end:
         n, name = end

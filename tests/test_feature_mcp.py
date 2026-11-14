@@ -89,3 +89,23 @@ def test_mirror_feature_mirrors_a_rib_about_the_right_plane(win):
     xs = [p[0] for t in mesh.tessellate(win.model.root) for p in t[:3]]
     assert min(xs) == pytest.approx(-40, abs=0.5)   # the copy, x -40..0
     assert max(xs) == pytest.approx(60, abs=0.5)    # the part as it was
+
+
+def test_a_cut_into_an_extruded_boss_leaves_the_boss_alone(win):
+    """Exercise 6's base: a 160 deep boss, then a groove Through All —
+    the depth went onto the BOSS's extrude (22 mm) instead of the cut."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    s = _sketch(win)
+    win.model.add_node("rect", dict(x=0, y=0, width=40, height=40),
+                       parent=s)
+    boss = ex.execute("sketch_feature", {"node_id": s.id, "depth": 30})
+    s2 = _sketch(win, z=30)
+    win.model.add_node("rect", dict(x=10, y=10, width=10, height=10),
+                       parent=s2)
+    out = ex.execute("sketch_feature", {
+        "node_id": s2.id, "kind": "extruded_cut", "through_all": True,
+        "part_id": boss["feature_id"]})
+    assert "error" not in out, out
+    QTest.qWait(50)
+    assert _volume(win) == pytest.approx(40 * 40 * 30 - 100 * 30, rel=0.02)
