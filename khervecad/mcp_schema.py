@@ -1776,6 +1776,23 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "mirror_feature",
+        "description": (
+            "MIRROR (SolidWorks' Mirror of features / bodies): node_ids "
+            "(features, parts) copied about plane Front / Top / Right — "
+            "the PART's planes, carried into each node's own frame, so a "
+            "rib or boss made in a turned sketch mirrors where it should "
+            "(wrap_nodes symmetry mirrors in the node's own frame) — or "
+            "about point + normal (scope frame). The original stays."
+        ),
+        "input_schema": _obj({
+            "node_ids": {"type": "array", "items": {"type": "integer"}},
+            "plane": {"type": "string"},
+            "point": {"type": "array", "items": {"type": "number"}},
+            "normal": {"type": "array", "items": {"type": "number"}},
+        }, ["node_ids"]),
+    },
+    {
         "name": "sketch_feature",
         "description": (
             "FEATURE FROM A SKETCH — the ribbon's Extruded Boss / Cut and "

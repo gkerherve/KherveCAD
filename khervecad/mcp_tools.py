@@ -1691,6 +1691,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_mirror_feature(self, params) -> dict:
+        from . import feature_mcp
+        out = feature_mcp.mirror(self._w, params)
+        if "error" in out:
+            raise ToolError(out["error"])
+        return out
+
     def _t_sketch_feature(self, params) -> dict:
         from . import feature_mcp
         try:

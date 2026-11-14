@@ -69,3 +69,23 @@ def test_a_bad_kind_is_refused(win):
     out = McpToolExecutor(win).execute(
         "sketch_feature", {"node_id": group.id, "kind": "melt"})
     assert "error" in out
+
+
+def test_mirror_feature_mirrors_a_rib_about_the_right_plane(win):
+    """A rib made in a turned plane sketch, mirrored about the Right
+    Plane by MCP, lands on the other side (a plain symmetry wrap
+    mirrored it in the sketch's own frame)."""
+    from khervecad.mcp_tools import McpToolExecutor
+    from test_rib import CODE, _rib_sketch
+    ex = McpToolExecutor(win)
+    ex.execute("apply_code", {"code": CODE})
+    QTest.qWait(50)
+    rib = ex.execute("rib", {"node_id": _rib_sketch(win).id})
+    out = ex.execute("mirror_feature", {"node_ids": [rib["rib_id"]],
+                                        "plane": "Right"})
+    assert "error" not in out, out
+    QTest.qWait(50)
+    from khervecad import mesh
+    xs = [p[0] for t in mesh.tessellate(win.model.root) for p in t[:3]]
+    assert min(xs) == pytest.approx(-40, abs=0.5)   # the copy, x -40..0
+    assert max(xs) == pytest.approx(60, abs=0.5)    # the part as it was

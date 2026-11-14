@@ -53,3 +53,31 @@ def run(window, args) -> dict:
         extent.refresh(model)
     return {"feature_id": made.id, "name": made.name, "kind": kind,
             "extrude_id": ext.id if ext is not None else None}
+
+
+PLANES = {"front": "Front (XZ)", "top": "Top (XY)", "right": "Side (YZ)"}
+
+
+def mirror(window, args) -> dict:
+    """MCP `mirror_feature`: SolidWorks' Mirror — node_ids about a main
+    plane (Front / Top / Right) or a plane given by point + normal (the
+    scope's frame), carried into each node's own frame."""
+    from . import mirror_feature
+    nodes = [n for n in (_find(window, i) for i in args.get("node_ids", []))
+             if n is not None]
+    if not nodes:
+        return {"error": "node_ids names no node"}
+    if "normal" in args:
+        spec = ("face", tuple(args.get("point", (0, 0, 0))),
+                tuple(args["normal"]))
+    else:
+        key = str(args.get("plane", "Right")).split()[0].lower()
+        if key not in PLANES:
+            return {"error": "plane must be Front, Top or Right "
+                             "(or give point + normal)"}
+        spec = ("main", PLANES[key])
+    made = mirror_feature.mirror(window, nodes, spec)
+    if not made:
+        return {"error": "nothing mirrored"}
+    return {"mirror_ids": [m.id for m in made],
+            "names": [m.name for m in made]}
