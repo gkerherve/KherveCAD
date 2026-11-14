@@ -1853,12 +1853,17 @@ TOOLS = [
             "sketch's own x, y, one inside each area to extrude (extruded "
             "kinds); the same sketch may be given again later with other "
             "regions — one sketch, several features (a cut then cuts "
-            "everything built before it)."
+            "everything built before it). from_offset = SolidWorks' "
+            "From: Offset — the extrude starts that many mm along its own "
+            "direction (after reverse) instead of on the sketch plane; "
+            "the end condition (reference_geometry end_condition, e.g. "
+            "up_to_face) then measures from there."
         ),
         "input_schema": _obj({
             "node_id": {"type": "integer"},
             "kind": {"type": "string"},
             "depth": {"type": "number", "exclusiveMinimum": 0},
+            "from_offset": {"type": "number"},
             "mid_plane": {"type": "boolean"},
             "through_all": {"type": "boolean"},
             "reverse": {"type": "boolean"},

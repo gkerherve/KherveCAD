@@ -101,6 +101,10 @@ def is_plumbing(node):
         # setting of that extrude, listed as "Mirror 1 (Reverse
         # direction)" beside it (2026-11-13, the user)
         return True
+    if node.type == "translate" and node.params.get("extrude_from") \
+            is not None:
+        # an extrude's From: Offset (extrude_from.py): its setting
+        return True
     if node.type == "rotate":
         return (node.name or "").endswith("(about the sketch's Y axis)")
     if node.type == "multmatrix":

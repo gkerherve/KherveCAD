@@ -117,6 +117,9 @@ def _size(model, ext, args):
             model.set_param(ext, "extent", "through_all")
         if "reverse" in args:
             model.set_param(ext, "reverse", bool(args["reverse"]))
+        if args.get("from_offset"):
+            from . import extrude_from
+            extrude_from.set_offset(model, ext, float(args["from_offset"]))
         from . import extent
         extent.refresh(model)
 

@@ -4,6 +4,8 @@ Extruded Boss / Cut, or an extrude selected — a `tool_panel.ToolPanel`
 shows what it extrudes and every option the extrude really has:
 
 - Profiles — what is extruded (the regions, the shapes);
+- From — Sketch Plane, or Offset a distance along the extrude
+  (extrude_from.py, SolidWorks' From: Offset);
 - (no Sketch plane row: the plane was chosen before the window opened,
   2026-11-01, the user);
 - Direction — One side (`height`), Two sides (`height2`), Symmetric
@@ -202,10 +204,23 @@ def is_reversed(ext):
 
 
 def set_reversed(model, ext, on):
-    from . import drag_feature
+    from . import drag_feature, extrude_from
     if not on and ext.params.get("reverse"):
         model.set_param(ext, "reverse", False)
     drag_feature.set_direction(model, ext, bool(on))
+    extrude_from.follow(model, ext)
+
+
+def set_from(model, ext, mode, distance=None):
+    """From: "sketch" (the sketch plane) or "offset" (*distance* mm along
+    the extrude, its last value or extrude_from.DEFAULT)."""
+    from . import extrude_from
+    if mode != "offset":
+        extrude_from.set_offset(model, ext, None)
+        return
+    if distance is None:
+        distance = extrude_from.offset_of(ext) or extrude_from.DEFAULT
+    extrude_from.set_offset(model, ext, distance)
 
 
 OPERATIONS = [("join", "Boss (add)"), ("cut", "Cut (remove)")]
@@ -427,6 +442,7 @@ def show(window, tool):
                "here; every change shows at once. OK keeps it.")
     panel.selection("profiles", "Profiles", profiles_text(ext))
     panel.set_active("profiles")
+    from . import extrude_from
 
     def changed(fn):
         def run(value):
@@ -449,6 +465,13 @@ def show(window, tool):
         return run
     panel.choice("operation", "Operation", OPERATIONS, operation_of(ext),
                  changed(lambda v: set_operation(model, ext, v)))
+    panel.choice("from", "From", extrude_from.CHOICES,
+                 extrude_from.mode_of(ext),
+                 changed(lambda v: set_from(model, ext, v)))
+    panel.number("from_offset", "Offset (start)",
+                 extrude_from.offset_of(ext) or extrude_from.DEFAULT,
+                 changed(lambda v: set_from(model, ext, "offset", v)),
+                 minimum=-100000.0)
     panel.choice("direction", "Direction", DIRECTIONS, direction_of(ext),
                  changed(lambda v: set_direction(model, ext, v)))
     panel.choice("extent", "End condition", EXTENTS,
@@ -508,6 +531,12 @@ def refresh(window):
             plane_text(ext) + " — click to choose another")
     panel.title.setText("Extruded Cut" if is_cut(ext) else "Extrude")
     panel.set_value("direction", d)
+    from . import extrude_from
+    mode = extrude_from.mode_of(ext)
+    panel.set_value("from", mode)
+    if mode == "offset":
+        panel.set_value("from_offset", extrude_from.offset_of(ext))
+    panel.show_row("from_offset", mode == "offset")
     panel.set_value("extent", ext.params.get("extent") or "")
     panel.set_value("height", _num(ext.params.get("height"), 10))
     panel.set_value("height2", _num(ext.params.get("height2"), 0))
