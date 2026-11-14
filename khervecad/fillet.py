@@ -908,6 +908,17 @@ def _weld_slivers(rows, tol=2e-3):
     return out
 
 
+def _open_edges(rows):
+    """Directed edges with no partner running the other way."""
+    count = {}
+    for row in rows:
+        t = [tuple(v) for v in row[0]]
+        for a, b in ((t[0], t[1]), (t[1], t[2]), (t[2], t[0])):
+            count[(a, b)] = count.get((a, b), 0) + 1
+    return sum(max(0, n - count.get((b, a), 0))
+               for (a, b), n in count.items())
+
+
 def _corner_pieces(edges, runs, radius, kind, detail, adds):
     """Triangles of the corner cutters (convex corners); concave ones go
     to *adds*. Nothing without Manifold."""
@@ -1157,7 +1168,13 @@ def tess(node, env, color, sel, selected):
             # capped: 2.5 % of a 48 mm radius merged corners 0.9 mm apart,
             # and the plate under the fillet lost a long thin wedge of its
             # top (the user's cut left a strip along that edge)
-            out = _weld_slivers(cut, max(2e-3, min(size * 0.025, WELD_MAX)))
+            welded = _weld_slivers(cut, max(2e-3, min(size * 0.025,
+                                                      WELD_MAX)))
+            # the weld must not OPEN the solid (2026-11-14, Exercise 55: an
+            # arm edge running tangent into a hub left 3 open edges, and
+            # the Difference after the fillet stopped cutting)
+            out = welded if _open_edges(welded) <= _open_edges(cut) \
+                else cut
     for body in result["adds"]:
         out.extend(mesh._emit(body, color, selected))
     return out

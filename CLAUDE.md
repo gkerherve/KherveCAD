@@ -3195,6 +3195,20 @@ into a new module and import.
                        `center`, so codegen is untouched and the depth
                        follows the target. A .scad round trip keeps the
                        number, not the rule.
+  - `extrude_from.py` — SolidWorks' extrude **From: Offset** (2026-11-14,
+                       Exercise 55: both bore cuts start 8 / 13 mm off the
+                       Front plane). The Extrude window's From row (Sketch
+                       Plane / Offset + "Offset (start)"); a `translate`
+                       round the extrude (round its Reverse mirror) marked
+                       `params["extrude_from"]` = mm along the extrude's own
+                       way — History hides it (`feature_list.is_plumbing`),
+                       Reverse re-signs it (`follow`), the end conditions
+                       measure through it (Up To Surface = what is left
+                       past the offset). MCP sketch_feature `from_offset`.
+                       Fillet preview (same day): the 0.05 mm weld of the
+                       Manifold cut is dropped when it OPENS the solid
+                       (`fillet._open_edges`) — an arm edge tangent into a
+                       hub left 3 open edges and the next cut did nothing.
   - `sketch_modify.py` — **Trim / Extend / Sketch fillet / chamfer**
                        (2026-10-21): trim a line between the lines / circles
                        crossing it (shorten, split, delete), extend an end
