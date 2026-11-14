@@ -284,7 +284,8 @@ def _take(window, st, nodes):
                                             (0.0, 0.0, 1.0)))
             st["centre"], st["centre_text"] = p, n.name or "Point"
         else:
-            rest.append(n)
+            from .feature_mcp import _cut_tool
+            rest.append(_cut_tool(n))      # a Cut-Extrude: its hole
     if rest:
         st["nodes"] = rest
 

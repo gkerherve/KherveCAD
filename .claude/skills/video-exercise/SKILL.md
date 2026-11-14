@@ -91,7 +91,11 @@ Then FIX THEM, without waiting to be asked, worst first, in a loop:
 1. Reproduce the problem in a unit test under `tests/` first (offscreen,
    real mouse events where the user would use the mouse — see the
    `*_by_mouse` / `test_*_mouse` tests); it must FAIL before the fix.
-2. Fix KherveCAD (follow CLAUDE.md: file size, MCP reach, help /
+2. Fix KherveCAD so it works BY MOUSE for a human, not only through MCP
+   (the user, 2026-11-14): a ribbon button and a ToolPanel window like
+   Extruded Boss's (feature_pick toggles, boxes filled by clicking
+   regions / faces / planes / edges in 3D, OK / Cancel); an MCP-only fix
+   is not a fix. Test the mouse path with real mouse events. (Follow CLAUDE.md: file size, MCP reach, help /
    tooltips, CLAUDE.md notes for anything non-obvious).
 3. Run the new test and the related test files; then the whole suite
    before the commit if the change is broad.

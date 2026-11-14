@@ -89,3 +89,17 @@ def test_a_plane_halfway_between_two_faces(win):
     assert "error" not in out, out
     assert out["origin"][2] == pytest.approx(112.5)
     assert abs(out["direction"][2]) == pytest.approx(1.0)
+
+
+def test_the_window_patterns_a_cut_as_its_hole():
+    """Picking a Cut-Extrude's row in the Pattern window (the mouse path)
+    patterns the hole, like the MCP call — not the whole holed part."""
+    from khervecad.model import DocumentModel
+    from khervecad import pattern_feature as pf
+    m = DocumentModel()
+    diff = m.add_node("difference", {}, name="Cut-Extrude1")
+    m.add_node("cube", {"size": 10}, parent=diff, name="Body")
+    tool = m.add_node("union", {}, parent=diff, name="Cut sketch")
+    st = {}
+    pf._take(None, st, [diff])
+    assert st["nodes"] == [tool]
