@@ -104,6 +104,11 @@ def test_convert_in_the_3d_sketch(app, monkeypatch):
                                3) for n in made)
         assert lengths == [20, 20, 40, 40]
         assert all(n.parent is g for n in made)
+        # a second click: the face is still the part's face, not the
+        # part's face plus the lines just converted (Exercise 49)
+        sk._load_face()
+        again = tool._convert(s[0], s[1])
+        assert len(again) == 4
     finally:
         win._dirty = False
         win.close()

@@ -822,12 +822,15 @@ def _bridge_holes(solid, holes):
                                       for e in _loop_edges(h)] \
             + _loop_edges(hole)
         best = None
-        for i, v in enumerate(outer):
-            if v[0] < m[0] - 1e-9 or v == m:
-                continue
-            d = (v[0] - m[0]) ** 2 + (v[1] - m[1]) ** 2
-            if best is not None and d >= best[0]:
-                continue
+        # nearest first: the first visible vertex is the answer, so a
+        # plate of fine arcs no longer tests every vertex's sight lines
+        order = sorted((((v[0] - m[0]) ** 2 + (v[1] - m[1]) ** 2, i)
+                        for i, v in enumerate(outer)
+                        if v[0] >= m[0] - 1e-9 and v != m))
+        for d, i in order:
+            v = outer[i]
+            if best is not None:
+                break
             if not _sees(m, v, walls):
                 continue
             mid = ((m[0] + v[0]) / 2, (m[1] + v[1]) / 2)
