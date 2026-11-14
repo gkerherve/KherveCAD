@@ -125,3 +125,39 @@ def test_leaving_a_rib_sketch_makes_the_rib(win):
     QTest.qWait(50)
     assert rib is not None and cut_feature.KEY not in group.params
     assert _volume(win) - before == pytest.approx(6000, rel=0.02)
+
+
+def test_a_rib_on_the_front_plane_stays_in_the_middle(win):
+    """The user, 2026-11-14: Rib, then the Front Plane, made the rib on
+    the part's front FACE (y = -26), not on the plane through the
+    middle — the sketch remembered the nearest face facing the same
+    way and followed it there."""
+    from khervecad import cut_feature, face_sketch, feature_pick, mesh
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code": (
+        "translate([-30, -26, 0]) cube([60, 52, 10]); // Base\n"
+        "translate([20, -26, 10]) cube([10, 52, 30]); // Wall\n")})
+    QTest.qWait(50)
+    feature_pick.start(win, "rib")
+    pick = win._feature_pick
+    win.view3d.release_hooks  # (armed)
+    feature_pick._use_plane(win, pick, "Front (XZ)")
+    QTest.qWait(100)
+    group = next(n for n in win.model.root.walk()
+                 if n.params.get(face_sketch.KEY))
+    assert float(group.params["y"]) == pytest.approx(0, abs=1e-6)
+    assert face_sketch.FACE_REF not in group.params
+    # a line from the wall's top to the base's far edge, then leave
+    a = face_sketch.to_local(group, (20, 0, 40))
+    b = face_sketch.to_local(group, (-30, 0, 10))
+    win.model.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                    width=0.2), parent=group)
+    QTest.qWait(100)
+    assert float(group.params["y"]) == pytest.approx(0, abs=1e-6)
+    rib = cut_feature.finish(win, group)
+    QTest.qWait(100)
+    assert rib is not None
+    m = mesh.ancestor_matrix(rib, {})
+    ys = [mesh.mat_apply(m, p)[1] for t in mesh.tessellate(rib) for p in t]
+    assert min(ys) == pytest.approx(-5, abs=0.01)
+    assert max(ys) == pytest.approx(5, abs=0.01)

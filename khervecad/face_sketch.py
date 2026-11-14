@@ -159,9 +159,13 @@ def _whole_face_desc(desc, parts):
     return out
 
 
-def make(window, part, point, normal, open_2d=True):
+def make(window, part, point, normal, open_2d=True, on_plane=False):
     """The face sketch Group at *point* on a face of *part*, then open
-    it (unless it is drawn in 3D). Returns the Group."""
+    it (unless it is drawn in 3D). Returns the Group. *on_plane*: it
+    stands on a PLANE (Front / Top / Right) through the part, not on a
+    face — it remembers no face to follow (2026-11-14, the user: a Rib
+    on the Front Plane was made on the part's front face, the nearest
+    face looking the same way)."""
     model = window.model
     scope = window.builder.isolated_component() or model.root
     rx, ry, rz = euler_for(normal)
@@ -179,7 +183,10 @@ def make(window, part, point, normal, open_2d=True):
         on = on[len("Sketch on "):]
     model.rename(group, "Sketch on " + on)
     group._outline_part = part
-    remember_face(window, group, raw, normal)
+    if on_plane:
+        group.params[ON_PLANE] = True
+    else:
+        remember_face(window, group, raw, normal)
     if open_2d:
         open_sketch(window, group)
     return group
@@ -201,12 +208,17 @@ def remember_face(window, group, point, normal):
         face_owner.remember(window, group, point, normal)
 
 
+#: on a sketch Group: it stands on a plane, never adopts a face
+ON_PLANE = "on_plane"
+
 #: an old sketch's plane this near a face (mm) stands on that face
 ADOPT_GAP = 0.5
 
 
 def adopt_face(window, group):
     """An older sketch's face, found from where its plane stands."""
+    if group.params.get(ON_PLANE):
+        return
     o = [float(group.params.get(k, 0.0)) for k in ("x", "y", "z")]
     n = _normal_of(group)
     remember_face(window, group, o, n)

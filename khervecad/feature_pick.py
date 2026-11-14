@@ -465,6 +465,7 @@ def _use_plane(window, pick, plane):
         refresh(window)
         return
     group = face_sketch.make(window, part, (0.0, 0.0, 0.0), normal,
+                             on_plane=True,
                              open_2d=not in_3d)
     window.model.rename(group, "Sketch on " + plane_pick.name_of(plane))
     if kind == SKETCH:
