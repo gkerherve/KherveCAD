@@ -25,7 +25,7 @@ the Free Software Foundation, either version 3 of the License, or
 from __future__ import annotations
 
 from . import (wrap, armature, brep, character, curve3d, curve_surface, curves2d,
-               displace, dome, draft, gears, holes, outfit, refgeom, regions2d, scatter,
+               displace, dome, draft, full_round, gears, holes, outfit, refgeom, regions2d, scatter,
                shapekeys, sheet_body, skin,
                solids, strands, subd, textured, textures, threads, vpaint,
                weathering)
@@ -34,7 +34,7 @@ MODULES = [gears, threads, holes, solids, curves2d, curve3d, textures,
            textured, outfit, weathering, scatter, displace.KIT,
            armature.KIT, brep.KIT, curve_surface.KIT, subd.KIT,
            shapekeys.KIT, strands.KIT, skin.KIT, vpaint, character,
-           regions2d, sheet_body.KIT, refgeom, draft.KIT, dome.KIT, wrap.KIT]
+           regions2d, sheet_body.KIT, refgeom, draft.KIT, dome.KIT, wrap.KIT, full_round.KIT]
 
 NODE_TYPES = {}
 LEAVES = frozenset()

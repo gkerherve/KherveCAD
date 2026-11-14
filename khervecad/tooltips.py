@@ -748,6 +748,19 @@ TIPS = {
          "click one again to leave it.",
          "OK (or Esc) keeps it; Cancel takes the Dome away."],
         "A round face becomes exactly half an ellipsoid."),
+    "full_round": (
+        "Full Round Fillet",
+        "Rounds a face right across: a half round tangent to the two "
+        "faces either side — the top of a lug, a rib end, a tab "
+        "(SolidWorks' Full round fillet). The radius is half the width, "
+        "found by itself.",
+        [_SELECTION + " Pick the part.",
+         "Click Full Round Fillet: its window opens beside the view.",
+         "In the 3D view click a SIDE face, then the CENTRE face, then "
+         "the other SIDE face.",
+         "OK (or Esc) keeps it; Cancel takes it away."],
+        "Click nothing and the top face is rounded across its narrow "
+        "way; click the centre face alone and its sides are found."),
     "wrap": (
         "Wrap",
         "Writes text or a flat sketch ROUND a cylinder, raised (Emboss) "

@@ -211,6 +211,27 @@ def _dome(d):
                width=0.03)
 
 
+@draws("full_round")
+def _full_round(d):
+    """A block whose top is one half round from side to side (the made
+    colour), tangent to both side faces."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    w, L, h = 0.55, 0.85, 0.6            # half width (x), half length, wall
+    d.box(-w, -L, 0, 2 * w, 2 * L, h)
+    steps = 12
+    for i in range(steps):               # strips from the far side over
+        a0 = math.pi * i / steps
+        a1 = math.pi * (i + 1) / steps
+        p = [(w * math.cos(a), h + w * math.sin(a)) for a in (a0, a1)]
+        d.poly([d.P(p[0][0], -L, p[0][1]), d.P(p[1][0], -L, p[1][1]),
+                d.P(p[1][0], L, p[1][1]), d.P(p[0][0], L, p[0][1])],
+               shade(made, 0.75 + 0.6 * math.sin((a0 + a1) / 2)),
+               edge=False)
+    end = [d.P(w * math.cos(math.pi * k / 24), -L,
+               h + w * math.sin(math.pi * k / 24)) for k in range(25)]
+    d.poly(end, shade(made, 1.0), width=0.03)
+
+
 @draws("wrap")
 def _wrap(d):
     """A cylinder with a raised band of 'letters' wrapped round its

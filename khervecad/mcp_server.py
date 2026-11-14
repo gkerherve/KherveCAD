@@ -249,6 +249,10 @@ open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
 open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
 kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \
 the edges listed (get them from list_edges, or use fillet_edges). \
+A FULL ROUND (SolidWorks' full round fillet: a lug's top rounded right \
+across, tangent to both sides) is `kcad_full_round(pick = [[side 1], \
+[centre], [side 2]]) { … }` (a point on each face; one point = the \
+centre face, its sides found; none = the top face) — never two fillets. \
 To round or chamfer EVERY sharp edge of a part at once — a machined \
 block, a printed case, an enclosure — wrap it in `kcad_bevel(width = \
 1, segments = 4, profile = 0.5, angle = 30, which = "convex") { … }` \

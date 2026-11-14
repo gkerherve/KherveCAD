@@ -1263,6 +1263,9 @@ class MainWindow(QMainWindow):
             elif op == "dome":                # now: which faces bulge?
                 from . import dome_pick
                 dome_pick.start(self, wrapper)
+            elif op == "full_round":          # now: side, centre, side
+                from . import full_round_pick
+                full_round_pick.start(self, wrapper)
             elif op == "wrap":                # now: what is written?
                 from . import wrap_panel
                 wrap_panel.start(self, wrapper)
