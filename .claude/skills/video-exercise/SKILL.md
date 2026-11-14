@@ -1,6 +1,6 @@
 ---
 name: video-exercise
-description: Rebuild a CAD tutorial video (SolidWorks, Fusion, Onshape...) in KherveCAD — turn a YouTube link, a video file, or a folder holding them into frames + captions with KherveFrames, read the steps, reproduce each in the live KherveCAD window, compare with the video, and report where KherveCAD struggled. Use whenever the user gives a YouTube link or a video (or a folder with one) of a CAD exercise, or asks to reproduce / follow / copy a tutorial or exercise from a video.
+description: Rebuild a CAD tutorial video (SolidWorks, Fusion, Onshape...) in KherveCAD — turn a YouTube link, a video file, or a folder holding them into frames + captions with KherveFrames, read the steps, reproduce each in the live KherveCAD window, compare with the video, fix every KherveCAD problem it shows in a test-first loop, and only then write a KherveTeX report (PDF) of how the part is made. Use whenever the user gives a YouTube link or a video (or a folder with one) of a CAD exercise, or asks to reproduce / follow / copy a tutorial or exercise from a video.
 ---
 
 # Rebuild a CAD exercise from a video
@@ -76,12 +76,56 @@ same views, `mass_properties` / `get_node_bounds` against any given
 size or mass. Save as `<exercise folder>/<title>.kcad`; put a
 `compare/` folder of KherveCAD renders beside matching frames if useful.
 
-## 6. Report the problems — the main output
+## 6. Problems → fix KherveCAD in a loop
 
-Write `<exercise folder>/problems.md` and summarise it to the user:
-for each step that was hard, impossible, wrong or needed a workaround:
-what the video did, what KherveCAD did instead, how bad (blocker /
-workaround / cosmetic), and which KherveCAD module or tool it concerns.
-Also list SolidWorks tools the video used that KherveCAD lacks. Do NOT
-start fixing KherveCAD inside this skill: offer the fixes (most
-important first) and wait for the user's go.
+Keep `<exercise folder>/problems.md` as you go: for each step that was
+hard, impossible, wrong or needed a workaround — what the video did,
+what KherveCAD did instead, how bad (blocker / workaround / cosmetic),
+which module or tool it concerns, and a status (open / fixed in vN).
+
+Then FIX THEM, without waiting to be asked, worst first, in a loop:
+
+1. Reproduce the problem in a unit test under `tests/` first (offscreen,
+   real mouse events where the user would use the mouse — see the
+   `*_by_mouse` / `test_*_mouse` tests); it must FAIL before the fix.
+2. Fix KherveCAD (follow CLAUDE.md: file size, MCP reach, help /
+   tooltips, CLAUDE.md notes for anything non-obvious).
+3. Run the new test and the related test files; then the whole suite
+   before the commit if the change is broad.
+4. Commit and push each fix on its own (`v<N>: fix: ...`, CLAUDE.md
+   rules; stage only your own files). Mark it fixed in problems.md.
+5. Redo the exercise's affected steps — from scratch, the video's way —
+   in a fresh document. New problems go back into the list.
+
+Repeat until the WHOLE exercise goes through the video's way with no
+open blocker or workaround. Cosmetic leftovers may stay open, listed.
+A missing tool that is a big feature of its own (days of work): build it
+if the exercise cannot be done without it, but tell the user it is
+coming first; anything else, ask before starting.
+If the loop stalls (the same problem three times), stop and ask.
+
+## 7. The report — only once it works
+
+Only when step 6 is done and a final clean run of the exercise worked,
+write the report in **KherveTeX** (the `mcp__khervetex__*` tools drive
+the user's live KherveTeX window; get_document_info first, new_document
+— never discard unsaved work). Title = the video's title; author line
+says it was rebuilt in KherveCAD vN. Contents:
+
+- **The part**: what it is, its overall size, the video link, a picture
+  of the finished KherveCAD part (render_view saved as PNG into the
+  exercise folder, \includegraphics).
+- **How it is made**, one subsection per feature in order: plane or
+  face, what is sketched with every dimension and relation, the feature
+  and its values, and HOW to do it in KherveCAD (which tab / button /
+  clicks, or the MCP call), with a KherveCAD render of that stage and,
+  where it helps, the matching video frame beside it.
+- **Check**: the final views against the video's, sizes / mass.
+- **What KherveCAD needed**: the problems found and the fix for each
+  (version, one line), and what is still cosmetic.
+
+compile_document, look at the pages with render_page and fix the
+layout, then save as `<exercise folder>/<title>.ktex` and export_pdf
+`<title>.pdf` beside it. If KherveTeX is not connected, say so and ask
+the user to open it rather than writing LaTeX by hand. End by giving the
+user the PDF path and a short summary of the fixes.
