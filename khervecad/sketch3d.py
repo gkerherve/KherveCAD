@@ -142,6 +142,7 @@ class Sketch3DTool:
         self._pulling = False
         self.holder = None            # the extrude shapes join, if made
         self.snapped = None           # (x, y, kind) under the cursor
+        self.tangent = None           # the circle a line end touches
         self.lit = []                 # model / sketch edges lit up
         self.info = {}                # the face's segments and points
         self._drag = None             # (node, role) of a dragged point
@@ -303,6 +304,25 @@ class Sketch3DTool:
         if best is None:
             return radius, None
         return best[1], best[2]
+
+    def _tangent_end(self, lx, ly):
+        """(point, circle) when a line's end is near the point where it
+        would touch a circle or arc of the sketch or the part's round edge
+        (tangent_snap, as the 2D Line: SolidWorks' tangent symbol)."""
+        if self.mode != "line" or not self.points or self.arc:
+            return None
+        from . import tangent_snap
+        mm = self._mm_per_px(lx, ly)
+        if mm is None:
+            return None
+        shapes = list((self.holder or self.group).children)
+        while any(n.type == "union" for n in shapes):
+            shapes = [k for n in shapes for k in (
+                n.children if n.type == "union" else [n])]
+        circles = tangent_snap.circles_of(
+            shapes, self.info.get("segments") or ())
+        return tangent_snap.snap(tuple(self.points[-1]), (lx, ly), circles,
+                                 SNAP_PX * mm)
 
     def aimed(self, pt):
         """(*pt* moved onto the direction it nearly has, what that direction
@@ -874,8 +894,16 @@ class Sketch3DTool:
             return None
         lx, ly = to_local(g, p)
         self.snapped, self.lit = None, []
+        self.tangent = None
         if not free:
             got = self.snap_local(lx, ly)
+            if got is not None and self.snapped is not None and \
+                    self.snapped[2] != "edge":
+                return (tidy(got[0]), tidy(got[1]))
+            tan = self._tangent_end(lx, ly)
+            if tan is not None:
+                self.tangent = tan[1]
+                return (tidy(tan[0][0]), tidy(tan[0][1]))
             if got is not None:
                 return (tidy(got[0]), tidy(got[1]))
             step = self.grid_at(lx, ly)
@@ -888,7 +916,9 @@ class Sketch3DTool:
             from . import sketch3d_tools
             return sketch3d_tools.place(self, pt)
         model = self.window.model
-        if self.mode == "line" and self.points and not self.arc:
+        tangent = self.tangent if self.mode == "line" else None
+        if self.mode == "line" and self.points and not self.arc and \
+                tangent is None:
             pt = self.aimed(pt)[0]
         elif self.mode == "slot" and len(self.points) == 1:
             pt = straighten(self.points[-1], pt)
@@ -947,6 +977,17 @@ class Sketch3DTool:
                     self._say()          # (lines again: say so)
                 self._join(last, node)
                 self._tie_ends(node)
+                if not arc and tangent is not None and \
+                        tangent.get("node") is not None and \
+                        tangent["node"].parent is node.parent:
+                    from . import sketch_constraints as sc
+                    try:
+                        sc.add(model, node.parent, "tangent",
+                               [sc.ref_of(node.parent, node, "l"),
+                                sc.ref_of(node.parent, tangent["node"], "o")])
+                    except (ValueError, KeyError):
+                        pass
+                self.tangent = None
                 if not arc:
                     self._write_relations(
                         node, last.params if last is not None and
@@ -1302,6 +1343,12 @@ class Sketch3DTool:
                 painter.drawRect(int(q.x()) - 4, int(q.y()) - 4, 8, 8)
                 painter.drawText(q + QPointF(10, 16), language.tr(
                     self.snapped[2].capitalize()))
+        if self.tangent is not None and self.hover is not None:
+            q = scr(self.hover)
+            if q is not None:
+                painter.setPen(QPen(QColor(240, 140, 30), 2))
+                painter.drawText(q + QPointF(10, -8),
+                                 language.tr("Tangent") + " \u25e0")
         pen = QPen(QColor(240, 140, 30), 2)
         pen.setStyle(Qt.DashLine)
         painter.setPen(pen)
