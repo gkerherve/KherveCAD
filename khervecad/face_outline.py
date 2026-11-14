@@ -92,15 +92,41 @@ def arcs(segs):
         if n < 3:
             continue
 
-        def turn(i):
+        def signed(i):
             a, b, c = points[i - 1], points[i], points[(i + 1) % n]
             u = (b[0] - a[0], b[1] - a[1])
             v = (c[0] - b[0], c[1] - b[1])
-            t = math.degrees(math.atan2(u[0] * v[1] - u[1] * v[0],
-                                        u[0] * v[0] + u[1] * v[1]))
-            return abs(t)
+            return math.degrees(math.atan2(u[0] * v[1] - u[1] * v[0],
+                                           u[0] * v[0] + u[1] * v[1]))
+
+        def turn(i):
+            return abs(signed(i))
+
+        def radius(i):
+            # the local radius: half the two pieces' length over the turn
+            a, b, c = points[i - 1], points[i], points[(i + 1) % n]
+            ln = (math.hypot(b[0] - a[0], b[1] - a[1])
+                  + math.hypot(c[0] - b[0], c[1] - b[1])) / 2
+            return ln / max(math.radians(turn(i)), 1e-9)
+
+        def same_arc(i, j):
+            # tangent arcs of other radii (Exercise 50: an R25 end running
+            # into an R100) are two arcs, not one fitted between them
+            if (signed(i) > 0) != (signed(j) > 0):
+                return False
+            ri, rj = radius(i), radius(j)
+            return max(ri, rj) / max(min(ri, rj), 1e-9) < 1.6
+        def even(i):
+            # a tessellated arc's pieces are alike; a vertex between an
+            # arc and a long straight side is where the arc ENDS (it
+            # turned a little too, and a run through two of them made a
+            # huge circle of a straight side — Exercise 50's plate)
+            a, b, c = points[i - 1], points[i], points[(i + 1) % n]
+            la = math.hypot(b[0] - a[0], b[1] - a[1])
+            lc = math.hypot(c[0] - b[0], c[1] - b[1])
+            return max(la, lc) <= 4.0 * max(min(la, lc), 1e-9)
         rng = range(n) if closed else range(1, n - 1)
-        bent = {i: 0.3 < turn(i) < 40.0 for i in rng}
+        bent = {i: 0.3 < turn(i) < 40.0 and even(i) for i in rng}
         if closed and all(bent.values()):
             got = drawing.fit_circle(points)
             if got:
@@ -113,7 +139,7 @@ def arcs(segs):
         order = [(start + k) % n for k in range(n)] if closed else list(rng)
         run = []
         for i in order + [start]:
-            if bent.get(i):
+            if bent.get(i) and (not run or same_arc(run[-1], i)):
                 run.append(i)
                 continue
             if len(run) >= 2:
@@ -122,7 +148,7 @@ def arcs(segs):
                 got = drawing.fit_circle(pts)
                 if got and got[1] > 1e-6:
                     out.append(got)
-            run = []
+            run = [i] if bent.get(i) else []
     return out
 
 

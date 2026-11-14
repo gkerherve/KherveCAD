@@ -107,3 +107,74 @@ def test_convert_in_the_3d_sketch(app, monkeypatch):
     finally:
         win._dirty = False
         win.close()
+
+
+def _tangent_arcs_outline():
+    """Exercise 50's plate end: a bottom line, an R25 end and an R100
+    sweeping back tangent to it, closed by straight lines."""
+    pts = [(0.0, -25.0), (85.0, -25.0)]
+    for i in range(1, 25):                   # R25 from -90° to +86.4°
+        a = math.radians(-90 + 176.4 * i / 24)
+        pts.append((85 + 25 * math.cos(a), 25 * math.sin(a)))
+    c = (85 + 125 * math.cos(math.radians(86.4)),
+         125 * math.sin(math.radians(86.4)))
+    for i in range(1, 16):                   # R100, concave, to the left
+        a = math.radians(266.4 - 40 * i / 15)
+        pts.append((c[0] + 100 * math.cos(a), c[1] + 100 * math.sin(a)))
+    pts.append((0.0, pts[-1][1]))
+    return list(zip(pts, pts[1:] + pts[:1]))
+
+
+def test_tangent_arcs_of_different_radii_are_two_arcs():
+    from khervecad import face_outline
+    got = sorted(r for _c, r in face_outline.arcs(_tangent_arcs_outline()))
+    assert len(got) == 2, got
+    assert got[0] == pytest.approx(25, rel=0.02)
+    assert got[1] == pytest.approx(100, rel=0.02)
+
+
+def test_convert_the_r25_brings_only_the_r25():
+    segs = _tangent_arcs_outline()
+    shapes = cv.convert(cv.whole_edge(segs, *cv.edge_at(segs, (110, 0), 1)),
+                        segs)
+    assert len(shapes) == 1, shapes
+    t, p = shapes[0]
+    assert p.get("bulge"), p
+    assert (p["x1"], p["y1"]) == pytest.approx((85, -25), abs=0.01)
+
+
+def test_convert_the_r100_stops_where_the_r25_starts():
+    segs = _tangent_arcs_outline()
+    c = (85 + 125 * math.cos(math.radians(86.4)),
+         125 * math.sin(math.radians(86.4)))
+    p = (c[0] + 100 * math.cos(math.radians(246)),
+         c[1] + 100 * math.sin(math.radians(246)))
+    shapes = cv.convert(cv.whole_edge(segs, *cv.edge_at(segs, p, 1)), segs)
+    assert len(shapes) == 1, shapes
+    q = shapes[0][1]
+    assert (q["x2"], q["y2"]) == pytest.approx(
+        (85 + 25 * math.cos(math.radians(86.4)),
+         25 * math.sin(math.radians(86.4))), abs=0.01)
+
+
+def test_a_straight_side_between_two_tangent_arcs_stays_straight():
+    """The plate's bottom runs tangent out of one arc into another: its
+    two ends turn a little, and were fitted as a circle of r ~ 1000 that
+    swallowed the whole straight side."""
+    pts = []
+    for i in range(10):                      # R20 corner, 180° -> 270°
+        a = math.radians(180 + 90 * i / 9)
+        pts.append((20 * math.cos(a), -5 + 20 * math.sin(a)))
+    for i in range(25):                      # R25 end from -90° to +90°
+        a = math.radians(-90 + 180 * i / 24)
+        pts.append((85 + 25 * math.cos(a), 25 * math.sin(a)))
+    pts.append((-20.0, 25.0))
+    segs = list(zip(pts, pts[1:] + pts[:1]))
+    from khervecad import face_outline
+    assert all(r < 30 for _c, r in face_outline.arcs(segs))
+    shapes = cv.convert(cv.whole_edge(segs, *cv.edge_at(segs, (40, -25), 1)),
+                        segs)
+    assert len(shapes) == 1, shapes
+    t, p = shapes[0]
+    assert t == "line" and not p.get("bulge"), p
+    assert sorted((p["x1"], p["x2"])) == pytest.approx([0, 85], abs=0.01)

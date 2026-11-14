@@ -31,16 +31,27 @@ def _r(v):
     return round(float(v), 4) + 0.0
 
 
-def _on(arc, p):
+def _on(arc, p, slack=0.0):
     (cx, cy), r = arc
-    return abs(math.hypot(p[0] - cx, p[1] - cy) - r) < max(r * 0.02, 1e-3)
+    return abs(math.hypot(p[0] - cx, p[1] - cy) - r) < \
+        max(r * 5e-4, 2e-3) + slack
+
+
+#: the most of a circle one tessellated piece of an arc can span (degrees)
+MAX_PIECE_DEG = 45.0
 
 
 def _piece_on(arc, p, q):
-    """The piece p-q runs along the arc: both ends AND its middle on it
-    (a chord across the circle has its ends on it too)."""
-    m = ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
-    return _on(arc, p) and _on(arc, q) and _on(arc, m)
+    """The piece p-q runs along the arc: both ends on it and the piece
+    SHORT, as a tessellated arc's are (a chord across the circle has its
+    ends on it too). Ends within a hair of it: at 2 % of the radius the
+    start of an R25 tangent to an R100 was taken for the R100 too
+    (Exercise 50)."""
+    (_c, r) = arc
+    half = math.hypot(q[0] - p[0], q[1] - p[1]) / 2
+    if r <= 0 or half > r * math.sin(math.radians(MAX_PIECE_DEG / 2)):
+        return False
+    return _on(arc, p) and _on(arc, q)
 
 
 def whole_edge(segs, a, b):
