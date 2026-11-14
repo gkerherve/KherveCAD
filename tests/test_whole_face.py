@@ -439,3 +439,31 @@ def test_a_later_cut_stays_out_of_an_earlier_features_section(win):
     assert d is not None or body.parent.type == "difference"
     after = sketch_section.built_before(win, sketch)
     assert sorted(map(str, after)) == sorted(map(str, before))
+
+
+def test_extruded_cut_on_a_lone_line_cuts_the_corner_by_mouse(win):
+    """Exercise 51's Cut-Extrude2 the human way: Extruded Cut, one line
+    across the top face, leave the sketch — the triangle it closes with
+    the face's edges is taken, the Extrude window opens, a mouse click on
+    its OK makes the cut (10 mm deep)."""
+    from PyQt5.QtCore import Qt
+    from khervecad import cut_feature, extrude_panel
+    from khervecad.mcp_tools import McpToolExecutor
+    from test_rib import _volume
+    McpToolExecutor(win).execute("apply_code", {
+        "code": "cube([40, 40, 30]); // Block\n"})
+    QTest.qWait(50)
+    m = win.model
+    g = m.add_node("union", dict(x=0, y=0, z=30))
+    g.params["face_sketch"] = True
+    g.params[cut_feature.KEY] = "extruded_cut"
+    m.add_node("line", dict(x1=0, y1=20, x2=20, y2=40, width=0.2),
+               parent=g)
+    cut_feature.finish(win, g)
+    QTest.qWait(50)
+    panel = extrude_panel._panel(win)
+    assert panel is not None and panel.isVisible()
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
+    QTest.qWait(50)
+    assert _volume(win) == pytest.approx(40 * 40 * 30 - 200 * 10,
+                                         rel=0.01)
