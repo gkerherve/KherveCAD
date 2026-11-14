@@ -68,7 +68,7 @@ OPERATION_GROUPS = [
     ("transform", ["translate", "rotate", "scale", "mirror", "resize",
                    "multmatrix"]),
     ("combine", ["union", "difference", "intersection", "render"]),
-    ("finish", ["fillet", "bevel", "push_pull", "bisect", "hull",
+    ("finish", ["fillet", "bevel", "draft", "push_pull", "bisect", "hull",
                 "minkowski"]),
     ("deform", ["blend", "bend", "twist", "taper", "lattice",
                 "subdivide", "decimate", "remesh", "wireframe", "shell",

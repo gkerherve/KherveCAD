@@ -25,7 +25,7 @@ from . import language, mesh
 #: operations that pick their part in 3D when nothing is selected —
 #: every tool that works on a solid (2026-10-27, the user: "all the
 #: tools ... done the same way" as Fillet and the extrudes)
-PICKED = ("hull", "bisect", "shell", "minkowski",
+PICKED = ("hull", "bisect", "shell", "draft", "minkowski",
           "translate", "rotate", "scale", "resize", "multmatrix",
           "render", "pattern", "symmetry", "joint",
           "bevel", "blend", "subdivide", "subd", "decimate", "remesh",

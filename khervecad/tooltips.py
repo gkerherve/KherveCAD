@@ -722,6 +722,19 @@ TIPS = {
          "clothes), all (onto the surface) or inside.",
          "Offset: how far off the surface it sits (mm)."],
         "Blocky piece? Set Refine to split it first, so it can bend."),
+    "draft": (
+        "Draft",
+        "Tilts a part's side faces by a small angle about a neutral "
+        "plane, so it comes out of a mould (SolidWorks' Draft): the part "
+        "narrows going away from the bottom (or the top).",
+        [_SELECTION + " Pick the part.",
+         "Click Draft: every side face leans in by 3°.",
+         "In Properties set the Draft angle (°) and the Neutral plane "
+         "(bottom: narrower at the top; top: narrower at the bottom).",
+         "To draft only some faces, list a point on each in Faces to "
+         "draft."],
+        "A negative angle leans the faces out instead. Caps stay flat and "
+        "the solid stays closed."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "

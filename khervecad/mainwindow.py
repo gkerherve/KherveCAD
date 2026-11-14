@@ -1257,6 +1257,9 @@ class MainWindow(QMainWindow):
             elif op == "shell":               # now: which faces open?
                 from . import shell_pick
                 shell_pick.start(self, wrapper)
+            elif op == "draft":               # now: which faces lean?
+                from . import draft_pick
+                draft_pick.start(self, wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
             elif op == "vertex_paint":        # now: where to paint?

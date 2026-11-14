@@ -176,6 +176,22 @@ def _rib(d):
             d.P(0.75, y0, 0.3)], shade(made, 1.25), width=0.025)
 
 
+@draws("draft")
+def _draft(d):
+    """A block whose sides lean in going up, the drafted face in the
+    made colour, and the neutral plane's edge dashed at its foot."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    s, k = 0.8, 0.28                       # half size, lean at the top
+    b = [(-s, -s, 0), (s, -s, 0), (s, s, 0), (-s, s, 0)]
+    t = [(-s + k, -s + k, 1.3), (s - k, -s + k, 1.3), (s - k, s - k, 1.3),
+         (-s + k, s - k, 1.3)]
+    d.faces([([b[0], b[1], t[1], t[0]], 1.0),
+             ([t[0], t[1], t[2], t[3]], 1.38)])
+    d.faces([([b[1], b[2], t[2], t[1]], 1.0)], body=made)
+    d.line(d.P(-s - 0.25, -s, 0), d.P(s + 0.35, -s, 0), d.pal.edge, 0.03,
+           [3, 2])
+
+
 def _surface(d, bumps):
     path = QPainterPath(QPointF(0.08, 0.86))
     for i in range(41):
