@@ -1260,6 +1260,9 @@ class MainWindow(QMainWindow):
             elif op == "draft":               # now: which faces lean?
                 from . import draft_pick
                 draft_pick.start(self, wrapper)
+            elif op == "dome":                # now: which faces bulge?
+                from . import dome_pick
+                dome_pick.start(self, wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
             elif op == "vertex_paint":        # now: where to paint?

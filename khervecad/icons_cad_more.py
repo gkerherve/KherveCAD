@@ -192,6 +192,25 @@ def _draft(d):
            [3, 2])
 
 
+@draws("dome")
+def _dome(d):
+    """A round block with a dome bulging from its top face, the dome in
+    the made colour."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    d.cyl(0, 0, 0, 0.85, 0.7)
+    # the dome: rings of a half ellipsoid over the top face, drawn from
+    # the rim up so the nearer, higher rings cover the lower ones
+    rings = 8
+    for i in range(rings):
+        a = math.pi / 2 * i / rings
+        r = 0.85 * math.cos(a)
+        z = 0.7 + 0.75 * math.sin(a)
+        pts = [d.P(r * math.cos(t), r * math.sin(t), z)
+               for t in (2 * math.pi * k / 36 for k in range(36))]
+        d.poly(pts, shade(made, 0.8 + 0.6 * i / rings), edge=(i == 0),
+               width=0.03)
+
+
 def _surface(d, bumps):
     path = QPainterPath(QPointF(0.08, 0.86))
     for i in range(41):

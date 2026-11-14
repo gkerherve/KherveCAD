@@ -735,6 +735,19 @@ TIPS = {
          "draft."],
         "A negative angle leans the faces out instead. Caps stay flat and "
         "the solid stays closed."),
+    "dome": (
+        "Dome",
+        "Bulges a flat face out into a smooth dome (or dents it in) — a "
+        "button top, a knob, a lid (SolidWorks' Dome). The face's edge "
+        "stays where it is.",
+        [_SELECTION + " Pick the part.",
+         "Click Dome: its window opens beside the view; the top face is "
+         "domed 10 mm.",
+         "Set the Height; tick Reverse to dent the face in instead.",
+         "Click other flat faces in the 3D view to dome them instead; "
+         "click one again to leave it.",
+         "OK (or Esc) keeps it; Cancel takes the Dome away."],
+        "A round face becomes exactly half an ellipsoid."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "
