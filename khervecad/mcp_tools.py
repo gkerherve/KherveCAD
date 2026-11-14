@@ -1691,6 +1691,16 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_sketch_feature(self, params) -> dict:
+        from . import feature_mcp
+        try:
+            out = feature_mcp.run(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+        if "error" in out:
+            raise ToolError(out["error"])
+        return out
+
     def _t_rib(self, params) -> dict:
         from . import rib_feature
         try:

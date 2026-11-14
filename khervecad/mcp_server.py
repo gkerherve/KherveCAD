@@ -249,6 +249,10 @@ open = "top") { … }` hollows a solid into an even-walled shell (a cup: \
 open = "top"; "none" for a closed hollow), and `kcad_fillet(radius = 2, \
 kind = "round", edges = [[x1, y1, z1, x2, y2, z2], ...]) { … }` rounds \
 the edges listed (get them from list_edges, or use fillet_edges). \
+A SolidWorks-style Boss or Cut FROM A SKETCH (lines, arcs, \
+circles drawn in a face / plane sketch) is sketch_feature on the \
+sketch — it extrudes the AREA the lines close, holes left out; never \
+wrap each line in its own linear_extrude. \
 A FULL ROUND (SolidWorks' full round fillet: a lug's top rounded right \
 across, tangent to both sides) is `kcad_full_round(pick = [[side 1], \
 [centre], [side 2]]) { … }` (a point on each face; one point = the \

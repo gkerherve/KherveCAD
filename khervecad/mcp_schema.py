@@ -1776,6 +1776,32 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "sketch_feature",
+        "description": (
+            "FEATURE FROM A SKETCH — the ribbon's Extruded Boss / Cut and "
+            "the other Bosses and Cuts, made exactly as on leaving their "
+            "sketch: node_id = the sketch (a face / plane sketch Group, "
+            "reference_geometry sketch_on). The AREA its lines, arcs and "
+            "shapes close is the profile (a circle inside a closed outline "
+            "is a hole), kept as a Regions with the sketch's dimensions. "
+            "kind extruded_boss (default, joined to the part) / "
+            "extruded_cut / revolved_boss / revolved_cut (about the "
+            "sketch's Y axis) / swept_* / lofted_*; depth (mm, default "
+            "10), mid_plane (both ways, centred on the sketch), "
+            "through_all (cuts), reverse; part_id = the part a cut cuts "
+            "(default: the part the sketch stands on)."
+        ),
+        "input_schema": _obj({
+            "node_id": {"type": "integer"},
+            "kind": {"type": "string"},
+            "depth": {"type": "number", "exclusiveMinimum": 0},
+            "mid_plane": {"type": "boolean"},
+            "through_all": {"type": "boolean"},
+            "reverse": {"type": "boolean"},
+            "part_id": {"type": "integer"},
+        }, ["node_id"]),
+    },
+    {
         "name": "rib",
         "description": (
             "RIB (SolidWorks' Rib): node_id = a sketch on a plane THROUGH "
