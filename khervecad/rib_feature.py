@@ -121,13 +121,13 @@ def _ray_hit(p, d, segs):
     return best
 
 
-def _on(p, segs):
+def _on(p, segs, tol=ON_EDGE):
     for (ax, ay), (bx, by) in segs:
         ex, ey = bx - ax, by - ay
         n2 = ex * ex + ey * ey
         t = 0.0 if n2 < 1e-18 else max(0.0, min(1.0, (
             (p[0] - ax) * ex + (p[1] - ay) * ey) / n2))
-        if math.hypot(ax + ex * t - p[0], ay + ey * t - p[1]) <= ON_EDGE:
+        if math.hypot(ax + ex * t - p[0], ay + ey * t - p[1]) <= tol:
             return True
     return False
 
@@ -138,6 +138,14 @@ def extend_to_part(model, lines, ghost):
     first meets (2026-11-14, Exercise 52: the bracket's rib line stops
     2 mm under the bearing). The lines moved."""
     segs = _outline_segments(ghost)
+    # the outline is the section GROWN by section_grow: a true corner of
+    # the part lies grow * sqrt 2 from it, and is on the part (2026-11-14,
+    # Exercise 57: corner-to-corner lines were run on through the part)
+    try:
+        grow = abs(float(ghost.params.get("section_grow") or 0))
+    except (TypeError, ValueError):
+        grow = 0.0
+    tol = ON_EDGE + grow * 1.5
     moved = []
     for line in lines:
         p = line.params
@@ -152,7 +160,7 @@ def extend_to_part(model, lines, ghost):
         d = ((b[0] - a[0]) / n, (b[1] - a[1]) / n)
         ends = {}
         for key, q, sign in (("1", a, -1), ("2", b, 1)):
-            if _on(q, segs):
+            if _on(q, segs, tol):
                 continue
             ray = (d[0] * sign, d[1] * sign)
             t = _ray_hit(q, ray, segs)

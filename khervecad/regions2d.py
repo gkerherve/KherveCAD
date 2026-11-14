@@ -137,7 +137,10 @@ def _fused(node, cs):
     if pushed is None:                   # as before: grown and clipped
         return cs + (outside.offset(3 * sketch_section.GROW,
                                     m.JoinType.Miter) ^ section)
-    return cs + pushed
+    # what the push adds stays inside the part's outline: a free edge
+    # ending ON a convex corner was run on past it (2026-11-14, Exercise
+    # 57: the rib stood 0.2 mm proud of the base's end face)
+    return cs + (pushed ^ section)
 
 
 def _push_into(outside, loops, depth, m):
