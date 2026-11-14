@@ -106,8 +106,14 @@ def mirror(window, nodes, spec):
     Mirror per parent, each given the plane in its own frame. The new
     nodes."""
     point, normal = plane_in_scope(window, spec)
+    # a FILLET wraps the whole part: mirrored as a node it drew the part
+    # twice (Exercise 53's Mirror1 = Fillet2 + the leg). As SolidWorks,
+    # its edges are mirrored instead, after the features they round
+    fillets = [n for n in nodes if n.type == "fillet"]
     groups = {}
     for n in nodes:
+        if n in fillets:
+            continue
         if n.parent is not None and n is not window.model.root:
             groups.setdefault(id(n.parent), []).append(n)
     made = []
@@ -116,7 +122,53 @@ def mirror(window, nodes, spec):
         node = apply(window.model, group, nrm, p)
         if node is not None:
             made.append(node)
+    for fil in fillets:
+        if _mirror_fillet(window, fil, point, normal):
+            made.append(fil)
     return made
+
+
+def _mirror_fillet(window, fil, point, normal):
+    """Add *fil*'s edges and faces reflected about the plane (scope
+    frame) to its own rows. True when anything was added."""
+    p0, n = _to_parent(window, fil, point, normal)
+
+    def refl(q):
+        d = sum((q[i] - p0[i]) * n[i] for i in range(3))
+        return [round(q[i] - 2 * d * n[i], 6) for i in range(3)]
+
+    def turn(v):
+        d = sum(v[i] * n[i] for i in range(3))
+        return [round(v[i] - 2 * d * n[i], 6) for i in range(3)]
+
+    def same(r, rows):
+        return any(len(x) == len(r) and all(abs(a - b) < 1e-6
+                                            for a, b in zip(x, r))
+                   for x in rows)
+    params = dict(fil.params)
+    changed = False
+    edges = [list(map(float, e)) for e in (params.get("edges") or [])]
+    for e in list(edges):
+        if len(e) < 6:
+            continue
+        r = refl(e[:3]) + refl(e[3:6])
+        if not same(r, edges) and not same(r[3:] + r[:3], edges):
+            edges.append(r)
+            changed = True
+    faces = [list(map(float, f)) for f in (params.get("faces") or [])]
+    for f in list(faces):
+        if len(f) < 6:
+            continue
+        r = refl(f[:3]) + turn(f[3:6])
+        if not same(r, faces):
+            faces.append(r)
+            changed = True
+    if not changed:
+        return False
+    window.model.set_param(fil, "edges", edges)
+    if faces:
+        window.model.set_param(fil, "faces", faces)
+    return True
 
 
 def spec_text(spec):

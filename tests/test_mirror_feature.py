@@ -244,3 +244,46 @@ def test_history_lists_the_boss_then_mirror_1(app):
     finally:
         w._dirty = False
         w.close()
+
+
+LEGGED = """
+translate([-60, -40, 0]) cube([120, 80, 15]); // Block
+translate([30, -10, 15]) cube([20, 20, 20]); // Boss
+"""
+
+
+def test_mirroring_a_fillet_mirrors_its_edges_not_the_whole_part(shown):
+    """Exercise 53's Mirror1 = Fillet2 + Boss-Extrude4 + 5 about the Right
+    Plane. A fillet wraps the WHOLE part, so the Mirror wrapped the part
+    and drew it twice; it must instead round the mirrored edges too.
+    In the window: the rows, the Right Plane row, OK."""
+    from khervecad import tree_history
+    win = shown
+    ex = McpToolExecutor(win)
+    ex.execute("new_document", {})
+    ex.execute("apply_code", {"code": LEGGED})
+    for _ in range(3):
+        QApplication.processEvents()
+    top = [c for c in win.model.root.children if c.visible]
+    body = win.model.wrap_nodes(top, "union")
+    QApplication.processEvents()
+    out = ex.execute("fillet_edges", {"node_id": body.id, "radius": 3,
+                                      "edges": [[30, -10, 15, 30, 10, 15]]})
+    assert "error" not in out, out
+    fil = next(n for n in win.model.root.walk() if n.type == "fillet")
+    boss = next(n for n in win.model.root.walk() if "Boss" in n.name)
+    while boss.parent is not None and boss.parent.type in (
+            "translate", "color"):
+        boss = boss.parent
+    tree = win.builder.active_tree()
+    tree.clearSelection()
+    panel = mirror_feature.start(win)
+    tree.select_nodes([fil, boss])
+    item = _plane_item(tree, "Side (YZ)")
+    tree_history.clicked(tree, item)
+    panel.ok.click()
+    syms = [n for n in win.model.root.walk() if n.type == "symmetry"]
+    assert len(syms) == 1 and fil not in list(syms[0].walk())
+    assert len(fil.params["edges"]) == 2
+    a, b = fil.params["edges"][1][:3], fil.params["edges"][1][3:]
+    assert a[0] == pytest.approx(-30) and b[0] == pytest.approx(-30)
