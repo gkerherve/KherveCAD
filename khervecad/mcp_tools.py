@@ -1698,6 +1698,13 @@ class McpToolExecutor:
             raise ToolError(out["error"])
         return out
 
+    def _t_pattern_feature(self, params) -> dict:
+        from . import feature_mcp
+        out = feature_mcp.pattern(self._w, params)
+        if "error" in out:
+            raise ToolError(out["error"])
+        return out
+
     def _t_sketch_feature(self, params) -> dict:
         from . import feature_mcp
         try:

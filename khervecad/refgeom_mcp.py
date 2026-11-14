@@ -42,6 +42,18 @@ def run(ex, params):
                 names.index(params["offset_from"])]
             o, d = refgeom.offset_plane(o, d, float(
                 params.get("distance") or 0.0))
+        elif params.get("faces"):
+            from . import plane_tool
+            fs = params["faces"]
+            if len(fs) != 2 or any(len(f) < 6 for f in fs):
+                raise ValueError("faces: two [x, y, z, nx, ny, nz].")
+            refs = [dict(kind="plane", point=[float(c) for c in f[:3]],
+                         dir=[float(c) for c in f[3:6]],
+                         text="face %d" % (i + 1))
+                    for i, f in enumerate(fs)]
+            o, d, why = plane_tool.compute(refs)
+            if o is None:
+                raise ValueError(why)
         elif params.get("points"):
             pts = params["points"]
             if len(pts) != 3:

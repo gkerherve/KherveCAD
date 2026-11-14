@@ -1622,7 +1622,9 @@ TOOLS = [
             "points that stay in the tree, are drawn in the 3D view and "
             "render nothing (kcad_ref_* in the program). action: plane "
             "(origin + normal, or offset_from: 'Front' / 'Top' / "
-            "'Right' + distance, or points: three [x, y, z]), axis "
+            "'Right' + distance, or points: three [x, y, z], or faces: "
+            "two [x, y, z, nx, ny, nz] — the mid-plane of two parallel "
+            "faces, the bisector of two at an angle), axis "
             "(point + direction, or points: two, or planes: two "
             "ref_plane node ids — where they meet), point (at), sketch "
             "(node_id of a plane, or origin + normal: makes the Group "
@@ -1655,6 +1657,8 @@ TOOLS = [
             "direction": {"type": "array", "items": {"type": "number"}},
             "at": {"type": "array", "items": {"type": "number"}},
             "points": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"}}},
+            "faces": {"type": "array", "items": {
                 "type": "array", "items": {"type": "number"}}},
             "planes": {"type": "array", "items": {"type": "integer"}},
             "offset_from": {"type": "string",
@@ -1790,6 +1794,37 @@ TOOLS = [
             "plane": {"type": "string"},
             "point": {"type": "array", "items": {"type": "number"}},
             "normal": {"type": "array", "items": {"type": "number"}},
+        }, ["node_ids"]),
+    },
+    {
+        "name": "pattern_feature",
+        "description": (
+            "CIRCULAR / LINEAR PATTERN of features or bodies (SolidWorks' "
+            "Circular Pattern, Linear Pattern — the Features tab's "
+            "windows): node_ids (an extrude, a cut's feature, a part). "
+            "kind circular: copies about `axis` [x, y, z] through "
+            "`centre` (world, default origin; a cylinder's axis is its "
+            "centre line), `count` instances over `angle` (default 360, "
+            "equal spacing; equal false = `angle` between copies), "
+            "reverse. kind linear: `direction` [x, y, z], `spacing` mm, "
+            "`count`, reverse; optional direction2 / spacing2 / count2 "
+            "for a grid. One pattern per parent; copies follow every "
+            "edit of the original."
+        ),
+        "input_schema": _obj({
+            "kind": {"type": "string", "enum": ["circular", "linear"]},
+            "node_ids": {"type": "array", "items": {"type": "integer"}},
+            "count": {"type": "integer", "minimum": 1},
+            "axis": {"type": "array", "items": {"type": "number"}},
+            "centre": {"type": "array", "items": {"type": "number"}},
+            "angle": {"type": "number"},
+            "equal": {"type": "boolean"},
+            "reverse": {"type": "boolean"},
+            "direction": {"type": "array", "items": {"type": "number"}},
+            "spacing": {"type": "number"},
+            "direction2": {"type": "array", "items": {"type": "number"}},
+            "spacing2": {"type": "number"},
+            "count2": {"type": "integer", "minimum": 1},
         }, ["node_ids"]),
     },
     {

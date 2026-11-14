@@ -83,3 +83,36 @@ def mirror(window, args) -> dict:
         return {"error": "nothing mirrored"}
     return {"mirror_ids": [m.id for m in made],
             "names": [m.name for m in made]}
+
+
+def pattern(window, args) -> dict:
+    """MCP `pattern_feature`: SolidWorks' Circular / Linear Pattern —
+    the same `pattern_feature.make` its window's OK runs."""
+    from . import pattern_feature as pf
+    nodes = [n for n in (_find(window, i) for i in args.get("node_ids", []))
+             if n is not None]
+    if not nodes:
+        return {"error": "node_ids names no node"}
+    kind = str(args.get("kind", pf.CIRCULAR))
+    if kind not in (pf.CIRCULAR, pf.LINEAR):
+        return {"error": "kind must be circular or linear"}
+    st = pf._defaults(kind)
+    count = int(args.get("count", 3 if kind == pf.CIRCULAR else 2))
+    st.update(count=max(1, count), reverse=bool(args.get("reverse")))
+    if kind == pf.CIRCULAR:
+        st.update(axis=tuple(args.get("axis", (0, 0, 1))),
+                  centre=tuple(args.get("centre", (0, 0, 0))),
+                  angle=float(args.get("angle", 360.0)),
+                  equal=bool(args.get("equal", True)))
+    else:
+        st.update(dir=tuple(args.get("direction", (1, 0, 0))),
+                  spacing=float(args.get("spacing", 20.0)))
+        if args.get("direction2") is not None:
+            st.update(use2=True, dir2=tuple(args["direction2"]),
+                      spacing2=float(args.get("spacing2", 20.0)),
+                      count2=max(1, int(args.get("count2", 2))))
+    made = pf.make(window, nodes, st)
+    if not made:
+        return {"error": "nothing patterned"}
+    return {"pattern_ids": [m.id for m in made],
+            "names": [m.name for m in made]}
