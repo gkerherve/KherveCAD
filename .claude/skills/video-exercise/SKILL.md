@@ -161,6 +161,13 @@ Contents:
   Rectangle** → click the origin → drag. [icon] **Smart Dimension** →
   **75**, **9**." No explanations, no section of prose; the picture says
   the rest. Keep the generator as report/make_tutorial.py.
+- **Every Smart Dimension he places** (the user: "he was using the
+  smart dimension all the way"): its own click line — "[icon] **Smart
+  Dimension** → click this → click that → **40**" — and DRAWN in the
+  sketch pictures as KherveCAD draws it (extension lines, arrows, Ø
+  leaders: `sketchpic` dims "h" / "v" / "d" / "a"), kept in every later
+  picture of that sketch. Grep the captions for "smart" / "dimension" /
+  "give" and look at the frames to list them all before writing.
 - **A picture for every stage**: the SKETCH finished and dimensioned
   (the 2D sketch view: render_view view "2d", or a 3D view square on),
   then the part after the feature (render_view 3D). Save each into
