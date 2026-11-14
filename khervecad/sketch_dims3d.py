@@ -551,7 +551,7 @@ def paint(window, painter, project, skip=(), hits=True, occlude=True,
             if not vis(m, ((la[0] + lb[0]) / 2, (la[1] + lb[1]) / 2)):
                 continue
             chip(QPointF((oa.x() + ob.x()) / 2, (oa.y() + ob.y()) / 2),
-                 str(row["value"]), cont, index,
+                 _text(row), cont, index,
                  dict(kind="linear", jac=jac(m, (ax, ay)), n=(nx, ny),
                       offset=off))
     if hits:

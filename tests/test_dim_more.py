@@ -271,3 +271,25 @@ def test_an_assistant_adds_the_same_dimensions(win):
         action="set_driven", node_id=g.id, index=len(sc.rows(g)) - 1,
         driven=False))
     assert not sc.rows(g)[-1].get("driven")
+
+
+def test_a_driven_linear_dimension_reads_in_brackets_in_3d(win):
+    """Exercise 51's Sketch3: the driven 30 showed on the model as a
+    plain "30.0" — the 3D chip of a linear dimension wrote the raw value,
+    not dim_more.text (brackets, tidy number)."""
+    from PyQt5.QtGui import QImage, QPainter
+    from khervecad import refgeom_ui, sketch_dims3d
+    g = refgeom_ui.sketch_on(win, origin=(0, 0, 0), normal=(0, 0, 1),
+                             label="Sketch", open_2d=False)
+    win.model.add_node("line", dict(x1=0, y1=0, x2=20, y2=30, width=0.2),
+                       parent=g)
+    g.params["constraints"] = [{"kind": "vdistance",
+                                "refs": ["0.p1", "0.p2"],
+                                "driven": True, "value": 30.0}]
+    img = QImage(800, 800, QImage.Format_ARGB32)
+    p = QPainter(img)
+    shown = sketch_dims3d.paint(
+        win, p, lambda v: (400 + 5 * v[0], 400 - 5 * v[1], 1.0),
+        occlude=False)
+    p.end()
+    assert "(30)" in shown, shown
