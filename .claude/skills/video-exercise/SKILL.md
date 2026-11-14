@@ -115,28 +115,45 @@ if the exercise cannot be done without it, but tell the user it is
 coming first; anything else, ask before starting.
 If the loop stalls (the same problem three times), stop and ask.
 
-## 7. The report — only once it works
+## 7. The report — a TUTORIAL, only once it works
 
 Only when step 6 is done and a final clean run of the exercise worked,
 write the report in **KherveTeX** (the `mcp__khervetex__*` tools drive
 the user's live KherveTeX window; get_document_info first, new_document
-— never discard unsaved work). Title = the video's title; author line
-says it was rebuilt in KherveCAD vN. Contents:
+— never discard unsaved work: save it first).
 
-- **The part**: what it is, its overall size, the video link, a picture
-  of the finished KherveCAD part (render_view saved as PNG into the
-  exercise folder, \includegraphics).
-- **How it is made**, one subsection per feature in order: plane or
-  face, what is sketched with every dimension and relation, the feature
-  and its values, and HOW to do it in KherveCAD (which tab / button /
-  clicks, or the MCP call), with a KherveCAD render of that stage and,
-  where it helps, the matching video frame beside it.
-- **Check**: the final views against the video's, sizes / mass.
-- **What KherveCAD needed**: the problems found and the fix for each
-  (version, one line), and what is still cosmetic.
+The report is a **step-by-step tutorial for recreating the exercise in
+KherveCAD**, written for a person at the mouse — NOT an account of the
+problems met or the fixes made (those stay in problems.md and in your
+chat summary; the report never mentions them, nor MCP calls, scripts or
+versions beyond the author line). The user, 2026-11-14: "put a circle,
+go into Sketch, put the circles at 47, another one at 30, then trim this
+and trim that — exactly what you need to do".
 
-compile_document, look at the pages with render_page and fix the
-layout, then save as `<exercise folder>/<title>.ktex` and export_pdf
+Title = the video's title; author line "Recreated in KherveCAD vN".
+Contents:
+
+- **The part**: what it is, overall size, the video link, the drawing /
+  final frame from the video and a picture of the finished KherveCAD part.
+- **Step by step**, one subsection per feature in the video's order, each
+  split into numbered actions, exactly as the user does them in KherveCAD:
+  which tab and button ("Features ▸ Extruded Boss/Base"), which plane or
+  face to click, which sketch tool, where to click, every Smart Dimension
+  and relation with its value ("Smart Dimension the circle: 47"), each
+  Trim / Mirror / Offset, leaving the sketch, the feature window's
+  settings (Direction, End condition, Distance), OK.
+- **A picture for every stage**: the SKETCH finished and dimensioned
+  (the 2D sketch view: render_view view "2d", or a 3D view square on),
+  then the part after the feature (render_view 3D). Save each into
+  `<exercise folder>/report/NN_name.png` as you build (the build script
+  shoots after every step), so the report shows the part growing image
+  by image. Put the matching video frame beside it where it helps.
+- **Check**: the finished part against the video's, sizes / mass.
+
+compile_document, look at EVERY page with render_page (pictures present,
+nothing running off the page — one image per figure, `[H]`, widths
+≤ 0.8\linewidth; tables in p{} columns; plain spaces in numbers, no
+\,), then save as `<exercise folder>/<title>.ktex` and export_pdf
 `<title>.pdf` beside it. If KherveTeX is not connected, say so and ask
 the user to open it rather than writing LaTeX by hand. End by giving the
-user the PDF path and a short summary of the fixes.
+user the PDF path; summarise the fixes in the chat, not in the report.
