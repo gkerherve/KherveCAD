@@ -183,3 +183,28 @@ def test_a_straight_side_between_two_tangent_arcs_stays_straight():
     t, p = shapes[0]
     assert t == "line" and not p.get("bulge"), p
     assert sorted((p["x1"], p["x2"])) == pytest.approx([0, 85], abs=0.01)
+
+
+def test_a_tangent_arc_between_lines_converts_whole(app):
+    """Exercise 49: the plate's R89 arc runs tangent out of a long
+    straight side; the junction turned only a little, so the side's far
+    end was fitted into the arc (R118, wrong place) and Convert brought
+    in a short wrong piece."""
+    k = 8
+    arc = [(89 * math.sin(t), 89 - 89 * math.cos(t))
+           for t in (i / k for i in range(k + 1))]          # 0..1 rad
+    pts = [(-80, 0)] + arc + [(arc[-1][0], -30), (-80, -30)]
+    segs = list(zip(pts, pts[1:] + pts[:1]))
+    from khervecad import face_outline
+    found = face_outline.arcs(segs)
+    assert len(found) == 1
+    (cx, cy), r = found[0]
+    assert r == pytest.approx(89, abs=0.5)
+    assert (cx, cy) == pytest.approx((0, 89), abs=0.5)
+    piece = cv.whole_edge(segs, arc[3], arc[4])
+    shapes = cv.convert(piece, segs)
+    assert len(shapes) == 1
+    p = shapes[0][1]
+    assert {(round(p["x1"], 2), round(p["y1"], 2)),
+            (round(p["x2"], 2), round(p["y2"], 2))} == \
+        {(0.0, 0.0), (round(arc[-1][0], 2), round(arc[-1][1], 2))}
