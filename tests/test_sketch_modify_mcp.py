@@ -39,9 +39,36 @@ def test_trim_extend_and_fillet(ex):
                                            vertex=2, size=2))
     assert "error" not in out, out
     assert out["corners"]
-    bad = ex.execute("sketch_modify", dict(action="trim", node_id=poly.id,
+    cube = m.add_node("cube", dict())
+    bad = ex.execute("sketch_modify", dict(action="trim", node_id=cube.id,
                                            point=[0, 0]))
     assert "error" in bad
+
+
+def test_trim_a_circle_and_a_rectangle_side_construction(ex):
+    """The pattern exercise's lug (ogsBu7TcfDI): a Center Rectangle and a
+    circle on its top side; the circle's lower half is trimmed away and
+    the top side made construction — an assistant could do neither."""
+    m = ex._w.model
+    r = m.add_node("rect", dict(x=-50, y=120, width=100, height=55))
+    c = m.add_node("circle", dict(x=0, y=175, radius=50))
+    out = ex.execute("sketch_modify", dict(action="trim", node_id=c.id,
+                                           point=[0, 125]))
+    assert "error" not in out, out
+    assert out["result"] == "opened"
+    arc = m.find(c.id)
+    assert arc.type == "line" and arc.params.get("bulge")
+    out = ex.execute("sketch_modify", dict(
+        action="construction", node_id=r.id, point=[0, 175]))
+    assert "error" not in out, out
+    top = m.find(out["node_id"])
+    assert top.type == "line" and top.params.get("modifier") == "%"
+    assert top.params["y1"] == pytest.approx(175)
+    assert top.params["y2"] == pytest.approx(175)
+    others = [n for n in m.root.children
+              if n.type == "line" and n is not top and n is not arc]
+    assert len(others) == 3 and all(
+        n.params.get("modifier", "") != "%" for n in others)
 
 
 def test_first_dimension_scales_through_mcp(ex, monkeypatch):

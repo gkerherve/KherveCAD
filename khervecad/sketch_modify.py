@@ -744,6 +744,15 @@ def fold(node):
 
 
 # ------------------------------------------------------------------ MCP
+def _seg_dist(p, q):
+    """Distance from point *q* to the segment of line params *p*."""
+    ax, ay, bx, by = p["x1"], p["y1"], p["x2"], p["y2"]
+    dx, dy = bx - ax, by - ay
+    ln = dx * dx + dy * dy or 1e-12
+    t = max(0.0, min(1.0, ((q[0] - ax) * dx + (q[1] - ay) * dy) / ln))
+    return math.hypot(ax + t * dx - q[0], ay + t * dy - q[1])
+
+
 def run_mcp(window, params):
     """The `sketch_modify` MCP tool: trim / extend a line at a point,
     fillet / chamfer a polygon or rectangle corner or where two lines
@@ -762,6 +771,28 @@ def run_mcp(window, params):
         if not (isinstance(p, (list, tuple)) and len(p) >= 2):
             raise ValueError("Give point [x, y] on the line.")
         return (float(p[0]), float(p[1]))
+    if action == "construction" or (
+            action == "trim" and node(params["node_id"]).type in (
+                "circle", "rect", "polygon")):
+        # (2026-11-14, the pattern exercise's lug: a circle's half trimmed
+        # away, a rectangle's side made construction — as the Trim tool
+        # and the Construction switch do with the mouse)
+        from . import sketch_trim
+        shape = node(params["node_id"])
+        if shape.type in ("rect", "polygon"):
+            p = point()
+            sides = sketch_trim.explode(model, shape)
+            if not sides:
+                raise ValueError("%s has no sides to pick." % shape.name)
+            shape = min(sides, key=lambda ln: _seg_dist(ln.params, p))
+        if action == "construction":
+            on = shape.params.get("modifier") != "%"
+            model.set_modifier(shape, "%" if on else "")
+            return {"result": "construction" if on else "normal",
+                    "node_id": shape.id}
+        done = sketch_trim.trim_piece(model, shape, point())
+        return {"result": done, "node_id": shape.id,
+                "line": None if done == "deleted" else dict(shape.params)}
     if action in ("trim", "extend"):
         line = node(params["node_id"])
         if line.type != "line":

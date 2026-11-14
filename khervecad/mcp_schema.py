@@ -1875,10 +1875,13 @@ TOOLS = [
         "description": (
             "SKETCH MODIFY — the ribbon's Trim / Extend / Sketch fillet / "
             "Sketch chamfer. Points are in the shape's own sketch "
-            "coordinates (its params' frame). trim: node_id (a line) + "
-            "point on the piece to remove — it is cut where other lines / "
-            "circles of its group cross it (shortened, split in two, or "
-            "deleted). extend: node_id (a line) + point near the end to "
+            "coordinates (its params' frame). trim: node_id (a line, "
+            "circle, arc, or a rectangle / polygon — its side nearest the "
+            "point) + point on the piece to remove — it is cut where other "
+            "lines / circles of its group cross it (shortened, split in "
+            "two, deleted; a circle becomes an open arc). construction: "
+            "node_id (+ point to pick a rectangle / polygon side, which "
+            "becomes lines) switches it to construction and back. extend: node_id (a line) + point near the end to "
             "run on to the first line / circle it meets. fillet / "
             "chamfer: node_id of a polygon or rect + vertex index (a rect "
             "becomes a polygon; the corner is kept and a corners row "
@@ -1898,7 +1901,7 @@ TOOLS = [
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["trim", "extend", "fillet", "chamfer",
-                                "mirror", "offset"]},
+                                "mirror", "offset", "construction"]},
             "reverse": {"type": "boolean"},
             "cap": {"type": "boolean"},
             "node_id": {"type": "integer"},
