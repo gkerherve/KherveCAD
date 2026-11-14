@@ -29,13 +29,16 @@ KherveFrames lives in `~/Documents/PycharmProjects/KherveFrames`
 the system Python).
 
 ```bash
-~/Documents/PycharmProjects/KherveFrames/frames "<url or file>" --changes --subs --out "<exercise folder>/frames"
+~/Documents/PycharmProjects/KherveFrames/frames "<url or file>" --seconds 2 --subs --sheets --width 1280 --out "<exercise folder>/frames"
 ```
 
-- `--changes` (screen-change detection) is the default choice for a
-  screen recording. Aim for roughly 30-150 frames: too many → raise it
-  (`--changes 0.15`), steps missing → lower it (`0.04`) or use
-  `--seconds 2` over the part that moved too fast (`--start/--end`).
+- One frame every 2 seconds is the DEFAULT (the user: ~50 frames for a
+  10-minute video was not enough to see how each step is done — about
+  30 a minute is). Go to `--seconds 1` over a fast passage
+  (`--start/--end`, another `--out`). `--changes` alone misses clicks.
+- `--sheets` tiles them 2x2 into `frames_sheets/`: read the SHEETS in
+  order to follow every click (4 frames per picture), then open single
+  frames at full size where a dimension, dialog or value must be read.
 - `--subs` writes the caption on each image and `captions.txt` (what was
   said from one frame to the next). Add a language (`--subs fr`) if the
   video is not in English. "no captions found" is fine — go on without.
