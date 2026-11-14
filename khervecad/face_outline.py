@@ -307,6 +307,8 @@ def show(window, group, part):
     from . import meshedit_ui
     tris, others = None, []
     for node, t in meshedit_ui._parts(window):
+        if _inside(node, group):
+            continue      # the sketch's own shapes are not the face
         if tris is None and (node is part or _inside(part, node)):
             tris = t
         else:
