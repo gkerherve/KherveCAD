@@ -81,15 +81,21 @@ BACKGROUNDS = {
     "Snow": ("#ffffff", "#f6f8fb", "#e9eef4"),
     # the looks CAD programs ship (2026-11-13, the user: "used in CAD
     # quite a lot"): original colours in those families, no brand names
-    "Sky blue gradient": ("#7fa4cc", "#c3d4e6", "#ffffff"),
-    "Steel grey gradient": ("#9aa3ad", "#d5d9de", "#f4f5f6"),
-    "Engineering blue": ("#3d5a80", "#9db3cc", "#e8eef5"),
+    "Sky": ("#7fa4cc", "#c3d4e6", "#ffffff"),
+    "Steel": ("#9aa3ad", "#d5d9de", "#f4f5f6"),
+    "Denim": ("#3d5a80", "#9db3cc", "#e8eef5"),
     "Charcoal": ("#474747", "#3a3a3a", "#2e2e2e"),
     "Graphite": ("#5a5f66", "#41454b"),
-    "Deep navy": ("#1d2a44", "#0e1626"),
+    "Navy": ("#1d2a44", "#0e1626"),
     "Paper": ("#fdfcf7", "#f3f1e8"),
-    "Green screen": ("#2f4a3a", "#1a2b21"),
+    "Forest": ("#2f4a3a", "#1a2b21"),
 }
+#: the names those had before (2026-11-14, the user: one word each) —
+#: a saved choice under the old name still loads
+OLD_BACKGROUND_NAMES = {"Sky blue gradient": "Sky",
+                        "Steel grey gradient": "Steel",
+                        "Engineering blue": "Denim", "Deep navy": "Navy",
+                        "Green screen": "Forest"}
 
 
 #: how far the sliders can push the shading: the value offset at full
@@ -304,6 +310,7 @@ class View3D(QWidget):
         saved = settings.value("render_style", "Shaded")
         self.style = saved if saved in RENDER_STYLES else "Shaded"
         bg = settings.value("render_bg", "Studio")
+        bg = OLD_BACKGROUND_NAMES.get(bg, bg)
         self.background = bg if bg in BACKGROUNDS else "Slate"
         proj = settings.value("render_projection", "Perspective")
         self.projection = proj if proj in PROJECTIONS else "Perspective"

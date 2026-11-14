@@ -2250,6 +2250,9 @@ class McpToolExecutor:
             win.view3d.set_stage(bool(params["stage"]))
         if params.get("background") is not None:
             from .view3d import BACKGROUNDS
+            from .view3d import OLD_BACKGROUND_NAMES
+            params["background"] = OLD_BACKGROUND_NAMES.get(
+                params["background"], params["background"])
             if params["background"] not in BACKGROUNDS:
                 raise ToolError(f"Unknown background "
                                 f"{params['background']!r}. Choose one "
