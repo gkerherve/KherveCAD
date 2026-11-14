@@ -182,6 +182,12 @@ Contents:
   `python3 add_windows.py "<exercise folder>"`, which copies them into
   report/windows/ and puts each under the first step naming its tool
   (re-runnable: it drops the windows it added before).
+- **Into KherveTeX**: `python3 ~/Documents/KherveCAD\ Exercises/full_tex.py
+  "<folder>" "<name>" "<title>" <version>` writes a whole .tex (figures as
+  centred pictures — KherveTeX makes a figure a float and the pictures
+  drifted pages away from their steps); open_document it, compile, look,
+  save as .ktex and export the PDF. Never `\input` the body: KherveTeX
+  caches the file and the blocks are not editable.
 - **A picture for every stage**: the SKETCH finished and dimensioned
   (the 2D sketch view: render_view view "2d", or a 3D view square on),
   then the part after the feature (render_view 3D). Save each into
