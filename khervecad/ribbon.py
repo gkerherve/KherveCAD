@@ -150,7 +150,6 @@ MENU_PANELS = {
         ("insert/reference geometry/sketch in 3d (rectangle, circle, line)", None),
         ("insert/reference geometry/extrude up to a face", None),
         ("insert/reference geometry/measure (click two things)", None),
-        ("insert/reference geometry/show main planes in 3d", None),
     ],
     "checks": [("analyse/heat map", "mdi.thermometer"),
                ("analyse/check sharp edges", "mdi.angle-acute"),
@@ -863,10 +862,17 @@ class Ribbon(QWidget):
             row.addWidget(self._fusion_panel(page, language.tr("Select"),
                                              stop, 1))
             row.addWidget(_separator(page))
-        for i, key in enumerate(panels):
-            if i:
-                row.addWidget(_separator(page))
+        placed = 0
+        for key in panels:
             title, actions = panel_actions(self.win, key)
+            if not [a for a in actions if a.isVisible()]:
+                # an empty panel (the Assemble panel in a part tab): no
+                # panel and no second bar beside the last one's (the user,
+                # 2026-11-14: "two vertical grey bars")
+                continue
+            if placed:
+                row.addWidget(_separator(page))
+            placed += 1
             if self.fusion:
                 shown = PANEL_SHOWN.get(
                     key, FUSION_SHOWN.get(len(panels), FUSION_SHOWN_MANY))

@@ -71,7 +71,10 @@ def _keys(act):
 
 
 OFF_RIBBON = {"New Object", "Exploded View", "Animate ($t)",
-              "Animate ($t)…", "Animate ($t)..."}
+              "Animate ($t)…", "Animate ($t)...",
+              # the planes' show / hide lives on the 3D view's glasses
+              # (the user, 2026-11-14: not on the ribbon)
+              "Show main planes in 3D"}
 
 
 def _ribbon_actions(win):
