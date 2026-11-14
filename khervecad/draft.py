@@ -166,7 +166,7 @@ def _check(node, env):
 KIT = bakedkit.make(
     "draft", "Draft", "mdi.trapezoid", _DEFAULTS,
     [("angle", "Draft angle (°)", "float", -MAX_ANGLE, MAX_ANGLE),
-     ("neutral", "Neutral plane", "choice", None, None),
+     ("neutral", "Neutral plane", "choice", ["bottom", "top"], None),
      ("pick", "Faces to draft (a point on each; none = every side)",
       "rows", ["X", "Y", "Z"], None)],
     _compute, choices={"neutral": ["bottom", "top"]}, check=_check,
