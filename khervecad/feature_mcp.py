@@ -34,7 +34,11 @@ def run(window, args) -> dict:
         part = face_sketch.part_of(group)
         if part is None:
             return {"error": "a cut needs the part: give part_id"}
-    made = cut_feature.apply(model, group, part, kind)
+    made = None
+    if kind in ("extruded_boss", "extruded_cut"):
+        made = _with_model_edges(window, group, kind, args.get("region"))
+    if made is None:
+        made = cut_feature.apply(model, group, part, kind)
     if made is None:
         return {"error": "nothing made: the sketch holds no shape that "
                          "closes an area (or the part is not beside it)"}
@@ -55,6 +59,72 @@ def run(window, args) -> dict:
         extent.refresh(model)
     return {"feature_id": made.id, "name": made.name, "kind": kind,
             "extrude_id": ext.id if ext is not None else None}
+
+
+def _with_model_edges(window, group, kind, region=None):
+    """SolidWorks' "close the sketch with model edges" for MCP (Exercise
+    51's Cut-Extrude2: ONE line across a face; the ribbon offers the
+    areas it makes with the face's edges, MCP extruded the line as a
+    0.2 mm strip). The area holding *region* (a sketch point), else —
+    two areas, as the ribbon — the smaller one. None when the sketch
+    closes its own area (or holds no thin line): the usual path."""
+    from . import extrude_panel, sketch_regions, sketch_section, slot2d
+    shapes = [s for s in cut_feature._shapes(group)
+              if s.params.get("modifier") != "%"]
+
+    def thin(s):
+        try:
+            return float(s.params.get("width", 0.2) or 0.2) \
+                <= cut_feature.THIN_LINE
+        except (TypeError, ValueError):
+            return False
+    if not any(s.type == "line" and not slot2d.is_slot(s) and thin(s)
+               for s in shapes):
+        return None
+    try:
+        if sketch_regions.solid_faces(shapes, sketch_regions.faces(shapes)):
+            return None                  # they close an area themselves
+    except Exception:
+        pass
+    model = window.model
+    with_part, ghost = sketch_section.with_section(
+        window, group, sketch_regions.shapes_of(group))
+    if ghost is None:
+        return None
+    face_list = sketch_regions.faces(with_part)
+    if not face_list:
+        return None
+    if region is not None:
+        key = sketch_regions.face_at(face_list, tuple(region[:2]))
+        if key is None:
+            raise ValueError("region %r lies in none of the %d areas the "
+                             "sketch closes with the part's edges"
+                             % (list(region), len(face_list)))
+    else:
+        key = min(range(len(face_list)),
+                  key=lambda i: face_list[i][0].area())
+    real = sketch_section.keep(model, group, ghost)
+    with_part = [real if s is ghost else s for s in with_part]
+    ext = sketch_regions.extrude(model, group, face_list, {key},
+                                 hide=with_part)
+    if ext is None:
+        return None
+    if kind == "extruded_cut":
+        if not extrude_panel.set_operation(model, ext, "cut"):
+            return None
+        model.set_param(ext, "extent", "")
+        model.set_param(ext, "center", False)
+        model.set_param(ext, "reverse", True)
+        node = ext.parent
+        while node is not None and not node.params.get(
+                extrude_panel.CUT_KEY):
+            node = node.parent
+        return node or ext
+    reg = next((n for n in ext.walk() if n.type == "regions"), None)
+    if reg is not None:
+        reg.params["fuse"] = True        # a boss joins the part it closes on
+        model.node_changed.emit(reg)
+    return ext
 
 
 PLANES = {"front": "Front (XZ)", "top": "Top (XY)", "right": "Side (YZ)"}

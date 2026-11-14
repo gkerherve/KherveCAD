@@ -1844,7 +1844,10 @@ TOOLS = [
             "sketch's Y axis) / swept_* / lofted_*; depth (mm, default "
             "10), mid_plane (both ways, centred on the sketch), "
             "through_all (cuts), reverse; part_id = the part a cut cuts "
-            "(default: the part the sketch stands on)."
+            "(default: the part the sketch stands on). Lines that close "
+            "nothing alone (ONE line across a face) close areas WITH the "
+            "part's edges at the sketch plane, as SolidWorks: region = "
+            "[x, y] in the sketch picks the area (default the smallest)."
         ),
         "input_schema": _obj({
             "node_id": {"type": "integer"},
@@ -1854,6 +1857,8 @@ TOOLS = [
             "through_all": {"type": "boolean"},
             "reverse": {"type": "boolean"},
             "part_id": {"type": "integer"},
+            "region": {"type": "array", "items": {"type": "number"},
+                       "minItems": 2, "maxItems": 2},
         }, ["node_id"]),
     },
     {

@@ -109,3 +109,44 @@ def test_a_cut_into_an_extruded_boss_leaves_the_boss_alone(win):
     assert "error" not in out, out
     QTest.qWait(50)
     assert _volume(win) == pytest.approx(40 * 40 * 30 - 100 * 30, rel=0.02)
+
+
+def test_one_line_cuts_the_corner_it_closes_with_the_face_edges(win):
+    """Exercise 51's Cut-Extrude2: ONE line from a face's side to its
+    top edge closes a triangle with the face's edges (SolidWorks' "close
+    with model edges"). By MCP the line was extruded as a 0.2 mm strip."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    s = _sketch(win)
+    win.model.add_node("rect", dict(x=0, y=0, width=40, height=40),
+                       parent=s)
+    boss = ex.execute("sketch_feature", {"node_id": s.id, "depth": 30})
+    s2 = _sketch(win, z=30)
+    win.model.add_node("line", dict(x1=0, y1=20, x2=20, y2=40, width=0.2),
+                       parent=s2)
+    out = ex.execute("sketch_feature", {
+        "node_id": s2.id, "kind": "extruded_cut", "depth": 10,
+        "part_id": boss["feature_id"]})
+    assert "error" not in out, out
+    QTest.qWait(50)
+    # the smaller of the two areas, as the ribbon takes it
+    assert _volume(win) == pytest.approx(40 * 40 * 30 - 200 * 10, rel=0.01)
+
+
+def test_region_picks_which_area_a_line_closes(win):
+    """`region` (a point in the sketch) chooses the other area."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    s = _sketch(win)
+    win.model.add_node("rect", dict(x=0, y=0, width=40, height=40),
+                       parent=s)
+    boss = ex.execute("sketch_feature", {"node_id": s.id, "depth": 30})
+    s2 = _sketch(win, z=30)
+    win.model.add_node("line", dict(x1=0, y1=20, x2=20, y2=40, width=0.2),
+                       parent=s2)
+    out = ex.execute("sketch_feature", {
+        "node_id": s2.id, "kind": "extruded_cut", "depth": 10,
+        "region": [30, 10], "part_id": boss["feature_id"]})
+    assert "error" not in out, out
+    QTest.qWait(50)
+    assert _volume(win) == pytest.approx(40 * 40 * 30 - 1400 * 10, rel=0.01)
