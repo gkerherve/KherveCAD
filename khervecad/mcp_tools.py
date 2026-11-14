@@ -2791,15 +2791,17 @@ class McpToolExecutor:
         tris = self._local_tris(node)
         if not tris:
             raise ToolError(f"{node.name} has no solid to take edges from.")
+        # united first, as the fillet itself does (fillet._merged): the
+        # inside corner where two overlapping parts meet is an edge
+        from . import analysis
+        tris = analysis.united([tuple(t[:3]) for t in tris])
         chains = fillet.chains(tris, min_angle)
         for i, c in enumerate(chains):
             c["index"] = i
         return {"node": node.id, "name": node.name, "edges": chains,
                 "approximate": mesh.approximates(node),
-                "note": ("Edges come from the built-in mesh: a union of "
-                         "overlapping shapes has no edge where they "
-                         "meet, and a difference's hole has none — only "
-                         "edges a single shape owns are listed.")}
+                "note": ("Edges of the parts united into one solid (as "
+                         "the fillet sees them), from the built-in mesh.")}
 
     def _t_fillet_edges(self, params) -> dict:
         from . import fillet
