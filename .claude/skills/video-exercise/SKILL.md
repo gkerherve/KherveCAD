@@ -152,6 +152,15 @@ Contents:
   sketch exactly as it stands after that action (dimensions so far).
   Never jump to the finished outline, never reorder, never replace his
   construction by an easier one.
+- **Few words: clicks and icons** (the user: "not a crazy number of
+  text ... click here, click there, and show the icon I need to click
+  on"). Each step is one or two short lines — the tool's ribbon ICON
+  (`icons_cad.pixmap(key, 64, "SolidWorks")`, every icons_cad* module
+  imported, saved to report/icons/, inline at 1.4em) + its name in bold
+  + the clicks joined by arrows + the values in bold: "[icon] **Center
+  Rectangle** → click the origin → drag. [icon] **Smart Dimension** →
+  **75**, **9**." No explanations, no section of prose; the picture says
+  the rest. Keep the generator as report/make_tutorial.py.
 - **A picture for every stage**: the SKETCH finished and dimensioned
   (the 2D sketch view: render_view view "2d", or a 3D view square on),
   then the part after the feature (render_view 3D). Save each into
