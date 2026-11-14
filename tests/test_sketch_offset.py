@@ -151,3 +151,25 @@ def test_mcp_sketch_fillet_of_two_lines_is_a_real_arc():
     assert (cx, cy, r) == pytest.approx((46, 53, 18), abs=1e-3)
     w._dirty = False
     w.close()
+
+
+def test_arcs_of_one_circle_share_their_points():
+    """Exercise 50: the cut's Converted R100 starts at x = 20 while the
+    plate's R100 starts at the peak; split evenly each, their chords
+    crossed and the cut left slivers standing along the arc. Arcs of
+    one circle now put their points on the same angles."""
+    import math
+    from khervecad import sketch_arc
+    c, r = (78.0, 124.8), 100.0
+
+    def at(deg):
+        a = math.radians(deg)
+        return c[0] + r * math.cos(a), c[1] + r * math.sin(a)
+    whole = sketch_arc.points(*at(250), *at(293),
+                              sketch_arc.bulge_for_sweep(43))
+    part = sketch_arc.points(*at(258.3), *at(293),
+                             sketch_arc.bulge_for_sweep(34.7))
+    keys = {(round(x, 6), round(y, 6)) for x, y in whole}
+    inner = part[1:-1]
+    assert len(inner) >= 3
+    assert all((round(x, 6), round(y, 6)) in keys for x, y in inner)

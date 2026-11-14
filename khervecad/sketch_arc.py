@@ -75,12 +75,43 @@ def points(x1, y1, x2, y2, bulge, steps=None):
     if g is None:
         return [(x1, y1), (x2, y2)]
     cx, cy, r, a0, sweep = g
-    n = steps or max(4, int(math.ceil(abs(sweep) / (2 * math.pi)
-                                      * STEPS_PER_TURN)))
-    out = [(cx + r * math.cos(a0 + sweep * i / n),
-            cy + r * math.sin(a0 + sweep * i / n)) for i in range(n + 1)]
+    if steps:
+        n = steps
+        out = [(cx + r * math.cos(a0 + sweep * i / n),
+                cy + r * math.sin(a0 + sweep * i / n)) for i in range(n + 1)]
+    else:
+        out = [(x1, y1)] + [(cx + r * math.cos(a), cy + r * math.sin(a))
+                            for a in grid_angles(a0, sweep)] + [(x2, y2)]
     out[0], out[-1] = (x1, y1), (x2, y2)
     return out
+
+
+def grid_angles(a0, sweep):
+    """The angles strictly inside the arc on ONE grid round the centre
+    (STEPS_PER_TURN a turn, halved for a short arc until it has three):
+    two arcs of one circle — a plate's R100 and the cut's Converted
+    R100 that starts further along — then share their points, where
+    splitting each evenly made their chords cross and the cut left
+    slivers standing (Exercise 50)."""
+    span = abs(sweep)
+    sign = 1.0 if sweep > 0 else -1.0
+    step = 2 * math.pi / STEPS_PER_TURN
+    while True:
+        k0 = math.floor(a0 / step)
+        out = []
+        k = 1
+        while True:
+            a = (k0 + sign * k) * step if sign > 0 else \
+                (math.ceil(a0 / step) - k) * step
+            off = (a - a0) * sign
+            if off >= span - 0.2 * step:
+                break
+            if off > 0.2 * step:
+                out.append(a)
+            k += 1
+        if len(out) >= 3 or step < 1e-4:
+            return out
+        step /= 2.0
 
 
 def node_points(node, env=None, steps=None):
