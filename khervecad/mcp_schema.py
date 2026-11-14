@@ -1896,12 +1896,17 @@ TOOLS = [
             "lines / arcs joined end to end (any order), size = the "
             "distance, reverse = the other side (the side is the left of "
             "the FIRST id as drawn), cap = close both ends with lines (a "
-            "wall of even thickness, ready to extrude)."
+            "wall of even thickness, ready to extrude). convert "
+            "(Convert Entities): node_id = the sketch, point = [x, y] in "
+            "its frame on an edge of the part where the sketch's plane "
+            "meets it (the whole edge comes in as a line, arc or circle), "
+            "or inside it (the whole outline)."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["trim", "extend", "fillet", "chamfer",
-                                "mirror", "offset", "construction"]},
+                                 "mirror", "offset", "construction",
+                                 "convert"]},
             "reverse": {"type": "boolean"},
             "cap": {"type": "boolean"},
             "node_id": {"type": "integer"},

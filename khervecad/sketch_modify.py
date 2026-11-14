@@ -856,5 +856,22 @@ def run_mcp(window, params):
             model, [node(i) for i in ids], size,
             -1 if params.get("reverse") else 1, bool(params.get("cap")))
         return {"result": "offset", "node_ids": [n.id for n in made]}
-    raise ValueError("action is trim, extend, fillet, chamfer, mirror or "
-                     "offset.")
+    if action == "convert":
+        # Convert Entities (Exercise 50): the part's edge at `point` (the
+        # sketch's own x, y) where the sketch's plane cuts the part
+        from . import section_outline, sketch_convert
+        group = node(params["node_id"])
+        segs = section_outline.for_group(window, group)
+        if not segs:
+            raise ValueError("The sketch's plane meets no part to convert.")
+        xs = [c for s in segs for p in s for c in p]
+        tol = max(0.5, 0.01 * (max(xs) - min(xs)))
+        made = sketch_convert.click(model, group, segs, point(), tol)
+        if not made:
+            raise ValueError("No edge of the part near %r, and the point "
+                             "is not inside it." % (list(point()),))
+        return {"result": "converted", "node_ids": [n.id for n in made],
+                "shapes": [dict(type=n.type, params=dict(n.params))
+                           for n in made]}
+    raise ValueError("action is trim, extend, fillet, chamfer, mirror, "
+                     "offset or convert.")
