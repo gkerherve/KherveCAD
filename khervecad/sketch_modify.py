@@ -37,6 +37,7 @@ TOOLS = [(TRIM, "mdi.content-cut", "Trim"),
          (CHAMFER, "mdi.vector-polyline", "Sketch chamfer"),
          ("sk_mirror", "mdi.flip-horizontal", "Mirror Entities"),
          ("sk_convert", "mdi.vector-square-plus", "Convert Entities"),
+         ("sk_offset", "mdi.vector-polyline-plus", "Offset Entities"),
          ("sk_lpattern", "mdi.dots-grid", "Linear Sketch Pattern"),
          ("sk_cpattern", "mdi.rotate-3d-variant", "Circular Sketch Pattern"),
          # (no Extrude regions button: Extruded Boss/Base on overlapping
@@ -651,6 +652,8 @@ def panel_actions(win):
     tooltips.TIPS.update(sketch_convert.TIPS)
     from . import origin_tool
     tooltips.TIPS.update(origin_tool.TIPS)
+    from . import sketch_offset
+    tooltips.TIPS.update(sketch_offset.TIPS)
     acts = []
     for tool, glyph, label in TOOLS:
         act = QAction(icons.icon(glyph, icons.family_color("draw")),
@@ -664,6 +667,10 @@ def panel_actions(win):
         elif tool == "sk_mirror":
             act.triggered.connect(
                 lambda _=False: sketch_mirror.start(win))
+        elif tool == "sk_offset":
+            act.setCheckable(False)
+            act.triggered.connect(
+                lambda _=False: sketch_offset.start(win))
         elif tool == TRIM:
             from . import sketch_trim
             act.triggered.connect(lambda _=False: sketch_trim.start(win))
@@ -776,8 +783,12 @@ def run_mcp(window, params):
         round_ = action == "fillet"
         ids = params.get("node_ids") or []
         if len(ids) == 2:
-            new = line_corner(model, node(ids[0]), node(ids[1]), size,
-                              round_)
+            # the window's Sketch Fillet / Chamfer (sketch_corner): a real
+            # arc tangent to both, with its relations and radius — the old
+            # line_corner drew a band polygon nothing could offset
+            from . import sketch_corner
+            new = sketch_corner.corner(model, node(ids[0]), node(ids[1]),
+                                       size, round_)
             return {"result": action, "node_id": getattr(new, "id", None)}
         shape = node(params["node_id"])
         if shape.type not in ("polygon", "rect"):
@@ -803,4 +814,16 @@ def run_mcp(window, params):
             relate=params.get("relate", True))
         return {"result": "mirrored", "node_ids": [c.id for c in copies],
                 "skipped": skipped}
-    raise ValueError("action is trim, extend, fillet, chamfer or mirror.")
+    if action == "offset":
+        from . import sketch_offset
+        ids = params.get("node_ids") or []
+        size = float(params.get("size", 0) or 0)
+        if not ids or size <= 0:
+            raise ValueError("Give node_ids (lines / arcs that join end "
+                             "to end) and size > 0 (the distance).")
+        made = sketch_offset.offset(
+            model, [node(i) for i in ids], size,
+            -1 if params.get("reverse") else 1, bool(params.get("cap")))
+        return {"result": "offset", "node_ids": [n.id for n in made]}
+    raise ValueError("action is trim, extend, fillet, chamfer, mirror or "
+                     "offset.")

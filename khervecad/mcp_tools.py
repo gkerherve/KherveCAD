@@ -2805,7 +2805,14 @@ class McpToolExecutor:
 
     def _t_fillet_edges(self, params) -> dict:
         from . import fillet
+        from . import analysis
         node = self._node(params.get("node_id"))
+        # the edges are read off the part as list_edges numbered them:
+        # its children united (before the wrap, so the indices match)
+        indices = params.get("chains") or []
+        chains = fillet.chains(analysis.united(
+            [tuple(t[:3]) for t in self._local_tris(node)])) \
+            if indices else []
         if node.type == "fillet":
             target = node
         elif node.parent is not None and node.parent.type == "fillet":
@@ -2814,6 +2821,15 @@ class McpToolExecutor:
             if node.parent is None:
                 raise ToolError("The document root cannot be filleted.")
             target = self._model.wrap_nodes([node], "fillet")
+        radius = params.get("radius")
+        if radius is not None and target.params.get("edges") and \
+                abs(float(radius) - float(target.params.get("radius",
+                                                            0))) > 1e-9:
+            # another radius = another Fillet feature round this one
+            # (SolidWorks' Fillet2 R42, Fillet3 R12); joining it made the
+            # first fillet's edges take the new radius
+            target = self._model.wrap_nodes([target], "fillet")
+            target.params["edges"] = []
         seeds = []
         for row in params.get("edges") or []:
             try:
@@ -2823,9 +2839,7 @@ class McpToolExecutor:
             if len(seed) not in (6, 9):
                 raise ToolError("Each edge is 6 numbers: x1 y1 z1 x2 y2 z2.")
             seeds.append([round(v, 4) for v in seed])
-        indices = params.get("chains") or []
         if indices:
-            chains = fillet.chains(self._local_tris(target))
             for i in indices:
                 if not isinstance(i, int) or not 0 <= i < len(chains):
                     raise ToolError(

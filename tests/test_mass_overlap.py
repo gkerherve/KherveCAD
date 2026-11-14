@@ -40,3 +40,64 @@ def test_list_edges_finds_where_two_overlapping_parts_meet(win):
     inside = [e for e in r["edges"] if not e["convex"]
               and abs(e["centre"][2] - 10) < 0.01]
     assert inside, "no concave edge where the block stands on the plate"
+
+
+def _plate_block(win):
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    ex.execute("apply_code", {"code": "union() { cube([40, 40, 10]);\n"
+                              "translate([10, 10, 5]) cube([20, 20, 20]); }\n"})
+    QTest.qWait(50)
+    return ex, next(n for n in win.model.root.walk() if n.type == "union")
+
+
+def test_fillet_edges_takes_the_edge_list_edges_numbered(win):
+    """list_edges numbers the UNITED part's edges; fillet_edges must
+    read its chains the same way (it rounded other edges)."""
+    ex, u = _plate_block(win)
+    edges = ex.execute("list_edges", {"node_id": u.id})["edges"]
+    i = next(e["index"] for e in edges if not e["convex"]
+             and abs(e["centre"][2] - 10) < 0.01)
+    want = edges[i]["seed"]
+    out = ex.execute("fillet_edges", {"node_id": u.id, "chains": [i],
+                                      "radius": 2})
+    f = win.model.find(out["fillet"])
+    got = f.params["edges"][0]
+    assert got == pytest.approx(want, abs=1e-3)
+
+
+def test_a_second_radius_is_a_second_fillet(win):
+    """SolidWorks' Fillet2 R42 then Fillet3 R12: two features, each with
+    its own radius (the second used to overwrite the first's radius)."""
+    ex, u = _plate_block(win)
+    edges = ex.execute("list_edges", {"node_id": u.id})["edges"]
+    top = [e["index"] for e in edges if e["convex"]
+           and abs(e["centre"][2] - 25) < 0.01][:1]
+    foot = [e["index"] for e in edges if not e["convex"]
+            and abs(e["centre"][2] - 10) < 0.01][:1]
+    a = ex.execute("fillet_edges", {"node_id": u.id, "chains": top,
+                                    "radius": 4})
+    b = ex.execute("fillet_edges", {"node_id": u.id, "chains": foot,
+                                    "radius": 2})
+    fa, fb = win.model.find(a["fillet"]), win.model.find(b["fillet"])
+    assert fa is not fb
+    assert fa.params["radius"] == 4 and fb.params["radius"] == 2
+
+
+def test_a_fillet_never_runs_metres_past_its_edge():
+    """Faces meeting almost flat give a fillet profile reaching to
+    infinity: the strip is left out (the edge stays sharp), it never
+    becomes a slab metres long (Exercise 7's rib on its tube)."""
+    from khervecad import fillet, mesh, scadparse
+    # two faces at 179°: a block with a very slightly bent top
+    code = ("rotate([90, 0, 0]) linear_extrude(height = 10) "
+            "polygon([[0, 0], [40, 0], [40, 10], [20, 10.17], [0, 10]]);")
+    root = scadparse.parse_scad(code)[0]
+    tris = [tuple(t[:3]) for t in mesh.tessellate(root)]
+    ch = [c for c in fillet.chains(tris, 0.5) if abs(c["centre"][0] - 20) < 0.5]
+    assert ch
+    res = fillet.compute(tris, [ch[0]["seed"]], 12, "round", 6)
+    for piece in res["cuts"] + res["adds"]:
+        for t in piece:
+            for p in t[:3]:
+                assert abs(p[0] - 20) < 60

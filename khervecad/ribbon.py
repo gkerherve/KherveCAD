@@ -612,7 +612,7 @@ def _panel_actions(win, key):
             ops[k] for k in SKETCH_MODIFY if k in ops]
         # SolidWorks' order: Trim Entities and Convert Entities first,
         # right after the sketch shapes (2026-11-11, the user)
-        lead = [a for k in (sketch_modify.TRIM, "sk_convert")
+        lead = [a for k in (sketch_modify.TRIM, "sk_convert", "sk_offset")
                 for a in acts if a.data() == k]
         return title, lead + [a for a in acts if a not in lead]
     if key == "sketch_constrain":

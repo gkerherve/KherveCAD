@@ -486,6 +486,18 @@ def _sk_convert(d):
     d.arrow(P(0.2, 0.36), P(0.36, 0.22), d.pal.make, 0.04, 0.07)
 
 
+@draws("sk_offset")
+def _sk_offset(d):
+    """A bent sketch line (blue) and its copy a distance beside it (make
+    colour), the two ends closed: SolidWorks' Offset Entities."""
+    d.poly([P(0.12, 0.9), P(0.12, 0.45), P(0.45, 0.12), P(0.9, 0.12)],
+           color=d.pal.edge, width=0.06)
+    d.poly([P(0.32, 0.9), P(0.32, 0.53), P(0.53, 0.32), P(0.9, 0.32)],
+           color=d.pal.make, width=0.06)
+    d.poly([P(0.12, 0.9), P(0.32, 0.9)], color=d.pal.make, width=0.04)
+    d.poly([P(0.9, 0.12), P(0.9, 0.32)], color=d.pal.make, width=0.04)
+
+
 @draws("circular_pattern")
 def _circular_pattern(d):
     """A round plate (grey) with six bosses round its axis: one the

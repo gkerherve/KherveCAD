@@ -733,6 +733,13 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         body = _trim_ends(body, run, around)
         if not body:
             continue
+        if _runs_away(body, run, float(radius)):
+            # faces meeting almost flat (a rib ending on a tube nearly
+            # tangent): the profile reaches to infinity — leave the edge
+            # sharp rather than add a strip metres long (Exercise 7)
+            missing.append(list(run["points"][0]) +
+                           list(run["points"][-1]))
+            continue
         (cuts if run["convex"] else adds).append(body)
     # 3. corners where THREE chosen edges of one kind meet (a face's rim
     #    and the upright edge under it): the strips stop square there and
@@ -742,6 +749,19 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     cuts.extend(_corner_pieces(edges, runs, float(radius), kind,
                                int(detail), adds))
     return dict(cuts=cuts, adds=adds, missing=missing, chains=len(seen))
+
+
+#: a strip may reach this many radii past its edge's own box
+REACH = 4.0
+
+
+def _runs_away(body, run, radius):
+    """True when a fillet strip reaches far past its edge."""
+    pts = run["points"]
+    lo = [min(p[k] for p in pts) - REACH * radius for k in range(3)]
+    hi = [max(p[k] for p in pts) + REACH * radius for k in range(3)]
+    return any(not (lo[k] <= v[k] <= hi[k])
+               for t in body for v in t[:3] for k in range(3))
 
 
 def _vertex_normals(tris):

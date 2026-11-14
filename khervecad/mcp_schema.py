@@ -1854,12 +1854,18 @@ TOOLS = [
             "line) in the same sketch — each copy is the same kind of "
             "shape tied by Symmetric relations (Equal for circles) unless "
             "relate is false; a rect about a slanted line becomes a "
-            "polygon."
+            "polygon. offset (SolidWorks' Offset Entities): node_ids = "
+            "lines / arcs joined end to end (any order), size = the "
+            "distance, reverse = the other side (the side is the left of "
+            "the FIRST id as drawn), cap = close both ends with lines (a "
+            "wall of even thickness, ready to extrude)."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
                        "enum": ["trim", "extend", "fillet", "chamfer",
-                                "mirror"]},
+                                "mirror", "offset"]},
+            "reverse": {"type": "boolean"},
+            "cap": {"type": "boolean"},
             "node_id": {"type": "integer"},
             "node_ids": {"type": "array", "items": {"type": "integer"},
                          "minItems": 1},
