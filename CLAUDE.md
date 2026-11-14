@@ -3557,7 +3557,14 @@ into a new module and import.
                        Regions holding no shapes, `params["sketch_of"]` =
                        the first one's name (`regions2d.sketch_source`;
                        `_reuse` places it beside the first extrude, same
-                       frame; `model.rename` follows). Boss's question says
+                       frame; `model.rename` follows). A CUT from such a
+                       reused sketch is lifted out of the boss's sketch group
+                       into a multmatrix at the scope's end
+                       (`extrude_panel._lift_reused`) — beside the boss it
+                       cut only that boss (Exercise 52's M8 hole). MCP
+                       sketch_feature `regions` = Selected Contours (points
+                       in the sketch's x, y; `feature_mcp._regions`).
+                       Boss's question says
                        "the sketch already extruded — pick other regions".
   - Every sketch at once (same day): with nothing selected, Extruded
                        Boss / Cut inside an OBJECT show the regions of every

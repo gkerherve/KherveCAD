@@ -280,12 +280,39 @@ def _own_plane_group(model, ext, holder):
     return _holder(ext)
 
 
+def _lift_reused(model, ext):
+    """A cut made from a sketch a BOSS already used (one sketch, several
+    features) sits beside that boss inside the boss's sketch group, so
+    it cut only that boss (2026-11-14, Exercise 52: the M8 hole of
+    Sketch4 went through the Ø17 ring and stopped at the bearing).
+    It goes to the end of the scope in its own place (a multmatrix of
+    the sketch's frame), after everything built before it."""
+    reg = next((c for c in ext.children if c.type == "regions"), None)
+    if reg is None or not reg.params.get("sketch_of"):
+        return
+    top = ext
+    while top.parent is not None and top.parent.type not in (
+            "component", "root"):
+        top = top.parent
+    if top is ext or top.parent is None:
+        return
+    from . import mesh
+    mat = mesh.ancestor_matrix(ext, {}, stop=top.parent)
+    scope = top.parent
+    holder = model.add_node("multmatrix", {"matrix": [
+        [round(float(mat[r][c]), 9) for c in range(4)] for r in range(4)]},
+        parent=scope, name="Sketch place (%s)" % reg.params["sketch_of"])
+    model.move_node(ext, holder, 0)
+
+
 def set_operation(model, ext, op):
     """Boss: the extrude adds (as drawn). Cut: the part before it and
     the sketch's branch go into a Difference — the area is removed, Through
     all by default (the user: a line across the lever, the top cut)."""
     if op == operation_of(ext):
         return True
+    if op == "cut":
+        _lift_reused(model, ext)
     holder = _holder(ext)
     if op == "cut":
         holder = _own_plane_group(model, ext, holder)

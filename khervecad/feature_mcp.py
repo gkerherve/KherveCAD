@@ -28,6 +28,8 @@ def run(window, args) -> dict:
     if kind not in cut_feature.ALL or kind == "rib":
         return {"error": "kind must be one of %s (rib: use the rib tool)"
                 % ", ".join(k for k in cut_feature.ALL if k != "rib")}
+    if args.get("regions") and cut_feature.ALL[kind][1] == "linear_extrude":
+        return _regions(window, group, kind, args)
     part = _find(window, args["part_id"]) if "part_id" in args else None
     if part is None and kind not in cut_feature.BOSS:
         from . import face_sketch
@@ -46,6 +48,66 @@ def run(window, args) -> dict:
     # part first — its own extrude must not be the one given the depth)
     ext = made if made.type == "linear_extrude" else next(
         (n for n in group.walk() if n.type == "linear_extrude"), None)
+    _size(model, ext, args)
+    return {"feature_id": made.id, "name": made.name, "kind": kind,
+            "extrude_id": ext.id if ext is not None else None}
+
+
+def _regions(window, group, kind, args) -> dict:
+    """SolidWorks' Selected Contours (2026-11-14, Exercise 52): only the
+    areas holding the `regions` points (sketch x, y) are extruded — the
+    region pick's own `sketch_regions.extrude`, so a sketch a feature
+    already used offers its areas again (one sketch, several features),
+    and a cut is the Extrude window's Operation ▸ Cut."""
+    from . import sketch_regions, extrude_panel
+    model = window.model
+    try:
+        sketch_regions.tidy(window, group)
+    except Exception:
+        pass
+    # an extruded sketch: its Regions (or plain extrude) holds the shapes
+    source = None
+    for n in group.walk():
+        if n is not group and (n.type == "regions" and not
+                               n.params.get("sketch_of")):
+            source = sketch_regions._regions_of(n)
+            if source is not None:
+                break
+    container = source or group
+    shapes = sketch_regions.shapes_of(container)
+    face_list = sketch_regions.faces(shapes) if shapes else []
+    picked = []
+    for p in args["regions"]:
+        i = sketch_regions.face_at(face_list, (float(p[0]), float(p[1])))
+        if i is None:
+            return {"error": "regions: no area of the sketch holds %r "
+                             "(sketch x, y)" % (list(p),)}
+        picked.append(i)
+    ext = sketch_regions.extrude(model, container, face_list, picked,
+                                 hide=None if source else shapes)
+    if ext is None:
+        return {"error": "nothing made from those regions"}
+    label = cut_feature.ALL[kind][0]
+    ext.name = label
+    if kind not in cut_feature.BOSS:
+        if not extrude_panel.set_operation(model, ext, "cut"):
+            return {"error": "no part before the sketch to cut"}
+        if not args.get("through_all"):
+            model.set_param(ext, "extent", "")
+            model.set_param(ext, "reverse", True)
+    _size(model, ext, args)
+    top = ext
+    while top.parent is not None and top.parent.type not in (
+            "difference", "component", "root"):
+        top = top.parent
+    made = top.parent if top.parent is not None and \
+        top.parent.type == "difference" else ext
+    return {"feature_id": made.id, "name": made.name, "kind": kind,
+            "extrude_id": ext.id, "regions": len(picked)}
+
+
+def _size(model, ext, args):
+    """Depth / Mid Plane / Through All / Reverse on the made extrude."""
     if ext is not None:
         if "depth" in args:
             model.set_param(ext, "height", float(args["depth"]))
@@ -57,8 +119,6 @@ def run(window, args) -> dict:
             model.set_param(ext, "reverse", bool(args["reverse"]))
         from . import extent
         extent.refresh(model)
-    return {"feature_id": made.id, "name": made.name, "kind": kind,
-            "extrude_id": ext.id if ext is not None else None}
 
 
 def _with_model_edges(window, group, kind, region=None):

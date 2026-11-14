@@ -1847,7 +1847,13 @@ TOOLS = [
             "(default: the part the sketch stands on). Lines that close "
             "nothing alone (ONE line across a face) close areas WITH the "
             "part's edges at the sketch plane, as SolidWorks: region = "
-            "[x, y] in the sketch picks the area (default the smallest)."
+            "[x, y] in the sketch picks the area (default the smallest). "
+            "regions = "
+            "SolidWorks' Selected Contours: [[x, y], ...] points in the "
+            "sketch's own x, y, one inside each area to extrude (extruded "
+            "kinds); the same sketch may be given again later with other "
+            "regions — one sketch, several features (a cut then cuts "
+            "everything built before it)."
         ),
         "input_schema": _obj({
             "node_id": {"type": "integer"},
@@ -1859,6 +1865,9 @@ TOOLS = [
             "part_id": {"type": "integer"},
             "region": {"type": "array", "items": {"type": "number"},
                        "minItems": 2, "maxItems": 2},
+            "regions": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
         }, ["node_id"]),
     },
     {
