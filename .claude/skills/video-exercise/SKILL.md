@@ -172,6 +172,16 @@ Contents:
   leaders: `sketchpic` dims "h" / "v" / "d" / "a"), kept in every later
   picture of that sketch. Grep the captions for "smart" / "dimension" /
   "give" and look at the frames to list them all before writing.
+- **The tool windows too** (the user, 2026-11-14: "show images of the
+  tools / icon / window, like Extrude Boss or Cut"): under the step that
+  opens one, a picture of KherveCAD's own window — the Boss / Cut toggle
+  bar, the Extrude / Extruded Cut window, Mirror Entities, Trim, Offset,
+  Circular / Linear Pattern, Plane, Mirror, Hole Wizard, Full Round.
+  `~/Documents/KherveCAD Exercises/toolwins.py windows` pictures them all
+  offscreen (add a new tool's window there); after make_tutorial.py run
+  `python3 add_windows.py "<exercise folder>"`, which copies them into
+  report/windows/ and puts each under the first step naming its tool
+  (re-runnable: it drops the windows it added before).
 - **A picture for every stage**: the SKETCH finished and dimensioned
   (the 2D sketch view: render_view view "2d", or a 3D view square on),
   then the part after the feature (render_view 3D). Save each into
