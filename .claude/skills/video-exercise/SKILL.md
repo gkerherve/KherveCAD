@@ -142,6 +142,16 @@ Contents:
   and relation with its value ("Smart Dimension the circle: 47"), each
   Trim / Mirror / Offset, leaving the sketch, the feature window's
   settings (Direction, End condition, Distance), OK.
+- **The video's own ORDER, one action at a time** (the user, same day:
+  "how did you get this half circle? did you trim it? ... first the
+  rectangle, then the circles, then the line, then trimming"). Read the
+  captions AND the frames between features: every sketch tool he uses,
+  in his order — Center Rectangle, Circle, dimension, Line, Trim (what is
+  clicked away), Centerline, Mirror Entities, dimension, Trim, Exit,
+  Extrude — each its own numbered step with its own picture showing the
+  sketch exactly as it stands after that action (dimensions so far).
+  Never jump to the finished outline, never reorder, never replace his
+  construction by an easier one.
 - **A picture for every stage**: the SKETCH finished and dimensioned
   (the 2D sketch view: render_view view "2d", or a 3D view square on),
   then the part after the feature (render_view 3D). Save each into
