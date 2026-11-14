@@ -3309,6 +3309,19 @@ into a new module and import.
                        the relations `sketch_touch.relate` gives a drawn one
                        (Coincident on a point, On curve on each line through
                        it — a crossing is On both). tests/test_snap_intersections.py.
+  - `sketch_offset.py` — **Offset Entities** of sketch lines AND of the
+                       PART's edges (2026-11-14, Exercise 54: the wall is
+                       the base's inside edges offset 19). With the window
+                       open a click on an edge of the part (3D sketch:
+                       Modify3D tool "sk_offset"; 2D: scene tool, `press_2d`)
+                       takes that edge, with **Select chain** every edge
+                       running on from it within `TANGENT_DEG` (`edge_chain`;
+                       `_absorb` joins a fillet's end facet converted as a
+                       line), oriented with the part on the left so the
+                       copy goes INTO the part (Reverse = out). The window
+                       pauses the 3D sketch (edit_tool None before
+                       start_modify, or the sketch closes). MCP
+                       sketch_modify offset with node_id + point(s).
   - `sketch_trim.py` / `sketch_convert.py` — SolidWorks' **Trim Entities**
                        and **Convert Entities** (2026-11-11, the user, with
                        SolidWorks' Trim window), the two LARGE buttons

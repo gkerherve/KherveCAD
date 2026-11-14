@@ -173,3 +173,162 @@ def test_arcs_of_one_circle_share_their_points():
     inner = part[1:-1]
     assert len(inner) >= 3
     assert all((round(x, 6), round(y, 6)) in keys for x, y in inner)
+
+
+# ---- Offset Entities of the PART's edges (2026-11-14, Exercise 54: the
+#   lead screw bracket's wall is the base's inside edges — a line, the R45
+#   fillet and a line — clicked with Select chain and offset 19)
+
+_L_BASE = """
+linear_extrude(25) polygon([[-100, -106.5], [100, -106.5], [100, 106.5],
+    [62, 106.5], [62, -4.5], [-100, -4.5]]); // Base
+"""
+
+
+def _filleted_base(w):
+    """The video's way: the L extruded, then Fillet R45 on its inside
+    upright edge."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(w)
+    assert "error" not in ex.execute("apply_code", {"code": _L_BASE})
+    part = next(c for c in w.model.root.children
+                if c.visible and c.type not in ("assign", "variables"))
+    edges = ex.execute("list_edges", {"node_id": part.id})["edges"]
+    inner = [e["index"] for e in edges if not e["convex"]
+             and abs(e["centre"][0] - 62) < 0.5
+             and abs(e["centre"][1] + 4.5) < 0.5]
+    out = ex.execute("fillet_edges", {"node_id": part.id, "chains": inner,
+                                      "radius": 45})
+    assert "error" not in out, out
+    return next(c for c in w.model.root.children
+                if c.visible and c.type not in ("assign", "variables"))
+
+
+def _l_outline():
+    """The base's top face: the L with the R45 fillet in its corner."""
+    pts = [(-100, -106.5), (100, -106.5), (100, 106.5), (62, 106.5),
+           (62, 40.5)]
+    for i in range(1, 24):                  # R45 about (17, 40.5)
+        a = math.radians(0 - 90 * i / 24)
+        pts.append((17 + 45 * math.cos(a), 40.5 + 45 * math.sin(a)))
+    pts += [(17, -4.5), (-100, -4.5)]
+    return list(zip(pts, pts[1:] + pts[:1]))
+
+
+def test_a_model_edge_chain_runs_through_tangent_edges_only():
+    from khervecad import sketch_offset as so
+    order = so.edge_chain(_l_outline(), (-50, -4.5), 1.0)
+    assert order is not None and len(order) == 3     # line, arc, line
+    ends = {(round(s[0], 2), round(s[1], 2)) for s in order} | \
+        {(round(s[2], 2), round(s[3], 2)) for s in order}
+    assert (-100, -4.5) in ends and (62, 106.5) in ends
+    one = so.edge_chain(_l_outline(), (-50, -4.5), 1.0, chain=False)
+    assert len(one) == 1
+
+
+def test_a_model_edge_chain_offsets_into_the_part():
+    from khervecad import sketch_offset as so
+    m, g = _model()
+    order = so.edge_chain(_l_outline(), (-50, -4.5), 1.0)
+    new = so.offset_order(m, order, 19, parent=g)
+    _check_wall(new)
+
+
+def _check_wall(new):
+    from khervecad import sketch_arc
+    lines = [n.params for n in new if not n.params.get("bulge")]
+    arcs = [n.params for n in new if n.params.get("bulge")]
+    assert len(lines) == 2 and len(arcs) == 1, [n.params for n in new]
+    ys = [p for p in lines if abs(p["y1"] - p["y2"]) < 1e-6]
+    xs = [p for p in lines if abs(p["x1"] - p["x2"]) < 1e-6]
+    assert ys and ys[0]["y1"] == pytest.approx(-23.5, abs=0.05)
+    assert xs and xs[0]["x1"] == pytest.approx(81, abs=0.05)
+    cx, cy, r, _a, _s = sketch_arc.geometry(
+        *(arcs[0][k] for k in ("x1", "y1", "x2", "y2", "bulge")))
+    assert (cx, cy, r) == pytest.approx((17, 40.5, 64), abs=0.3)
+
+
+def test_the_mcp_offsets_part_edges_by_a_point():
+    from PyQt5.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    from khervecad.mcp_tools import McpToolExecutor
+    w = MainWindow()
+    ex = McpToolExecutor(w)
+    _filleted_base(w)
+    sk = ex.execute("reference_geometry", {
+        "action": "sketch", "origin": [0, 0, 25], "normal": [0, 0, 1]})
+    out = ex.execute("sketch_modify", {
+        "action": "offset", "node_id": sk["sketch_id"],
+        "point": [-50, -4.5], "size": 19})
+    assert "error" not in out, out
+    g = next(n for n in w.model.root.walk() if n.id == sk["sketch_id"])
+    _check_wall([n for n in g.children if n.id in out["node_ids"]])
+    w._dirty = False
+    w.close()
+
+
+def test_the_button_offsets_a_part_edge_clicked_in_3d(monkeypatch):
+    """By mouse, as the video: open a sketch on the top face, press
+    Offset Entities, click the base's inside edge in the 3D view (Select
+    chain takes the fillet and the far line too), Distance 19, OK."""
+    from PyQt5.QtCore import QPoint, Qt
+    from PyQt5.QtTest import QTest
+    from PyQt5.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    from khervecad.mcp_tools import McpToolExecutor
+    from khervecad import cut_feature, sketch_modify
+    monkeypatch.setattr(cut_feature, "IN_3D", True)
+    w = MainWindow()
+    w.resize(1200, 800)
+    w.show()
+    try:
+        part = _filleted_base(w)
+        QApplication.processEvents()
+        cut_feature.start(w, "extruded_boss")
+        w.view3d._pick_cb(dict(kind="face", pos=(0, -50, 25),
+                               dir=(0, 0, 1)), part)
+        QApplication.processEvents()
+        w.view3d.resize(800, 600)
+        w.view3d.fit()
+        sk = w._sketch3d_tool
+        g = sk.holder or sk.group
+        before = list(g.children)
+        act = next(a for a in sketch_modify.panel_actions(w)
+                   if a.data() == "sk_offset")
+        act.trigger()
+        QApplication.processEvents()
+        panel = w._offset_panel
+        assert panel is not None
+        panel.fields["distance"].setValue(19)
+        v = w.view3d
+        s = v._project(*v._camera(), (-50, -4.5, 25))
+        QTest.mouseClick(v, Qt.LeftButton, Qt.NoModifier,
+                         QPoint(int(round(s[0])), int(round(s[1]))))
+        QApplication.processEvents()
+        panel.ok.click()
+        QApplication.processEvents()
+        new = [n for n in g.children if n not in before
+               and n.type == "line"]
+        _check_wall(new)
+    finally:
+        w._dirty = False
+        w.close()
+
+
+def test_the_copies_of_a_faceted_chain_meet():
+    """A part's fillet comes off its facets a hair off tangent (the arc
+    ended at y = 40.243 where the line's copy began at 40.14): the copies
+    must still join end to end, or the wall's band is open and the
+    extrude takes the whole face."""
+    from khervecad import sketch_offset as so
+    m, g = _model()
+    order = [[62.0, 106.5, 62.0, 40.243, 0.0],
+             [62.0, 40.243, 17.257, -4.5, -0.4111212927],
+             [17.257, -4.5, -100.0, -4.5, 0.0]]
+    new = so.offset_order(m, order, 19, parent=g)
+    p = [n.params for n in new]
+    for a, b in zip(p, p[1:]):
+        assert (a["x2"], a["y2"]) == pytest.approx((b["x1"], b["y1"]),
+                                                   abs=1e-6)

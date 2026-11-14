@@ -1913,7 +1913,12 @@ TOOLS = [
             "lines / arcs joined end to end (any order), size = the "
             "distance, reverse = the other side (the side is the left of "
             "the FIRST id as drawn), cap = close both ends with lines (a "
-            "wall of even thickness, ready to extrude). convert "
+            "wall of even thickness, ready to extrude). The PART's edges "
+            "instead (as SolidWorks, no Convert first): node_id = the "
+            "sketch + point (or points) = [x, y] on an edge where the "
+            "sketch's plane meets the part; chain (default true, Select "
+            "chain) runs on through tangent edges; the copy goes INTO the "
+            "part, reverse = out of it. convert "
             "(Convert Entities): node_id = the sketch, point = [x, y] in "
             "its frame on an edge of the part where the sketch's plane "
             "meets it (the whole edge comes in as a line, arc or circle), "
@@ -1933,6 +1938,10 @@ TOOLS = [
             "relate": {"type": "boolean"},
             "point": {"type": "array", "items": {"type": "number"},
                       "minItems": 2, "maxItems": 2},
+            "points": {"type": "array", "items": {
+                "type": "array", "items": {"type": "number"},
+                "minItems": 2, "maxItems": 2}},
+            "chain": {"type": "boolean"},
             "vertex": {"type": "integer", "minimum": 0},
             "size": {"type": "number", "exclusiveMinimum": 0},
         }, ["action"]),

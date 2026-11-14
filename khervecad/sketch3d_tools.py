@@ -25,7 +25,7 @@ from . import sketch_tools as st
 #: a click this near (px) a polygon's first point closes it
 CLOSE_PX = 10.0
 MODIFY = (sm.TRIM, sm.EXTEND, sm.FILLET, sm.CHAMFER, "sk_mirror",
-          "sk_construction", "sk_convert")
+          "sk_construction", "sk_convert", "sk_offset")
 REGIONS = ("regions", "make_region")
 
 
@@ -302,6 +302,9 @@ class Modify3D(constrain3d.Constrain3D):
         if self.tool == "sk_convert":
             return ("Convert Entities (3D): click an edge of the part, or "
                     "inside the face for its whole outline.")
+        if self.tool == "sk_offset":
+            return ("Offset Entities (3D): click an edge of the part — "
+                    "Select chain takes the edges running on from it.")
         return sm.PROMPTS[self.tool] + " (3D)"
 
     def key_press(self, event):
@@ -337,6 +340,8 @@ class Modify3D(constrain3d.Constrain3D):
     def click(self, x, y):
         if self.tool == "sk_convert":
             return self._convert(x, y)
+        if self.tool == "sk_offset":
+            return self._offset(x, y)
         hit = self.pick_at(x, y)
         if hit is None:
             self._say(self._prompt())
@@ -414,6 +419,24 @@ class Modify3D(constrain3d.Constrain3D):
         if size is not None:
             sketch_corner.between(model, first, node, size, round_)
         return node
+
+    def _offset(self, x, y):
+        """Offset Entities on the sketch drawn in 3D: the part's edge
+        under the click goes to the open Offset window (Exercise 54)."""
+        from . import sketch3d, sketch_offset
+        sk = getattr(self.window, "_sketch3d_tool", None)
+        if sk is None or sk.group is None:
+            self._refuse("Offset Entities: open a sketch on a face first.")
+            return None
+        p = sk.local_of(x, y, True)
+        if p is None:
+            return None
+        mm = sk._mm_per_px(*p) or 0.1
+        if not sketch_offset.click_3d(self.window, sk, p,
+                                      sketch3d.EDGE_PX * mm):
+            self._say("Offset Entities: click an edge of the part.")
+        self.view.update()
+        return True
 
     def _convert(self, x, y):
         """Convert Entities on the sketch drawn in 3D: the part's edge

@@ -349,7 +349,7 @@ def _band(pts, width):
 def handles(tool):
     return tool in (TRIM, EXTEND, FILLET, CHAMFER, "regions", "make_region",
                     "sk_construction", "sk_mirror", "sk_lpattern",
-                    "sk_cpattern", "sk_convert", "sk_origin")
+                    "sk_cpattern", "sk_convert", "sk_origin", "sk_offset")
 
 
 PROMPTS = {TRIM: "Trim: click the piece of a line to remove.",
@@ -399,6 +399,11 @@ def press(scene, event):
     if tool in ("regions", "make_region"):
         from . import sketch_regions
         sketch_regions.press(scene, event)
+        return
+    if tool == "sk_offset":
+        from . import sketch_offset
+        from .polygon_draw import px_to_scene
+        sketch_offset.press_2d(scene, pos, px_to_scene(scene, 8))
         return
     if tool == "sk_convert":
         from . import sketch_convert
@@ -849,6 +854,24 @@ def run_mcp(window, params):
         from . import sketch_offset
         ids = params.get("node_ids") or []
         size = float(params.get("size", 0) or 0)
+        pts = params.get("points") or (
+            [params["point"]] if params.get("point") is not None else [])
+        if not ids and pts and params.get("node_id") is not None \
+                and size > 0:
+            # the PART's edges at the points (SolidWorks offsets model
+            # edges straight away, Select chain on: Exercise 54's wall)
+            from . import section_outline
+            group = node(params["node_id"])
+            segs = section_outline.for_group(window, group)
+            if not segs:
+                raise ValueError("The sketch's plane meets no part.")
+            xs = [c for s_ in segs for p_ in s_ for c in p_[:2]]
+            tol = max(0.5, 0.01 * (max(xs) - min(xs)))
+            made = sketch_offset.offset_edges(
+                model, segs, [tuple(map(float, q[:2])) for q in pts], size,
+                -1 if params.get("reverse") else 1, bool(params.get("cap")),
+                chain=params.get("chain", True), tol=tol, parent=group)
+            return {"result": "offset", "node_ids": [n.id for n in made]}
         if not ids or size <= 0:
             raise ValueError("Give node_ids (lines / arcs that join end "
                              "to end) and size > 0 (the distance).")
