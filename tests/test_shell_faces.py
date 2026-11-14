@@ -74,3 +74,15 @@ def test_the_removed_faces_round_trip_through_scad(window):
     assert found and [[float(v) for v in r] for r in
                       found[0].params["remove"]] == [[0, 0, 20, 0, 0, 1]]
     assert sh.params["remove"]
+
+
+def test_shell_button_on_a_selected_shell_edits_it(window):
+    sh = _cup(window.model, [])
+    window.builder.active_tree().select_nodes([sh])
+    window._apply_operation("shell")
+    assert window._shell_panel is not None
+    assert sh.parent is window.model.root          # not wrapped again
+    assert not any(c.type == "shell" for c in sh.children)
+    window._shell_panel.fields["thickness"].setValue(3.0)
+    assert float(sh.params["thickness"]) == 3.0
+    window._shell_panel.ok.click()

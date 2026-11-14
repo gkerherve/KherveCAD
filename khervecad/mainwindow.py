@@ -1098,6 +1098,17 @@ class MainWindow(QMainWindow):
             from . import mirror_feature
             mirror_feature.start(self)
             return
+        if op == "shell":
+            # a Shell (or something inside one) selected: its window
+            # opens again to change it, SolidWorks' Edit Feature
+            for n in nodes:
+                s = n
+                while s is not None and s.type != "shell":
+                    s = s.parent
+                if s is not None:
+                    from . import shell_pick
+                    shell_pick.start(self, s)
+                    return
         if op == "pattern":
             # the Circular Pattern window (pattern_feature, 2026-11-13, the
             # user: the bare pattern wrapper "not working as well")

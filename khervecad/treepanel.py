@@ -1333,6 +1333,15 @@ class ObjectTree(QTreeWidget):
                   is not None and roots[0].parent.type == "fillet"
                   else None)
         win = self.window()
+        shell = roots[0] if len(roots) == 1 and roots[0].type == "shell" \
+            else None
+        if shell is not None:
+            def _edit_shell(s=shell):
+                from . import shell_pick
+                shell_pick.start(win, s)
+            menu.addAction(icons.icon("mdi.cup-outline"),
+                           language.tr("Edit Shell (thickness, faces)..."),
+                           _edit_shell)
         if fillet is not None and hasattr(win, "start_fillet_pick"):
             menu.addAction(
                 icons.icon("mdi.rounded-corner"),
