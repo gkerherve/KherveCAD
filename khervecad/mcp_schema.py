@@ -1776,6 +1776,23 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "rib",
+        "description": (
+            "RIB (SolidWorks' Rib): node_id = a sketch on a plane THROUGH "
+            "the part (reference_geometry sketch_on, or a face sketch) "
+            "holding one or more OPEN lines that start and end on the "
+            "part's edges on that plane. The area each line closes with "
+            "the part's outline there is filled and extruded `thickness` "
+            "mm (default 10) about the plane, both sides, joined to the "
+            "part — a brace between a wall and a base. Change the "
+            "thickness later with set_params height on the returned rib."
+        ),
+        "input_schema": _obj({
+            "node_id": {"type": "integer"},
+            "thickness": {"type": "number", "exclusiveMinimum": 0},
+        }, ["node_id"]),
+    },
+    {
         "name": "sketch_modify",
         "description": (
             "SKETCH MODIFY — the ribbon's Trim / Extend / Sketch fillet / "

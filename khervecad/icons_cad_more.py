@@ -159,6 +159,20 @@ def _shell(d):
            shade(d.pal.body, 0.82), width=0.025)
 
 
+@draws("rib")
+def _rib(d):
+    """An L of a base and a wall, braced by a triangular rib (what the
+    tool makes) in the middle of the corner."""
+    d.box(-0.85, -0.8, 0, 1.7, 1.6, 0.3)          # base
+    d.box(-0.85, -0.8, 0.3, 0.35, 1.6, 1.3)       # wall
+    y0, y1 = -0.12, 0.12
+    for y, k in ((y1, 0.7), (y0, 1.0)):
+        d.poly([d.P(-0.5, y, 1.5), d.P(-0.5, y, 0.3), d.P(0.75, y, 0.3)],
+               shade(d.pal.make, k), width=0.025)
+    d.poly([d.P(-0.5, y0, 1.5), d.P(-0.5, y1, 1.5), d.P(0.75, y1, 0.3),
+            d.P(0.75, y0, 0.3)], shade(d.pal.make, 1.25), width=0.025)
+
+
 def _surface(d, bumps):
     path = QPainterPath(QPointF(0.08, 0.86))
     for i in range(41):

@@ -486,8 +486,12 @@ def _panel_actions(win, key):
         acts = list(families.get("finish", []))
         shell = [a for _k, fam in parts["families"] for a in fam
                  if a.data() == "shell"]
+        # ... and the Rib, as SolidWorks' Features tab (Fillet, Rib,
+        # Shell)
+        from . import rib_feature
         return language.tr(tooltips.GROUPS.get("finish", ("Finish", ""))[0]
-                           ), acts + [a for a in shell if a not in acts]
+                           ), acts + [rib_feature.action(win)] + \
+            [a for a in shell if a not in acts]
     if key in families:
         title = tooltips.GROUPS.get(key, (key, ""))[0]
         if key == "extrude":

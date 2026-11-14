@@ -262,7 +262,8 @@ def start(window, kind):
         items = [it for it in items if it[0] in free]
     # planes off for a Boss / Cut (the user); on for Sketch Mode, where
     # they were the whole choice — and whenever there is nothing else
-    st["planes"] = kind == SKETCH or (not parts and not items)
+    # a Rib is sketched on a plane through the part: planes on for it
+    st["planes"] = kind in (SKETCH, "rib") or (not parts and not items)
     window._feature_pick = dict(kind=kind, label=label, parts=parts,
                                 sketches=sketches, items=items,
                                 regions_ok=regions_ok)
@@ -498,6 +499,17 @@ def _use_sketch(window, pick, sketch):
     stop(window)
     model = window.model
     made = None
+    if kind == "rib":
+        from . import rib_feature
+        made = rib_feature.make(window, face_sketch.group_of(sketch)
+                                or sketch)
+        if made is None:
+            window.view3d.flash(
+                "Rib: that sketch's line closes no area against the part "
+                "— it must run from the part's edge to its edge.", 6000)
+            return None
+        window.builder.active_tree().select_nodes([made])
+        return made
     if kind == "revolved_boss":
         # revolve_feature knows a sketch with no sketch group too
         from . import revolve_feature

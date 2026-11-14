@@ -51,7 +51,11 @@ BOSS = {"extruded_boss": ("Extruded Boss/Base", "linear_extrude",
                         "mdi.layers-outline")}
 #: the tree operation behind each Boss button -> its kind
 BOSS_OF_OP = {v[1]: k for k, v in BOSS.items()}
-ALL = dict(KINDS, **BOSS)
+#: the Rib (rib_feature): an open line on a plane through the part —
+#: kept out of BOSS, whose op map would take linear_extrude from Extruded
+#: Boss
+RIB = {"rib": ("Rib", "linear_extrude", "mdi.triangle-outline")}
+ALL = dict(KINDS, **BOSS, **RIB)
 DEPTH = 10.0
 KEY = "cut"                  # on the face sketch Group: the cut it makes
 
@@ -243,6 +247,8 @@ def finish(window, group):
     kind = group.params.get(KEY) if group is not None else None
     if not kind or group.parent is None:
         return None
+    if kind in RIB:
+        return _finish_rib(window, group)
     part = getattr(window, "_cut_parts", {}).pop(id(group), None)
     if part is None:                     # (after a restart: the face's part)
         from . import face_sketch
@@ -268,6 +274,30 @@ def finish(window, group):
             except Exception:
                 pass
     return diff
+
+
+def _finish_rib(window, group):
+    """Leaving a Rib's sketch: the rib its line makes with the part."""
+    from . import rib_feature
+    group.params.pop(KEY, None)
+    getattr(window, "_cut_parts", {}).pop(id(group), None)
+    rib = rib_feature.make(window, group)
+    if rib is None:
+        window.statusBar().showMessage(
+            "Rib: nothing made — draw ONE open line that starts and ends "
+            "on the part's edges on this plane.", 8000)
+        window.view3d.flash("Rib: the line must run from the part to the "
+                            "part (it closes an area with its edges).",
+                            6000)
+        return None
+    try:
+        window.builder.active_tree().select_nodes([rib])
+    except Exception:
+        pass
+    window.statusBar().showMessage(
+        "%s made, %g mm thick about the sketch plane — change Thickness "
+        "(height) in Properties." % (rib.name, rib.params["height"]), 8000)
+    return rib
 
 
 def paint_chosen_face(window, painter, project):
@@ -580,7 +610,7 @@ def _open(window, kind, group, part, normal, face_tris, in_3d):
         if ribbon is not None:
             ribbon.show_tab("sketch")
         return
-    end = "to make it" if kind in BOSS else "to cut"
+    end = "to make it" if kind in BOSS or kind in RIB else "to cut"
     window.statusBar().showMessage(
         "%s: draw the shape (circle, slot, rectangle…), dimension "
         "it, then leave the sketch %s." % (label, end), 10000)

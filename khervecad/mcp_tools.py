@@ -1691,6 +1691,16 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_rib(self, params) -> dict:
+        from . import rib_feature
+        try:
+            out = rib_feature.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+        if "error" in out:
+            raise ToolError(out["error"])
+        return out
+
     def _t_sheet_metal(self, params) -> dict:
         from . import sheet_metal_mcp
         try:

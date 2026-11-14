@@ -623,6 +623,8 @@ class Sketch3DTool:
             cut_feature.clear_chosen_face(self.window)
         if made is None:
             return made
+        if kind in cut_feature.RIB:      # (a rib asks nothing more)
+            return made
         if kind in cut_feature.BOSS:     # (a boss opens the window itself)
             drag = self.view.edit_tool
             if isinstance(drag, drag_feature.DragFeature):

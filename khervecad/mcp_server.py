@@ -441,7 +441,10 @@ chain and carry their own relations already. sketch_modify trims a line \
 where others cross it, extends one to the next, and rounds / chamfers a \
 polygon or rectangle corner (kept sharp underneath, a corners row draws the \
 arc) or the corner two lines make. Shapes on a Front / Side plane sit in \
-one turned "<plane> sketch" group — add them there, in its frame.
+one turned "<plane> sketch" group — add them there, in its frame. A RIB \
+(a brace between a wall and a base) is the `rib` tool: a sketch on a plane \
+through the part with one open line from edge to edge, never a hand-made \
+wedge.
 
 Sheet metal — a bent part (bracket, enclosure, chassis, tray, channel) is \
 ONE sheet_metal body, never boxes: create (a base outline, or a contour + \
