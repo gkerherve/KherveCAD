@@ -95,9 +95,17 @@ Then FIX THEM, without waiting to be asked, worst first, in a loop:
    tooltips, CLAUDE.md notes for anything non-obvious).
 3. Run the new test and the related test files; then the whole suite
    before the commit if the change is broad.
-4. Commit and push each fix on its own (`v<N>: fix: ...`, CLAUDE.md
+4. SHOW IT (the user, 2026-11-14: "put pictures of what you've done,
+   like the new ribbon, what you've added — in the chat"): after each
+   fix, take pictures of what changed — the new or changed ribbon /
+   button / window (a screenshot of the running app or an offscreen
+   `QWidget.grab()` of the ribbon or panel), and the model result
+   (`render_view`) — save them in `<exercise folder>/fixes/`, and send
+   them in the chat with SendUserFile, each with a one-line caption
+   saying what it shows. The report reuses them.
+5. Commit and push each fix on its own (`v<N>: fix: ...`, CLAUDE.md
    rules; stage only your own files). Mark it fixed in problems.md.
-5. Redo the exercise's affected steps — from scratch, the video's way —
+6. Redo the exercise's affected steps — from scratch, the video's way —
    in a fresh document. New problems go back into the list.
 
 Repeat until the WHOLE exercise goes through the video's way with no
