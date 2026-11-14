@@ -1167,6 +1167,13 @@ class MainWindow(QMainWindow):
                     n = n.parent
                 return False
             done = [n for n in nodes if extruded(n)]
+            if done and op == "linear_extrude":
+                # an extruded SKETCH selected (its Regions, a shape of
+                # it): its other areas, for another feature — SolidWorks'
+                # one sketch, several features (Exercise 52's ring)
+                reg = sketch_regions.overlap_container(self, done)
+                if reg is not None and sketch_regions.start_3d(self, reg):
+                    return
             if done:
                 self.statusBar().showMessage(language.tr(
                     "{name} is already extruded or cut — change its depth "
