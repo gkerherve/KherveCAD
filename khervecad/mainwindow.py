@@ -1263,6 +1263,9 @@ class MainWindow(QMainWindow):
             elif op == "dome":                # now: which faces bulge?
                 from . import dome_pick
                 dome_pick.start(self, wrapper)
+            elif op == "wrap":                # now: what is written?
+                from . import wrap_panel
+                wrap_panel.start(self, wrapper)
             elif op == "sculpt":              # now: where to push?
                 self.start_sculpt(wrapper)
             elif op == "vertex_paint":        # now: where to paint?

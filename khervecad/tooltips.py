@@ -748,6 +748,21 @@ TIPS = {
          "click one again to leave it.",
          "OK (or Esc) keeps it; Cancel takes the Dome away."],
         "A round face becomes exactly half an ellipsoid."),
+    "wrap": (
+        "Wrap",
+        "Writes text or a flat sketch ROUND a cylinder, raised (Emboss) "
+        "or cut in (Deboss) — a name on a mug, a scale on a knob "
+        "(SolidWorks' Wrap).",
+        [_SELECTION + " Pick the round part.",
+         "Click Wrap: its window opens beside the view with a text "
+         "already wrapped across the front.",
+         "Type the Text and its Size; choose Emboss or Deboss and the "
+         "Depth.",
+         "Turn it round the part with Start angle.",
+         "For a shape instead of text, draw 2D shapes inside the Wrap "
+         "(after the part): x runs round the cylinder, y up it."],
+        "The radius is the part's own; give Radius in Properties for a "
+        "cylinder that is only part of the model."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "

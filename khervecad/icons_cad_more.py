@@ -211,6 +211,24 @@ def _dome(d):
                width=0.03)
 
 
+@draws("wrap")
+def _wrap(d):
+    """A cylinder with a raised band of 'letters' wrapped round its
+    front, in the made colour."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    d.cyl(0, 0, 0, 0.75, 1.4)
+    for k, (a0, a1) in enumerate(((-150, -118), (-110, -86), (-78, -52),
+                                  (-44, -20))):
+        pts = []
+        for z in (0.45, 0.95):
+            seq = range(a0, a1 + 1, 4) if z == 0.45 else \
+                range(a1, a0 - 1, -4)
+            for a in seq:
+                t = math.radians(a)
+                pts.append(d.P(0.8 * math.cos(t), 0.8 * math.sin(t), z))
+        d.poly(pts, shade(made, 0.9 + 0.12 * k), width=0.025)
+
+
 def _surface(d, bumps):
     path = QPainterPath(QPointF(0.08, 0.86))
     for i in range(41):
