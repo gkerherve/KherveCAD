@@ -30,7 +30,7 @@ def start(window, node) -> bool:
     model, view = window.model, window.view3d
     old = _panel(window)
     if old is not None:
-        old.close()
+        old.hide()
     state = {"node": node, "world": world, "local": local, "done": False}
 
     def finish(keep):
@@ -40,7 +40,8 @@ def start(window, node) -> bool:
         if view._pick_cb is not None:
             view._pick_cb = None
             view._end_pick_mode()
-        panel.close()
+        panel.hide()
+        panel.deleteLater()
         window._shell_panel = None
         if not keep and node.parent is not None:
             model.ungroup(node)

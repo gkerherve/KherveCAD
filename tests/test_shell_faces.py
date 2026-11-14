@@ -62,8 +62,10 @@ def test_clicking_faces_in_the_window(window):
     view._pick_cb(desc, sh)                  # again: kept after all
     assert sh.params["remove"] == []
     view._pick_cb(desc, sh)
-    window._shell_panel.ok.click()
+    panel = window._shell_panel
+    panel.ok.click()
     assert len(sh.params["remove"]) == 1 and sh.parent is not None
+    assert not panel.isVisible()            # OK closes the window
 
 
 def test_the_removed_faces_round_trip_through_scad(window):
