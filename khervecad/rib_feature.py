@@ -87,6 +87,85 @@ def _next_name(model):
     return "Rib%d" % k
 
 
+#: an end this near the part's outline is ON it (mm)
+ON_EDGE = 0.05
+
+
+def _outline_segments(ghost):
+    """The section polygon's edges [(a, b)] in the sketch's x, y."""
+    pts = [tuple(float(v) for v in p[:2])
+           for p in ghost.params.get("points") or []]
+    paths = ghost.params.get("paths") or [list(range(len(pts)))]
+    segs = []
+    for path in paths:
+        loop = [pts[i] for i in path if 0 <= i < len(pts)]
+        segs += [(loop[i - 1], loop[i]) for i in range(len(loop))]
+    return segs
+
+
+def _ray_hit(p, d, segs):
+    """Distance along the unit ray p + t d to the nearest segment, or
+    None."""
+    best = None
+    for (ax, ay), (bx, by) in segs:
+        ex, ey = bx - ax, by - ay
+        den = d[0] * ey - d[1] * ex
+        if abs(den) < 1e-12:
+            continue
+        wx, wy = ax - p[0], ay - p[1]
+        t = (wx * ey - wy * ex) / den
+        u = (wx * d[1] - wy * d[0]) / den
+        if t > ON_EDGE and -1e-9 <= u <= 1 + 1e-9 and \
+                (best is None or t < best):
+            best = t
+    return best
+
+
+def _on(p, segs):
+    for (ax, ay), (bx, by) in segs:
+        ex, ey = bx - ax, by - ay
+        n2 = ex * ex + ey * ey
+        t = 0.0 if n2 < 1e-18 else max(0.0, min(1.0, (
+            (p[0] - ax) * ex + (p[1] - ay) * ey) / n2))
+        if math.hypot(ax + ex * t - p[0], ay + ey * t - p[1]) <= ON_EDGE:
+            return True
+    return False
+
+
+def extend_to_part(model, lines, ghost):
+    """SolidWorks' Rib runs an open line on to the part: an end that is
+    not on the part's outline is moved along the line to the outline it
+    first meets (2026-11-14, Exercise 52: the bracket's rib line stops
+    2 mm under the bearing). The lines moved."""
+    segs = _outline_segments(ghost)
+    moved = []
+    for line in lines:
+        p = line.params
+        try:
+            a = (float(p["x1"]), float(p["y1"]))
+            b = (float(p["x2"]), float(p["y2"]))
+        except (KeyError, TypeError, ValueError):
+            continue                     # an expression: left as drawn
+        n = math.hypot(b[0] - a[0], b[1] - a[1])
+        if n < 1e-9 or p.get("bulge"):
+            continue
+        d = ((b[0] - a[0]) / n, (b[1] - a[1]) / n)
+        ends = {}
+        for key, q, sign in (("1", a, -1), ("2", b, 1)):
+            if _on(q, segs):
+                continue
+            ray = (d[0] * sign, d[1] * sign)
+            t = _ray_hit(q, ray, segs)
+            if t is not None and t < 10 * n:
+                ends[key] = (q[0] + ray[0] * t, q[1] + ray[1] * t)
+        for key, (x, y) in ends.items():
+            model.set_param(line, "x" + key, round(x, 6))
+            model.set_param(line, "y" + key, round(y, 6))
+        if ends:
+            moved.append(line)
+    return moved
+
+
 def make(window, group, thickness=THICKNESS):
     """The rib the open lines of the sketch *group* make with the part:
     a centred Linear extrude of a Regions, or None when the lines close
@@ -98,6 +177,10 @@ def make(window, group, thickness=THICKNESS):
     try:
         shapes, ghost = sketch_section.with_section(
             window, group, sketch_regions.shapes_of(group))
+        if ghost is not None and extend_to_part(window.model, lines,
+                                                ghost):
+            shapes, ghost = sketch_section.with_section(
+                window, group, sketch_regions.shapes_of(group))
         face_list = sketch_regions.faces(shapes)
     except Exception:                         # no Manifold, odd shapes
         return None
@@ -155,7 +238,8 @@ TIP = ("Rib",
         "a face.",
         "Draw one Line from a point on the part's edge to another (e.g. "
         "from the top of a wall down to the far edge of the base); "
-        "dimension it if you like.",
+        "dimension it if you like (an end short of the part is run on "
+        "to it, as SolidWorks does).",
         "Leave the sketch: the rib fills the triangle the line closes, "
         "10 mm thick, centred on the plane.",
         "Change Thickness (height) in Properties; Mirror it to the other "
