@@ -540,13 +540,19 @@ def _scale(d):
 
 @draws("mirror")
 def _mirror(d):
-    d.line(QPointF(0.5, 0.08), QPointF(0.5, 0.92), d.pal.select, 0.05,
-           [3, 2])
-    left = [QPointF(0.42, 0.25), QPointF(0.42, 0.80), QPointF(0.10, 0.80),
-            QPointF(0.10, 0.55)]
-    d.poly(left, shade(d.pal.body, 1.1))
-    right = [QPointF(1 - q.x(), q.y()) for q in left]
-    d.poly(right, d.pal.paper, color=d.pal.make, width=0.05)
+    """A shaded L (the feature) and its reflected copy across a thin
+    mirror plane between them — the copy in the made colour (green in
+    the SolidWorks look, as its Mirror button: the user, 2026-11-14)."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    # the left L: a base and a post, against the plane at x = 0
+    d.box(-0.95, -0.55, 0, 0.85, 1.1, 0.35)
+    d.box(-0.95, -0.55, 0.35, 0.3, 1.1, 1.0)
+    # the plane, edge-on-ish, between the halves
+    d.faces([([(0, -0.85, -0.15), (0, 0.85, -0.15), (0, 0.85, 1.6),
+               (0, -0.85, 1.6)], 1.0)], body=QColor(150, 190, 230))
+    # the mirrored copy
+    d.box(0.1, -0.55, 0, 0.85, 1.1, 0.35, body=made)
+    d.box(0.65, -0.55, 0.35, 0.3, 1.1, 1.0, body=made)
 
 
 @draws("resize")
