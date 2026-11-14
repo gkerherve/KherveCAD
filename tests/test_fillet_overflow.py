@@ -39,3 +39,12 @@ def test_a_concave_fillet_stays_on_the_part(win):
     QTest.qWait(50)
     xs = [p[0] for t in mesh.tessellate(win.model.root) for p in t[:3]]
     assert max(xs) == pytest.approx(40, abs=0.05)
+
+
+def test_the_cut_back_fillet_is_still_a_solid(win):
+    """A Difference after it must still cut (Exercise 52's side hole)."""
+    from khervecad import csg, mesh
+    test_a_concave_fillet_stays_on_the_part(win)
+    fil = next(n for n in win.model.root.walk() if n.type == "fillet")
+    rows = mesh._tess(fil, {}, None, set(), False)
+    assert csg.to_manifold(rows, {}) is not None

@@ -502,8 +502,22 @@ def _clip_to_box(body, box, eps=1e-6):
     fillet wider than the face it rolls onto stops at the part's edge
     as SolidWorks' does (2026-11-14, Exercise 52: the rib's R32 foot on
     a base 28 mm wider than the rib stood 4 mm out past it)."""
-    from . import cutaway
+    from . import csg, cutaway
     lo, hi = box
+    vals = [p for t in body for p in t]
+    if all(lo[k] - eps <= p[k] <= hi[k] + eps for p in vals
+           for k in range(3)):
+        return body
+    if csg.available():
+        # Manifold keeps it one closed solid (a fanned clip + cap left
+        # it open, and a Difference after the fillet stopped cutting)
+        import manifold3d as m
+        rows = [(t, None, False) for t in body]
+        solid = csg.to_manifold(rows, {})
+        if solid is not None:
+            cube = m.Manifold.cube([hi[k] - lo[k] for k in range(3)]
+                                   ).translate(list(lo))
+            return csg.to_triangles(solid ^ cube)
     for axis, k in cutaway.AXES.items():
         for flip, plane in ((False, hi[k]), (True, lo[k])):
             vals = [p[k] for t in body for p in t]
