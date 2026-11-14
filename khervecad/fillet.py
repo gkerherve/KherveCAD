@@ -497,6 +497,27 @@ def mesh_size(tris) -> float:
                for i in range(3))
 
 
+def _clip_to_box(body, box, eps=1e-6):
+    """A concave strip cut back to the part's box and capped, so a
+    fillet wider than the face it rolls onto stops at the part's edge
+    as SolidWorks' does (2026-11-14, Exercise 52: the rib's R32 foot on
+    a base 28 mm wider than the rib stood 4 mm out past it)."""
+    from . import cutaway
+    lo, hi = box
+    for axis, k in cutaway.AXES.items():
+        for flip, plane in ((False, hi[k]), (True, lo[k])):
+            vals = [p[k] for t in body for p in t]
+            if not vals:
+                return []
+            past = max(vals) > plane + eps if not flip else \
+                min(vals) < plane - eps
+            if not past:
+                continue
+            cap = cutaway.caps(body, axis, plane, flip)
+            body = cutaway.clip(body, None, axis, plane, flip)[0] + cap
+    return body
+
+
 def _box(tris):
     pts = [v for t in tris for v in t]
     lo = [min(p[i] for p in pts) for i in range(3)]
@@ -740,6 +761,10 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             missing.append(list(run["points"][0]) +
                            list(run["points"][-1]))
             continue
+        if not run["convex"] and box is not None:
+            body = _clip_to_box(body, box)
+            if not body:
+                continue
         (cuts if run["convex"] else adds).append(body)
     # 3. corners where THREE chosen edges of one kind meet (a face's rim
     #    and the upright edge under it): the strips stop square there and
