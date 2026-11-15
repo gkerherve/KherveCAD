@@ -3195,6 +3195,17 @@ into a new module and import.
                        `center`, so codegen is untouched and the depth
                        follows the target. A .scad round trip keeps the
                        number, not the rule.
+  - Up To Body (2026-11-15, Exercise 58's Ø44 boss on the fork): the
+                       Extrude window's Up To Body click (and MCP
+                       end_condition up_to) sets `up_to_side` "contact" —
+                       rays along the extrude from the profile, the depth
+                       where the LAST lands on the body (`extent.
+                       _to_contact`, `_profile_depth`), so a profile over
+                       a curved hub reaches its lowest contact instead of
+                       stopping at a plane through the body's near face.
+                       A click on the part the extrude is built in takes
+                       what stands before it. tests/
+                       test_up_to_body_by_mouse.py.
   - `extrude_from.py` — SolidWorks' extrude **From: Offset** (2026-11-14,
                        Exercise 55: both bore cuts start 8 / 13 mm off the
                        Front plane). The Extrude window's From row (Sketch

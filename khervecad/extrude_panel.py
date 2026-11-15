@@ -97,7 +97,7 @@ def choose_extent(window, ext, kind, offset=None):
         elif what == "face":
             apply(face=list(desc["pos"]) + list(desc["dir"]), offset=off)
         else:
-            apply(up_to=node.name, side="near")
+            apply(up_to=node.name, side="contact")
     banner = {"vertex": "%s: click the vertex (a corner of an edge)",
               "face": "%s: click the surface",
               "body": "%s: click the body"}[what] % extent.LABELS[kind]

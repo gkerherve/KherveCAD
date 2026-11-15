@@ -42,7 +42,7 @@ PICKS = {"up_to_vertex": "vertex", "up_to_face": "face",
          "offset_face": "face", "up_to": "body"}
 #: the ones that keep the Distance the user typed
 KEEPS_HEIGHT = ("mid_plane",)
-SIDES = ("far", "near")
+SIDES = ("far", "near", "contact")
 MARGIN = 1.0
 
 SCHEMA = [("extent", "End condition", "choice", EXTENTS, None),
@@ -185,13 +185,29 @@ def height_for(model, extrude, env=None):
     if kind == "up_to":
         name = str(extrude.params.get("up_to") or "").strip()
         target = _find(model, name, extrude) if name else None
+        side = extrude.params.get("up_to_side") or "far"
+        if target is None and side == "contact" and name and any(
+                n.name == name and _is_inside(extrude, n)
+                for n in model.root.walk()):
+            # the body the click found is the part the extrude itself is
+            # being built in: what stands BEFORE it is the body
+            h = _to_next(model, extrude, env, anything=True)
+            return round(h + float(extrude.params.get("up_to_offset")
+                                    or 0.0), 4), False
         if target is None:
             raise ValueError("Up to: no object named %r." % name)
         pts = _world_points(target, env)
         if pts is None:
             raise ValueError("Up to: %r has no geometry." % name)
+        if side == "contact":
+            # SolidWorks' Up To Body: the profile lands on the body's
+            # surface everywhere (2026-11-15, Exercise 58's Ø44 boss on a
+            # fork: a plane through the body's near face would stop it in
+            # the air over the hub)
+            h = _to_contact(extrude, target, env)
+            return round(h + float(extrude.params.get("up_to_offset")
+                                    or 0.0), 4), False
         z = _local_z(extrude, pts, env)
-        side = extrude.params.get("up_to_side") or "far"
         h = float(z.max() if side == "far" else z.min())
         h += float(extrude.params.get("up_to_offset") or 0.0)
         if h <= 0.01:
@@ -258,13 +274,11 @@ def _first_hit(tris, o, d, leaving=False):
     return float(t[hit].min()) if hit.any() else None
 
 
-def _to_next(model, extrude, env):
-    """Up To Next: rays along the extrude from the profile (its points
-    drawn a little in, and its centre); the depth is where the LAST of
-    them meets its first surface, so the whole profile gets there."""
+def _profile_depth(extrude, env, tris, leaving):
+    """The depth where the LAST ray from the profile (its points drawn a
+    little in, and its centre) meets its first surface, or None."""
     from . import mesh
     np = _np()
-    tris = _world_tris(model, extrude, env)
     m = _frame(extrude, env)
     try:
         loops = [o for o in mesh.collect_outlines(extrude, env) if o]
@@ -283,14 +297,44 @@ def _to_next(model, extrude, env):
         # a cut goes on to where the solid ENDS. Stopping at the first
         # surface met, a sketch standing a hair off its face cut nothing
         # (the user's Circle 13: 0.02 mm of air, a depth of 0.02)
-        t = _first_hit(tris, o, d, leaving=_body_for(extrude) is not None)
+        t = _first_hit(tris, o, d, leaving=leaving)
         if t is not None:
             depth = t if depth is None else max(depth, t)
+    return depth
+
+
+def _to_next(model, extrude, env, anything=False):
+    """Up To Next: rays along the extrude from the profile (its points
+    drawn a little in, and its centre); the depth is where the LAST of
+    them meets its first surface, so the whole profile gets there."""
+    tris = _world_tris(model, extrude, env)
+    depth = _profile_depth(extrude, env, tris,
+                           _body_for(extrude) is not None)
     if depth is None:
         raise ValueError("Up to next: no surface in front of the sketch "
                          "(try Reverse direction).")
+    if anything:
+        return depth
     return round(depth + float(extrude.params.get("up_to_offset") or 0.0),
                  4)
+
+
+def _to_contact(extrude, target, env):
+    """Rays along the extrude from the profile to the body's first
+    surface: the depth is where the LAST of them lands."""
+    from . import mesh
+    np = _np()
+    raw = mesh.tessellate(target, env)
+    if not raw:
+        raise ValueError("Up to: %r has no geometry." % target.name)
+    t = np.array(raw, float).reshape(-1, 3)
+    m = np.array(mesh.ancestor_matrix(target, env), float)
+    tris = (t @ m[:3, :3].T + m[:3, 3]).reshape(-1, 3, 3)
+    depth = _profile_depth(extrude, env, tris, False)
+    if depth is None:
+        raise ValueError("Up to: %r is not in front of the sketch (try "
+                         "Reverse direction)." % target.name)
+    return depth
 
 
 def _sketch_centre(extrude, env):

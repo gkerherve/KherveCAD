@@ -112,7 +112,7 @@ def run(ex, params):
         if kind in ("up_to_face", "offset_face"):
             kw["face"] = _vec(params, "face", 6)
         if kind == "up_to":
-            kw["up_to"], kw["side"] = str(params.get("body") or ""), "near"
+            kw["up_to"], kw["side"] = str(params.get("body") or ""), "contact"
         if params.get("distance") is not None and kind != "up_to":
             kw["offset"] = float(params["distance"])
         h = extent.set_extent(win.model, node, kind, **kw)

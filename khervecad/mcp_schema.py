@@ -1641,7 +1641,7 @@ TOOLS = [
             "through_all_one (Through All), through_all (Through All - "
             "Both), up_to_next, up_to_vertex (+ point), up_to_face (Up To "
             "Surface, + face), offset_face (+ face + distance), up_to (Up "
-            "To Body, + body: a node name), mid_plane), list (default)."
+            "To Body, + body: a node name — the profile lands on its surface everywhere), mid_plane), list (default)."
         ),
         "input_schema": _obj({
             "action": {"type": "string",
