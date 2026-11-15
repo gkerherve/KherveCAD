@@ -80,6 +80,17 @@ class _Box(QFrame):
 
     def set_text(self, text):
         self.body.setText(text)
+        # a wrapped label in a fixed-width box kept ONE line's height, so
+        # a long text ("— select lines, or click an edge of the part")
+        # was cut off (the user, 2026-11-15): give it the lines it needs
+        w = self.body.width() or self.body.maximumWidth()
+        self.body.setMinimumHeight(max(
+            self.body.fontMetrics().height(),
+            self.body.heightForWidth(w)))
+        self.updateGeometry()
+        panel = self.parent()
+        if panel is not None and panel.isVisible():
+            panel.adjustSize()
 
     def set_active(self, on):
         # its own small stylesheet: re-polishing through self.style()

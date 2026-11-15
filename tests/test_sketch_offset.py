@@ -377,3 +377,73 @@ def test_the_copies_of_a_faceted_chain_meet():
     for a, b in zip(p, p[1:]):
         assert (a["x2"], a["y2"]) == pytest.approx((b["x1"], b["y1"]),
                                                    abs=1e-6)
+
+
+def _window_with(shapes):
+    from PyQt5.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    w = MainWindow()
+    w.show()
+    sk = w.model.add_node("union", {}, name="Sketch")
+    nodes = [w.model.add_node(t, p, parent=sk) for t, p in shapes]
+    w.model.structure_changed.emit()
+    QApplication.processEvents()
+    return w, sk, nodes
+
+
+def _press_offset(w):
+    from khervecad import sketch_modify
+    next(a for a in sketch_modify.panel_actions(w)
+         if a.data() == "sk_offset").trigger()
+    return w._offset_panel
+
+
+def test_a_selected_rectangle_offsets_outward_and_inward():
+    """The user pressed Offset Entities on a rectangle: 'select lines',
+    OK, nothing. Rectangles, circles and polygons offset too."""
+    w, sk, (r,) = _window_with(
+        [("rect", dict(x=0, y=0, width=40, height=20))])
+    w.builder.active_tree().select_nodes([r])
+    panel = _press_offset(w)
+    panel.fields["distance"].setValue(5)
+    panel.ok.click()
+    rects = [n for n in sk.children if n.type == "rect"]
+    assert len(rects) == 2
+    new = rects[1].params
+    assert (new["x"], new["y"], new["width"], new["height"]) == \
+        (-5, -5, 50, 30)
+    w._dirty = False
+    w.close()
+
+
+def test_a_circle_and_a_polygon_offset_too():
+    w, sk, (c, p) = _window_with([
+        ("circle", dict(x=0, y=0, radius=10)),
+        ("polygon", dict(points=[[0, 0], [20, 0], [20, 20], [0, 20]]))])
+    w.builder.active_tree().select_nodes([c, p])
+    panel = _press_offset(w)
+    panel.fields["distance"].setValue(2)
+    panel.ok.click()
+    circles = [n for n in sk.children if n.type == "circle"]
+    assert [n.params["radius"] for n in circles] == [10, 12]
+    lines = [n for n in sk.children if n.type == "line"]
+    assert len(lines) == 4
+    xs = sorted({round(v, 3) for n in lines
+                 for v in (n.params["x1"], n.params["x2"])})
+    assert xs == [-2, 22]                  # outward, not inward
+    w._dirty = False
+    w.close()
+
+
+def test_the_entities_box_shows_all_of_its_text():
+    w, sk, _ = _window_with([])
+    panel = _press_offset(w)
+    box = panel.boxes["entities"]
+    from PyQt5.QtWidgets import QApplication
+    QApplication.processEvents()
+    need = box.body.heightForWidth(box.body.width())
+    assert box.body.height() >= need > box.body.fontMetrics().height()
+    panel.cancel.click() if hasattr(panel, "cancel") else None
+    w._dirty = False
+    w.close()

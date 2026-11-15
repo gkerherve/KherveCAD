@@ -200,6 +200,67 @@ def offset(model, shapes, distance, side=1, cap=False):
                         width=shapes[0].params.get("width", 0.2))
 
 
+SOLIDS = ("rect", "circle", "polygon")
+OFFSETTABLE = ("line",) + SOLIDS
+
+
+def offset_solids(model, nodes, distance, side=1, cap=False):
+    """Offset Entities of closed shapes (2026-11-15, the user pressed it
+    on a rectangle and nothing happened): a rectangle gives a larger
+    (smaller with Reverse) rectangle, a whole circle a concentric one and
+    a polygon a closed loop of lines. Positive distance is OUTWARD, as
+    SolidWorks' default, Reverse inward. Returns the new nodes."""
+    d = float(distance) * (1 if side >= 0 else -1)
+    made = []
+    for n in nodes:
+        p, par = n.params, n.parent
+        if n.type == "rect":
+            x, y = float(p["x"]), float(p["y"])
+            w, h = float(p["width"]), float(p["height"])
+            if w + 2 * d <= 1e-9 or h + 2 * d <= 1e-9:
+                raise ValueError(language.tr(
+                    "Offset Entities: the distance is larger than the "
+                    "shape"))
+            m = model.add_node("rect", dict(
+                x=round(x - d, 6), y=round(y - d, 6),
+                width=round(w + 2 * d, 6), height=round(h + 2 * d, 6)),
+                parent=par)
+        elif n.type == "circle":
+            if float(p.get("angle", 360.0)) < 359.999:
+                raise ValueError(language.tr(
+                    "Offset Entities: select a whole circle, or the arc "
+                    "as a line"))
+            r = float(p["radius"]) + d
+            if r <= 1e-9:
+                raise ValueError(language.tr(
+                    "Offset Entities: the distance is larger than the "
+                    "radius"))
+            m = model.add_node("circle", dict(
+                x=float(p["x"]), y=float(p["y"]), radius=round(r, 6)),
+                parent=par)
+        else:
+            pts = [(float(a) + float(p.get("x", 0) or 0),
+                    float(b) + float(p.get("y", 0) or 0))
+                   for a, b in p.get("points") or []]
+            if len(pts) < 3:
+                continue
+            area = sum(pts[i][0] * pts[(i + 1) % len(pts)][1]
+                       - pts[(i + 1) % len(pts)][0] * pts[i][1]
+                       for i in range(len(pts)))
+            if area < 0:
+                pts.reverse()                 # counter-clockwise
+            order = [[pts[i][0], pts[i][1], pts[(i + 1) % len(pts)][0],
+                      pts[(i + 1) % len(pts)][1], 0.0]
+                     for i in range(len(pts))]
+            # the left of a CCW loop is inward: outward = the right
+            made += offset_order(model, order, abs(d),
+                                 -1 if d >= 0 else 1, False, parent=par)
+            continue
+        model.rename(m, "Offset")
+        made.append(m)
+    return made
+
+
 def offset_order(model, order, distance, side=1, cap=False, parent=None,
                  width=0.2, create=None):
     """The chain *order* ([x1, y1, x2, y2, bulge] end to end) offset by
@@ -529,13 +590,13 @@ def start(win):
     from .tool_panel import ToolPanel
     tr = language.tr
     tree = win.builder.active_tree()
-    picked = [n for n in tree.selected_nodes() if n.type == "line"] \
+    picked = [n for n in tree.selected_nodes() if n.type in OFFSETTABLE] \
         if hasattr(tree, "selected_nodes") else []
     old = getattr(win, "_offset_panel", None)
     if old is not None:
         old.hide()
     state = {"distance": 10.0, "reverse": False, "cap": False,
-             "chain": True, "preview": [], "edges": []}
+             "chain": True, "preview": [], "edges": [], "picked": []}
     model = win.model
 
     def drop_preview():
@@ -547,19 +608,24 @@ def start(win):
 
     def preview():
         drop_preview()
-        shapes = picked or [n for n in tree.selected_nodes()
-                            if n.type == "line"]
+        shapes = state["picked"] or picked or [
+            n for n in tree.selected_nodes() if n.type in OFFSETTABLE]
         if not shapes and not state["edges"]:
             panel.boxes["entities"].set_text(
-                tr("— select lines, or click an edge of the part"))
+                tr("— click a shape, or an edge of the part"))
             return
         side = -1 if state["reverse"] else 1
         made, n = [], 0
         try:
-            if shapes:
-                made += offset(model, shapes, state["distance"], side,
+            lines = [x for x in shapes if x.type == "line"]
+            solids = [x for x in shapes if x.type in SOLIDS]
+            if lines:
+                made += offset(model, lines, state["distance"], side,
                                state["cap"])
-                n += len(shapes)
+            if solids:
+                made += offset_solids(model, solids, state["distance"],
+                                      side, state["cap"])
+            n += len(shapes)
             for segs, p, tol, parent, create in state["edges"]:
                 for order in edge_orders(segs, p, tol, state["chain"]):
                     n += len(order)
@@ -622,6 +688,9 @@ def start(win):
     panel.finish()
     win._offset_panel = panel
     win._offset_pick = add_edge
+    win._offset_shape = lambda node: (
+        state["picked"].append(node) if node not in state["picked"]
+        else None, preview())
     panel.open()
     # clicks on the part's edges: the 3D sketch, else the 2D sketch
     sk = getattr(win, "_sketch3d_tool", None)
@@ -656,6 +725,13 @@ def press_2d(scene, pos, tol):
     pick = getattr(win, "_offset_pick", None)
     outline = getattr(scene, "face_outline", None) or {}
     segs = outline.get("segments") or []
+    shape = getattr(win, "_offset_shape", None)
+    if shape is not None:
+        item = scene._item_under(pos) if hasattr(pos, "x") else None
+        node = getattr(item, "node", None)
+        if node is not None and node.type in OFFSETTABLE:
+            shape(node)
+            return True
     if pick is None or not segs:
         scene.status.emit(language.tr(
             "Offset Entities: click an edge of the part."))
