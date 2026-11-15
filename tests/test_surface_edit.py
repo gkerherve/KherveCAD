@@ -153,3 +153,42 @@ def test_the_node_bakes_into_triangles(app):
     from khervecad import mesh
     tris = mesh.tessellate(m.root)
     assert len(tris) > 100
+
+
+def test_a_boundary_pick_on_a_round_end_closes_it_with_its_chord(app):
+    m = DocumentModel()
+    t = tube(m, m.root, 0, "+Y", "T", height=50.0)
+    cut = m.add_node("surface_edit", dict(
+        se._DEFAULTS, op="trim", mutual=False,
+        remove=[[0, 25, -20]]), parent=m.root, name="Trim")
+    pl = m.add_node("surface_edit", dict(se._DEFAULTS, op="planar"),
+                    parent=m.root, name="Plane")
+    m.add_node("curve", dict(points=[[-100, -100, 0], [100, -100, 0],
+                                     [100, 100, 0], [-100, 100, 0]],
+                             closed=True, style="straight"), parent=pl)
+    m.move_node(t, cut)
+    m.move_node(pl, cut)
+    half = se.shape_of(cut, {})
+    assert len(se._faces(half)) == 1            # the upper half sheet
+    cap = m.add_node("surface_edit", dict(
+        se._DEFAULTS, op="boundary", points=[[0, 0, 20]]),
+        parent=m.root, name="Cap")
+    m.move_node(cut, cap)
+    out = se.shape_of(cap, {})
+    assert len(se._faces(out)) == 2             # the sheet + a D face
+    assert area(out) > area(half)
+
+
+def test_a_fillet_that_cannot_be_made_says_so_in_words(app):
+    m = DocumentModel()
+    t = tube(m, m.root, 0, "+Y", "T", height=10.0)
+    with pytest.raises(ValueError):
+        se.fillet(cs.shape(t, {}), 5.0, [])
+
+
+def test_point_on_a_face_is_on_it(app):
+    m = DocumentModel()
+    t = tube(m, m.root, 0, "+Y", "T", height=30.0)
+    face = se._faces(cs.shape(t, {}))[0]
+    p = se.point_on(face)
+    assert se._dist(p, face) < 1e-4

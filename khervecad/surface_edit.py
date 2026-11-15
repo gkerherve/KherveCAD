@@ -62,7 +62,7 @@ ANGLE = 12.0
 SEW_TOL = 0.05
 
 _DEFAULTS = dict(op="trim", mutual=False, keep=False, remove=[],
-                 points=[], solid=False, thickness=2.0, radius=5.0,
+                 points=[], fillets=[], solid=False, thickness=2.0, radius=5.0,
                  plane="YZ (Right)", offset=0.0)
 
 
@@ -81,15 +81,18 @@ def _faces(shape):
 
 
 def _edges(shape):
+    """The distinct edges of a shape (an edge shared by two faces once)."""
     from OCP.TopExp import TopExp_Explorer
     from OCP.TopAbs import TopAbs_EDGE
-    from OCP.TopTools import TopTools_IndexedMapOfShape
-    from OCP.TopExp import TopExp
     from . import cadexchange
-    m = TopTools_IndexedMapOfShape()
-    TopExp.MapShapes_s(shape, TopAbs_EDGE, m)
-    return [cadexchange._topods("Edge", m.FindKey(i + 1))
-            for i in range(m.Extent())]
+    out = []
+    exp = TopExp_Explorer(shape, TopAbs_EDGE)
+    while exp.More():
+        e = cadexchange._topods("Edge", exp.Current())
+        if not any(e.IsSame(o) for o in out):
+            out.append(e)
+        exp.Next()
+    return out
 
 
 def compound(shapes):
@@ -119,6 +122,34 @@ def _nearest(point, shapes):
         if d < best_d:
             best, best_d = i, d
     return best
+
+
+def point_on(face):
+    """A point ON a face, near its middle — what a click on that piece
+    would give (the centre of mass is often off a curved face)."""
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeVertex
+    from OCP.BRepExtrema import BRepExtrema_DistShapeShape
+    from OCP.GProp import GProp_GProps
+    from OCP.BRepGProp import BRepGProp
+    from OCP.gp import gp_Pnt
+    g = GProp_GProps()
+    BRepGProp.SurfaceProperties_s(face, g)
+    c = g.CentreOfMass()
+    d = BRepExtrema_DistShapeShape(
+        BRepBuilderAPI_MakeVertex(gp_Pnt(c.X(), c.Y(), c.Z())).Vertex(),
+        face)
+    if not d.IsDone():
+        return [c.X(), c.Y(), c.Z()]
+    q = d.PointOnShape2(1)
+    return [q.X(), q.Y(), q.Z()]
+
+
+def edge_point(edge):
+    """A point ON an edge, at the middle of its parameter range."""
+    from OCP.BRepAdaptor import BRepAdaptor_Curve
+    c = BRepAdaptor_Curve(edge)
+    q = c.Value(0.5 * (c.FirstParameter() + c.LastParameter()))
+    return [q.X(), q.Y(), q.Z()]
 
 
 def _point(row):
@@ -277,12 +308,32 @@ def fill(wire, planar_only=False):
     return op.Shape()
 
 
+def _chord_face(edge):
+    """An open edge closed by the straight chord between its ends — the
+    D-shaped cap of a half round end."""
+    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeEdge,
+                                    BRepBuilderAPI_MakeWire)
+    from OCP.BRep import BRep_Tool
+    from OCP.TopExp import TopExp
+    from OCP.TopoDS import TopoDS_Vertex
+    from . import cadexchange
+    v1, v2 = TopoDS_Vertex(), TopoDS_Vertex()
+    TopExp.Vertices_s(edge, v1, v2)
+    chord = BRepBuilderAPI_MakeEdge(BRep_Tool.Pnt_s(v1),
+                                    BRep_Tool.Pnt_s(v2)).Edge()
+    wire = BRepBuilderAPI_MakeWire(edge, chord)
+    if not wire.IsDone():
+        raise ValueError("could not close this edge")
+    return fill(wire.Wire())
+
+
 def caps(shapes, picks, planar_only):
-    """Faces closing the open loops of the first shape nearest *picks*
-    (or every closed curve among *shapes*)."""
+    """The first surface plus faces closing open edges of it: *planar_only* (the
+    Planar surface) fills the whole free loop the picked edge belongs to;
+    otherwise (Boundary surface) a single round edge is closed by its
+    chord, a closed one filled. Closed curves among *shapes* fill too."""
     from OCP.TopAbs import TopAbs_WIRE
     out = []
-    loops = []
     base = None
     for s in shapes:
         if s.ShapeType() == TopAbs_WIRE:
@@ -293,16 +344,29 @@ def caps(shapes, picks, planar_only):
         loops = free_loops(base)
         if not loops:
             raise ValueError("this surface has no open loop of edges")
-        chosen = []
+        edges = [(e, w) for w in loops for e in _edges(w)]
+        done = []
         for p in picks:
-            i = _nearest(_point(p), loops)
-            if i is not None and i not in chosen:
-                chosen.append(i)
+            i = _nearest(_point(p), [e for e, _w in edges])
+            if i is None:
+                continue
+            edge, wire = edges[i]
+            key = wire if planar_only else edge
+            if any(key.IsSame(d) for d in done):
+                continue
+            done.append(key)
+            if planar_only:
+                out.append(fill(wire, True))
+            elif len(_edges(wire)) == 1:
+                out.append(fill(wire))
+            else:
+                out.append(_chord_face(edge))
         if not picks:
-            chosen = list(range(len(loops)))
-        out.extend(fill(loops[i], planar_only) for i in chosen)
+            out.extend(fill(w, planar_only) for w in loops)
     if not out:
-        raise ValueError("nothing to fill — pick an open loop of edges")
+        raise ValueError("nothing to fill — pick an open edge")
+    if base is not None:
+        out = [base] + out           # the body and its new caps, in one
     return compound(out)
 
 
@@ -322,6 +386,8 @@ def thicken(shape, thick):
 
 
 def fillet(shape, radius, picks):
+    """Round the edges nearest each pick. A pick may carry its own radius
+    as a 4th number (SolidWorks' multi-radius fillet); else *radius*."""
     from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet
     edges = _edges(shape)
     mk = BRepFilletAPI_MakeFillet(shape)
@@ -332,13 +398,18 @@ def fillet(shape, radius, picks):
         if i is None or i in seen:
             continue
         seen.append(i)
-        mk.Add(radius, edges[i])
+        r = float(p[3]) if len(p) > 3 and float(p[3]) > 0 else radius
+        mk.Add(r, edges[i])
         added += 1
     if not added:
         raise ValueError("pick the edges to round")
-    mk.Build()
-    if not mk.IsDone():
-        raise ValueError(f"a fillet of {radius:g} mm does not fit here")
+    try:
+        mk.Build()
+    except Exception:
+        mk = None
+    if mk is None or not mk.IsDone():
+        raise ValueError(f"a fillet of {radius:g} mm does not fit here — "
+                         "try fewer edges at once, or a smaller radius")
     return mk.Shape()
 
 
@@ -380,7 +451,7 @@ def shape_of(node, env):
     if op == "fillet":
         return fillet(knit(shapes) if len(shapes) > 1 else shapes[0],
                       mesh.rv(p.get("radius", 5.0), env, 5.0),
-                      p.get("points") or [])
+                      p.get("fillets") or p.get("points") or [])
     if op == "mirror":
         return mirror(shapes, str(p.get("plane", "YZ (Right)")),
                       mesh.rv(p.get("offset", 0.0), env, 0.0))
@@ -419,6 +490,8 @@ KIT = bakedkit.make(
       ["X", "Y", "Z"], None),
      ("points", "Edges / loops picked (a point on each)", "rows",
       ["X", "Y", "Z"], None),
+     ("fillets", "Fillet: edges (a point on each, radius mm)", "rows",
+      ["X", "Y", "Z", "R"], None),
      ("solid", "Knit: make a solid when closed", "bool", None, None),
      ("thickness", "Thicken: wall (mm)", "float", -1e4, 1e4),
      ("radius", "Fillet: radius (mm)", "float", 0.0, 1e4),

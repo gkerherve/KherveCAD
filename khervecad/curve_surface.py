@@ -114,12 +114,15 @@ def shape(node, env=None):
     elif kind == "revolve":
         out = _revolve(wires[0], mesh.rv(p.get("angle", 360.0), env, 360.0))
     else:
-        out = _extrude(wires[0], mesh.rv(p.get("height", 20.0), env, 20.0),
-                       _closed(cs[0]),
-                       _DIR_VEC.get(str(p.get("direction", "+Z")),
-                                    (0, 0, 1)),
-                       mesh.rv(p.get("draft", 0.0), env, 0.0),
-                       not p.get("sheet"))
+        direction = _DIR_VEC.get(str(p.get("direction", "+Z")), (0, 0, 1))
+        height = mesh.rv(p.get("height", 20.0), env, 20.0)
+        draft = mesh.rv(p.get("draft", 0.0), env, 0.0)
+        far = _drafted_far(cs[0], env, direction, height, draft) \
+            if abs(draft) > 1e-9 and _closed(cs[0]) else None
+        out = _loft([wires[0], far], [False, False], True) \
+            if far is not None else _extrude(
+                wires[0], height, _closed(cs[0]), direction, 0.0,
+                not p.get("sheet"))
     if out is None:
         raise ValueError(f"OpenCascade could not make this {kind} — try "
                          "curves that do not cross, all running the same "
@@ -196,50 +199,47 @@ def _revolve(wire, angle):
 
 def _extrude(wire, height, closed, direction=(0, 0, 1), draft=0.0,
              solid=True):
-    """The curve pushed *height* along *direction*. A non-zero *draft*
-    (degrees, positive = widening) lofts it to its own offset instead —
-    a drafted surface, the way SolidWorks' Surface-Extrude does."""
+    """The curve pushed *height* along *direction*; a closed curve makes
+    a solid unless *solid* is off (a surface body)."""
     from OCP.BRepPrimAPI import BRepPrimAPI_MakePrism
-    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeFace,
-                                    BRepBuilderAPI_Transform)
-    from OCP.gp import gp_Vec, gp_Trsf
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace
+    from OCP.gp import gp_Vec
     vec = gp_Vec(direction[0] * height, direction[1] * height,
                  direction[2] * height)
-    if abs(draft) > 1e-9 and closed:
-        out = _drafted(wire, vec, height * math.tan(math.radians(draft)))
-        if out is not None:
-            return out
     base = wire
-    if closed and solid and abs(draft) <= 1e-9:
+    if closed and solid:
         face = BRepBuilderAPI_MakeFace(wire, False)
         if face.IsDone():
             base = face.Face()
     return BRepPrimAPI_MakePrism(base, vec).Shape()
 
 
-def _drafted(wire, vec, grow):
-    """A loft from *wire* to its planar offset by *grow*, moved by *vec*."""
-    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeFace,
-                                    BRepBuilderAPI_Transform)
-    from OCP.BRepOffsetAPI import BRepOffsetAPI_MakeOffset
-    from OCP.GeomAbs import GeomAbs_Arc
-    from OCP.TopoDS import TopoDS
-    from OCP.gp import gp_Trsf
-    face = BRepBuilderAPI_MakeFace(wire, True)
-    if not face.IsDone():
-        return None
-    off = BRepOffsetAPI_MakeOffset(face.Face(), GeomAbs_Arc)
-    off.Perform(grow)
-    if not off.IsDone():
-        return None
-    from . import cadexchange
-    moved = gp_Trsf()
-    moved.SetTranslation(vec)
-    far = TopoDS.Wire_s(BRepBuilderAPI_Transform(
-        off.Shape(), moved, True).Shape()) if hasattr(TopoDS, "Wire_s") \
-        else cadexchange._topods("Wire", BRepBuilderAPI_Transform(
-            off.Shape(), moved, True).Shape())
-    return _loft([wire, far], [False, False], True)
+def _drafted_far(node, env, direction, height, draft):
+    """The curve moved by *height* along *direction* and grown outward
+    by height * tan(draft) — a transient copy with the same points
+    count, so the loft between them is ONE face per span, not one per
+    offset-wire fragment."""
+    from . import curve3d
+    from .model import CadNode
+    pts = [list(map(float, p[:3])) for p in curve3d.control_points(node,
+                                                                   env)]
+    n = len(pts)
+    grow = height * math.tan(math.radians(draft))
+    cen = [sum(p[i] for p in pts) / n for i in range(3)]
+    d = direction
+    far = []
+    for i, p in enumerate(pts):
+        a, b = pts[(i - 1) % n], pts[(i + 1) % n]
+        t = [b[k] - a[k] for k in range(3)]
+        nv = [t[1] * d[2] - t[2] * d[1], t[2] * d[0] - t[0] * d[2],
+              t[0] * d[1] - t[1] * d[0]]
+        ln = math.sqrt(sum(v * v for v in nv)) or 1.0
+        nv = [v / ln for v in nv]
+        if sum(nv[k] * (p[k] - cen[k]) for k in range(3)) < 0:
+            nv = [-v for v in nv]
+        far.append([p[k] + nv[k] * grow + d[k] * height for k in range(3)])
+    twin = CadNode("curve", "far", dict(node.params, points=far))
+    return curve3d.wire_of(twin, env)
 
 
 def is_solid(shape):
