@@ -216,8 +216,13 @@ user the PDF path; summarise the fixes in the chat, not in the report.
   + 1, body ends `Co-Authored-By: Claude <model> <noreply@anthropic.com>`;
   push each commit at once.
 - **Several videos = parallel agents**, one exercise each (the user asks
-  for this). Agent tool, `isolation: "worktree"`, model "sonnet" when the
-  user asks for cheaper agents. Brief each one with: the video link, its
+  for this). Agent tool, `isolation: "worktree"`, **model "sonnet" by default**
+  (the user, 2026-11-15: Sonnet agents, not Opus). Sonnet follows a brief
+  literally, so the brief must spell out everything below plus: read this
+  SKILL.md and CLAUDE.md first; write steps.md before building; test-first
+  for every fix; stop and report after 3 failed tries at one problem
+  instead of guessing; never claim a fix works without its test run.
+  The coordinating session reviews each agent's diff before merging. Brief each one with: the video link, its
   exercise folder (a new name if it would clash with an existing one —
   e.g. "Exercise 57 - Bearing bracket 2"), this skill, and these rules:
   - first `git reset --hard main` IN ITS WORKTREE (worktrees start from an
