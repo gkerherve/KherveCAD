@@ -142,15 +142,16 @@ class Recorder:
     """
 
     def __init__(self, win, out_path, fps=FPS, voice=VOICE, rate=RATE,
-                 burn_captions=True, side=None, side_width=None):
+                 burn_captions=True, side=None, side_width=None,
+                 crop=True):
         self.win = win
         # the part's 2D drawing kept beside the window for the whole film
         # (the user: "the 2D drawing needs to be present")
         self.side = QImage(side) if isinstance(side, str) else side
         if self.side is not None and self.side.isNull():
             self.side = None
-        if self.side is not None:
-            self.side = crop_drawing(self.side)
+        if self.side is not None and crop:     # a full Blueprint sheet
+            self.side = crop_drawing(self.side)  # is shown whole
         self.out = os.path.abspath(out_path)
         self.fps = fps
         self.voice = voice
