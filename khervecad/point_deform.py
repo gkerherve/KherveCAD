@@ -7,9 +7,10 @@ The node holds the bodies (its children) and one push: a *point*, a
 vertex within *radius* of the point moves along the direction by
 ``distance · f(d / radius)`` — d is its distance from the point, f falls
 smoothly from 1 at the point to 0 at the radius, its stiffness chosen by
-the *shape*: ``minimum`` (a peak, only the surface near the point
-moves), ``medium`` (a bell, the video's choice) or ``maximum`` (a broad
-flat-topped hill). A vertex is moved by where it IS, so a closed solid
+the *shape*: ``minimum`` (a bell, (1-t^2)^2), ``medium`` (a plateau
+dome, (1-t^4)^3 — the video's two pushes, which with this falloff leave a
+ring ridge round a distinct central dimple) or ``maximum`` (a broad
+table, (1-t^6)^3). A vertex is moved by where it IS, so a closed solid
 stays closed, holes keep their shape and what lies beyond the radius is
 not touched. Meshes are first refined (``detail`` mm, 0 = automatic) so
 the surface can curve.
@@ -45,10 +46,10 @@ def falloff(t, shape="medium"):
     import numpy as np
     t = np.clip(np.asarray(t, float), 0.0, 1.0)
     if shape == "minimum":
-        return (1.0 - t) ** 3
+        return (1.0 - t * t) ** 2          # a bell: the surface by the point
     if shape == "maximum":
-        return (1.0 - t ** 3) ** 2
-    return (1.0 - t * t) ** 2
+        return (1.0 - t ** 6) ** 3         # a broad table, steep at the rim
+    return (1.0 - t ** 4) ** 3             # a plateau dome (the video's)
 
 
 def push(verts, point, direction, distance, radius, shape="medium"):

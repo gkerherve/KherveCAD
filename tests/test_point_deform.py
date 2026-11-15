@@ -142,19 +142,58 @@ def test_point_deform_by_mouse_makes_the_dome(win):
     assert not M.validate(win.model.root)
 
 
-def test_a_second_deform_down_flattens_the_crown(win):
-    ex = McpToolExecutor(win)
+def _deform_by_mouse(win, body, distance, radius, reverse=False):
+    """One Deform window run: ribbon button, Type Point, Origin row,
+    the body's row, the numbers, OK."""
+    from khervecad import tree_history
+    QTest.mouseClick(_button(win, "curve_deform"), Qt.LeftButton)
+    QTest.qWait(50)
+    panel = win._deform_panel
+    panel.fields["type"].setCurrentIndex(0)
+    QTest.qWait(30)
+    _click_row(win, lambda t, i: i.data(0, tree_history.ROLE_FIXED)
+               == "origin")
+    _click_row(win, lambda t, i: t.node_of(i) is body)
+    panel.fields["distance"].setValue(distance)
+    panel.fields["radius"].setValue(radius)
+    if reverse:
+        panel.fields["reverse"].setChecked(True)
+    assert panel.ok.isEnabled()
+    panel.ok.click()
+    QTest.qWait(50)
+    return next(n for n in win.model.root.walk()
+                if n.type == "point_deform" and body in
+                [c for c in n.children])
+
+
+def test_the_videos_two_deforms_make_a_dome_with_a_distinct_dimple(win):
+    """The video: Deform1 15 mm up, radius 40, medium; Deform2 10 mm
+    down, radius 30, medium. The crown is a plateau dome (about 17 mm
+    over the plate, steep at the rim); the second push leaves a RING
+    ridge round a central dimple, 3 mm deep, the dome 12-14 mm high."""
     body = [c for c in win.model.root.children if c.visible][0]
-    r1 = ex.execute("deform_point", dict(body_ids=[body.id], distance=15,
-                                         radius=40))
-    r2 = ex.execute("deform_point", dict(body_ids=[r1["deform_id"]],
-                                         distance=10, radius=30,
-                                         reverse=True))
-    assert "error" not in r2, r2
-    top = _top(win)
-    assert 12.0 < top < 17.0, top
-    assert win.model.find(r2["deform_id"]).params["dz"] == \
-        pytest.approx(-1.0)
+    d1 = _deform_by_mouse(win, body, 15.0, 40.0)
+    assert 16.5 < _top(win) <= 18.05
+    # a plateau dome: still 90 % of the lift 10 mm out, steep at 30
+    tris = mesh.tessellate(win.model.root)
+    pts = [p for t in tris for p in t[:3] if p[2] > 1.0]
+
+    def z_at(r, tol=2.0):
+        zs = [p[2] for p in pts if abs((p[0] ** 2 + p[1] ** 2) ** 0.5 - r)
+              < tol]
+        return max(zs)
+    assert z_at(10) > 2 + 0.9 * 15 - 0.8 and z_at(32) < 2 + 0.35 * 15
+    _deform_by_mouse(win, d1, 10.0, 30.0, reverse=True)
+    tris = mesh.tessellate(win.model.root)
+    pts = [p for t in tris for p in t[:3] if p[2] > 1.0]
+    ridge = max(p[2] for p in pts)
+    centre = max(p[2] for p in pts
+                 if (p[0] ** 2 + p[1] ** 2) ** 0.5 < 6)
+    assert 12.0 < ridge < 14.0, ridge
+    assert ridge - centre >= 2.0, (ridge, centre)
+    at = max((p for p in pts if p[2] > ridge - 0.01),
+             key=lambda p: p[2])
+    assert 10 < (at[0] ** 2 + at[1] ** 2) ** 0.5 < 26
 
 
 def test_the_mcp_tool_validates(win):

@@ -4033,7 +4033,7 @@ into a new module and import.
                        medium / maximum stiffness, Reverse). A baked kit
                        (`kcad_point_deform`): vertices within radius of the
                        point move along the direction by distance * f(d /
-                       radius), f = (1-t)^3 / (1-t^2)^2 / (1-t^3)^2 (`falloff`), after
+                       radius), f = (1-t^2)^2 / (1-t^4)^3 / (1-t^6)^3 for minimum / medium / maximum (`falloff`; medium = the video's plateau dome, two pushes leave a ring ridge round a ~3 mm dimple), after
                        the mesh is refined (radius / 20); a vertex moves by
                        where it is, so holes and closedness survive. A
                        second push is a second Deform wrapped round the
