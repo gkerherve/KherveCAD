@@ -1,0 +1,1437 @@
+{
+ "format": "kcad",
+ "version": 16,
+ "global_fn": 45,
+ "global_fn_on": false,
+ "unit": "mm",
+ "dimensions": [],
+ "references": [],
+ "tree": {
+  "type": "root",
+  "name": "root",
+  "visible": true,
+  "params": {},
+  "children": [
+   {
+    "type": "difference",
+    "name": "Cut-Extrude2",
+    "visible": true,
+    "params": {},
+    "children": [
+     {
+      "type": "union",
+      "name": "Part",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 0.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "feature_order": 17
+      },
+      "children": [
+       {
+        "type": "difference",
+        "name": "Cut-Extrude1",
+        "visible": true,
+        "params": {
+         "cut_operation": true
+        },
+        "children": [
+         {
+          "type": "union",
+          "name": "Part",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 0.0,
+           "ry": 0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0,
+           "feature_order": 9
+          },
+          "children": [
+           {
+            "type": "union",
+            "name": "Boss sketch",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 0.0,
+             "rx": 0.0,
+             "ry": -0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0,
+             "feature_order": 1,
+             "face_sketch": true
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Boss-Extrude1",
+              "visible": true,
+              "params": {
+               "height": 19.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0,
+               "feature_order": 2
+              },
+              "children": [
+               {
+                "type": "regions",
+                "name": "Regions",
+                "visible": true,
+                "params": {
+                 "seeds": [
+                  [
+                   1.5749,
+                   -79.6057
+                  ],
+                  [
+                   -32.8485,
+                   -7.7998
+                  ]
+                 ],
+                 "inside": [
+                  [],
+                  [
+                   0
+                  ]
+                 ],
+                 "constraints": [
+                  {
+                   "kind": "coincident",
+                   "refs": [
+                    "1.p2",
+                    "6.p1"
+                   ]
+                  },
+                  {
+                   "kind": "coincident",
+                   "refs": [
+                    "2.p1",
+                    "6.p2"
+                   ]
+                  },
+                  {
+                   "kind": "tangent",
+                   "refs": [
+                    "1.l",
+                    "6.o"
+                   ]
+                  },
+                  {
+                   "kind": "tangent",
+                   "refs": [
+                    "2.l",
+                    "6.o"
+                   ]
+                  },
+                  {
+                   "kind": "radius",
+                   "refs": [
+                    "6.o"
+                   ],
+                   "value": 19.0
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "0.o"
+                   ],
+                   "value": 76
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "7.o"
+                   ],
+                   "value": 50.8
+                  },
+                  {
+                   "kind": "vdistance",
+                   "refs": [
+                    "0.c",
+                    "2.p1"
+                   ],
+                   "value": 140
+                  },
+                  {
+                   "kind": "radius",
+                   "refs": [
+                    "4.o"
+                   ],
+                   "value": 19
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "8.o"
+                   ],
+                   "value": 14
+                  },
+                  {
+                   "kind": "hdistance",
+                   "refs": [
+                    "8.c",
+                    "11.c"
+                   ],
+                   "value": 241
+                  },
+                  {
+                   "kind": "hdistance",
+                   "refs": [
+                    "8.c",
+                    "10.c"
+                   ],
+                   "value": 108
+                  },
+                  {
+                   "kind": "hdistance",
+                   "refs": [
+                    "10.c",
+                    "9.c"
+                   ],
+                   "value": 70
+                  },
+                  {
+                   "kind": "vdistance",
+                   "refs": [
+                    "9.c",
+                    "10.c"
+                   ],
+                   "value": 41
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "12.o"
+                   ],
+                   "value": 10
+                  },
+                  {
+                   "kind": "hdistance",
+                   "refs": [
+                    "8.c",
+                    "12.c"
+                   ],
+                   "value": 25
+                  },
+                  {
+                   "kind": "vdistance",
+                   "refs": [
+                    "8.c",
+                    "12.c"
+                   ],
+                   "value": 13
+                  },
+                  {
+                   "kind": "vdistance",
+                   "refs": [
+                    "10.c",
+                    "2.p2"
+                   ],
+                   "value": 19
+                  },
+                  {
+                   "kind": "hdistance",
+                   "refs": [
+                    "9.c",
+                    "13.c"
+                   ],
+                   "value": 25
+                  },
+                  {
+                   "kind": "radius",
+                   "refs": [
+                    "14.o"
+                   ],
+                   "value": 89
+                  }
+                 ]
+                },
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle 1",
+                  "visible": true,
+                  "params": {
+                   "x": 0,
+                   "y": 0,
+                   "radius": 38.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 1",
+                  "visible": true,
+                  "params": {
+                   "x1": 38.0,
+                   "y1": 0.0,
+                   "x2": 38.0,
+                   "y2": -121.0,
+                   "width": 0.2,
+                   "untrimmed": {
+                    "key": "19ebbee2391f",
+                    "type": "line",
+                    "params": {
+                     "x1": 38,
+                     "y1": 0,
+                     "x2": 38,
+                     "y2": -140,
+                     "width": 0.2
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 2",
+                  "visible": true,
+                  "params": {
+                   "x1": 19.0,
+                   "y1": -140.0,
+                   "x2": -114.0,
+                   "y2": -140.0,
+                   "width": 0.2,
+                   "untrimmed": {
+                    "key": "7c38cf2f8ce9",
+                    "type": "line",
+                    "params": {
+                     "x1": 38,
+                     "y1": -140,
+                     "x2": -114,
+                     "y2": -140,
+                     "width": 0.2
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 3",
+                  "visible": true,
+                  "params": {
+                   "x1": -114,
+                   "y1": -140,
+                   "x2": -228.56320375918054,
+                   "y2": -97.83043343319164,
+                   "width": 0.2
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 4",
+                  "visible": true,
+                  "params": {
+                   "x1": -228.56320375918054,
+                   "y1": -97.83043343319164,
+                   "x2": -222,
+                   "y2": -61,
+                   "width": 0.2,
+                   "bulge": -0.8375530736626232
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 5",
+                  "visible": true,
+                  "params": {
+                   "x1": -222.0,
+                   "y1": -61.0,
+                   "x2": -123.874938,
+                   "y2": -61.0,
+                   "width": 0.2,
+                   "untrimmed": {
+                    "key": "5182161218f8",
+                    "type": "line",
+                    "params": {
+                     "x1": -222,
+                     "y1": -61,
+                     "x2": -60,
+                     "y2": -61,
+                     "width": 0.2
+                    }
+                   }
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Sketch fillet R19",
+                  "visible": true,
+                  "params": {
+                   "x1": 38.0,
+                   "y1": -121.0,
+                   "x2": 19.0,
+                   "y2": -140.0,
+                   "width": 0.2,
+                   "bulge": -0.414213562373,
+                   "sketch_corner": {
+                    "kind": "fillet",
+                    "size": 19.0
+                   }
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 2",
+                  "visible": true,
+                  "params": {
+                   "x": 0,
+                   "y": 0,
+                   "radius": 25.4,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 3",
+                  "visible": true,
+                  "params": {
+                   "x": -222,
+                   "y": -80,
+                   "radius": 7.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 4",
+                  "visible": true,
+                  "params": {
+                   "x": -44,
+                   "y": -80,
+                   "radius": 7.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 5",
+                  "visible": true,
+                  "params": {
+                   "x": -114,
+                   "y": -121,
+                   "radius": 7.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 6",
+                  "visible": true,
+                  "params": {
+                   "x": 19,
+                   "y": -121,
+                   "radius": 7.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 7",
+                  "visible": true,
+                  "params": {
+                   "x": -197,
+                   "y": -93,
+                   "radius": 5.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 8",
+                  "visible": true,
+                  "params": {
+                   "x": -19,
+                   "y": -121,
+                   "radius": 5.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 9",
+                  "visible": true,
+                  "params": {
+                   "x1": -123.87493693237546,
+                   "y1": -61,
+                   "x2": -37.06494175929344,
+                   "y2": 8.377952755905511,
+                   "width": 0.2,
+                   "bulge": 0.35050471216620843
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 6",
+                  "visible": true,
+                  "params": {
+                   "x1": -222,
+                   "y1": -80,
+                   "x2": -44,
+                   "y2": -80,
+                   "width": 0.2,
+                   "modifier": "%"
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 7",
+                  "visible": true,
+                  "params": {
+                   "x1": -114,
+                   "y1": -121,
+                   "x2": 19,
+                   "y2": -121,
+                   "width": 0.2,
+                   "modifier": "%"
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 8",
+                  "visible": true,
+                  "params": {
+                   "x1": 0,
+                   "y1": 0,
+                   "x2": 0,
+                   "y2": -121,
+                   "width": 0.2,
+                   "modifier": "%"
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "union",
+            "name": "Boss sketch",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -61.0,
+             "z": 0.0,
+             "rx": 90.0,
+             "ry": -0.0,
+             "rz": 180.0,
+             "color": "",
+             "alpha": 1.0,
+             "feature_order": 3,
+             "face_sketch": true
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Boss-Extrude2",
+              "visible": true,
+              "params": {
+               "height": 19.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0,
+               "feature_order": 4,
+               "reverse": true
+              },
+              "children": [
+               {
+                "type": "regions",
+                "name": "Regions",
+                "visible": true,
+                "params": {
+                 "seeds": [
+                  [
+                   158.1505,
+                   27.9107
+                  ]
+                 ],
+                 "inside": [
+                  []
+                 ],
+                 "constraints": [
+                  {
+                   "kind": "symmetric",
+                   "refs": [
+                    "0.p1",
+                    "0.p2",
+                    "5.l"
+                   ]
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "4.o"
+                   ],
+                   "value": 44.45
+                  },
+                  {
+                   "kind": "radius",
+                   "refs": [
+                    "2.o"
+                   ],
+                   "value": 35
+                  },
+                  {
+                   "kind": "vdistance",
+                   "refs": [
+                    "0.p1",
+                    "4.c"
+                   ],
+                   "value": 105
+                  },
+                  {
+                   "kind": "angle",
+                   "refs": [
+                    "0.l",
+                    "1.l"
+                   ],
+                   "value": 77
+                  }
+                 ]
+                },
+                "children": [
+                 {
+                  "type": "line",
+                  "name": "Line 10",
+                  "visible": true,
+                  "params": {
+                   "x1": 95.83819615904719,
+                   "y1": 0.0,
+                   "x2": 216.1618038409528,
+                   "y2": 0.0,
+                   "width": 0.2
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 11",
+                  "visible": true,
+                  "params": {
+                   "x1": 216.1618038409528,
+                   "y1": 0.0,
+                   "x2": 190.10295226748323,
+                   "y2": 112.87328690203528,
+                   "width": 0.2
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 12",
+                  "visible": true,
+                  "params": {
+                   "x1": 190.10295226748323,
+                   "y1": 112.87328690203528,
+                   "x2": 121.89704773251677,
+                   "y2": 112.87328690203528,
+                   "width": 0.2,
+                   "bulge": 0.7954359166678282
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 13",
+                  "visible": true,
+                  "params": {
+                   "x1": 121.89704773251677,
+                   "y1": 112.87328690203528,
+                   "x2": 95.83819615904719,
+                   "y2": 0.0,
+                   "width": 0.2
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 9",
+                  "visible": true,
+                  "params": {
+                   "x": 156.0,
+                   "y": 105.0,
+                   "radius": 22.225,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "line",
+                  "name": "Line 14",
+                  "visible": true,
+                  "params": {
+                   "x1": 156.0,
+                   "y1": 0,
+                   "x2": 156.0,
+                   "y2": 140,
+                   "width": 0.2,
+                   "modifier": "%"
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "union",
+            "name": "Boss sketch",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": 0.0,
+             "z": 19.0,
+             "rx": 0.0,
+             "ry": -0.0,
+             "rz": 0.0,
+             "color": "",
+             "alpha": 1.0,
+             "feature_order": 5,
+             "face_sketch": true
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Boss-Extrude3",
+              "visible": true,
+              "params": {
+               "height": 64.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0,
+               "feature_order": 6
+              },
+              "children": [
+               {
+                "type": "regions",
+                "name": "Regions",
+                "visible": true,
+                "params": {
+                 "seeds": [
+                  [
+                   -7.7998,
+                   32.8485
+                  ]
+                 ],
+                 "inside": [
+                  [
+                   0
+                  ]
+                 ],
+                 "constraints": [
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "0.o"
+                   ],
+                   "value": 76
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "1.o"
+                   ],
+                   "value": 50.8
+                  }
+                 ]
+                },
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle 10",
+                  "visible": true,
+                  "params": {
+                   "x": 0,
+                   "y": 0,
+                   "radius": 38.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 11",
+                  "visible": true,
+                  "params": {
+                   "x": 0,
+                   "y": 0,
+                   "radius": 25.4,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "union",
+            "name": "Boss sketch",
+            "visible": true,
+            "params": {
+             "x": 0.0,
+             "y": -61.0,
+             "z": 0.0,
+             "rx": 90.0,
+             "ry": -0.0,
+             "rz": 180.0,
+             "color": "",
+             "alpha": 1.0,
+             "feature_order": 7,
+             "face_sketch": true
+            },
+            "children": [
+             {
+              "type": "linear_extrude",
+              "name": "Boss-Extrude5",
+              "visible": true,
+              "params": {
+               "height": 57.0,
+               "twist": 0.0,
+               "scale": 1.0,
+               "center": false,
+               "segments": 0,
+               "feature_order": 8,
+               "height2": 3.0
+              },
+              "children": [
+               {
+                "type": "regions",
+                "name": "Regions",
+                "visible": true,
+                "params": {
+                 "seeds": [
+                  [
+                   182.5231,
+                   89.5264
+                  ]
+                 ],
+                 "inside": [
+                  [
+                   0
+                  ]
+                 ],
+                 "constraints": [
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "0.o"
+                   ],
+                   "value": 70
+                  },
+                  {
+                   "kind": "diameter",
+                   "refs": [
+                    "1.o"
+                   ],
+                   "value": 44.45
+                  }
+                 ]
+                },
+                "children": [
+                 {
+                  "type": "circle",
+                  "name": "Circle 12",
+                  "visible": true,
+                  "params": {
+                   "x": 156.0,
+                   "y": 105.0,
+                   "radius": 35.0,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 },
+                 {
+                  "type": "circle",
+                  "name": "Circle 13",
+                  "visible": true,
+                  "params": {
+                   "x": 156.0,
+                   "y": 105.0,
+                   "radius": 22.225,
+                   "angle": 360.0,
+                   "start_angle": 0.0,
+                   "segments": 64
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "union",
+          "name": "Sketch on plane",
+          "visible": true,
+          "params": {
+           "x": 0.0,
+           "y": 0.0,
+           "z": 0.0,
+           "rx": 180.0,
+           "ry": -0.0,
+           "rz": 0.0,
+           "color": "",
+           "alpha": 1.0,
+           "feature_order": 10,
+           "face_sketch": true
+          },
+          "children": [
+           {
+            "type": "linear_extrude",
+            "name": "Extruded Cut",
+            "visible": true,
+            "params": {
+             "height": 57.0,
+             "twist": 0.0,
+             "scale": 1.0,
+             "center": true,
+             "segments": 0,
+             "feature_order": 11,
+             "extent": "",
+             "reverse": true
+            },
+            "children": [
+             {
+              "type": "regions",
+              "name": "Regions",
+              "visible": true,
+              "params": {
+               "seeds": [
+                [
+                 -18.479,
+                 51.5425
+                ]
+               ],
+               "inside": [
+                []
+               ]
+              },
+              "children": [
+               {
+                "type": "line",
+                "name": "Converted arc",
+                "visible": true,
+                "params": {
+                 "x1": -123.8749,
+                 "y1": 61.0,
+                 "x2": -37.0304,
+                 "y2": -8.3693,
+                 "width": 0.2,
+                 "bulge": -0.3501701313
+                }
+               },
+               {
+                "type": "circle",
+                "name": "Circle 14",
+                "visible": true,
+                "params": {
+                 "x": 0,
+                 "y": 0,
+                 "radius": 38.0,
+                 "angle": 360.0,
+                 "start_angle": 0.0,
+                 "segments": 64
+                }
+               },
+               {
+                "type": "line",
+                "name": "Line 15",
+                "visible": true,
+                "params": {
+                 "x1": -123.87493693237546,
+                 "y1": 61,
+                 "x2": 38,
+                 "y2": 61,
+                 "width": 0.2
+                }
+               },
+               {
+                "type": "line",
+                "name": "Line 16",
+                "visible": true,
+                "params": {
+                 "x1": 38,
+                 "y1": 61,
+                 "x2": 38,
+                 "y2": 0,
+                 "width": 0.2
+                }
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "union",
+        "name": "Boss sketch",
+        "visible": true,
+        "params": {
+         "x": 0.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 90.0,
+         "ry": -0.0,
+         "rz": 90.0,
+         "color": "",
+         "alpha": 1.0,
+         "feature_order": 12,
+         "face_sketch": true
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Boss-Extrude6",
+          "visible": true,
+          "params": {
+           "height": 13.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": true,
+           "segments": 0,
+           "feature_order": 13
+          },
+          "children": [
+           {
+            "type": "regions",
+            "name": "Regions",
+            "visible": true,
+            "params": {
+             "seeds": [
+              [
+               -58.3747,
+               29.6667
+              ]
+             ],
+             "inside": [
+              []
+             ],
+             "constraints": [
+              {
+               "kind": "length",
+               "refs": [
+                "2.l"
+               ],
+               "value": 32
+              },
+              {
+               "kind": "angle",
+               "refs": [
+                "1.l",
+                "0.l"
+               ],
+               "value": 25
+              }
+             ]
+            },
+            "children": [
+             {
+              "type": "line",
+              "name": "Line 17",
+              "visible": true,
+              "params": {
+               "x1": -35.5,
+               "y1": 51,
+               "x2": -104.12422145630588,
+               "y2": 19,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 18",
+              "visible": true,
+              "params": {
+               "x1": -104.12422145630588,
+               "y1": 19,
+               "x2": -35.5,
+               "y2": 19,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 19",
+              "visible": true,
+              "params": {
+               "x1": -35.5,
+               "y1": 19,
+               "x2": -35.5,
+               "y2": 51,
+               "width": 0.2
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "ref_plane",
+        "name": "Plane 1",
+        "visible": true,
+        "params": {
+         "x": -156.0,
+         "y": 0.0,
+         "z": 0.0,
+         "nx": 1.0,
+         "ny": 0.0,
+         "nz": 0.0,
+         "size": 347.0,
+         "feature_order": 14
+        }
+       },
+       {
+        "type": "union",
+        "name": "Boss sketch",
+        "visible": true,
+        "params": {
+         "x": -156.0,
+         "y": 0.0,
+         "z": 0.0,
+         "rx": 90.0,
+         "ry": -0.0,
+         "rz": 90.0,
+         "color": "",
+         "alpha": 1.0,
+         "feature_order": 15,
+         "face_sketch": true
+        },
+        "children": [
+         {
+          "type": "linear_extrude",
+          "name": "Boss-Extrude7",
+          "visible": true,
+          "params": {
+           "height": 13.0,
+           "twist": 0.0,
+           "scale": 1.0,
+           "center": true,
+           "segments": 0,
+           "feature_order": 16
+          },
+          "children": [
+           {
+            "type": "regions",
+            "name": "Regions",
+            "visible": true,
+            "params": {
+             "seeds": [
+              [
+               -50.3333,
+               53.0
+              ],
+              [
+               -97.0,
+               36.0
+              ]
+             ],
+             "inside": [
+              [],
+              []
+             ],
+             "constraints": [
+              {
+               "kind": "length",
+               "refs": [
+                "0.l"
+               ],
+               "value": 32
+              },
+              {
+               "kind": "angle",
+               "refs": [
+                "4.l",
+                "3.l"
+               ],
+               "value": 45
+              }
+             ]
+            },
+            "children": [
+             {
+              "type": "line",
+              "name": "Line 20",
+              "visible": true,
+              "params": {
+               "x1": -61,
+               "y1": 70,
+               "x2": -29,
+               "y2": 70,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 21",
+              "visible": true,
+              "params": {
+               "x1": -29,
+               "y1": 70,
+               "x2": -61,
+               "y2": 19,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 22",
+              "visible": true,
+              "params": {
+               "x1": -61,
+               "y1": 19,
+               "x2": -61,
+               "y2": 70,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 23",
+              "visible": true,
+              "params": {
+               "x1": -80,
+               "y1": 70,
+               "x2": -131,
+               "y2": 19,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 24",
+              "visible": true,
+              "params": {
+               "x1": -131,
+               "y1": 19,
+               "x2": -80,
+               "y2": 19,
+               "width": 0.2
+              }
+             },
+             {
+              "type": "line",
+              "name": "Line 25",
+              "visible": true,
+              "params": {
+               "x1": -80,
+               "y1": 19,
+               "x2": -80,
+               "y2": 70,
+               "width": 0.2
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "union",
+      "name": "Cut sketch",
+      "visible": true,
+      "params": {
+       "x": 0.0,
+       "y": 0.0,
+       "z": 19.0,
+       "rx": 0.0,
+       "ry": -0.0,
+       "rz": 0.0,
+       "color": "",
+       "alpha": 1.0,
+       "feature_order": 18,
+       "face_sketch": true
+      },
+      "children": [
+       {
+        "type": "linear_extrude",
+        "name": "Extruded Cut",
+        "visible": true,
+        "params": {
+         "height": 2.0,
+         "twist": 0.0,
+         "scale": 1.0,
+         "center": false,
+         "segments": 0,
+         "feature_order": 19,
+         "reverse": true
+        },
+        "children": [
+         {
+          "type": "regions",
+          "name": "Regions",
+          "visible": true,
+          "params": {
+           "seeds": [
+            [
+             -48.6667,
+             -80.0
+            ],
+            [
+             -118.6667,
+             -121.0
+            ],
+            [
+             -226.6667,
+             -80.0
+            ],
+            [
+             14.3333,
+             -121.0
+            ]
+           ],
+           "inside": [
+            [
+             1
+            ],
+            [
+             2
+            ],
+            [
+             0
+            ],
+            [
+             3
+            ]
+           ],
+           "constraints": [
+            {
+             "kind": "diameter",
+             "refs": [
+              "0.o"
+             ],
+             "value": 28
+            },
+            {
+             "kind": "equal",
+             "refs": [
+              "0.o",
+              "1.o"
+             ]
+            },
+            {
+             "kind": "equal",
+             "refs": [
+              "0.o",
+              "2.o"
+             ]
+            },
+            {
+             "kind": "equal",
+             "refs": [
+              "0.o",
+              "3.o"
+             ]
+            }
+           ]
+          },
+          "children": [
+           {
+            "type": "circle",
+            "name": "Circle 15",
+            "visible": true,
+            "params": {
+             "x": -222,
+             "y": -80,
+             "radius": 14.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle 16",
+            "visible": true,
+            "params": {
+             "x": -44,
+             "y": -80,
+             "radius": 14.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle 17",
+            "visible": true,
+            "params": {
+             "x": -114,
+             "y": -121,
+             "radius": 14.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           },
+           {
+            "type": "circle",
+            "name": "Circle 18",
+            "visible": true,
+            "params": {
+             "x": 19,
+             "y": -121,
+             "radius": 14.0,
+             "angle": 360.0,
+             "start_angle": 0.0,
+             "segments": 64
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}

@@ -510,19 +510,33 @@ def follow(window, group):
     best = None
     for t in tris:
         nt = normal(t)
-        if nt is None or sum(a * b for a, b in zip(nt, n0)) < 0.7:
+        if nt is None:
+            continue
+        dot = sum(a * b for a, b in zip(nt, n0))
+        if dot < 0.7:
             continue
         mid = [sum(v[i] for v in t) / 3.0 for i in range(3)]
         off = abs(sum((seed[i] - t[0][i]) * nt[i] for i in range(3)))
         d = off * 5.0 + math.dist(mid, seed)
-        if best is None or d < best[0]:
-            best = (d, nt)
+        # a face still lying in the sketch's own plane wins over any
+        # tilted facet nearer the seed (Exercise 49: a round boss
+        # standing on the face lent its facet, the plane "turned" and the
+        # upright's sketch slid 54 mm along the plate)
+        flat = dot > 1 - 1e-6 and off < 0.5
+        key = (0 if flat else 1, d)
+        if best is None or key < best[0]:
+            best = (key, nt, t)
     if best is None:
         return False
     n1 = best[1]
     centre = anchors.face_centre(tris, seed, n1)
     if centre is None:
         return False
+    # the centre ON the face's plane: a seed left a hair off it (the
+    # face it was taken from has since been cut) put the sketch there
+    t0 = best[2]
+    lift = sum((centre[i] - t0[0][i]) * n1[i] for i in range(3))
+    centre = [centre[i] - lift * n1[i] for i in range(3)]
     same = sum(a * b for a, b in zip(n1, n0)) > 1 - 1e-9 and \
         math.dist(centre, seed) < 1e-5 and \
         abs(sum((float(group.params.get(k, 0.0)) - centre[i]) * n1[i]
@@ -535,7 +549,7 @@ def follow(window, group):
     group.params.update(zip(("rx", "ry", "rz"), fs.euler_for(n1)))
     group.params.update(zip(("x", "y", "z"),
                             (round(float(v), 4) for v in target)))
-    if sum(a * b for a, b in zip(n1, n0)) <= 1 - 1e-9:
+    if sum(a * b for a, b in zip(n1, n0)) <= 1 - 1e-6:
         # the plane TURNED: shapes keep their place from the face's centre.
         # A face that only grew or shrank moves nothing: shifting by its
         # centre threw every square on it (the user: 64 -> 60 moved one
