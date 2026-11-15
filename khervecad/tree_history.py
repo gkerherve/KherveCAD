@@ -238,6 +238,10 @@ def clicked(tree, item):
     if not role:
         return False
     win = tree.window()
+    if role == "origin" and getattr(win, "_deform_state", None):
+        from . import curve_deform_panel      # Deform: the point
+        if curve_deform_panel.origin_row(win):
+            return True
     if role == "origin" and getattr(win, "_plane_tool", None):
         from . import plane_tool              # the origin as a point
         plane_tool.origin_row(win)

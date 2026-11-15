@@ -1855,6 +1855,32 @@ TOOLS = [
         }, ["node_ids"]),
     },
     {
+        "name": "deform_point",
+        "description": (
+            "SolidWorks' DEFORM, Point type: every vertex of the bodies "
+            "within `radius` mm of `point` moves along `direction` by "
+            "`distance` mm times a smooth falloff (shape minimum = a "
+            "peak, medium = a bell, maximum = a broad flat hill) — a "
+            "flat grille pushed into a dome. body_ids = nodes sharing "
+            "one parent; point = world [x, y, z] (the origin by "
+            "default), direction a vector (default +Z), reverse flips "
+            "it. The reply gives the Deform node; call it again on the "
+            "result for a second push (the video's central dimple)."
+        ),
+        "input_schema": _obj({
+            "body_ids": {"type": "array", "items": {"type": "integer"}},
+            "point": {"type": "array", "items": {"type": "number"},
+                      "minItems": 3, "maxItems": 3},
+            "direction": {"type": "array", "items": {"type": "number"},
+                          "minItems": 3, "maxItems": 3},
+            "distance": {"type": "number"},
+            "radius": {"type": "number", "exclusiveMinimum": 0},
+            "shape": {"type": "string",
+                      "enum": ["minimum", "medium", "maximum"]},
+            "reverse": {"type": "boolean"},
+        }, ["body_ids"]),
+    },
+    {
         "name": "deform_curve",
         "description": (
             "DEFORM, CURVE TO CURVE (SolidWorks' Deform): bend `body_ids` "

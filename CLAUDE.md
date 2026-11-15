@@ -4023,6 +4023,23 @@ into a new module and import.
                        (fill / update / count; the instructions tell
                        clients a grille is ONE call). Tests:
                        tests/test_fill_pattern.py (by mouse).
+  - `point_deform.py` — SolidWorks' **Deform ▸ Point** (2026-11-15, the
+                       "Deform feature" video), the second type of the
+                       Deform window (`curve_deform_panel`: Type Point /
+                       Curve to curve; Point = the Origin row of the tree,
+                       a ref point or a face in 3D for the point, Z / X / Y
+                       or a picked axis / line / face for the direction,
+                       Deform distance, radius, Shape options minimum /
+                       medium / maximum stiffness, Reverse). A baked kit
+                       (`kcad_point_deform`): vertices within radius of the
+                       point move along the direction by distance * f(d /
+                       radius), f = (1-t)^3 / (1-t^2)^2 / (1-t^3)^2 (`falloff`), after
+                       the mesh is refined (radius / 20); a vertex moves by
+                       where it is, so holes and closedness survive. A
+                       second push is a second Deform wrapped round the
+                       first. MCP `deform_point`. Surface push is not built
+                       (the video never uses it). Tests:
+                       tests/test_point_deform.py.
   - `hole_wizard.py` — SolidWorks' **Hole Wizard** (2026-10-21): first
                        button of the Features panel; a tool window (type
                        Clearance / Tapped / Counterbore / Countersink / Nut
