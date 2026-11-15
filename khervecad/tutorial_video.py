@@ -440,6 +440,137 @@ class Recorder:
             self.proc.stdin.write(img.bits().asstring(img.byteCount()))
             self.frames += 1
 
+    def explain_drawing(self, drawing, stops, zoom_to=None, glide=1.6,
+                        hold=2.2, settle=1.5):
+        """The drawing on its own, before a feature (the user: "show the
+        drawing and hover around the parts you are going to do ...
+        slower"). The whole sheet first, then a slow zoom on the area of
+        *stops* (or *zoom_to*, a pixel rect of the sheet), and the
+        pointer glides to each stop — (x, y, label) in sheet pixels —
+        rings it and shows its label while it rests there."""
+        draw = QImage(drawing) if isinstance(drawing, str) else drawing
+        draw = draw.convertToFormat(QImage.Format_ARGB32)
+        W, H = draw.width(), draw.height()
+        full = QRectF(0, 0, W, H)
+        if zoom_to is None and stops:
+            xs = [p[0] for p in stops]
+            ys = [p[1] for p in stops]
+            pad = 0.12 * W
+            zoom_to = QRectF(min(xs) - pad, min(ys) - pad,
+                             max(xs) - min(xs) + 2 * pad,
+                             max(ys) - min(ys) + 2 * pad)
+        aspect = self.w / float(self.h)
+        target = QRectF(zoom_to) if zoom_to is not None else full
+        if target.width() / target.height() < aspect:
+            grow = target.height() * aspect - target.width()
+            target.adjust(-grow / 2, 0, grow / 2, 0)
+        else:
+            grow = target.width() / aspect - target.height()
+            target.adjust(0, -grow / 2, 0, grow / 2)
+        if target.width() > full.width():
+            target = QRectF(full)
+        state = {"view": QRectF(full), "pointer": None, "ring": None,
+                 "label": None, "done": []}
+
+        def to_frame(view, x, y):
+            sc = min(self.w / view.width(), self.h / view.height())
+            ox = (self.w - view.width() * sc) / 2
+            oy = (self.h - view.height() * sc) / 2
+            return QPointF(ox + (x - view.x()) * sc,
+                           oy + (y - view.y()) * sc), sc
+
+        def paint():
+            view = state["view"]
+            img = QImage(self.w, self.h, QImage.Format_ARGB32)
+            img.fill(QColor(255, 255, 255))
+            p = QPainter(img)
+            p.setRenderHint(QPainter.Antialiasing)
+            p.setRenderHint(QPainter.SmoothPixmapTransform)
+            o, sc = to_frame(view, view.x(), view.y())
+            p.drawImage(QRectF(o.x(), o.y(), view.width() * sc,
+                               view.height() * sc), draw, view)
+            for (x, y, _l) in state["done"]:
+                q, _ = to_frame(view, x, y)
+                p.setPen(QPen(QColor(255, 140, 0, 120), 2))
+                p.setBrush(Qt.NoBrush)
+                p.drawEllipse(q, 14, 14)
+            if state["ring"] is not None:
+                x, y, k = state["ring"]
+                q, _ = to_frame(view, x, y)
+                p.setPen(QPen(QColor(255, 120, 0), 3))
+                p.setBrush(QColor(255, 140, 0, 50))
+                p.drawEllipse(q, 10 + 12 * k, 10 + 12 * k)
+            if state["label"]:
+                x, y, text = state["label"]
+                q, _ = to_frame(view, x, y)
+                f = QFont()
+                f.setPointSize(20)
+                f.setBold(True)
+                p.setFont(f)
+                r = QRectF(p.boundingRect(QRectF(0, 0, 900, 60), 0, text))
+                r = r.adjusted(-14, -8, 14, 8)
+                r.moveTopLeft(QPointF(q.x() + 30, q.y() + 26))
+                if r.right() > self.w - 10:
+                    r.moveRight(q.x() - 30)
+                if r.bottom() > self.h - 120:
+                    r.moveBottom(q.y() - 26)
+                p.setPen(Qt.NoPen)
+                p.setBrush(QColor(255, 120, 0, 235))
+                p.drawRoundedRect(r, 8, 8)
+                p.setPen(QColor("white"))
+                p.drawText(r, int(Qt.AlignCenter), text)
+            if state["pointer"] is not None:
+                save = self.pos
+                self.pos = state["pointer"].toPoint()
+                self._paint_pointer(p)
+                self.pos = save
+            if self.burn and self.caption and self.t <= self.caption_until:
+                self._paint_caption(p, self.caption)
+            p.end()
+            self.proc.stdin.write(img.bits().asstring(img.byteCount()))
+            self.frames += 1
+
+        def frames(seconds):
+            return max(1, int(seconds * self.fps))
+
+        for _ in range(frames(settle)):          # the whole sheet
+            paint()
+        n = frames(settle)
+        for i in range(1, n + 1):                # slow zoom in
+            e = i / float(n)
+            e = e * e * (3 - 2 * e)
+            v = QRectF(full.x() + (target.x() - full.x()) * e,
+                       full.y() + (target.y() - full.y()) * e,
+                       full.width() + (target.width() - full.width()) * e,
+                       full.height() + (target.height() - full.height())
+                       * e)
+            state["view"] = v
+            paint()
+        start = (target.x() + target.width() * 0.5,
+                 target.y() + target.height() * 0.85)
+        cur = start
+        for (x, y, label) in stops:
+            n = frames(glide)
+            for i in range(1, n + 1):
+                e = i / float(n)
+                e = e * e * (3 - 2 * e)
+                px = cur[0] + (x - cur[0]) * e
+                py = cur[1] + (y - cur[1]) * e
+                state["pointer"], _ = to_frame(state["view"], px, py)
+                paint()
+            cur = (x, y)
+            state["label"] = (x, y, label)
+            n = frames(hold)
+            for i in range(n):
+                state["ring"] = (x, y, min(1.0, i / max(1.0, n * 0.3)))
+                paint()
+            state["ring"] = None
+            state["label"] = None
+            state["done"].append((x, y, label))
+        if self.t < self.voice_until:            # let the words finish
+            for _ in range(frames(self.voice_until - self.t)):
+                paint()
+
     # ----------------------------------------------------------- mouse
     def to_win(self, widget, point):
         return widget.mapTo(self.win, QPoint(point)) \

@@ -238,8 +238,11 @@ for each Smart Dimension (typed on film into a real input box),
 `rec.chapter` per feature. Print sizes / volume at the end and compare
 with steps.md. The film OPENS with the finished part turning beside
 its 2D drawing (`rec.showcase`) and keeps the drawing beside the window
-the whole time (`Recorder(side=drawing.png)`): build the part by MCP
-first, `export_drawing` it, then new_document and film. Run `PYTHONPATH=. .venv/bin/python <script>` from the
+NO drawing on the side: before each feature, `rec.explain_drawing` shows
+the Blueprint sheet, zooms slowly on that feature and rests the pointer on
+each size it uses (the exercise's make_drawing.py builds the sheet with
+EVERY dimension and radius and writes the view map json). Build the part
+by MCP first, make the drawing, then new_document and film. Run `PYTHONPATH=. .venv/bin/python <script>` from the
 repo; it writes `<name>.mp4` (voice = macOS `say`), `<name>.srt` and
 `<name> narration.txt` (the script, for another TTS). Check a contact
 sheet (`ffmpeg -vf "fps=1/5,scale=640:-1,tile=4x6"`). A step that will

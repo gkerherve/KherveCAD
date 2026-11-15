@@ -4017,7 +4017,17 @@ into a new module and import.
                        drawing)` opens the film with the finished part
                        turning beside its drawing — build it first by
                        MCP, export the drawing, then new_document and
-                       film the mouse build.
+                       film the mouse build. Later the same day (the user: no
+                       drawing on the side; before each step SHOW the
+                       drawing, slowly, pointer on the sizes used):
+                       `explain_drawing(png, stops)` = the whole sheet,
+                       a slow zoom on the stops, the pointer resting on
+                       each NUMBER with an orange label. Stops are model
+                       points mapped through the Blueprint state's view
+                       rects (the exercise's make_drawing.py writes
+                       `<drawing>.json`). Voice: macOS `say`; a Premium
+                       voice (System Settings ▸ Accessibility ▸ Spoken
+                       Content ▸ Manage Voices) is used by name.
   - `fill_pattern.py` / `fill_pattern_ui.py` — SolidWorks' **Fill Pattern**
                        (2026-11-15, the "Deform feature" video): click a
                        flat face (Features tab, beside Linear Pattern), a
