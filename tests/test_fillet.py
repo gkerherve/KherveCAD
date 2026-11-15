@@ -547,3 +547,60 @@ def test_a_picked_face_follows_a_rib_made_longer(app):
         got = fillet.baked(fil, env)
         assert not got["missing"], end
         assert got["cuts"] or got["adds"]
+
+
+def _fins(rows) -> int:
+    """Faces folded back on each other: hair-thin fins a cut left."""
+    return sum(1 for e in fillet.crease_edges([r[0] for r in rows])
+               if e.angle > 177)
+
+
+def test_a_tilted_face_on_a_faceted_side_leaves_no_fins(app):
+    """Exercise 8's clevis: the big faces lean 2 degrees over the R24
+    rim's facets, and the mitre put the cutter's leg off each ridge —
+    a fin stood at every facet joint."""
+    m = DocumentModel()
+    m.set_global_fn(False)
+    d = m.add_node("difference", {})
+    ext = m.add_node("linear_extrude", dict(height=10), parent=d)
+    m.add_node("circle", dict(radius=20, segments=48), parent=ext)
+    tr = m.add_node("translate", dict(x=0, y=0, z=8), parent=d)
+    ro = m.add_node("rotate", dict(x=2, y=0, z=0), parent=tr)
+    up = m.add_node("translate", dict(x=0, y=0, z=50), parent=ro)
+    m.add_node("cube", dict(width=100, depth=100, height=100,
+                            center=True), parent=up)
+    f = m.wrap_nodes([d], "fillet")
+    f.params.update(radius=2)
+    s, c = math.sin(math.radians(2)), math.cos(math.radians(2))
+    f.params["faces"] = [[0, 0, 8, 0, -s, c]]
+    rows = fillet.tess(f, {}, None, set(), False)
+    assert fillet.baked(f, {})["chains"] == 1
+    assert _fins(rows) == 0
+
+
+def test_a_picked_face_rounds_on_round_a_tangent_end(app):
+    """SolidWorks' tangent propagation: the clevis arms' flat faces stop
+    where their round ends begin, and the fillet stopped there square."""
+    m = DocumentModel()
+    m.set_global_fn(False)
+    rot = m.add_node("rotate", dict(x=90, y=0, z=0))
+    ext = m.add_node("linear_extrude", dict(height=10), parent=rot)
+    end = [[30 + 3 * math.sin(math.radians(a)),
+            3 - 3 * math.cos(math.radians(a))] for a in range(15, 180, 15)]
+    m.add_node("polygon", dict(points=[[0, 0], [30, 0]] + end +
+                               [[30, 6], [0, 6]]), parent=ext)
+    tris = mesh.tessellate(rot)
+    result = fillet.compute(tris, [], 1, faces=[[15, -5, 6, 0, 0, 1]])
+    reach = max(v[0] for body in result["cuts"] for t in body for v in t)
+    assert reach > 32.9
+
+
+def test_a_picked_face_does_not_run_on_round_a_turn(app):
+    """...but only along near-tangent creases: at 35 degrees the clevis
+    face's rim ran on under the boss and the cutter folded there."""
+    edges = [fillet.Edge((0, 0, 0), (10, 0, 0), (0, 0, 1), (0, -1, 0),
+                         90, True),
+             fillet.Edge((10, 0, 0), (20, math.tan(math.radians(24)) * 10,
+                                      0), (0, 0, 1), (0, -1, 0), 90, True)]
+    run = fillet.chain(edges, edges[0], fillet.FACE_TURN)
+    assert len(run["edges"]) == 1

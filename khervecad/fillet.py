@@ -337,13 +337,71 @@ def _area2d(pts):
 
 
 # ------------------------------------------------------------- strip
+#: a picked FACE's rim carries on along creases turning less than this
+#: (degrees) — a curved end's facets, not another face's edge met at an
+#: angle (Exercise 8: at 35 the rim ran on under the clevis's boss)
+FACE_TURN = 20.0
+
+#: faces turning less than this from one crease to the next are one
+#: faceted surface, whose normals `smoothed` averages
+SMOOTH_TURN = 20.0
+
+
+def smoothed(run: dict, radius: float) -> list:
+    """The run's edges with each face normal averaged over the edges
+    within *radius* along the run, as long as the faces turn less than
+    `SMOOTH_TURN` from this edge's. A curved side is facets, and where
+    two features cut the same arc at different segment counts its
+    facets ZIG-ZAG (Exercise 8's clevis rim: normals alternating 1-8°
+    back and forth): a profile per facet put a notch in the fillet at
+    every joint. A real corner (a box's rim) turns too far to blend."""
+    edges = run["edges"]
+    n = len(edges)
+    if n < 2:
+        return edges
+    lens = [e.length for e in edges]
+    s = [0.0]
+    for x in lens[:-1]:
+        s.append(s[-1] + x)
+    mids = [s[i] + lens[i] / 2 for i in range(n)]
+    total = s[-1] + lens[-1]
+    cos_max = math.cos(math.radians(SMOOTH_TURN))
+    closed = run["closed"]
+    out = []
+    for i, e in enumerate(edges):
+        sum_l, sum_r = _mul(e.nl, lens[i]), _mul(e.nr, lens[i])
+        for step in (1, -1):
+            j = i
+            for _k in range(n - 1):
+                j += step
+                if closed:
+                    j %= n
+                elif not 0 <= j < n:
+                    break
+                if j == i:
+                    break
+                d = abs(mids[j] - mids[i])
+                if closed:
+                    d = min(d, total - d)
+                if d > radius:
+                    break
+                o = edges[j]
+                if _dot(o.nl, e.nl) < cos_max or _dot(o.nr, e.nr) < cos_max:
+                    break
+                sum_l = _add(sum_l, _mul(o.nl, lens[j]))
+                sum_r = _add(sum_r, _mul(o.nr, lens[j]))
+        out.append(Edge(e.a, e.b, _unit(sum_l), _unit(sum_r), e.angle,
+                        e.convex, e.il, e.ir))
+    return out
+
+
 def strip(run: dict, radius: float, kind: str, detail: int,
           section=None) -> list:
     """Counter-clockwise triangles of the cutter (or filler) along a
     chain: one ring per chain vertex, mitred between its two edges,
     walls between rings, caps at open ends. *section(edge)* replaces
     `profile` (bevel.py's superellipse profiles)."""
-    edges = run["edges"]
+    edges = smoothed(run, radius)
     profiles = [section(e) if section else
                 profile(e, radius, kind, detail) for e in edges]
     m = len(profiles[0][2])
@@ -354,42 +412,59 @@ def strip(run: dict, radius: float, kind: str, detail: int,
         u, v, pts = profiles[i]
         return [_add(_mul(u, x), _mul(v, y)) for x, y in pts]
 
-    def mitre(o0, o1, t0, t1):
-        """The corner ring: where the two edges' profiles meet. Only the
-        part of each offset lying in the corner's plane (the plane of
-        t0 and t1) is bent by the mitre; the part along the corner's
-        axis (t0 x t1 — down a box's side, for its top rim) is the same
-        for both and kept as it is. Summing whole offsets doubled that
-        part: a face's rim cut twice as deep down the sides."""
+    def mitre(o0, o1, t0, t1, room=float("inf")):
+        """The corner ring: where the two edges' profiles meet — each
+        profile point slid along its own edge until the two lines meet
+        (summing whole offsets once cut a face's rim twice as deep down
+        the sides). *room* is how far a point may slide before it passes
+        a neighbouring ring."""
         k = 1.0 + _dot(t0, t1)
         if k < 0.2:                        # a hairpin: just average
             return [_mul(_add(a, b), 0.5) for a, b in zip(o0, o1)]
-        axis = _cross(t0, t1)
-        if _len(axis) < 1e-9:              # straight on
-            return [_mul(_add(a, b), 0.5) for a, b in zip(o0, o1)]
-        axis = _unit(axis)
+        b = _dot(t0, t1)
+        reach = max(max(_len(p) for p in o0), max(_len(p) for p in o1))
+        if 1.0 - b * b < 1e-4:             # straight on
+            return [_mul(_add(a, c), 0.5) for a, c in zip(o0, o1)]
         out = []
-        for a, b in zip(o0, o1):
-            ca, cb = _dot(a, axis), _dot(b, axis)
-            ia = _sub(a, _mul(axis, ca))
-            ib = _sub(b, _mul(axis, cb))
-            out.append(_add(_mul(axis, (ca + cb) / 2.0),
-                            _mul(_add(ia, ib), 1.0 / k)))
+        for p0, p1 in zip(o0, o1):
+            # where the two offset lines p0 + l t0 and p1 + m t1 meet
+            # (the middle of their closest approach): on a faceted side
+            # the two profiles' points lie in the two facets, and the
+            # lines meet ON the ridge between them. Bending only the
+            # in-plane parts put a tapered face's leg 0.05 mm off the
+            # ridge, and a fin stood at every facet joint (Exercise 8's
+            # clevis rim).
+            d = _sub(p1, p0)
+            e, f = _dot(t0, d), _dot(t1, d)
+            den = 1.0 - b * b
+            lam = (e - b * f) / den
+            mu = (b * e - f) / den
+            if max(abs(lam), abs(mu)) > min(4.0 * reach, room) + 1e-9:
+                # lines all but parallel, or meeting past a neighbouring
+                # ring (a zig-zag rim of 0.06 mm steps): the strip would
+                # fold back on itself
+                out.append(_mul(_add(p0, p1), 0.5))
+                continue
+            out.append(_mul(_add(_add(p0, _mul(t0, lam)),
+                                 _add(p1, _mul(t1, mu))), 0.5))
         return out
 
     dirs = [e.direction for e in edges]
+    lens = [e.length for e in edges]
     offs = [offsets(i) for i in range(len(edges))]
     rings = []
     n = len(edges)
     if run["closed"]:
         for i in range(n):
             prev = (i - 1) % n
-            o = mitre(offs[prev], offs[i], dirs[prev], dirs[i])
+            o = mitre(offs[prev], offs[i], dirs[prev], dirs[i],
+                      min(lens[prev], lens[i]))
             rings.append([_add(edges[i].a, p) for p in o])
     else:
         rings.append([_add(edges[0].a, p) for p in offs[0]])
         for i in range(1, n):
-            o = mitre(offs[i - 1], offs[i], dirs[i - 1], dirs[i])
+            o = mitre(offs[i - 1], offs[i], dirs[i - 1], dirs[i],
+                      min(lens[i - 1], lens[i]))
             rings.append([_add(edges[i].a, p) for p in o])
         rings.append([_add(edges[-1].b, p) for p in offs[-1]])
     tris = []
@@ -658,6 +733,19 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     # 1. every edge to round: each picked edge with its tangent run (one
     #    click takes a cylinder's whole rim)
     chosen = {}
+    by_key = {}
+    for y in edges:
+        by_key.setdefault(frozenset((_vkey(y.a), _vkey(y.b))), []).append(y)
+
+    def take_run(e, max_turn=MAX_TURN):
+        """*e* and the tangent-continuous creases running on from it
+        (SolidWorks' tangent propagation): a face's rim carries on round
+        a rounded end the face itself does not include (Exercise 8's
+        clevis arms stopped square where their round ends began)."""
+        for x in chain(edges, e, max_turn)["edges"]:
+            for y in by_key.get(frozenset((_vkey(x.a), _vkey(x.b))), ()):
+                chosen[id(y)] = y
+
     for seed in seeds:
         try:
             values = [float(v) for v in seed]
@@ -697,11 +785,7 @@ def compute(tris, seeds, radius: float, kind: str = "round",
         pair = _pair(names, e)
         if named is not None and pair and key not in named:
             named[key] = pair
-        for x in chain(edges, e)["edges"]:
-            key = frozenset((_vkey(x.a), _vkey(x.b)))
-            for y in edges:
-                if frozenset((_vkey(y.a), _vkey(y.b))) == key:
-                    chosen[id(y)] = y
+        take_run(e)
     for row in faces or ():
         try:
             values = [float(v) for v in row]
@@ -717,7 +801,8 @@ def compute(tris, seeds, radius: float, kind: str = "round",
                     if (y.il in region) != (y.ir in region)]
             if hits:
                 for y in hits:
-                    chosen[id(y)] = y
+                    if id(y) not in chosen:
+                        take_run(y, FACE_TURN)
                 continue
         known = (places or {}).get(key)
         probe = values[:6] + list(known) if known and len(values) == 6 \
@@ -739,7 +824,8 @@ def compute(tris, seeds, radius: float, kind: str = "round",
                     names[start] is not None:
                 named[key] = [names[start]]
         for y in found:
-            chosen[id(y)] = y
+            if id(y) not in chosen:
+                take_run(y, FACE_TURN)
     picked = list(chosen.values())
     # 2. join them: where exactly two chosen edges of one kind meet (a
     #    face's rim turning a corner, the L's inside corner) the run

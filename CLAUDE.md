@@ -5871,6 +5871,19 @@ into a new module and import.
                        bends only the part of each offset in the corner's
                        plane; the part along the corner axis was summed
                        and cut twice as deep down the sides.
+  - Fillet on faceted rims (2026-11-15, Exercise 8's clevis R2 face
+                       fillet): a picked face's rim now carries on along
+                       tangent creases (`take_run`, turns under
+                       `FACE_TURN` 20° — round an arm's rounded end, never
+                       under a boss met at 24°); `smoothed` averages each
+                       run edge's face normals over one radius (faces
+                       turning < `SMOOTH_TURN`), and the mitre is where
+                       the two offset lines MEET (it bent only in-plane
+                       parts, which put a 2°-tilted face's leg off every
+                       facet ridge: a fin per joint). Left: a side made of
+                       two facetings of one arc laid over each other (the
+                       clevis's +x arch) still leaves hair-thin fins along
+                       the tangent line.
   - Fillet FACES (2026-10-21, the user cut holes into a filleted face):
                        a face click stores `params["faces"]` rows [x, y, z,
                        nx, ny, nz] (`fillet_pick.face_from_pick`), not its
