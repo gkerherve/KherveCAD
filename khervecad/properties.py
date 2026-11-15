@@ -581,22 +581,34 @@ class PropertiesPanel(QScrollArea):
         self._updating = False
 
     # --------------------------------------------------------- events
+    def _live(self):
+        """False once the window is closing and the model is gone: an
+        editor that finishes then (focus out as the window closes) must
+        not touch it (2026-11-15: "DocumentModel has been deleted")."""
+        try:
+            from PyQt5 import sip
+            return not sip.isdeleted(self.model)
+        except Exception:
+            return True
+
     def _set_param(self, key, value):
-        if not self._updating and self.node is not None:
+        if not self._updating and self.node is not None and self._live():
             self.model.set_param(self.node, key, value)
 
     def _set_construction(self, on):
         if not self._updating and self.node is not None and \
+                self._live() and \
                 (self.node.params.get("modifier") == "%") != bool(on):
             self.model.set_modifier(self.node, "%" if on else "")
 
     def _set_slot(self, key, value):
-        if not self._updating and self.node is not None:
+        if not self._updating and self.node is not None and self._live():
             from . import slot2d
             slot2d.write(self.model, self.node, key, value)
 
     def _rename(self, name):
-        if not self._updating and self.node is not None and name:
+        if not self._updating and self.node is not None and name and \
+                self._live():
             self.model.rename(self.node, name)
 
     def _node_changed(self, node):

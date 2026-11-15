@@ -47,8 +47,21 @@ ID_PREFIX = "user_"
 def folder() -> Path:
     """Where the user's library lives (not created until a save)."""
     env = os.environ.get("KHERVECAD_USER_LIBRARY")
-    return Path(env) if env else Path.home() / "Documents" / \
-        "KherveCAD Library"
+    if env:
+        return Path(env)
+    if os.environ.get("QT_QPA_PLATFORM", "").lower() == "offscreen":
+        # an offscreen run (a test, a filming / screenshot script) has no
+        # user: its autosaves and whole-design saves must not land in the
+        # real library (2026-11-15) — one scratch folder per process
+        global _SCRATCH
+        if _SCRATCH is None:
+            import tempfile
+            _SCRATCH = Path(tempfile.mkdtemp(prefix="kcad-offscreen-lib-"))
+        return _SCRATCH
+    return Path.home() / "Documents" / "KherveCAD Library"
+
+
+_SCRATCH = None
 
 
 def slug(text: str) -> str:
