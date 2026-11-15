@@ -1688,6 +1688,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_fill_pattern(self, params) -> dict:
+        from . import fill_pattern
+        try:
+            return fill_pattern.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+
     def _t_sketch_modify(self, params) -> dict:
         from . import sketch_modify
         try:
@@ -1720,6 +1727,27 @@ class McpToolExecutor:
         if node is None:
             raise ToolError("the bodies must share one parent")
         return {"deform_id": node.id, "name": node.name}
+
+    def _t_deform_point(self, params) -> dict:
+        from . import point_deform
+        ids = {n.id: n for n in self._w.model.root.walk()}
+        try:
+            bodies = [ids[i] for i in params["body_ids"]]
+        except KeyError as exc:
+            raise ToolError("no node with id %s" % exc)
+        shape = params.get("shape", "medium")
+        if shape not in point_deform.SHAPES:
+            raise ToolError("shape must be one of %s" % point_deform.SHAPES)
+        node = point_deform.make(
+            self._w.model, bodies, params.get("point") or [0, 0, 0],
+            params.get("direction") or [0, 0, 1],
+            float(params.get("distance", 10.0)),
+            float(params.get("radius", 30.0)), shape,
+            bool(params.get("reverse", False)))
+        if node is None:
+            raise ToolError("the bodies must share one parent")
+        return {"deform_id": node.id, "name": node.name,
+                "params": node.params}
 
     def _t_pattern_feature(self, params) -> dict:
         from . import feature_mcp

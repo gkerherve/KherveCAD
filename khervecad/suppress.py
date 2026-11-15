@@ -80,6 +80,7 @@ def keep_of(node) -> str:
         return "first"
     if node.type in ("linear_extrude", "rotate_extrude", "sweep",
                      "section_loft") or node.params.get("hole_wizard") \
+            or node.params.get("fill_pattern") \
             or node.params.get("face_sketch"):
         # a feature that makes its own solid: off, nothing of it shows
         # (a switched-off extrude passed its flat sketch on, into the
@@ -157,6 +158,25 @@ def roll_back_to(model, node):
             parent.params[ROLLED] = True  # applied on top: off as well
         child = parent
     model.structure_changed.emit()
+
+
+#: wrappers whose children are the part they finish: a feature added
+#: while one is rolled back belongs inside, before it
+_FINISHES = ("fillet",)
+
+
+def insertion_point(target):
+    """Where a new feature goes under *target*: inside the rolled-back
+    Fillet that is its last child (and so on down), else *target*."""
+    while True:
+        kids = target.children
+        last = kids[-1] if kids else None
+        if last is not None and last.type in _FINISHES and \
+                last.params.get(ROLLED) and \
+                last.params.get(ROLLBACK) is None:
+            target = last
+        else:
+            return target
 
 
 def any_rollback(root) -> bool:

@@ -16,6 +16,8 @@ the Free Software Foundation, either version 3 of the License, or
 from . import language
 
 BOXES = ("initial", "target", "bodies")
+TYPES = (("point", "Point"), ("curve", "Curve to curve"))
+AXES = {"z": (0.0, 0.0, 1.0), "x": (1.0, 0.0, 0.0), "y": (0.0, 1.0, 0.0)}
 
 
 def curve_lines(nodes):
@@ -68,15 +70,41 @@ def start(window):
     tr = language.tr
     pre = [n for n in window.builder.active_tree().selected_nodes()
            if n is not window.model.root and n.type != "line"]
-    st = window._deform_state = dict(initial=[], target=[], bodies=pre,
-                                     active="initial", quiet=False)
+    st = window._deform_state = dict(
+        initial=[], target=[], bodies=pre, active="initial", quiet=False,
+        type="curve", point=None, point_text="", axis="z", axis_vec=None,
+        axis_text="", distance=10.0, radius=30.0, shape="medium",
+        reverse=False)
     panel = ToolPanel(window.view3d, tr("Deform"),
                       on_ok=lambda: ok(window),
                       on_cancel=lambda: close(window))
-    panel.hint(tr("Curve to curve: click the INITIAL curve (a sketch or "
-                  "its construction line) in the tree, then the TARGET "
-                  "curve, then the bodies to bend. The initial curve's "
-                  "ends land on the target's ends."))
+    panel.section(tr("Deform type"))
+    panel.choice("type", tr("Type"), [(k, tr(t)) for k, t in TYPES],
+                 st["type"], lambda v: set_type(window, v))
+    panel.hint(tr("Point: the Origin row of the tree (or a face), the "
+                  "direction, then the bodies. Curve to curve: the initial "
+                  "curve, the target curve, then the bodies."))
+    panel.selection("point", tr("Deform point"),
+                    on_activate=lambda k: activate(window, k))
+    panel.choice("axis", tr("Direction"),
+                 [("z", tr("Z axis (vertical)")), ("x", tr("X axis")),
+                  ("y", tr("Y axis")), ("picked", tr("Picked axis / face"))],
+                 st["axis"], lambda v: _set(window, "axis", v))
+    panel.selection("axis", tr("Deform direction (axis, line or face)"),
+                    on_activate=lambda k: activate(window, k))
+    panel.number("distance", tr("Deform distance"), st["distance"],
+                 lambda v: _set(window, "distance", float(v)),
+                 minimum=-10000.0, maximum=10000.0, step=1.0)
+    panel.number("radius", tr("Deform radius"), st["radius"],
+                 lambda v: _set(window, "radius", float(v)),
+                 minimum=0.1, maximum=10000.0, step=1.0)
+    panel.choice("shape", tr("Shape options"),
+                 [("minimum", tr("Minimum stiffness")),
+                  ("medium", tr("Medium")),
+                  ("maximum", tr("Maximum stiffness"))], st["shape"],
+                 lambda v: _set(window, "shape", v))
+    panel.check("reverse", tr("Reverse direction"), st["reverse"],
+                lambda v: _set(window, "reverse", bool(v)))
     panel.selection("initial", tr("Initial curve"),
                     on_activate=lambda k: activate(window, k))
     panel.selection("target", tr("Target curve"),
@@ -88,8 +116,93 @@ def start(window):
     _hook(window, True)
     refresh(window)
     panel.open()
-    activate(window, "initial")
+    set_type(window, "curve")
     return panel
+
+
+def set_type(window, kind):
+    """Point or Curve to curve: the boxes that belong to the type show."""
+    st, panel = getattr(window, "_deform_state", None), _panel(window)
+    if not st or panel is None:
+        return
+    st["type"] = kind
+    panel.set_value("type", kind)
+    point = kind == "point"
+    panel.boxes["point"].setVisible(point)
+    for key in ("initial", "target"):
+        panel.boxes[key].setVisible(not point)
+    for key in ("axis", "distance", "radius", "shape", "reverse"):
+        panel.show_row(key, point)
+    panel.boxes["axis"].setVisible(point and st["axis"] == "picked")
+    refresh(window)
+    activate(window, "point" if point else "initial")
+    _arm_pick(window)
+
+
+def _set(window, key, value):
+    st = getattr(window, "_deform_state", None)
+    if not st:
+        return
+    st[key] = value
+    if key == "axis":
+        panel = _panel(window)
+        panel.boxes["axis"].setVisible(value == "picked")
+        if value == "picked":
+            activate(window, "axis")
+    refresh(window)
+
+
+def origin_row(window):
+    """The tree's Origin row clicked: the deform point (True when the
+    window took it)."""
+    st = getattr(window, "_deform_state", None)
+    if not st or st["type"] != "point":
+        return False
+    st["point"], st["point_text"] = (0.0, 0.0, 0.0), "Origin"
+    refresh(window)
+    if not st["bodies"]:
+        activate(window, "bodies")
+    return True
+
+
+def _arm_pick(window):
+    """Point type: a face clicked in 3D gives the point (and, in the
+    direction box, its normal)."""
+    st = getattr(window, "_deform_state", None)
+    view = window.view3d
+    if getattr(view, "_pick_cb", None) is not None:
+        view._pick_cb = None
+        view._end_pick_mode()
+    if not st or st["type"] != "point":
+        return
+    from . import meshedit_ui
+    parts = meshedit_ui._parts(window) or []
+    if not parts:
+        return
+
+    def picked(desc, node=None):
+        if getattr(window, "_deform_state", None) is not st:
+            return
+        if desc is not None and desc.get("pos") is not None:
+            if st["active"] == "axis" and desc.get("kind") == "face":
+                st["axis"], st["axis_vec"] = "picked", tuple(desc["dir"])
+                st["axis_text"] = "face normal"
+                _panel(window).set_value("axis", "picked")
+                _panel(window).boxes["axis"].setVisible(True)
+            else:
+                st["point"] = tuple(float(c) for c in desc["pos"])
+                st["point_text"] = "(%.1f, %.1f, %.1f)" % st["point"]
+            refresh(window)
+            if st["point"] is not None and not st["bodies"]:
+                activate(window, "bodies")
+        from PyQt5.QtCore import QTimer
+        if getattr(window, "_deform_state", None) is st:
+            QTimer.singleShot(0, lambda: _arm_pick(window))
+
+    view.start_pick(picked, groups=parts, done=False,
+                    banner=language.tr(
+                        "Deform: click a face for the point (or its "
+                        "direction) · OK in the window deforms"))
 
 
 def activate(window, key):
@@ -113,8 +226,17 @@ def refresh(window):
     empty = language.tr("Click it in the tree")
     for key in BOXES:
         panel.boxes[key].set_text(_names(st[key]) or empty)
-    panel.set_ok_enabled(bool(st["initial"] and st["target"]
-                              and st["bodies"]))
+    panel.boxes["point"].set_text(st["point_text"] or language.tr(
+        "Click Origin in the tree, a point, or a face in 3D"))
+    panel.boxes["axis"].set_text(st["axis_text"] or language.tr(
+        "Click an axis or line in the tree, or a face in 3D"))
+    if st["type"] == "point":
+        panel.set_ok_enabled(bool(st["point"] is not None and st["bodies"]
+                                  and (st["axis"] != "picked"
+                                       or st["axis_vec"] is not None)))
+    else:
+        panel.set_ok_enabled(bool(st["initial"] and st["target"]
+                                  and st["bodies"]))
 
 
 def tree_selected(window, nodes):
@@ -127,6 +249,10 @@ def tree_selected(window, nodes):
     if not nodes:
         return
     key = st["active"]
+    if st["type"] == "point":
+        return _point_selected(window, st, nodes, key)
+    if key in ("point", "axis"):
+        return
     if key == "bodies":
         nodes = [n for n in nodes if n.type != "line"]
     st[key] = list(nodes)
@@ -136,11 +262,73 @@ def tree_selected(window, nodes):
         activate(window, nxt)
 
 
+def _point_selected(window, st, nodes, key):
+    """Point type: the tree's selection fills the active box — a
+    reference point, a reference axis / sketch line, or the bodies."""
+    if key == "point":
+        pts = [n for n in nodes if n.type == "ref_point"]
+        if not pts:
+            return
+        p = pts[-1].params
+        st["point"] = (float(p.get("x", 0)), float(p.get("y", 0)),
+                       float(p.get("z", 0)))
+        st["point_text"] = pts[-1].name
+        refresh(window)
+        activate(window, "axis" if st["axis"] == "picked" else "bodies")
+    elif key == "axis":
+        vec = None
+        for n in nodes:
+            if n.type == "ref_axis":
+                p = n.params
+                vec = (float(p.get("dx", 0)), float(p.get("dy", 0)),
+                       float(p.get("dz", 1)))
+            elif n.type == "line":
+                from . import mesh
+                m = mesh.ancestor_matrix(n)
+                a = mesh.mat_apply(m, (float(n.params.get("x1", 0)),
+                                       float(n.params.get("y1", 0)), 0.0))
+                b = mesh.mat_apply(m, (float(n.params.get("x2", 0)),
+                                       float(n.params.get("y2", 0)), 0.0))
+                vec = tuple(b[i] - a[i] for i in range(3))
+            if vec is not None:
+                st["axis"], st["axis_vec"] = "picked", vec
+                st["axis_text"] = n.name
+                _panel(window).set_value("axis", "picked")
+                break
+        if vec is None:
+            return
+        refresh(window)
+        activate(window, "bodies")
+    else:
+        bodies = [n for n in nodes if n.type not in ("line", "ref_point",
+                                                      "ref_axis")]
+        if bodies:
+            st["bodies"] = bodies
+            refresh(window)
+
+
 def ok(window):
     """Make the Deform; the node, or None (a curve that does not chain
     says so and the window stays)."""
-    from . import curve_deform
+    from . import curve_deform, point_deform
     st = getattr(window, "_deform_state", None)
+    if st and st["type"] == "point":
+        if st["point"] is None or not st["bodies"]:
+            return None
+        vec = AXES[st["axis"]] if st["axis"] != "picked" else st["axis_vec"]
+        bodies = list(st["bodies"])
+        parent = bodies[0].parent
+        bodies = [b for b in bodies if b.parent is parent]
+        args = (st["point"], vec, st["distance"], st["radius"],
+                st["shape"], st["reverse"])
+        close(window)
+        node = point_deform.make(window.model, bodies, *args)
+        if node is not None:
+            window.builder.active_tree().select_nodes([node])
+            window.statusBar().showMessage(language.tr(
+                "Deformed about the point — distance, radius and shape "
+                "are in Properties."), 7000)
+        return node
     if not st or not (st["initial"] and st["target"] and st["bodies"]):
         return None
     init, targ = curve_of(st["initial"]), curve_of(st["target"])
@@ -169,6 +357,10 @@ def close(window):
     window._deform_state = None
     window._deform_panel = None
     _hook(window, False)
+    view = window.view3d
+    if getattr(view, "_pick_cb", None) is not None:
+        view._pick_cb = None
+        view._end_pick_mode()
     if panel is not None:
         panel.hide()
         panel.deleteLater()

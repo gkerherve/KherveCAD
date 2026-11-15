@@ -468,6 +468,11 @@ hole_wizard call: probe_surface for the face's point + normal, then \
 hole_wizard with the points, type, size (ISO M1-M64 or inch UNC / UNF like '1/4-20 UNC') and end (Through all / \
 Blind) — never hand-build a cylinder cut for a standard hole.
 
+Perforated faces — a grille, vent or hole field is ONE fill_pattern call: \
+probe_surface for the face's point + normal, then fill_pattern with the \
+layout (circular / square / perforation), spacing, margin, direction and \
+seed shape; it answers the instance count (action count only counts).
+
 Feature history and families, SolidWorks style — suppress switches a \
 feature off without deleting it (or rolls the history back after a node); \
 configurations stores named sets of the variables ('M6' / 'M8') and \

@@ -65,7 +65,8 @@ def _flat(node):
 def _tool(node):
     """What a feature's Difference cuts with: its sketch, a Hole Wizard
     feature, or one of them carried into the part's frame."""
-    if is_sketch_group(node) or node.params.get("hole_wizard"):
+    if is_sketch_group(node) or node.params.get("hole_wizard") or \
+            node.params.get("fill_pattern"):
         return True
     return node.type == "multmatrix" and bool(node.children) and \
         all(_tool(c) for c in node.children)
@@ -189,7 +190,9 @@ def features(model, scope=None):
         out = []
         for n in ordered(nodes):
             if n.type in ("union", "variables") and not \
-                    n.params.get("hole_wizard") and not is_sketch_group(n):
+                    n.params.get("hole_wizard") and \
+                    not n.params.get("fill_pattern") and \
+                    not is_sketch_group(n):
                 out.extend(walk(n.children))
             elif n.type not in _SCOPE:
                 out.append(n)

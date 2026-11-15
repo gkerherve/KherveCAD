@@ -238,6 +238,10 @@ def clicked(tree, item):
     if not role:
         return False
     win = tree.window()
+    if role == "origin" and getattr(win, "_deform_state", None):
+        from . import curve_deform_panel      # Deform: the point
+        if curve_deform_panel.origin_row(win):
+            return True
     if role == "origin" and getattr(win, "_plane_tool", None):
         from . import plane_tool              # the origin as a point
         plane_tool.origin_row(win)
@@ -356,7 +360,7 @@ def _features(tree, node, parent_item, selected, counts):
     """Rows for *node*: what it holds first (earlier features), then the
     node itself with its sketch under it."""
     from . import feature_list
-    if node.params.get("hole_wizard"):
+    if node.params.get("hole_wizard") or node.params.get("fill_pattern"):
         _row(tree, node, parent_item, selected, node.name)
         return
     if feature_list.is_sketch_group(node):

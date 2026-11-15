@@ -3996,6 +3996,50 @@ into a new module and import.
                        when centred), a curved arrow at the sweep's end
                        sets `angle`; readout, Ctrl snaps to the grid / 15°,
                        Esc puts a drag back or ends the tool.
+  - `fill_pattern.py` / `fill_pattern_ui.py` — SolidWorks' **Fill Pattern**
+                       (2026-11-15, the "Deform feature" video): click a
+                       flat face (Features tab, beside Linear Pattern), a
+                       ToolPanel (face box, direction box fed by a sketch
+                       line clicked in the tree, Layout Circular / Square /
+                       Perforation, Loop spacing, Instance spacing, Margin,
+                       direction angle + Reverse, seed Square / Circle /
+                       Diamond / Polygon + size / rotation, Through all /
+                       Blind) fills it LIVE (count shown), OK keeps, Cancel
+                       / Esc removes. ONE feature: a Group "Fill Pattern
+                       (circular, 181)" (`params["fill_pattern"]` = the
+                       spec incl. the face seed + normal) cut by a
+                       Difference, holding translate · rotate ·
+                       linear_extrude · ONE polygon with a path per
+                       instance (plain OpenSCAD). Circular rule read off
+                       the video's 181 squares on a Ø80 face: the centre,
+                       then a loop every loop_spacing holding the next EVEN
+                       number with arc <= spacing (6, 14, 20, 26, 32, 38,
+                       44; the first loop a hexagon), first instance along
+                       the direction; an instance stays where its seed is
+                       wholly inside the face offset by the margin
+                       (Manifold `offset`). The face is found again on the
+                       part (`refresh` from `_model_edited`, guarded by
+                       `_BUSY`, as the holes follow). MCP `fill_pattern`
+                       (fill / update / count; the instructions tell
+                       clients a grille is ONE call). Tests:
+                       tests/test_fill_pattern.py (by mouse).
+  - `point_deform.py` — SolidWorks' **Deform ▸ Point** (2026-11-15, the
+                       "Deform feature" video), the second type of the
+                       Deform window (`curve_deform_panel`: Type Point /
+                       Curve to curve; Point = the Origin row of the tree,
+                       a ref point or a face in 3D for the point, Z / X / Y
+                       or a picked axis / line / face for the direction,
+                       Deform distance, radius, Shape options minimum /
+                       medium / maximum stiffness, Reverse). A baked kit
+                       (`kcad_point_deform`): vertices within radius of the
+                       point move along the direction by distance * f(d /
+                       radius), f = (1-t)^3 / (1-t^2)^2 / (1-t^3)^2 (`falloff`), after
+                       the mesh is refined (radius / 20); a vertex moves by
+                       where it is, so holes and closedness survive. A
+                       second push is a second Deform wrapped round the
+                       first. MCP `deform_point`. Surface push is not built
+                       (the video never uses it). Tests:
+                       tests/test_point_deform.py.
   - `hole_wizard.py` — SolidWorks' **Hole Wizard** (2026-10-21): first
                        button of the Features panel; a tool window (type
                        Clearance / Tapped / Counterbore / Countersink / Nut

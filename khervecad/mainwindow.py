@@ -1543,6 +1543,8 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(next(iter(failed.values())), 8000)
         self._extent_failed = failed
         hole_wizard.refresh(self.model)     # holes follow their faces
+        from . import fill_pattern
+        fill_pattern.refresh(self.model)    # fills follow their part
         from . import sketch_regions
         sketch_regions.refresh(self.model)  # region extrudes follow sketches
         self._dirty = True

@@ -777,12 +777,18 @@ TIPS = {
         "The radius is the part's own; give Radius in Properties for a "
         "cylinder that is only part of the model."),
     "curve_deform": (
-        "Deform (curve to curve)",
-        "Bends bodies from one curve onto another — a straight rod onto "
-        "an S-shaped path (SolidWorks' Deform, Curve to curve). The "
-        "initial curve's ends land on the target curve's ends.",
-        ["Draw the target curve as a sketch (lines and fillet arcs) and "
-         "keep the rod's centre line as a construction line.",
+        "Deform (point / curve to curve)",
+        "SolidWorks' Deform. Point: pushes the body along an axis from a "
+        "point — a dome from a flat grille (distance, radius, stiffness). "
+        "Curve to curve: bends bodies from one curve onto another — a "
+        "straight rod onto an S-shaped path; the initial curve's ends "
+        "land on the target curve's ends.",
+        ["Point type: click the Origin row of the tree (or a face in 3D) "
+         "for the point, choose the axis, type the Deform distance and "
+         "radius, pick the Shape, then click the body and OK.",
+         "Curve to curve: draw the target curve as a sketch (lines and "
+         "fillet arcs) and keep the rod's centre line as a construction "
+         "line.",
          "Click Deform: its window opens beside the view.",
          "In the tree click the sketch that holds the INITIAL curve, "
          "then the TARGET sketch, then the bodies to bend.",
