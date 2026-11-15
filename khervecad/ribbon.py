@@ -516,9 +516,10 @@ def _panel_actions(win, key):
             # Translate's neighbours: the Gumball and Snap move parts too;
             # Circular Pattern first and large, Linear Pattern, Move/Copy
             # Bodies and the rest small (2026-11-13, the user)
-            from . import pattern_feature
+            from . import fill_pattern_ui, pattern_feature
             return language.tr(title), _painted(
-                win, list(pattern_feature.actions(win))) + \
+                win, list(pattern_feature.actions(win)) +
+                [fill_pattern_ui.action(win)]) + \
                 list(families[key]) + _panel_actions(win, "_move_tools")[1]
         return language.tr(title), families[key]
     title = language.tr(EXTRA_PANELS[key])
@@ -565,8 +566,9 @@ def _panel_actions(win, key):
     if key == "pattern":
         # SolidWorks' Circular / Linear Pattern of features and bodies,
         # beside Move/Copy Bodies (2026-11-13, the user)
-        from . import pattern_feature
-        return title, _painted(win, list(pattern_feature.actions(win)))
+        from . import fill_pattern_ui, pattern_feature
+        return title, _painted(win, list(pattern_feature.actions(win)) +
+                               [fill_pattern_ui.action(win)])
     if key == "mechanical":
         # the mechanical parts (gears, threads, knurls…); the Hole Wizard
         # is in the Cut panel now

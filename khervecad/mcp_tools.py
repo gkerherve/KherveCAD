@@ -1688,6 +1688,13 @@ class McpToolExecutor:
         except (ValueError, KeyError, IndexError, TypeError) as exc:
             raise ToolError(str(exc))
 
+    def _t_fill_pattern(self, params) -> dict:
+        from . import fill_pattern
+        try:
+            return fill_pattern.run_mcp(self._w, params)
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise ToolError(str(exc))
+
     def _t_sketch_modify(self, params) -> dict:
         from . import sketch_modify
         try:

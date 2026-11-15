@@ -1791,6 +1791,53 @@ TOOLS = [
         }, ["node_id"]),
     },
     {
+        "name": "fill_pattern",
+        "description": (
+            "SolidWorks' FILL PATTERN: fill a flat FACE with copies of a "
+            "seed cut. node_id = the part (a solid, an Object or an "
+            "instance), point = world [x, y, z] ON the face and normal = "
+            "its outward normal (probe_surface gives both). layout "
+            "circular (a centre instance then loops every loop_spacing mm "
+            "holding the next even count with at most `spacing` mm of arc "
+            "between neighbours), square (a grid) or perforation "
+            "(staggered rows); margin mm kept clear of the face's edge; "
+            "direction = a unit vector in the part's frame (a sketch "
+            "line's direction) or angle degrees in the face, reverse "
+            "turns it round; shape square / circle / diamond / polygon "
+            "(+ sides), size mm, rotation degrees; end Through all "
+            "(default) or Blind + depth. ONE feature: a Group 'Fill "
+            "Pattern' cut by a Difference, one polygon with a path per "
+            "instance; the reply gives the instance count. action count "
+            "only counts; action update + node_id inside a fill changes "
+            "its settings and fills again."
+        ),
+        "input_schema": _obj({
+            "action": {"type": "string",
+                       "enum": ["fill", "update", "count"]},
+            "node_id": {"type": "integer"},
+            "point": {"type": "array", "items": {"type": "number"},
+                      "minItems": 3, "maxItems": 3},
+            "normal": {"type": "array", "items": {"type": "number"},
+                       "minItems": 3, "maxItems": 3},
+            "layout": {"type": "string",
+                       "enum": ["circular", "square", "perforation"]},
+            "loop_spacing": {"type": "number", "exclusiveMinimum": 0},
+            "spacing": {"type": "number", "exclusiveMinimum": 0},
+            "margin": {"type": "number", "minimum": 0},
+            "shape": {"type": "string",
+                      "enum": ["square", "circle", "diamond", "polygon"]},
+            "size": {"type": "number", "exclusiveMinimum": 0},
+            "rotation": {"type": "number"},
+            "sides": {"type": "integer", "minimum": 3},
+            "angle": {"type": "number"},
+            "direction": {"type": "array", "items": {"type": "number"},
+                          "minItems": 3, "maxItems": 3},
+            "reverse": {"type": "boolean"},
+            "end": {"type": "string", "enum": ["Through all", "Blind"]},
+            "depth": {"type": "number", "exclusiveMinimum": 0},
+        }, ["node_id"]),
+    },
+    {
         "name": "mirror_feature",
         "description": (
             "MIRROR (SolidWorks' Mirror of features / bodies): node_ids "

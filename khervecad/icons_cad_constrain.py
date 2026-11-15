@@ -523,3 +523,14 @@ def _linear_pattern(d):
               _CUT if i == 0 else d.pal.make)
     d.arrow(d.P(-0.2, 0.0, 0.0), d.P(1.8, 0.0, 0.0), d.pal.make, 0.05,
             0.12)
+
+
+@draws("fill_pattern")
+def _fill_pattern(d):
+    """A round plate (grey) with a hexagonal-ish field of square cuts
+    (cut colour) — SolidWorks' Fill Pattern."""
+    d.cyl(0.0, 0.0, 0.0, 1.0, 0.25, _BODY)
+    for (x, y) in ((0, 0), (0.42, 0), (-0.42, 0), (0.21, 0.36),
+                   (-0.21, 0.36), (0.21, -0.36), (-0.21, -0.36),
+                   (0.84, 0.0), (-0.84, 0.0), (0.0, 0.72), (0.0, -0.72)):
+        d.box(x - 0.08, y - 0.08, 0.25, 0.16, 0.16, 0.01, _CUT)

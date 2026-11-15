@@ -178,6 +178,11 @@ def restored(window):
         pattern_feature.close(window)
     except Exception:                          # pragma: no cover
         pass
+    try:                      # the Fill Pattern window
+        from . import fill_pattern_ui
+        fill_pattern_ui.close(window)
+    except Exception:                          # pragma: no cover
+        pass
     try:                      # and the Plane window
         from . import plane_tool
         plane_tool.close(window)

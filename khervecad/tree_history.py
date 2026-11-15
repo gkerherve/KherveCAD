@@ -356,7 +356,7 @@ def _features(tree, node, parent_item, selected, counts):
     """Rows for *node*: what it holds first (earlier features), then the
     node itself with its sketch under it."""
     from . import feature_list
-    if node.params.get("hole_wizard"):
+    if node.params.get("hole_wizard") or node.params.get("fill_pattern"):
         _row(tree, node, parent_item, selected, node.name)
         return
     if feature_list.is_sketch_group(node):
