@@ -187,3 +187,22 @@ def test_a_region_click_on_the_hole_takes_the_hole_not_an_edge_on_slab(win):
     drop = before - _volume(win)["volume"]
     # the hole only: two bores of O10, about 13 mm long each
     assert 1000 < drop < 3000, drop
+
+
+def test_two_sketches_tying_in_depth_the_first_listed_takes_the_click(win):
+    """Every sketch's regions are offered inside an Object: where two
+    slabs meet under the click the free sketch (listed first) wins, not
+    the older extruded one (the clevis' slot cut took the fork's)."""
+    view = win.view3d
+    view.projection = "Orthographic"
+    view.fit()
+    old = [((0, 0, 0.0), (40, 0, 0.0), (40, 30, 0.0)),
+           ((0, 0, 0.0), (40, 30, 0.0), (0, 30, 0.0))]
+    new = [((10, 10, 0.004), (30, 10, 0.004), (30, 20, 0.004)),
+           ((10, 10, 0.004), (30, 20, 0.004), (10, 20, 0.004))]
+    eye, r, u, f = view._camera()
+    x, y, _d = view._project(eye, r, u, f, (22.0, 14.0, 0.0))
+    view._pick_groups = [((1, 0), new), ((0, 0), old)]
+    assert view._pick_at(x, y)[1] == (1, 0)
+    view._pick_groups = [((0, 0), old), ((1, 0), new)]
+    assert view._pick_at(x, y)[1] == (0, 0)

@@ -1856,6 +1856,13 @@ def _frame(window, container):
         return mesh.mat_mul(mat, mesh.node_matrix(container, {}))
 
 
+def _is_free(sketch):
+    """A sketch no feature has used yet (not an older extrude's shapes)."""
+    from . import regions2d
+    return not (regions2d._extrude_sketch(sketch) or
+                sketch.type == "regions")
+
+
 def start_any(window, cut=False):
     """Show the regions of EVERY sketch, each on its own plane and
     numbered across them all; the first click chooses that sketch and
@@ -1897,6 +1904,10 @@ def start_any(window, cut=False):
                               number))
     if not groups:
         return False
+    # where two sketches' regions tie in depth (same plane, the part's own
+    # section under both) the sketch being drawn wins over the extruded
+    # ones, newest first — the first group in the list takes a tie
+    groups.sort(key=lambda g: (not _is_free(sketches[g[0][0]]), -g[0][0]))
     view = window.view3d
     region_show.start(window, shown)
 

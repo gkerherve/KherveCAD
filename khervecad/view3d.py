@@ -1055,6 +1055,50 @@ class View3D(QWidget):
             d = [v / n for v in d]
         return abs(d[thin]) < 0.06       # within ~3.5 degrees of edge-on
 
+    #: slabs this close in depth (mm) tie
+    SLAB_TIE = 0.3
+
+    def _first_slab(self, groups, key, projector, x, y, eye, forward,
+                    depth0):
+        """The earliest slab group before *key*'s whose hit lies within
+        `SLAB_TIE` of depth *depth0*, as ``(key, tris, index, point,
+        start)``, else None (also when *key*'s group is no slab)."""
+        from . import anchors
+
+        def numbered(k):                  # start_any's (sketch, region)
+            return isinstance(k, tuple) and bool(k) and \
+                isinstance(k[0], int)
+        if not numbered(key):
+            return None
+        start = 0
+        mine = None
+        for i, (k, ts) in enumerate(groups):
+            if k == key:
+                mine = i
+                break
+        if mine is None or mine == 0:
+            return None
+        if not (len(groups[mine][1]) <= 4000 and self._is_slab(groups[mine][1])):
+            return None
+        start = 0
+        for k, ts in groups[:mine]:
+            if numbered(k) and self._is_slab(ts) and \
+                    not self._edge_on_slab(ts, eye, forward):
+                i2, p2 = anchors.pick(ts, projector, x, y)
+                if i2 is not None and \
+                        projector(p2)[2] <= depth0 + self.SLAB_TIE:
+                    return k, ts, start + i2, p2, start
+            start += len(ts)
+        return None
+
+    def _is_slab(self, ts):
+        if not ts or len(ts) > 4000:
+            return False
+        lo = [min(v[k] for t in ts for v in t) for k in range(3)]
+        hi = [max(v[k] for t in ts for v in t) for k in range(3)]
+        span = sorted(hi[k] - lo[k] for k in range(3))
+        return span[0] <= self.SLAB_MM and span[2] >= 10 * span[0]
+
     def _pick_at(self, x, y, quick=False):
         """``(desc, key)`` for the face/edge under screen (x, y), or
         ``(None, None)`` — key is the owning group key (two-click
@@ -1107,6 +1151,15 @@ class View3D(QWidget):
                     if best is not None:
                         _d, owner, key, index, point = best
                         start = self._group_start(groups, key)
+        if index is not None and owner is not None and groups:
+            # two flat slabs tying in depth (sketches on crossing planes
+            # meeting at the click, the part's own section under both):
+            # the one listed FIRST takes it — start_any lists the free,
+            # newest sketch first
+            got = self._first_slab(groups, key, projector, x, y, eye,
+                                   forward, projector(point)[2])
+            if got is not None:
+                key, owner, index, point, start = got
         if index is None or owner is None:
             return None, None
         # snap tolerance: ~8 px as world units at the hit depth
