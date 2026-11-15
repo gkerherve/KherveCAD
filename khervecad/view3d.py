@@ -1030,6 +1030,31 @@ class View3D(QWidget):
             start += len(ts)
         return 0
 
+    #: a sketch region's slab is this thin at most (mm)
+    SLAB_MM = 0.2
+
+    def _edge_on_slab(self, ts, eye, forward):
+        """True for a flat slab (a sketch region, a plane) the view sees
+        edge-on: its sliver sits across the view and swallowed the click
+        meant for what lies behind it (the symmetrical hole's centre, on
+        the Front sketch's own plane, 2026-11-15)."""
+        if not ts or len(ts) > 4000:
+            return False
+        lo = [min(v[k] for t in ts for v in t) for k in range(3)]
+        hi = [max(v[k] for t in ts for v in t) for k in range(3)]
+        span = [hi[k] - lo[k] for k in range(3)]
+        thin = min(range(3), key=lambda k: span[k])
+        if span[thin] > self.SLAB_MM or max(span) < 10 * span[thin]:
+            return False
+        if self.projection == "Orthographic":
+            d = list(forward)
+        else:
+            c = [(lo[k] + hi[k]) / 2.0 for k in range(3)]
+            d = [c[k] - eye[k] for k in range(3)]
+            n = sum(v * v for v in d) ** 0.5 or 1.0
+            d = [v / n for v in d]
+        return abs(d[thin]) < 0.06       # within ~3.5 degrees of edge-on
+
     def _pick_at(self, x, y, quick=False):
         """``(desc, key)`` for the face/edge under screen (x, y), or
         ``(None, None)`` — key is the owning group key (two-click
@@ -1045,7 +1070,10 @@ class View3D(QWidget):
             owner, key, start = self.mesh, None, 0
             index, point = anchors.pick(self.mesh, projector, x, y)
         else:
-            tris = [t for _key, ts in groups for t in ts]
+            dead = ((0.0, 0.0, 0.0),) * 3      # a degenerate: never hit
+            tris = [t for _key, ts in groups
+                    for t in (ts if not self._edge_on_slab(ts, eye, forward)
+                              else [dead] * len(ts))]
             index, point = anchors.pick(tris, projector, x, y)
             owner, key, start = None, None, 0
             if index is not None:
@@ -1066,6 +1094,9 @@ class View3D(QWidget):
                     start2 = 0
                     for k, ts in groups:
                         if isinstance(k, tuple) and k and k[0] == "region":
+                            if self._edge_on_slab(ts, eye, forward):
+                                start2 += len(ts)
+                                continue
                             i2, p2 = anchors.pick(ts, projector, x, y)
                             if i2 is not None:
                                 d2 = projector(p2)[2]
