@@ -264,6 +264,52 @@ def add_fold(model, node, p1, p2, angle=90.0, radius=0.0):
         raise
 
 
+def jog_row(p1, p2, offset=20.0, angle=60.0, radius=0.0, dim=0, pos=3,
+            side=-1, direction=1):
+    """One row of the body's `jogs` (see sheet_jog)."""
+    return [float(p1[0]), float(p1[1]), float(p2[0]), float(p2[1]),
+            float(offset), float(angle), float(radius), int(dim), int(pos),
+            1 if side >= 0 else -1, 1 if direction >= 0 else -1]
+
+
+def add_jog(model, node, p1, p2, offset=20.0, angle=60.0, radius=0.0,
+            dim=0, pos=3, side=-1, direction=1):
+    """Jog: two opposite bends from the line p1-p2 across the base; the
+    *side* of the line (1 left, -1 right of p1 -> p2) stays fixed."""
+    rows = _rows(node, "jogs")
+    rows.append(jog_row(p1, p2, offset, angle, radius, dim, pos, side,
+                        direction))
+    _set(model, node, "jogs", rows)
+    return len(rows) - 1
+
+
+def set_jog(model, node, index, row):
+    rows = _rows(node, "jogs")
+    if not 0 <= index < len(rows):
+        raise ValueError(f"no jog {index}")
+    rows[index] = [float(v) for v in row]
+    _set(model, node, "jogs", rows)
+
+
+def add_hole(model, node, x, y, diameter):
+    """A hole in the flat plate (Simple Hole / Cut-Extrude): it follows
+    its panel through any jog."""
+    if diameter <= 0:
+        raise ValueError("Hole: the diameter must be more than 0")
+    rows = _rows(node, "holes")
+    rows.append([float(x), float(y), float(diameter)])
+    _set(model, node, "holes", rows)
+
+
+def add_slot(model, node, p1, p2, width):
+    if width <= 0:
+        raise ValueError("Slot: the width must be more than 0")
+    rows = _rows(node, "slots")
+    rows.append([float(p1[0]), float(p1[1]), float(p2[0]), float(p2[1]),
+                 float(width)])
+    _set(model, node, "slots", rows)
+
+
 def path_flange(model, node, panel, edge, path):
     """Path Flange: flanges along a chain drawn across an edge — *path*
     = [(length, angle), ...], one bend per corner."""
@@ -465,7 +511,7 @@ def describe(model, node):
         panels=sum(1 for p in body.panels if p is not None),
         bends=len(body.bends), errors=body.errors,
         flat_size=[round(pat["width"], 3), round(pat["height"], 3)],
-        holes=len(pat["holes"]),
+        holes=len(pat["holes"]), cut_outs=len(pat.get("cuts") or []),
         bend_table=[{k: v for k, v in b.items() if k != "line"}
                     for b in pat["bend_table"]],
         edges=[{k: v for k, v in e.items() if k != "mids"}

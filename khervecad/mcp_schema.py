@@ -1989,7 +1989,7 @@ TOOLS = [
         "input_schema": _obj({
             "action": {"type": "string", "enum": [
                 "create", "convert", "flange", "hem", "path_flange", "fold",
-                "perforate", "unfold", "refold", "flat_pattern", "remove",
+                "jog", "hole", "slot", "perforate", "unfold", "refold", "flat_pattern", "remove",
                 "state", "rules", "set_rule", "apply_rule", "delete_rule",
                 "export_dxf", "export_bend_table"]},
             "node_id": {"type": "integer"},
@@ -2030,9 +2030,17 @@ TOOLS = [
             "margin": {"type": "number", "minimum": 0},
             "pattern": {"type": "string", "enum": ["staggered", "square"]},
             "what": {"type": "string",
-                     "enum": ["flanges", "hems", "folds", "perforate"]},
+                     "enum": ["flanges", "hems", "folds", "jogs", "holes",
+                              "slots", "perforate"]},
             "index": {"type": "integer", "minimum": 0},
             "bend_notes": {"type": "boolean"},
+            "offset": {"type": "number", "exclusiveMinimum": 0},
+            "dimension": {"type": "string",
+                          "enum": ["outside", "inside", "total"]},
+            "position": {"type": "integer", "minimum": 0, "maximum": 3},
+            "fixed_side": {"type": "string", "enum": ["right", "left"]},
+            "direction": {"type": "string", "enum": ["up", "down"]},
+            "x": {"type": "number"}, "y": {"type": "number"},
         }, ["action"]),
     },
     # ── Parts and assemblies ───────────────────────────────────────

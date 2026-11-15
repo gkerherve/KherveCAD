@@ -6633,6 +6633,32 @@ into a new module and import.
                        `sheet_metal`. An edit that breaks the body is
                        refused (`ops._set`). Next: corner reliefs, flanges
                        on a picked FACE, flanges joined at corners.
+  - `sheet_jog.py` / `sheet_jog_ui.py` — SolidWorks' **Jog** and cut-outs
+                       in a sheet body (2026-11-15, Exercise "Jog Feature
+                       in SolidWorks Sheet Metal"). `jogs` rows [x1, y1,
+                       x2, y2, offset, angle, radius, dim 0 outside / 1
+                       inside / 2 total, pos 0 centre line / 1 material
+                       inside / 2 material outside / 3 bend outside, side
+                       1 left / -1 right of the line stays FIXED, dir 1 up
+                       / -1 down]: the base is cut where the first bend
+                       starts (`plan`), a web panel and the far panel hang
+                       off two bends of opposite sign (`bend_child` twice),
+                       the far side ends parallel, `offset` high — and,
+                       like SolidWorks, the flat blank GROWS by the web
+                       (bend + web + bend). `holes` [x, y, d] and `slots`
+                       [x1, y1, x2, y2, w] are in the flat plate's own
+                       coordinates and land on whichever panel holds them
+                       (`place_cuts`; across a cut = an error), cut by
+                       Manifold in `_cut_panel`, also in the flat pattern
+                       and the DXF. Ribbon Sheet Metal ▸ Create ▸ Jog
+                       (`sm_jog`) opens a ToolPanel: two clicks on the
+                       sheet (0.5 mm grid, a line within 3 degrees of an
+                       axis is made straight), a click on the Fixed side,
+                       typeable line ends, rows for offset / dimension
+                       position / jog position / direction / angle /
+                       radius; every change rewrites the row live, OK keeps
+                       it, Cancel removes it. MCP sheet_metal `jog`, `hole`,
+                       `slot`. `tests/test_jog_by_mouse.py`.
   - `pattern.py`     — the **Pattern** wrapper (Blender's Array,
                        SolidWorks' linear/circular pattern; Repeat &
                        logic family): `kind` linear (`count` copies at

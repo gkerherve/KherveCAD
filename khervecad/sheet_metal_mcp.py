@@ -9,7 +9,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 """
 
-from . import sheet_body, sheet_metal_ops as ops
+from . import sheet_body, sheet_jog, sheet_metal_ops as ops
 
 
 def _node(win, params, key="node_id"):
@@ -106,6 +106,29 @@ def run(win, params):
                              "base, in its own frame")
         ops.add_fold(model, body, line[0], line[1],
                      params.get("angle", 90.0), params.get("bend_radius", 0))
+    elif action == "jog":
+        line = params.get("line")
+        if not line or len(line) != 2:
+            raise ValueError("jog: line = [[x1, y1], [x2, y2]] across the "
+                             "base, in its own frame")
+        ops.add_jog(model, body, line[0], line[1],
+                    params.get("offset", 20.0), params.get("angle", 60.0),
+                    params.get("bend_radius", 0),
+                    sheet_jog.DIM_MODES.index(params.get("dimension",
+                                                         "outside")),
+                    int(params.get("position", 3)),
+                    -1 if params.get("fixed_side", "right") == "right"
+                    else 1,
+                    -1 if params.get("direction", "up") == "down" else 1)
+    elif action == "hole":
+        ops.add_hole(model, body, params.get("x", 0.0), params.get("y", 0.0),
+                     params.get("diameter", 5.0))
+    elif action == "slot":
+        line = params.get("line")
+        if not line or len(line) != 2:
+            raise ValueError("slot: line = [[x1, y1], [x2, y2]] (the "
+                             "centre line), width")
+        ops.add_slot(model, body, line[0], line[1], params.get("width", 5.0))
     elif action == "perforate":
         ops.perforate(model, body, params.get("diameter", 5.0),
                       params.get("pitch", 8.0), params.get("margin", 0.0),

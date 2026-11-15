@@ -42,6 +42,7 @@ the Free Software Foundation, either version 3 of the License, or
 from __future__ import annotations
 
 import math
+import sys
 
 from . import bakedkit
 
@@ -54,7 +55,8 @@ _DEFAULTS = dict(
     outline=[[0.0, 0.0], [100.0, 0.0], [100.0, 60.0], [0.0, 60.0]],
     contour=[], width=60.0,
     thickness=2.0, radius=2.0, k_factor=0.44, hem_gap=1.0, rule="",
-    flanges=[], hems=[], folds=[], perforate=[], flat=False)
+    flanges=[], hems=[], folds=[], jogs=[], holes=[], slots=[],
+    perforate=[], flat=False)
 
 
 # ======================================================== small vectors
@@ -110,6 +112,7 @@ class Panel:
         self.poly, self.tags = list(poly), list(tags)
         self.frame = frame                   # 3D Frame
         self.flat = flat                     # 2D (o, u, v)
+        self.cuts = []                       # holes / slots (panel coords)
 
     def edge(self, tag):
         """The longest edge carrying *tag*: (a, b) in panel coordinates."""
@@ -357,6 +360,9 @@ def build(params, env=None):
             continue
         base.poly, base.tags = poly, tags
         fold_sides.append((j, ang, r, ba, move_poly, keep_n, p))
+    from . import sheet_jog
+    this = sys.modules[__name__]
+    jog_pieces = sheet_jog.jogs(body, base, rows("jogs", 5), t, k, r0, this)
     body.panels.append(base)
 
     # ---- set-backs: every bend on an edge pulls that edge in
@@ -384,6 +390,11 @@ def build(params, env=None):
 
     trim(0)
     _fold_panels(body, fold_sides, t)
+    if jog_pieces:
+        sheet_jog.panels(body, base, jog_pieces, t, k, this)
+    if rows("holes", 3) or rows("slots", 5):
+        sheet_jog.place_cuts(body, base, jog_pieces, rows("holes", 3),
+                             rows("slots", 5), this)
 
     for i, spec in enumerate(specs):
         parent_i, edge, height, ang, r, ia, ib, kind, numbered = spec
@@ -492,6 +503,10 @@ def panel_tris(panel, t):
     if len(poly) < 3 or abs(_area2(poly)) < 1e-9:
         return []
     f = panel.frame
+    if panel.cuts:
+        cut = _cut_panel(panel, t)
+        if cut is not None:
+            return cut
     out = []
     for tri in mesh.triangulate(poly):
         a, b, c = (f.at(p) for p in tri)
@@ -505,6 +520,26 @@ def panel_tris(panel, t):
         out.append((p0, q0, q1))
         out.append((p0, q1, p1))
     return _closed(out)
+
+
+def _cut_panel(panel, t):
+    """The panel with its holes and slots cut (Manifold), placed in
+    its frame; None when Manifold is not there."""
+    from . import csg
+    if not csg.available():
+        return None
+    import numpy as np
+    m = csg._m
+    sec = m.CrossSection([[list(q) for q in panel.poly]],
+                         m.FillRule.Positive)
+    holes = m.CrossSection([[list(q) for q in lp] for lp in panel.cuts],
+                           m.FillRule.Positive)
+    solid = m.Manifold.extrude(sec - holes, t)
+    f = panel.frame
+    mat = np.array([[f.u[0], f.v[0], f.n[0], f.o[0]],
+                    [f.u[1], f.v[1], f.n[1], f.o[1]],
+                    [f.u[2], f.v[2], f.n[2], f.o[2]]], dtype=float)
+    return csg.to_triangles(solid.transform(mat))
 
 
 def bend_tris(bend, t, segments):
@@ -618,6 +653,10 @@ def flat_pattern(body, perforate=None):
             start=[round(c, 4) for c in line[0]],
             end=[round(c, 4) for c in line[1]], line=line))
     outlines = loops + strips
+    cuts = []
+    for p in body.all_panels():
+        for lp in p.cuts:
+            cuts.append([p.flat_point(q) for q in lp])
     holes = []
     from . import csg
     if csg.available():
@@ -632,7 +671,7 @@ def flat_pattern(body, perforate=None):
     outlines = [[(float(x), float(y)) for x, y in lp] for lp in outlines]
     xs = [q[0] for lp in outlines for q in lp] or [0.0]
     ys = [q[1] for lp in outlines for q in lp] or [0.0]
-    return dict(outlines=outlines, bend_table=table, holes=holes,
+    return dict(outlines=outlines, bend_table=table, holes=holes, cuts=cuts,
                 thickness=body.t, k_factor=body.k,
                 width=max(xs) - min(xs), height=max(ys) - min(ys),
                 min=(min(xs), min(ys)))
@@ -694,6 +733,10 @@ def flat_tris(pattern, t, segments=24):
         sec = m.CrossSection([[list(q) for q in lp]
                               for lp in pattern["outlines"]],
                              m.FillRule.Positive)
+        if pattern.get("cuts"):
+            sec = sec - m.CrossSection(
+                [[list(q) for q in lp] for lp in pattern["cuts"]],
+                m.FillRule.Positive)
         if pattern["holes"]:
             circles = [m.CrossSection.circle(h[2] / 2, 12).translate(
                 (h[0], h[1])) for h in pattern["holes"]]
@@ -729,6 +772,9 @@ def flat_dxf(pattern, path, bend_notes=True, note_height=3.0):
                     f"{a[1]:.4f}", "30", "0", "11", f"{b[0]:.4f}", "21",
                     f"{b[1]:.4f}", "31", "0"])
     for lp in pattern["outlines"]:
+        for a, b in zip(lp, lp[1:] + lp[:1]):
+            line(a, b, "CUT")
+    for lp in pattern.get("cuts") or []:
         for a, b in zip(lp, lp[1:] + lp[:1]):
             line(a, b, "CUT")
     for x, y, d in pattern["holes"]:
@@ -800,6 +846,14 @@ KIT = bakedkit.make(
       ["Panel", "Edge", "Length", "Flip"], None),
      ("folds", "Folds (x1, y1, x2, y2, angle, radius)", "rows",
       ["X1", "Y1", "X2", "Y2", "Angle", "Radius"], None),
+     ("jogs", "Jogs (x1, y1, x2, y2, offset, angle, radius 0 = rule, "
+      "dimension 0/1/2, position 0-3, fixed side 1/-1, direction 1/-1)",
+      "rows", ["X1", "Y1", "X2", "Y2", "Offset", "Angle", "Radius", "Dim",
+               "Position", "Side", "Dir"], None),
+     ("holes", "Holes (x, y, diameter, in the flat plate)", "rows",
+      ["X", "Y", "Ø"], None),
+     ("slots", "Slots (x1, y1, x2, y2, width)", "rows",
+      ["X1", "Y1", "X2", "Y2", "Width"], None),
      ("perforate", "Perforation (diameter, pitch, margin, 0 staggered "
       "/ 1 square)", "rows", ["Ø", "Pitch", "Margin", "Square"], None),
      ("flat", "Unfolded (show the flat pattern)", "bool", None, None)],

@@ -45,6 +45,10 @@ COMMANDS = {
     "sm_fold": ("Fold", "mdi.book-open-variant", "create",
                 "Bends the sheet along a line across it (Sketched Bend); "
                 "the outline stays the flat blank."),
+    "sm_jog": ("Jog", "mdi.stairs", "create",
+               "Two opposite bends from a sketched line: click two points "
+               "for the line, the side that stays fixed, then the offset, "
+               "angle and positions in its window."),
     "sm_hem": ("Hem", "mdi.wrap", "create",
                "Click an edge: it is folded right back over itself, the "
                "rule's hem gap inside."),
@@ -637,7 +641,12 @@ def rules(win):
     return dlg
 
 
-HANDLERS = {"sm_base": base_flange, "sm_convert": convert,
+def jog(win):
+    from . import sheet_jog_ui
+    return sheet_jog_ui.jog(win)
+
+
+HANDLERS = {"sm_base": base_flange, "sm_convert": convert, "sm_jog": jog,
             "sm_flange": flange, "sm_fold": fold, "sm_hem": hem,
             "sm_path": path, "sm_contour": contour,
             "sm_perforate": perforate, "sm_flat": flat_pattern,

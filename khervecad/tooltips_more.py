@@ -259,6 +259,23 @@ TIPS = {
          "OK."],
         "Fold BEFORE adding flanges or hems: a fold changes the edges "
         "they sit on, and is refused afterwards."),
+    "sm_jog": (
+        "Jog",
+        "Two opposite bends from one line (SolidWorks' Jog): the side "
+        "you click stays fixed, the other side steps up (or down) by the "
+        "offset through a sloped web and ends parallel to the first. The "
+        "flat blank grows by the web.",
+        ["Select the sheet metal body, click Jog.",
+         "Click two points on the sheet for the bend line (a nearly "
+         "straight line is made straight); the line's ends can be typed.",
+         "Click the side of the sheet that stays fixed (Fixed face).",
+         "Set the Offset and its Dimension position (outside, inside "
+         "offset, total), the Jog position, the Angle and the direction; "
+         "the jog follows each change.",
+         "OK."],
+        "Jog position says where the line falls: bend centre line, "
+        "material inside / outside (its virtual sharps) or bend outside "
+        "(the bends start on the line)."),
     "sm_hem": (
         "Hem",
         "Folds an edge right back over itself — a safe, stiff, rounded "

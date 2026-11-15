@@ -94,6 +94,17 @@ def _fold(d):
             0.15)
 
 
+@draws("sm_jog")
+def _jog(d):
+    """Jog: the sheet steps up through two bends from one line."""
+    _plate(d, 0.0, -0.9, 1.0, 1.8, 0)
+    d.box(-1.0, -0.9, 0.55, 0.9, 1.8, T, shade(d.pal.body, 1.1))
+    d.box(-0.1, -0.9, 0.3, 0.2, 1.8, T, shade(d.pal.body, 1.0))
+    d.line(d.P(0.0, -0.9, T + 0.01), d.P(0.0, 0.9, T + 0.01),
+           d.pal.make, 0.06, dash=[3, 2])
+    d.arrow(d.P(0.5, 0.0, T), d.P(0.5, 0.0, 0.9), d.pal.make, 0.07, 0.15)
+
+
 @draws("sm_hem")
 def _hem(d):
     """Hem: the edge folded right back over itself."""
