@@ -27,6 +27,22 @@ os.environ["KHERVECAD_USER_LIBRARY"] = tempfile.mkdtemp(
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+
+def _slot_excepthook(kind, value, tb):
+    """PyQt5 calls qFatal() (abort, no Python traceback) when an exception
+    escapes a slot and sys.excepthook is the default. Print it instead, so
+    a failing slot shows WHICH slot and why (a RecursionError from a
+    signal feedback loop used to be a bare SIGABRT crash report)."""
+    import traceback
+    lines = traceback.format_exception(kind, value, tb)
+    sys.stderr.write("\n[exception in a Qt slot]\n"
+                     + "".join(lines[:6] + ["  ...\n"] + lines[-8:]
+                               if len(lines) > 16 else lines))
+    sys.stderr.flush()
+
+
+sys.excepthook = _slot_excepthook
+
 # The tests' OWN settings file. KherveCAD keeps its options in
 # QSettings("Kherve", "KherveCAD") — on macOS the user's real
 # com.kherve.KherveCAD.plist — and the suite used to write there: the
