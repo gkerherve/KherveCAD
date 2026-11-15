@@ -2070,13 +2070,38 @@ TOOLS = [
             "thin cube / extruded rect, polygon, circle / old sheet metal "
             "part), flange (panel, edge, height, angle, bend_radius 0 = "
             "the body's, inset_start/end, then [[height, angle], ...] "
-            "chained on the far edge), hem (panel, edge, length, flip), "
+            "chained on the far edge; ear true = Edge Flange with an edited "
+            "profile, a strip of width centred `center` mm along the edge "
+            "with a full round end, hole_diameter = the hole at its "
+            "centre), hem (panel, edge, length, flip), "
             "path_flange (panel, edge, segments [[length, angle], ...]), fold "
             "(line [[x1,y1],[x2,y2]] across the base, angle — the outline "
             "is the flat blank), perforate (diameter, pitch, margin, "
-            "pattern staggered|square: holes in the flat pattern), unfold "
+            "pattern staggered|square: holes in the flat pattern), panel_hole "
+            "(a hole through ANY panel, the base's opening or a flange's: panel, diameter and u, v in the panel's own "
+            "frame — or edge + along + across mm inward from that edge; "
+            "cut in the folded part AND the flat pattern, a base flange's "
+            "opening is one too), corner (Break Corner: panel, size and "
+            "u, v near the convex corner; chamfer true = a cut instead of "
+            "a round), tab (Base Flange/Tab merged into a panel: u, v = "
+            "centre of its round end, width, length toward angle degrees, "
+            "hole_diameter; it may stand in an opening the panel already "
+            "has), tab_jog (a jog of a merged tab, not of the whole plate: two bends along `line` [[x1,y1],[x2,y2]] in the "
+            "panel's frame step what lies beyond it `offset` mm — up for "
+            "angle > 0, down for < 0, bend_radius, fixed [x, y] = a point "
+            "on the piece that stays, extend true = stretch the line "
+            "across the material it crosses), gusset (a stamped rib across the "
+            "inside of bend number `bend` from the bend table, `offset` "
+            "mm along it, d1 / d2 depths up each face, width, draft "
+            "degrees), mirror / linear_pattern / circular_pattern (features "
+            "[{kind, index}] — kind pholes|tabs|tabjogs|gussets|corners|ears, "
+            "index from 0 as `state` lists them under features: mirror "
+            "about plane x|y at coordinate `at`; linear_pattern count, dx, "
+            "dy (a gusset's dx is the spacing along its bend); "
+            "circular_pattern count, pivot [u, v], total degrees — "
+            "copies written as ordinary rows), unfold "
             "/ refold (show flat / folded), flat_pattern (a flat copy "
-            "beside it), remove (what flanges|hems|folds|perforate, "
+            "beside it), remove (what flanges|hems|folds|perforate|holes|corners|tabs, "
             "index), state (panels, bends, bend table, every edge with its "
             "label, flat size, errors), rules, set_rule (rule + "
             "thickness, bend_radius, k_factor, hem_gap; node_id applies "
@@ -2087,7 +2112,10 @@ TOOLS = [
         "input_schema": _obj({
             "action": {"type": "string", "enum": [
                 "create", "convert", "flange", "hem", "path_flange", "fold",
-                "jog", "hole", "slot", "perforate", "unfold", "refold", "flat_pattern", "remove",
+                "jog", "hole", "slot", "perforate", "panel_hole", "corner", "tab",
+                "tab_jog", "gusset", "mirror", "linear_pattern",
+                "circular_pattern", "unfold", "refold", "flat_pattern",
+                "remove",
                 "state", "rules", "set_rule", "apply_rule", "delete_rule",
                 "export_dxf", "export_bend_table"]},
             "node_id": {"type": "integer"},
@@ -2129,8 +2157,39 @@ TOOLS = [
             "pattern": {"type": "string", "enum": ["staggered", "square"]},
             "what": {"type": "string",
                      "enum": ["flanges", "hems", "folds", "jogs", "holes",
-                              "slots", "perforate"]},
+                              "slots", "perforate", "pholes", "corners",
+                              "tabs", "tabjogs", "gussets"]},
             "index": {"type": "integer", "minimum": 0},
+            "u": {"type": "number"}, "v": {"type": "number"},
+            "ear": {"type": "boolean"},
+            "features": {"type": "array", "items": {
+                "type": "object", "properties": {
+                    "kind": {"type": "string", "enum": [
+                        "pholes", "tabs", "tabjogs", "gussets", "corners",
+                        "ears"]},
+                    "index": {"type": "integer", "minimum": 0}},
+                "required": ["kind", "index"]}},
+            "plane": {"type": "string", "enum": ["x", "y"]},
+            "pivot": {"type": "array", "items": {"type": "number"},
+                      "minItems": 2, "maxItems": 2},
+            "at": {"type": "number"},
+            "count": {"type": "integer", "minimum": 2},
+            "dx": {"type": "number"}, "dy": {"type": "number"},
+            "total": {"type": "number"},
+            "bend": {"type": "integer", "minimum": 1},
+            "d1": {"type": "number", "exclusiveMinimum": 0},
+            "d2": {"type": "number", "exclusiveMinimum": 0},
+            "draft": {"type": "number", "minimum": 0, "maximum": 80},
+            "offset": {"type": "number"},
+            "extend": {"type": "boolean"},
+            "fixed": {"type": "array", "items": {"type": "number"},
+                      "minItems": 2, "maxItems": 2},
+            "center": {"type": "number", "minimum": 0},
+            "hole_diameter": {"type": "number", "minimum": 0},
+            "size": {"type": "number", "exclusiveMinimum": 0},
+            "chamfer": {"type": "boolean"},
+            "along": {"type": "number", "minimum": 0},
+            "across": {"type": "number", "minimum": 0},
             "bend_notes": {"type": "boolean"},
             "offset": {"type": "number", "exclusiveMinimum": 0},
             "dimension": {"type": "string",

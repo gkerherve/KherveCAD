@@ -34,6 +34,9 @@ COMMANDS = {
                 "A flat sheet from the selected sketch shape (rectangle, "
                 "polygon, circle), else 100 × 60 mm — the start of every "
                 "sheet metal part."),
+    "sm_arch": ("Arch Plate", "mdi.arch", "create",
+                "A new base flange shaped like an arch: a half circle "
+                "over straight sides — the back plate of a bracket."),
     "sm_convert": ("Convert to Sheet Metal", "mdi.cube-unfolded", "create",
                    "Turns the selected plate — a thin cube or an extruded "
                    "sketch shape — into a sheet metal body you can flange "
@@ -65,6 +68,33 @@ COMMANDS = {
                    "A new body from an open profile in the XZ plane — a "
                    "channel, a Z or a hat section — with one bend at "
                    "every corner."),
+    "sm_mirror": ("Mirror", "mdi.flip-horizontal", "create",
+                  "Mirrors chosen features — an ear and its hole, tabs, "
+                  "holes — about a plane across the sheet."),
+    "sm_lpattern": ("Linear Pattern", "mdi.view-grid-plus", "create",
+                    "Repeats chosen features (a gusset, a hole, a tab) "
+                    "at a fixed step."),
+    "sm_cpattern": ("Circular Pattern", "mdi.rotate-right", "create",
+                    "Repeats chosen features (a tab and its jog) round a "
+                    "centre."),
+    "sm_gusset": ("Sheet Metal Gusset", "mdi.triangle-outline", "create",
+                  "Click a bend: a stamped rib is added across its "
+                  "inside corner — depths, width and draft in the form."),
+    "sm_tabjog": ("Jog Tab", "mdi.stairs", "create",
+               "Click two points across a tab: two bends step the part "
+               "beyond that line out of the sheet's plane by the offset."),
+    "sm_tab": ("Tab", "mdi.tab-plus", "create",
+               "Merges a round-ended tab into the sheet — with a hole, "
+               "and it may stand in an opening: give the centre of its "
+               "round end, its width, length and direction."),
+    "sm_corner": ("Break Corner", "mdi.vector-radius", "create",
+                  "Click a corner of the sheet: it is rounded (or cut "
+                  "off) by the size you give — in the folded part and "
+                  "the flat pattern."),
+    "sm_phole": ("Panel Hole", "mdi.circle-double", "create",
+                "Click the sheet where the hole goes, give its diameter "
+                "and position: a round hole through the sheet — in the "
+                "folded part and the flat pattern."),
     "sm_perforate": ("Perforate", "mdi.dots-grid", "create",
                      "A staggered or square field of holes over the flat "
                      "sheet, clear of the edges and the bends — in the "
@@ -272,6 +302,35 @@ def base_flange(win):
     return body
 
 
+def arch_plate(win):
+    dlg, form = _form(win, "Arch Plate")
+    f = {"width": _spin(80.0, 1.0, 1e5), "below": _spin(60.0, 0.0, 1e5),
+         "thickness": _spin(1.5, 0.05, 100.0, 2),
+         "radius": _spin(1.5, 0.0, 1e3, 2),
+         "k_factor": _spin(0.5, 0.0, 1.0, 2, "")}
+    for name, label in (("width", "Width (the arch's diameter)"),
+                        ("below", "Straight height below the arch centre"),
+                        ("thickness", "Thickness"),
+                        ("radius", "Bend radius"), ("k_factor", "K-factor")):
+        form.addRow(language.tr(label), f[name])
+    got = _ask("sm_arch_form", dlg, lambda: {k: w.value()
+                                             for k, w in f.items()})
+    if not got:
+        return None
+    parent = win.builder.isolated_component()
+    body = ops.insert_base(win.model, ops.arch_outline(got["width"],
+                                                       got["below"]),
+                           parent=parent, name="Base-Flange1",
+                           thickness=got["thickness"],
+                           radius=got["radius"])
+    win.model.set_param(body, "k_factor", got["k_factor"])
+    if parent is None:
+        win._geometry_created_in_main(body)
+    win.builder.active_tree().select_nodes([body])
+    _say(win, language.tr("Arch plate: now Edge Flange, Panel Hole, Tab…"))
+    return body
+
+
 def convert(win):
     nodes = _selected(win)
     if not nodes:
@@ -307,6 +366,17 @@ def _flange_form(win, body, edge, title, kind):
         labels = ("Segments: length, angle; …",)
     for (name, w), label in zip(fields.items(), labels):
         form.addRow(language.tr(label), w)
+    ear = None
+    if kind == "flange":
+        ear = QCheckBox(language.tr("Edit profile: a round-ended ear"))
+        form.addRow("", ear)
+        for name, label, val in (("ear_center", "Ear centre along the "
+                                  "edge", 20.0),
+                                 ("ear_width", "Ear width", 15.0),
+                                 ("ear_hole", "Ear hole diameter (0 = "
+                                  "none)", 0.0)):
+            fields[name] = _spin(val, 0.0, 1e5)
+            form.addRow(language.tr(label), fields[name])
     flip = None
     if kind == "hem":
         flip = QCheckBox(language.tr("Fold under (down) instead of over"))
@@ -318,6 +388,8 @@ def _flange_form(win, body, edge, title, kind):
             out[name] = w.text() if isinstance(w, QLineEdit) else w.value()
         if flip is not None:
             out["flip"] = flip.isChecked()
+        if ear is not None:
+            out["ear"] = ear.isChecked()
         return out
     return dlg, read
 
@@ -334,7 +406,12 @@ def _edge_tool(win, kind, title):
             return
         panel, edge_ = got["edge"]
         try:
-            if kind == "flange":
+            if kind == "flange" and got.get("ear"):
+                ops.add_ear(win.model, body, panel, edge_,
+                            got["ear_center"], got["ear_width"],
+                            got["height"], got["angle"], got["radius"],
+                            got["ear_hole"])
+            elif kind == "flange":
                 ops.add_flange(win.model, body, panel, edge_, got["height"],
                                got["angle"], got["radius"], got["inset_a"],
                                got["inset_b"])
@@ -443,6 +520,349 @@ def contour(win):
     if parent is None:
         win._geometry_created_in_main(body)
     report(win, body)
+    return body
+
+
+def _pick_point(win, body, then, banner="Click where the hole goes · "
+                "Esc types its position"):
+    """A click on a face of the body in the 3D view, then *then*(panel,
+    u, v) in that panel's own frame (None = missed / Esc)."""
+    from . import bake, mesh
+    view = win.view3d
+    root = win._render_scope()[0]
+    iso = root if root is not win.model.root else None
+    env = bake._codegen_env(body)
+    with win._isolated_frame(iso):
+        tris = mesh.selected_world_tris(root, {body.id},
+                                        fn=win.model.effective_fn())
+        matrix = mesh.ancestor_matrix(body, env, stop=iso)
+    if not tris or not hasattr(view, "start_pick"):
+        then(None)
+        return
+
+    def picked(desc, _node=None):
+        if desc is None or not (desc.get("point") or desc.get("pos")):
+            then(None)
+            return
+        try:
+            then(ops.locate(win.model, body,
+                            desc.get("point") or desc["pos"], matrix))
+        except ValueError:
+            then(None)
+    view.start_pick(picked, groups=[(body, tris)], banner=language.tr(banner),
+        labeler=lambda desc, node: getattr(node, "name", ""))
+
+
+def panel_hole(win):
+    body = _body(win)
+    if body is None:
+        return None
+
+    def go(spot):
+        panel, u, v = spot if spot else (0, 0.0, 0.0)
+        dlg, form = _form(win, "Simple Hole")
+        f = {"panel": _spin(panel, 0, 999, 0, ""),
+             "u": _spin(u, -1e5, 1e5), "v": _spin(v, -1e5, 1e5),
+             "diameter": _spin(6.5, 0.1, 1e4)}
+        for name, label in (("panel", "Panel (0 = the base)"),
+                            ("u", "Position U"), ("v", "Position V"),
+                            ("diameter", "Hole diameter")):
+            form.addRow(language.tr(label), f[name])
+        got = _ask("sm_phole_form", dlg, lambda: {k: w.value()
+                                            for k, w in f.items()})
+        if not got:
+            return
+        try:
+            ops.add_panel_hole(win.model, body, int(got["panel"]), got["u"],
+                         got["v"], got["diameter"])
+        except ValueError as exc:
+            _say(win, str(exc))
+            return
+        report(win, body)
+    if "sm_phole_spot" in ANSWERS:
+        go(ANSWERS["sm_phole_spot"])
+    else:
+        _pick_point(win, body, go)
+    return body
+
+
+def _feature_list(win, body, form):
+    """A multi-selection list of the body's copyable features."""
+    from PyQt5.QtCore import Qt
+    from PyQt5.QtWidgets import QListWidgetItem
+    from . import sheet_metal_patterns as pat
+    lst = QListWidget()
+    lst.setSelectionMode(QListWidget.MultiSelection)
+    for feat in pat.features(win.model, body):
+        item = QListWidgetItem(feat["label"])
+        item.setData(Qt.UserRole, (feat["kind"], feat["index"]))
+        lst.addItem(item)
+    form.addRow(language.tr("Features"), lst)
+
+    def chosen():
+        return [i.data(Qt.UserRole) for i in lst.selectedItems()]
+    return lst, chosen
+
+
+def _pattern_tool(win, key, title, fields, apply):
+    """Mirror / Linear / Circular Pattern: pick the features, the numbers,
+    OK. *fields* = [(name, label, default, lo, hi, decimals)]."""
+    body = _body(win)
+    if body is None:
+        return None
+    dlg, form = _form(win, title)
+    _lst, chosen = _feature_list(win, body, form)
+    f = {}
+    for name, label, default, lo, hi, dec in fields:
+        f[name] = _spin(default, lo, hi, dec, "" if dec == 0 else " mm")
+        form.addRow(language.tr(label), f[name])
+    extra = {}
+    if key == "sm_mirror":
+        plane = QComboBox()
+        plane.addItems([language.tr("Across X (the Right plane)"),
+                        language.tr("Across Y (the Front plane)")])
+        form.addRow(language.tr("Mirror plane"), plane)
+        extra["plane"] = plane
+    got = _ask(key + "_form", dlg, lambda: dict(
+        {k: w.value() for k, w in f.items()}, features=chosen(),
+        **{k: ("x", "y")[w.currentIndex()] for k, w in extra.items()}))
+    if not got:
+        return None
+    if not got.get("features"):
+        _say(win, language.tr("{t}: choose the features to repeat.")
+             .format(t=title))
+        return None
+    try:
+        apply(body, got)
+    except ValueError as exc:
+        _say(win, str(exc))
+        return None
+    report(win, body)
+    return body
+
+
+def mirror(win):
+    from . import sheet_metal_patterns as pat
+    return _pattern_tool(
+        win, "sm_mirror", "Mirror", [("at", "Plane position", 0.0, -1e5,
+                                      1e5, 2)],
+        lambda body, g: pat.mirror(win.model, body,
+                                   [tuple(i) for i in g["features"]],
+                                   g.get("plane", "x"), g["at"]))
+
+
+def linear_pattern(win):
+    from . import sheet_metal_patterns as pat
+
+    def go(body, g):
+        for kind, index in g["features"]:
+            pat.linear(win.model, body, kind, index, int(g["count"]),
+                       g["dx"], g["dy"])
+    return _pattern_tool(
+        win, "sm_lpattern", "Linear Pattern",
+        [("count", "Instances", 3, 2, 999, 0),
+         ("dx", "Step U (a gusset: along its bend)", 30.0, -1e5, 1e5, 2),
+         ("dy", "Step V", 0.0, -1e5, 1e5, 2)], go)
+
+
+def circular_pattern(win):
+    from . import sheet_metal_patterns as pat
+
+    def go(body, g):
+        for kind, index in g["features"]:
+            pat.circular(win.model, body, kind, index, int(g["count"]),
+                         (g["cx"], g["cy"]), g["total"])
+    return _pattern_tool(
+        win, "sm_cpattern", "Circular Pattern",
+        [("count", "Instances", 4, 2, 999, 0),
+         ("cx", "Centre U", 0.0, -1e5, 1e5, 2),
+         ("cy", "Centre V", 0.0, -1e5, 1e5, 2),
+         ("total", "Angle (360 = a full turn)", 360.0, -360.0, 360.0,
+          1)], go)
+
+
+def gusset(win):
+    body = _body(win)
+    if body is None:
+        return None
+
+    def go(bend, along):
+        dlg, form = _form(win, "Sheet Metal Gusset")
+        f = {"bend": _spin(bend, 1, 999, 0, ""),
+             "offset": _spin(along, 0, 1e5), "d1": _spin(10.0, 0.1, 1e4),
+             "d2": _spin(10.0, 0.1, 1e4), "width": _spin(7.5, 0.1, 1e4),
+             "draft": _spin(20.0, 0.0, 80.0, 1, " °")}
+        for name, label in (("bend", "Bend number (bend table)"),
+                            ("offset", "Offset along the bend"),
+                            ("d1", "Depth on the first face (d1)"),
+                            ("d2", "Depth on the second face (d2)"),
+                            ("width", "Width"), ("draft", "Side draft")):
+            form.addRow(language.tr(label), f[name])
+        got = _ask("sm_gusset_form", dlg, lambda: {k: w.value()
+                                                   for k, w in f.items()})
+        if not got:
+            return
+        try:
+            ops.add_gusset(win.model, body, int(got["bend"]),
+                           got["offset"], got["d1"], got["d2"],
+                           got["width"], got["draft"])
+        except ValueError as exc:
+            _say(win, str(exc))
+            return
+        report(win, body)
+
+    if "sm_gusset_spot" in ANSWERS:
+        go(*ANSWERS["sm_gusset_spot"])
+        return body
+    from . import bake, mesh
+    view = win.view3d
+    root = win._render_scope()[0]
+    iso = root if root is not win.model.root else None
+    env = bake._codegen_env(body)
+    with win._isolated_frame(iso):
+        tris = mesh.selected_world_tris(root, {body.id},
+                                        fn=win.model.effective_fn())
+        matrix = mesh.ancestor_matrix(body, env, stop=iso)
+    if not tris or not hasattr(view, "start_pick"):
+        go(1, 0.0)
+        return body
+
+    def picked(desc, _node=None):
+        if desc is None or not (desc.get("point") or desc.get("pos")):
+            return
+        try:
+            bend, along = ops.nearest_bend(
+                win.model, body, desc.get("point") or desc["pos"], matrix)
+        except ValueError as exc:
+            _say(win, str(exc))
+            return
+        go(bend, along)
+    view.start_pick(picked, groups=[(body, tris)], banner=language.tr(
+        "Click the bend to stiffen · Esc cancels"),
+        labeler=lambda desc, node: getattr(node, "name", ""))
+    return body
+
+
+def tab_jog(win):
+    body = _body(win)
+    if body is None:
+        return None
+
+    def go(first, second):
+        (panel, u1, v1), (panel2, u2, v2) = first, second
+        dlg, form = _form(win, "Jog")
+        f = {"panel": _spin(panel, 0, 999, 0, ""),
+             "x1": _spin(u1, -1e5, 1e5), "y1": _spin(v1, -1e5, 1e5),
+             "x2": _spin(u2, -1e5, 1e5), "y2": _spin(v2, -1e5, 1e5),
+             "offset": _spin(10.0, 0.1, 1e4),
+             "angle": _spin(90.0, -179.0, 179.0, 1, " °"),
+             "radius": _spin(0.0, 0.0, 1e4)}
+        for name, label in (("panel", "Panel (0 = the base)"),
+                            ("x1", "Line from U"), ("y1", "Line from V"),
+                            ("x2", "Line to U"), ("y2", "Line to V"),
+                            ("offset", "Jog offset"),
+                            ("angle", "Jog angle (negative = down)"),
+                            ("radius", "Bend radius (0 = the body's)")):
+            form.addRow(language.tr(label), f[name])
+        stretch = QCheckBox(language.tr(
+            "Stretch the line across the tab it crosses"))
+        stretch.setChecked(True)
+        form.addRow("", stretch)
+        got = _ask("sm_tabjog_form", dlg, lambda: dict(
+            {k: w.value() for k, w in f.items()},
+            extend=stretch.isChecked()))
+        if not got:
+            return
+        try:
+            ops.add_tab_jog(win.model, body, int(got["panel"]),
+                        (got["x1"], got["y1"]), (got["x2"], got["y2"]),
+                        got["offset"], got["angle"], got["radius"],
+                        extend=got.get("extend", True))
+        except ValueError as exc:
+            _say(win, str(exc))
+            return
+        report(win, body)
+
+    if "sm_tabjog_spots" in ANSWERS:
+        go(*ANSWERS["sm_tabjog_spots"])
+        return body
+
+    def first(spot):
+        if spot is None:
+            return
+        _pick_point(win, body, lambda second: go(spot, second)
+                    if second else None,
+                    banner="Click the line's end · Esc cancels")
+    _pick_point(win, body, first, banner="Click the line's start, across "
+                "the tab · Esc cancels")
+    return body
+
+
+def tab(win):
+    body = _body(win)
+    if body is None:
+        return None
+    dlg, form = _form(win, "Tab")
+    f = {"panel": _spin(0, 0, 999, 0, ""), "u": _spin(0.0, -1e5, 1e5),
+         "v": _spin(15.0, -1e5, 1e5), "width": _spin(10.0, 0.1, 1e4),
+         "length": _spin(20.0, 0.1, 1e5),
+         "angle": _spin(90.0, -360.0, 360.0, 1, " °"),
+         "hole": _spin(5.5, 0.0, 1e4)}
+    for name, label in (("panel", "Panel (0 = the base)"),
+                        ("u", "Round end centre U"),
+                        ("v", "Round end centre V"), ("width", "Width"),
+                        ("length", "Length (from that centre)"),
+                        ("angle", "Direction (0 = +U, 90 = +V)"),
+                        ("hole", "Hole diameter (0 = none)")):
+        form.addRow(language.tr(label), f[name])
+    got = _ask("sm_tab_form", dlg, lambda: {k: w.value()
+                                            for k, w in f.items()})
+    if not got:
+        return None
+    try:
+        ops.add_tab(win.model, body, int(got["panel"]), got["u"], got["v"],
+                    got["width"], got["length"], got["angle"], got["hole"])
+    except ValueError as exc:
+        _say(win, str(exc))
+        return None
+    report(win, body)
+    return body
+
+
+def corner(win):
+    body = _body(win)
+    if body is None:
+        return None
+
+    def go(spot):
+        panel, u, v = spot if spot else (0, 0.0, 0.0)
+        dlg, form = _form(win, "Break Corner")
+        f = {"panel": _spin(panel, 0, 999, 0, ""),
+             "u": _spin(u, -1e5, 1e5), "v": _spin(v, -1e5, 1e5),
+             "size": _spin(10.0, 0.1, 1e4)}
+        for name, label in (("panel", "Panel (0 = the base)"),
+                            ("u", "Near U"), ("v", "Near V"),
+                            ("size", "Radius")):
+            form.addRow(language.tr(label), f[name])
+        chamfer = QCheckBox(language.tr("Chamfer instead of a round"))
+        form.addRow("", chamfer)
+        got = _ask("sm_corner_form", dlg, lambda: dict(
+            {k: w.value() for k, w in f.items()},
+            chamfer=chamfer.isChecked()))
+        if not got:
+            return
+        try:
+            ops.add_corner(win.model, body, int(got["panel"]), got["u"],
+                           got["v"], got["size"], got.get("chamfer", False))
+        except ValueError as exc:
+            _say(win, str(exc))
+            return
+        report(win, body)
+    if "sm_corner_spot" in ANSWERS:
+        go(ANSWERS["sm_corner_spot"])
+    else:
+        _pick_point(win, body, go, banner="Click the corner to break · "
+                    "Esc types its position")
     return body
 
 
@@ -662,9 +1082,11 @@ def slot(win):
     return sheet_cut_ui.start(win, "slot")
 
 
-HANDLERS = {"sm_hole": hole, "sm_slot": slot, "sm_base": base_flange, "sm_convert": convert, "sm_jog": jog,
+HANDLERS = {"sm_hole": hole, "sm_slot": slot, "sm_base": base_flange, "sm_arch": arch_plate, "sm_convert": convert, "sm_jog": jog,
             "sm_flange": flange, "sm_fold": fold, "sm_hem": hem,
             "sm_path": path, "sm_contour": contour,
-            "sm_perforate": perforate, "sm_flat": flat_pattern,
+            "sm_phole": panel_hole, "sm_corner": corner, "sm_tab": tab,
+            "sm_tabjog": tab_jog, "sm_gusset": gusset, "sm_mirror": mirror,
+            "sm_lpattern": linear_pattern, "sm_cpattern": circular_pattern, "sm_perforate": perforate, "sm_flat": flat_pattern,
             "sm_unfold": unfold, "sm_refold": refold, "sm_rules": rules,
             "sm_dxf": export_dxf, "sm_bend_table": export_bend_table}

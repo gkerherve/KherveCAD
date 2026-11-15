@@ -101,6 +101,22 @@ def insert_contour(model, points, width, parent=None, name="Sheet metal"):
     return node
 
 
+def arch_outline(width, below, step=5.0):
+    """The outline of an arch plate: *width* wide, a half circle of
+    radius width / 2 on top (its centre at the origin) over *below* mm of
+    straight sides — a bracket's back plate. Points run counter-clockwise
+    from the bottom left; the arch is faceted every *step* degrees."""
+    r = width / 2.0
+    pts = [[-r, -below], [r, -below], [r, 0.0]]
+    a = step
+    while a < 180.0 - 1e-9:
+        pts.append([round(r * math.cos(math.radians(a)), 4),
+                    round(r * math.sin(math.radians(a)), 4)])
+        a += step
+    pts.append([-r, 0.0])
+    return pts
+
+
 def outline_of(node, env=None):
     """A sketch shape's outline in its own frame: rect, polygon, circle
     (as 24 sides) — what Base Flange and Convert read."""
@@ -242,6 +258,44 @@ def add_flange(model, node, panel, edge, height, angle=90.0, radius=0.0,
     return made
 
 
+def add_ear(model, node, panel, edge, center, width, height, angle=90.0,
+            radius=0.0, hole=0.0, from_end=False):
+    """Edge Flange with an edited profile, the common one: an ear — a
+    strip *width* wide centred *center* mm along the edge (from its
+    start), *height* to the outside, its far end a full round, with an
+    optional hole of diameter *hole* at the centre of that round. Returns
+    the ear's panel number."""
+    body = built(model, node)
+    pan = body.panels[panel] if 0 <= panel < len(body.panels) else None
+    if pan is None or pan.edge(edge) is None:
+        raise ValueError(f"panel {panel} has no edge {edge}")
+    # the edge as it stands once the other bends have set it back:
+    # measure it with a provisional ear (which notches, not trims)
+    trial = dict(node.params)
+    trial["flanges"] = _rows(node, "flanges") + [
+        [int(panel), int(edge), float(height), float(angle),
+         float(radius), 0.0, 0.0, 1]]
+    after = sheet_body.build(trial, _env(model))
+    held = after.panels[panel].edge(edge) if after.panels[panel] else None
+    ln = held[2] if held else pan.edge(edge)[2]
+    if from_end:
+        center = ln - center
+    lo, hi = center - width / 2.0, center + width / 2.0
+    if lo < -1e-9 or hi > ln + 1e-9:
+        raise ValueError(f"Ear: it runs off the edge ({ln:.2f} mm long)")
+    rows = _rows(node, "flanges")
+    index = len(body.panels)
+    rows.append([int(panel), int(edge), float(height), float(angle),
+                 float(radius), round(lo, 6), round(ln - hi, 6), 1])
+    _set(model, node, "flanges", rows)
+    if hole > 0:
+        r = radius or sheet_body._num(node.params.get("radius", 2.0),
+                                      _env(model), 2.0)
+        leg = height - (r + body.t) * math.tan(math.radians(angle) / 2)
+        add_panel_hole(model, node, index, -center, leg - width / 2.0, hole)
+    return index
+
+
 def add_hem(model, node, panel, edge, length, flip=False):
     rows = _rows(node, "hems")
     rows.append([int(panel), int(edge), float(length), 1 if flip else 0])
@@ -329,6 +383,203 @@ def perforate(model, node, diameter, pitch, margin=0.0, square=False):
          if diameter else [])
 
 
+def edge_position(model, node, panel, edge, along, across):
+    """A spot in a panel's own (u, v) given from one of its edges:
+    *along* mm from the edge's start toward its end, *across* mm
+    inward from the edge (how a drawing dimensions a hole)."""
+    body = built(model, node)
+    pan = body.panels[panel] if 0 <= panel < len(body.panels) else None
+    found = pan.edge(edge) if pan is not None else None
+    if found is None:
+        raise ValueError(f"panel {panel} has no edge {edge}")
+    a, b, ln = found
+    d = ((b[0] - a[0]) / ln, (b[1] - a[1]) / ln)
+    inward = (-d[1], d[0])                 # polygons run CCW: inside = left
+    return (a[0] + d[0] * along + inward[0] * across,
+            a[1] + d[1] * along + inward[1] * across)
+
+
+def add_panel_hole(model, node, panel, u, v, diameter):
+    """Simple Hole: a round hole through *panel* at (u, v) of its own
+    frame — cut in the folded part and in the flat pattern."""
+    if diameter <= 0:
+        raise ValueError("Hole: the diameter must be more than 0")
+    rows = _rows(node, "pholes")
+    rows.append([int(panel), round(float(u), 6), round(float(v), 6),
+                 float(diameter)])
+    _set(model, node, "pholes", rows)
+    return len(rows) - 1
+
+
+def add_tab(model, node, panel, u, v, width, length, angle=90.0, hole=0.0):
+    """Base Flange/Tab: a round-ended strip *width* wide merged into
+    *panel* — its round end centred at (u, v), running *length* mm toward
+    *angle* degrees (0 = +U), with an optional hole of diameter *hole* at
+    the centre of the round end. Material the panel already lacks (an
+    opening) stays open around it."""
+    if width <= 0 or length <= 0:
+        raise ValueError("Tab: width and length must be more than 0")
+    rows = _rows(node, "tabs")
+    rows.append([int(panel), round(float(u), 6), round(float(v), 6),
+                 float(width), float(length), float(angle), float(hole)])
+    _set(model, node, "tabs", rows)
+    return len(rows) - 1
+
+
+def jog_span(model, node, panel, p1, p2, margin=0.5):
+    """The sketched jog line p1 -> p2 stretched to the whole run it makes
+    across the material of *panel* (the part of the line inside the
+    sheet nearest their midpoint) plus *margin* mm of air each side — so
+    two clicks on a tab give a line that really crosses it."""
+    from . import csg
+    body = built(model, node)
+    pan = body.panels[panel] if 0 <= panel < len(body.panels) else None
+    if pan is None or not csg.available():
+        return p1, p2
+    length = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+    if length < 1e-9:
+        raise ValueError("Jog: the line has no length")
+    d = ((p2[0] - p1[0]) / length, (p2[1] - p1[1]) / length)
+    m = csg._m
+    far = 1e4
+    quad = [(p1[0] - d[0] * far - d[1] * 1e-3, p1[1] - d[1] * far + d[0] * 1e-3),
+            (p1[0] + d[0] * far - d[1] * 1e-3, p1[1] + d[1] * far + d[0] * 1e-3),
+            (p1[0] + d[0] * far + d[1] * 1e-3, p1[1] + d[1] * far - d[0] * 1e-3),
+            (p1[0] - d[0] * far + d[1] * 1e-3, p1[1] - d[1] * far - d[0] * 1e-3)]
+    strip = m.CrossSection([[list(q) for q in sheet_body._ccw(quad)]],
+                           m.FillRule.Positive)
+    cross = sheet_body.panel_region(pan) ^ strip
+    mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    mid_t = 0.0
+    best = None
+    for part in cross.decompose():
+        ts = [(q[0] - p1[0]) * d[0] + (q[1] - p1[1]) * d[1]
+              for lp in part.to_polygons() for q in lp]
+        if not ts:
+            continue
+        lo, hi = min(ts), max(ts)
+        dist = 0.0 if lo <= mid_t + length / 2 <= hi else min(
+            abs(lo - length / 2), abs(hi - length / 2))
+        if best is None or dist < best[0]:
+            best = (dist, lo, hi)
+    if best is None:
+        raise ValueError("Jog: that line crosses no material of the panel")
+    lo, hi = best[1] - margin, best[2] + margin
+    return ((p1[0] + d[0] * lo, p1[1] + d[1] * lo),
+            (p1[0] + d[0] * hi, p1[1] + d[1] * hi))
+
+
+def add_tab_jog(model, node, panel, p1, p2, offset=10.0, angle=90.0,
+            radius=0.0, fixed=None, extend=False):
+    """Jog: two bends along the line p1 -> p2 (the panel's own frame)
+    step what lies beyond it *offset* mm out of the plane — up when
+    *angle* is positive, down when negative; the piece holding *fixed*
+    (else the biggest) stays. *extend* stretches the line across the
+    material it crosses first (jog_span). Returns the jog's number."""
+    if extend:
+        p1, p2 = jog_span(model, node, panel, p1, p2)
+    if angle < 0:
+        offset = -abs(offset)
+    else:
+        offset = abs(offset)
+    fx, fy = fixed if fixed else (1e6, 1e6)
+    rows = _rows(node, "tabjogs")
+    rows.append([int(panel), round(p1[0], 6), round(p1[1], 6),
+                 round(p2[0], 6), round(p2[1], 6), float(offset),
+                 float(angle), float(radius), fx, fy])
+    _set(model, node, "tabjogs", rows)
+    return len(rows) - 1
+
+
+def add_gusset(model, node, bend, offset, d1=10.0, d2=10.0, width=7.5,
+               draft=20.0):
+    """Sheet Metal Gusset: a stamped rib across the inside of bend number
+    *bend* (as numbered in the bend table, from 1), its centre *offset* mm
+    along the bend from its start, rising *d1* up the first face and *d2*
+    up the second, *width* across at the corner, its sides drafted
+    *draft* degrees. Returns the gusset's number."""
+    built_body = built(model, node)
+    if not 1 <= int(bend) <= len(built_body.bends):
+        raise ValueError(f"Gusset: bend {bend} does not exist "
+                         f"({len(built_body.bends)} bends)")
+    rows = _rows(node, "gussets")
+    rows.append([int(bend) - 1, round(float(offset), 6), float(d1),
+                 float(d2), float(width), float(draft)])
+    _set(model, node, "gussets", rows)
+    return len(rows) - 1
+
+
+def nearest_bend(model, node, point, matrix=None):
+    """The number (from 1) and the distance along it of the bend whose
+    line lies nearest *point* (world; *matrix* takes the body's frame to
+    world)."""
+    from . import mesh
+    body = built(model, node)
+    best = None
+    for i, b in enumerate(body.bends):
+        a0 = b["a"]
+        a1 = sheet_body._add(a0, sheet_body._mul(b["e"], b["span"]))
+        if matrix:
+            a0, a1 = mesh.mat_apply(matrix, a0), mesh.mat_apply(matrix, a1)
+        seg = [a1[k] - a0[k] for k in range(3)]
+        ln2 = sum(c * c for c in seg) or 1.0
+        t = max(0.0, min(1.0, sum((point[k] - a0[k]) * seg[k]
+                                  for k in range(3)) / ln2))
+        q = [a0[k] + seg[k] * t for k in range(3)]
+        dist = sum((point[k] - q[k]) ** 2 for k in range(3))
+        if best is None or dist < best[0]:
+            best = (dist, i + 1, t * b["span"])
+    if best is None:
+        raise ValueError("Gusset: this body has no bend")
+    return best[1], best[2]
+
+
+def add_corner(model, node, panel, u, v, size, chamfer=False):
+    """Break Corner: round (or chamfer) the convex corner of *panel*
+    nearest (u, v) by *size* mm — in the folded part and the flat
+    pattern."""
+    if size <= 0:
+        raise ValueError("Break Corner: the size must be more than 0")
+    rows = _rows(node, "corners")
+    rows.append([int(panel), round(float(u), 6), round(float(v), 6),
+                 float(size), 1 if chamfer else 0])
+    _set(model, node, "corners", rows)
+    return len(rows) - 1
+
+
+def locate(model, node, point, matrix=None):
+    """(panel, u, v) of the face under *point* (world; *matrix* takes the
+    body's frame to world): the panel whose slab holds it, else the
+    nearest one."""
+    import numpy as np
+    from . import mesh
+    body = built(model, node)
+    best = None
+    for i, pan in enumerate(body.panels):
+        if pan is None:
+            continue
+        f = pan.frame
+        pts = [f.at((0.0, 0.0), 0.0), f.at((1.0, 0.0), 0.0),
+               f.at((0.0, 1.0), 0.0), f.at((0.0, 0.0), 1.0)]
+        if matrix:
+            pts = [mesh.mat_apply(matrix, q) for q in pts]
+        o = np.array(pts[0])
+        basis = np.array([np.array(q) - o for q in pts[1:]]).T
+        try:
+            a, b, c = np.linalg.solve(basis, np.array(point) - o)
+        except np.linalg.LinAlgError:
+            continue
+        inside = sheet_body._inside([pan.poly], a, b)
+        # c is the height over the panel's bottom in thickness units
+        off = abs(c * body.t - body.t / 2) - body.t / 2
+        score = max(off, 0.0) + (0.0 if inside else 1e3)
+        if best is None or score < best[0]:
+            best = (score, i, float(a), float(b))
+    if best is None:
+        raise ValueError("Hole: this body has no panel")
+    return best[1], best[2], best[3]
+
+
 def set_flat(model, node, flat=True):
     """Unfold (flat = True) / Refold (False) — the same body, shown as
     its flat pattern or folded."""
@@ -336,7 +587,8 @@ def set_flat(model, node, flat=True):
 
 
 def remove(model, node, what, index):
-    """Drop row *index* of flanges / hems / folds / perforate."""
+    """Drop row *index* of flanges / hems / folds / perforate / holes /
+    corners / tabs / jogs / gussets."""
     rows = _rows(node, what)
     if not 0 <= index < len(rows):
         raise ValueError(f"no {what} row {index}")
@@ -500,6 +752,11 @@ def apply_rule(model, node, name):
     model.set_param(node, "rule", slug)
 
 
+def _features(model, node):
+    from . import sheet_metal_patterns
+    return sheet_metal_patterns.features(model, node)
+
+
 def describe(model, node):
     """A short report of a body: panels, bends, flat size, errors."""
     body = built(model, node)
@@ -510,6 +767,12 @@ def describe(model, node):
         flat=bool(node.params.get("flat")),
         panels=sum(1 for p in body.panels if p is not None),
         bends=len(body.bends), errors=body.errors,
+        cut_holes=len(node.params.get("pholes") or []),
+        corners=len(node.params.get("corners") or []),
+        tabs=len(node.params.get("tabs") or []),
+        tab_jogs=len(node.params.get("tabjogs") or []),
+        gussets=len(node.params.get("gussets") or []),
+        features=_features(model, node),
         flat_size=[round(pat["width"], 3), round(pat["height"], 3)],
         holes=len(pat["holes"]), cut_outs=len(pat.get("cuts") or []),
         bend_table=[{k: v for k, v in b.items() if k != "line"}

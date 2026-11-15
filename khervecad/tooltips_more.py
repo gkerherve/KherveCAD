@@ -378,6 +378,103 @@ TIPS = {
          "OK: the body is made and can take edge flanges and hems."],
         "Keep the corners square to start; the bend radius rounds "
         "them."),
+    "sm_mirror": (
+        "Mirror",
+        "Copies chosen features — an ear with its hole, tabs, holes, "
+        "jogs — to the other side of a plane across the sheet.",
+        ["Select the sheet metal body.",
+         "Click Mirror and tick the features to mirror.",
+         "Choose the Mirror plane (across X or across Y) and its "
+         "position.",
+         "OK: the copies are added."],
+        "The copies are ordinary rows: edit or remove each on its own."),
+    "sm_lpattern": (
+        "Linear Pattern",
+        "Repeats chosen features at a fixed step — a row of gussets, "
+        "holes or tabs.",
+        ["Select the sheet metal body.",
+         "Click Linear Pattern and tick the features.",
+         "Give the number of Instances (the original counts) and the "
+         "Step; a gusset steps along its bend.",
+         "OK."],
+        "A gusset 10 mm from the corner, 3 instances 30 apart, gives "
+        "ribs at -30, 0 and 30 on an 80 mm flange."),
+    "sm_cpattern": (
+        "Circular Pattern",
+        "Repeats chosen features round a centre — four tabs and their "
+        "jogs round an opening.",
+        ["Select the sheet metal body.",
+         "Click Circular Pattern and tick the features (a tab and its "
+         "jog).",
+         "Give the Instances, the Centre and the Angle (360 = a full "
+         "turn, equally spaced).",
+         "OK."],
+        "Tick the tab AND its jog so every copy is jogged too."),
+    "sm_gusset": (
+        "Sheet Metal Gusset",
+        "A stamped rib across the inside corner of a bend — stiffens a "
+        "flange without extra parts.",
+        ["Select the sheet metal body.",
+         "Click Sheet Metal Gusset, then click the bend in the 3D view.",
+         "Give the Offset along the bend, the depths d1 / d2 up each "
+         "face, the Width and the side Draft.",
+         "OK: the rib is added (the flat pattern is unchanged)."],
+        "Repeat it, or use a Linear Pattern, for a row of ribs."),
+    "sm_tabjog": (
+        "Jog Tab",
+        "Two bends along a line step the part beyond it out of the "
+        "sheet's plane — a tab raised clear of the plate.",
+        ["Select the sheet metal body.",
+         "Click Jog Tab, then click the line's start and end across the "
+         "tab in the 3D view.",
+         "Give the Jog offset and angle (negative = down) and the Bend "
+         "radius; the line is stretched across the whole tab.",
+         "OK: the end of the tab moves, the rest stays."],
+        "The line must cross only what moves: a tab, not the plate."),
+    "sm_tab": (
+        "Tab",
+        "Merges a new tab — a strip with a round end and a hole — into "
+        "the sheet, even inside an opening of it (a mounting lug).",
+        ["Select the sheet metal body.",
+         "Click Tab.",
+         "Give the Round end centre (U, V), the Width, the Length "
+         "measured from that centre and the Direction (90 = up).",
+         "Hole diameter 0 leaves the end solid. OK."],
+        "The tab's root must overlap the sheet: it is merged, not "
+        "bent."),
+    "sm_corner": (
+        "Break Corner",
+        "Rounds (or chamfers) a sharp corner of the sheet — the flange's "
+        "free corners, a plate's corners — in the part, the flat pattern "
+        "and the DXF.",
+        ["Select the sheet metal body.",
+         "Click Break Corner, then click near the corner in the 3D view.",
+         "Give the Radius (tick Chamfer for a straight cut).",
+         "OK: the corner is rounded."],
+        "Only convex corners with sides longer than the radius can be "
+        "broken."),
+    "sm_phole": (
+        "Panel Hole",
+        "A round hole through the sheet — cut in the folded part, the "
+        "flat pattern and the DXF.",
+        ["Select the sheet metal body.",
+         "Click Panel Hole, then click the face where it goes.",
+         "Check the Position (U, V in that panel) and give the Hole "
+         "diameter.",
+         "OK: the hole is cut; Unfold shows it on the blank."],
+        "A hole belongs to one panel (the base or one flange): keep it on "
+        "that panel, clear of the bends."),
+    "sm_arch": (
+        "Arch Plate",
+        "A new base flange shaped like an arch — a half circle over "
+        "straight sides: the back plate of a bracket.",
+        ["Click Arch Plate (nothing needs selecting).",
+         "Give the Width (the arch's diameter), the straight height "
+         "below the arch centre, the Thickness, Bend radius and "
+         "K-factor.",
+         "OK: the plate stands on the XY plane with its centre at the "
+         "origin; Edge Flange comes next."],
+        "Any other outline: draw a polygon and use Base Flange/Tab."),
     "sm_perforate": (
         "Perforate",
         "A field of round holes over the flat sheet, kept clear of the "

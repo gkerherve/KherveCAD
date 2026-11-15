@@ -6734,6 +6734,35 @@ into a new module and import.
                        radius; every change rewrites the row live, OK keeps
                        it, Cancel removes it. MCP sheet_metal `jog`, `hole`,
                        `slot`. `tests/test_jog_by_mouse.py`.
+                       **Exercise 135** (2026-11-15, sheet metal bracket):
+                       a panel is now a 2D REGION (`panel_region`: outline
+                       less `holes`, plus `tabs`, less jog `cuts`; Manifold)
+                       used by the folded solid and the flat pattern, so
+                       these rows exist on the body: `pholes` [panel, u, v,
+                       Ø] (Panel Hole: any panel, cut BEFORE tabs; main's
+                       `holes`/`slots` stay the base plate's flat ones), `corners` [panel, u, v, size,
+                       chamfer] (Break Corner: the vertex nearest u, v),
+                       `tabs` [panel, cx, cy, width, length, angle, hole]
+                       (a round-ended strip merged in, after the holes, so
+                       it may stand in an opening), `tabjogs` [panel, x1, y1,
+                       x2, y2, offset, angle, radius, fixed x, y] (Jog Tab: two
+                       bends along the line; the piece beyond it moves
+                       `offset` out of plane and keeps its projected place,
+                       `jog_geometry` = leg and reach; `ops.jog_span`
+                       stretches two clicks across the tab), `gussets`
+                       [bend - 1, offset, d1, d2, width, draft] (a hull
+                       fused into the inside corner, `body.solids`), and a
+                       8th flange column `shape` 1 = a round-ended ear. A
+                       flange on PART of an edge (inset or ear) notches
+                       the parent by its own width instead of moving the
+                       whole edge (the whole-edge set-back ran an arch's
+                       tangent facet out to y = 68). `sheet_metal_patterns.
+                       py` copies rows: Mirror / Linear / Circular Pattern
+                       (ears take their holes along). `anchors.pick` is
+                       perspective-correct (`desc["point"]` is the true
+                       click). Offscreen scripts must use the project
+                       .venv python (the system one has no manifold3d, and
+                       a Difference then silently does not draw).
   - `pattern.py`     — the **Pattern** wrapper (Blender's Array,
                        SolidWorks' linear/circular pattern; Repeat &
                        logic family): `kind` linear (`count` copies at

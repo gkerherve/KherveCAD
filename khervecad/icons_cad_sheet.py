@@ -166,6 +166,103 @@ def _contour(d):
     d.path(path, None, color=d.pal.make, width=0.07)
 
 
+@draws("sm_mirror")
+def _mirror(d):
+    """Mirror: a tab and its image about a dashed plane."""
+    _plate(d)
+    d.box(-0.85, -0.2, 0.0, 0.4, 0.4, T, d.pal.make)
+    d.box(0.45, -0.2, 0.0, 0.4, 0.4, T, d.pal.make)
+    d.line(d.P(0.0, -0.9, T), d.P(0.0, 0.9, T), d.pal.edge, 0.04, [3, 2])
+
+
+@draws("sm_lpattern")
+def _lpattern(d):
+    """Linear Pattern: three ribs in a row."""
+    _plate(d)
+    for i in range(3):
+        d.box(-0.8 + 0.6 * i, -0.1, T, 0.3, 0.3, 0.3, d.pal.make)
+
+
+@draws("sm_cpattern")
+def _cpattern(d):
+    """Circular Pattern: four lugs round a centre."""
+    _plate(d)
+    for a in range(0, 360, 90):
+        c, s = math.cos(math.radians(a)), math.sin(math.radians(a))
+        d.box(c * 0.6 - 0.12, s * 0.6 - 0.12, T, 0.24, 0.24, 0.0, d.pal.make)
+        d.disc(d.P(c * 0.6, s * 0.6, T), 0.06, d.pal.cut)
+
+
+@draws("sm_gusset")
+def _gusset(d):
+    """Sheet Metal Gusset: a corner with a triangular rib in it."""
+    _plate(d, -1.0, -0.9, 2.0, 1.8)
+    _wall(d, -1.0, 0.9 - T, 2.0, 1.0)
+    pts = [d.P(-0.2, 0.9 - T, T), d.P(0.2, 0.9 - T, T),
+           d.P(0.0, 0.9 - T, 0.7), d.P(0.0, 0.2, T)]
+    path = QPainterPath()
+    path.moveTo(pts[0])
+    for q in pts[1:]:
+        path.lineTo(q)
+    path.closeSubpath()
+    d.path(path, None, color=d.pal.make, width=0.07)
+
+
+@draws("sm_tabjog")
+def _tabjog(d):
+    """Jog Tab: a sheet stepped up by two bends."""
+    d.box(-1.0, -0.9, 0.0, 1.0, 1.8, T)
+    d.box(0.0, -0.9, 0.0, 0.14, 1.8, 0.5, d.pal.make)
+    d.box(0.14, -0.9, 0.36, 0.86, 1.8, T)
+
+
+@draws("sm_tab")
+def _tab(d):
+    """Tab: a plate with a new tab sticking out of its edge."""
+    _plate(d, -1.0, -0.9, 1.5, 1.8)
+    d.box(0.5, -0.25, 0.0, 0.5, 0.5, T, d.pal.make)
+    d.disc(d.P(0.8, 0.0, T), 0.09, d.pal.cut)
+
+
+@draws("sm_corner")
+def _corner(d):
+    """Break Corner: a sheet with one rounded corner."""
+    path = QPainterPath()
+    path.moveTo(d.P(-1.0, -0.9, T))
+    path.lineTo(d.P(0.5, -0.9, T))
+    for i in range(9):
+        a = math.radians(-90 + 90 * i / 8)
+        path.lineTo(d.P(0.5 + 0.5 * math.cos(a), -0.4 + 0.5 * math.sin(a),
+                        T))
+    path.lineTo(d.P(1.0, 0.9, T))
+    path.lineTo(d.P(-1.0, 0.9, T))
+    path.closeSubpath()
+    _plate(d)
+    d.path(path, None, color=d.pal.make, width=0.07)
+
+
+@draws("sm_phole")
+def _hole(d):
+    """Simple Hole: one round hole through the sheet."""
+    _plate(d)
+    d.disc(d.P(0.0, 0.0, T), 0.3, d.pal.cut)
+
+
+@draws("sm_arch")
+def _arch(d):
+    """Arch Plate: a thin plate with a round top."""
+    path = QPainterPath()
+    path.moveTo(d.P(-0.6, -0.9, 0.0))
+    path.lineTo(d.P(0.6, -0.9, 0.0))
+    path.lineTo(d.P(0.6, 0.1, 0.0))
+    for i in range(1, 12):
+        a = math.radians(180 * i / 12)
+        path.lineTo(d.P(0.6 * math.cos(a), 0.1 + 0.6 * math.sin(a), 0.0))
+    path.lineTo(d.P(-0.6, 0.1, 0.0))
+    path.closeSubpath()
+    d.path(path, d.pal.make, color=d.pal.edge, width=0.05)
+
+
 @draws("sm_perforate")
 def _perforate(d):
     """Perforate: a staggered field of holes in the sheet."""
