@@ -1780,6 +1780,14 @@ TOOLS = [
             "fit": {"type": "string"},
             "end": {"type": "string"},
             "depth": {"type": "number", "exclusiveMinimum": 0},
+            "hole_diameter": {"type": "number", "exclusiveMinimum": 0,
+                              "description": "Custom sizing: hole Ø mm."},
+            "head_diameter": {"type": "number", "exclusiveMinimum": 0,
+                              "description": "Custom sizing: counterbore "
+                              "/ countersink Ø mm."},
+            "head_depth": {"type": "number", "exclusiveMinimum": 0,
+                           "description": "Custom sizing: counterbore "
+                           "depth mm."},
         }, ["node_id"]),
     },
     {

@@ -69,6 +69,15 @@ def spec_params(spec, through=None):
     elif kind == "Nut trap":
         p.update(kind="nut_trap", nut_width=round(r["nut_af"] + 0.3, 3),
                  nut_height=round(r["nut_h"] + 0.2, 3))
+    # SolidWorks' "Show custom sizing": typed values beat the table's
+    # (Exercise 59: a counterbore 15 across and 10 deep)
+    if spec.get("hole_diameter"):
+        p["diameter"] = float(spec["hole_diameter"])
+    if p["kind"] != "plain":
+        if spec.get("head_diameter") and "head_diameter" in p:
+            p["head_diameter"] = float(spec["head_diameter"])
+        if spec.get("head_depth") and "head_depth" in p:
+            p["head_depth"] = float(spec["head_depth"])
     return p
 
 
@@ -300,7 +309,8 @@ def open_panel(window):
 
 def _make_panel_class():
     from PyQt5.QtCore import Qt
-    from PyQt5.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox,
+    from PyQt5.QtWidgets import (QCheckBox, QComboBox, QDialog,
+                                 QDoubleSpinBox,
                                  QFormLayout, QHBoxLayout, QLabel,
                                  QPushButton, QVBoxLayout)
 
@@ -356,6 +366,27 @@ def _make_panel_class():
             form.addRow(language.tr("Fit"), self.fit)
             form.addRow(language.tr("End"), self.end)
             form.addRow(language.tr("Depth"), self.depth)
+            # Show custom sizing (SolidWorks): typed sizes beat the table
+            self.custom = QCheckBox(language.tr("Show custom sizing"))
+            form.addRow(self.custom)
+            self.custom_spins = {}
+            for key, label in (("hole_diameter", "Hole diameter"),
+                               ("head_diameter", "Counterbore diameter"),
+                               ("head_depth", "Counterbore depth")):
+                sp = QDoubleSpinBox()
+                sp.setRange(0.0, 10000)
+                sp.setDecimals(3)
+                sp.setSingleStep(0.5)
+                sp.setSuffix(" mm")
+                sp.setEnabled(False)
+                sp.setToolTip(language.tr("0 = the standard's value"))
+                sp.valueChanged.connect(self._describe)
+                self.custom_spins[key] = sp
+                form.addRow(language.tr(label), sp)
+            self.custom.toggled.connect(
+                lambda on: [s.setEnabled(on)
+                            for s in self.custom_spins.values()])
+            self.custom.toggled.connect(self._describe)
             lay.addLayout(form)
             self.info.setWordWrap(True)
             lay.addWidget(self.info)
@@ -377,11 +408,16 @@ def _make_panel_class():
             self._describe()
 
         def spec(self):
-            return dict(type=TYPES[self.type.currentIndex()],
-                        size=self.size.currentText(),
-                        fit=FITS[self.fit.currentIndex()],
-                        end=ENDS[self.end.currentIndex()],
-                        depth=float(self.depth.value()))
+            out = dict(type=TYPES[self.type.currentIndex()],
+                       size=self.size.currentText(),
+                       fit=FITS[self.fit.currentIndex()],
+                       end=ENDS[self.end.currentIndex()],
+                       depth=float(self.depth.value()))
+            if self.custom.isChecked():
+                for key, sp in self.custom_spins.items():
+                    if sp.value() > 0:
+                        out[key] = float(sp.value())
+            return out
 
         def _describe(self, *_):
             if not getattr(self, "_ready", False) or \
@@ -471,8 +507,9 @@ def run_mcp(window, params):
     (normal = the face's outward normal, from probe_surface), or
     re-size a feature (action update)."""
     model = window.model
-    spec = {k: params[k] for k in ("type", "size", "fit", "end", "depth")
-            if k in params}
+    spec = {k: params[k] for k in ("type", "size", "fit", "end", "depth",
+                                   "hole_diameter", "head_diameter",
+                                   "head_depth") if k in params}
     bad = [v for k, v in spec.items() if k in ("type", "size", "fit",
                                                 "end")
            and v not in dict(type=TYPES, size=SIZES, fit=FITS,
