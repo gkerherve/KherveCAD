@@ -144,6 +144,14 @@ def point_on(face):
     return [q.X(), q.Y(), q.Z()]
 
 
+def area_of(shape):
+    from OCP.GProp import GProp_GProps
+    from OCP.BRepGProp import BRepGProp
+    g = GProp_GProps()
+    BRepGProp.SurfaceProperties_s(shape, g)
+    return g.Mass()
+
+
 def edge_point(edge):
     """A point ON an edge, at the middle of its parameter range."""
     from OCP.BRepAdaptor import BRepAdaptor_Curve

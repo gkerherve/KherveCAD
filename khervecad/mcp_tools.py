@@ -3371,7 +3371,8 @@ class McpToolExecutor:
             surf = curve_surface.make_surface(self._model, nodes, kind)
         except ValueError as exc:
             raise ToolError(str(exc))
-        for key in ("thickness", "ruled", "capped", "angle", "height"):
+        for key in ("thickness", "ruled", "capped", "angle", "height",
+                    "direction", "draft", "sheet"):
             if key in params:
                 surf.params[key] = params[key]
         self._model.node_changed.emit(surf)
@@ -3380,6 +3381,14 @@ class McpToolExecutor:
         problem = validate(self._model.root).get(surf.id)
         if problem:
             out["problem"] = problem
+        return out
+
+    def _t_surface_edit(self, params) -> dict:
+        from . import surface_mcp
+        out = surface_mcp.run(self._w, params, lambda i: next(
+            (n for n in self._model.root.walk() if n.id == i), None))
+        if "error" in out:
+            raise ToolError(out["error"])
         return out
 
     def _t_edit_mesh(self, params) -> dict:

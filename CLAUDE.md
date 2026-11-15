@@ -5584,6 +5584,37 @@ into a new module and import.
                        through and only a still release is a click). The
                        curve lands where new geometry goes
                        (`create_curve`).
+  - `surface_edit.py` / `surface_tool.py` / `surface_mcp.py` — **surface
+                       bodies** (2026-11-15, Exercise 154, SolidWorks'
+                       Surfaces tab). `curve_surface` gained `sheet` (stay
+                       a surface, no thickening), `direction` (+-X/Y/Z) and
+                       `draft` (a drafted extrude lofts to a SAME-COUNT twin
+                       curve, `_drafted_far` — an offset wire made one face
+                       per fragment, 50 faces a cone and thousands of trim
+                       pieces). A `surface_edit` node WRAPS surfaces and
+                       works on them, op trim (BOPAlgo_Builder split, the
+                       pieces nearest `remove` points go; Standard = first
+                       child trimmed by the rest, Mutual = all; `keep`),
+                       knit (sewing, `solid`), planar / boundary (fill the
+                       free loop / close a round edge by its chord; the
+                       result INCLUDES the base so the tree stays a chain:
+                       Thicken(Fillet(Knit(Boundary(Trim(...)))))),
+                       thicken, fillet (`fillets` rows [x, y, z, r], one
+                       radius each) and mirror. Every pick is a point ON the
+                       piece / edge (`point_on`, `edge_point`), never a
+                       centre of mass (off a curved face). OCC quirks found:
+                       the free-bound loops of a knitted body join the base
+                       and the arm ends into ONE wire (pick the edge);
+                       arm-end fillets together with others raise
+                       Standard_Failure (caught, reported in words, do them
+                       in a separate fillet). Windows: Tools ▸ Surface Edit
+                       and the ribbon's SURFACE ▸ Edit surfaces; select the
+                       surfaces in the tree, the tool wraps them, clicks in
+                       3D add points, OK keeps / Cancel ungroups. MCP
+                       `surface_edit` (action pieces lists each piece with
+                       a point on it) and make_surface sheet / direction /
+                       draft. Exercise: ~/Documents/KherveCAD Exercises/
+                       Exercise 154 - Surface/build_ex154.py.
   - `curve_surface.py` / `curve_surface_ui.py` — **surfaces from curves**
                        (2026-10-05, the Rhino list): the `curve_surface`
                        bakedkit wrapper holds `curve` children and makes an

@@ -3690,7 +3690,62 @@ TOOLS = [
             "capped": {"type": "boolean"},
             "angle": {"type": "number"},
             "height": {"type": "number"},
+            "direction": {"type": "string",
+                          "enum": ["+Z", "-Z", "+X", "-X", "+Y", "-Y"],
+                          "description": "extrude: the axis it pushes "
+                                         "along."},
+            "draft": {"type": "number",
+                      "description": "extrude: draft angle in degrees "
+                                     "(+ widens) — a drafted surface."},
+            "sheet": {"type": "boolean",
+                      "description": "Keep it a SURFACE (no thickening) "
+                                     "so surface_edit can trim, knit, "
+                                     "fillet and thicken it."},
         }, ["curve_ids", "kind"]),
+    },
+    {
+        "name": "surface_edit",
+        "description": (
+            "Edit SURFACE BODIES the SolidWorks Surfaces way (make them "
+            "with make_surface sheet=true): wraps node_ids in a surface "
+            "node of `op`. trim: the surfaces cut each other where they "
+            "cross; `remove` = points ON the pieces to remove (node "
+            "frame); mutual false = the first surface is trimmed by the "
+            "rest, true = all trim all; keep true keeps the picked pieces "
+            "instead. Call with action=pieces first: it lists every "
+            "piece with its area and a point on it. knit: sew into one "
+            "body (`solid` true = a solid when closed). planar: fill "
+            "the whole open edge loop through each of `points`. "
+            "boundary: close a round open edge (point on it) by its "
+            "chord. thicken: `thickness` mm. fillet: `fillets` rows "
+            "[x, y, z, radius] (a point ON each edge) or `points` + "
+            "`radius`. mirror: `plane` 'XY (Top)' | 'XZ (Front)' | "
+            "'YZ (Right)' + `offset`. Chain them: each wraps the last, "
+            "like SolidWorks' feature list."
+        ),
+        "input_schema": _obj({
+            "op": {"type": "string",
+                   "enum": ["trim", "knit", "planar", "boundary",
+                            "thicken", "fillet", "mirror"]},
+            "action": {"type": "string", "enum": ["make", "pieces"]},
+            "node_ids": {"type": "array", "items": {"type": "integer"}},
+            "mutual": {"type": "boolean"},
+            "keep": {"type": "boolean"},
+            "remove": {"type": "array",
+                       "items": {"type": "array",
+                                 "items": {"type": "number"}}},
+            "points": {"type": "array",
+                       "items": {"type": "array",
+                                 "items": {"type": "number"}}},
+            "fillets": {"type": "array",
+                        "items": {"type": "array",
+                                  "items": {"type": "number"}}},
+            "solid": {"type": "boolean"},
+            "thickness": {"type": "number"},
+            "radius": {"type": "number"},
+            "plane": {"type": "string"},
+            "offset": {"type": "number"},
+        }, ["op", "node_ids"]),
     },
     {
         "name": "exact_part",

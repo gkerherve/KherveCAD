@@ -158,6 +158,17 @@ def remember_glyph(act, glyph, family=None):
     act.setProperty("kc_family", family or "")
 
 
+#: Tools ▸ Surface Edit: SolidWorks' Surfaces tab, on surface bodies
+SURFACE_EDIT = [
+    ("trim", "mdi.content-cut", "Trim Surface"),
+    ("knit", "mdi.layers-triple", "Knit Surface"),
+    ("planar", "mdi.square-outline", "Planar Surface"),
+    ("boundary", "mdi.vector-polygon", "Boundary Surface"),
+    ("thicken", "mdi.format-line-weight", "Thicken"),
+    ("fillet", "mdi.vector-radius", "Surface Fillet"),
+]
+
+
 def _action(win, glyph, text, key, slot=None, shortcut="",
             checkable=False, bind=True, family=None):
     """A toolbar action with its rich tooltip. *bind* False shows the
@@ -517,6 +528,14 @@ def build_tools_menu(win, menu):
         surf.addAction(_action(
             win, "mdi.vector-curve", label, "curve_surface",
             lambda _=False, k=kind: curve_surface_ui.from_selection(win, k)))
+    edit = menu.addMenu(icons.icon("mdi.layers-triple-outline"),
+                        language.tr("Surface E&dit"))
+    edit.setToolTipsVisible(True)
+    from . import surface_tool
+    for op, glyph, label in SURFACE_EDIT:
+        edit.addAction(_action(
+            win, glyph, label, "surface_" + op,
+            lambda _=False, o=op: surface_tool.start(win, o)))
     menu.addAction(_action(win, "mdi.magnet-on", "Snap objects",
                            "snap_objects", win._start_snap, "J",
                            bind=False))

@@ -208,6 +208,53 @@ TIPS = {
          "Select it and click Extrude.",
          "Set the Height and the Wall thickness in Properties."],
         "A curved fence, a rib, a shaped wall from one stroke."),
+    "surface_trim": (
+        "Trim Surface",
+        "Cuts surfaces where they cross and removes the pieces you "
+        "click. Standard: the first surface is trimmed by the others; "
+        "Mutual: every surface trims every other.",
+        ["Select the surfaces in the tree (Ctrl+click for several).",
+         "Click Trim Surface and choose Standard or Mutual.",
+         "Click each piece to REMOVE in the 3D view (click again to "
+         "bring it back; Keep selections keeps them instead).",
+         "OK."],
+        "A tube through a dome: remove the parts of each that lie "
+        "inside the other."),
+    "surface_knit": (
+        "Knit Surface",
+        "Sews surfaces that meet along their edges into one body; tick "
+        "Create solid when they close a volume.",
+        ["Select the surfaces in the tree.", "Click Knit Surface, OK."],
+        "Knit before Fillet or Thicken."),
+    "surface_planar": (
+        "Planar Surface",
+        "A flat surface filling an open loop of edges (or a closed "
+        "curve).",
+        ["Select the surface in the tree.",
+         "Click Planar Surface, then an open edge of it in the 3D "
+         "view — the whole loop it belongs to is filled.", "OK."],
+        "Close the top of a cone, or the base of a shell."),
+    "surface_boundary": (
+        "Boundary Surface",
+        "Closes a round open edge with a surface (its chord closes a "
+        "half round end).",
+        ["Select the surface in the tree.",
+         "Click Boundary Surface, then the open edge in the 3D view.",
+         "OK."],
+        "The D-shaped end of a half-round arm."),
+    "surface_thicken": (
+        "Thicken",
+        "Gives a surface a wall of the thickness you type — a solid.",
+        ["Select the (knitted) surface in the tree.",
+         "Click Thicken and type the thickness; OK."],
+        "A 2 mm shell from a surface model."),
+    "surface_fillet": (
+        "Surface Fillet",
+        "Rounds edges between faces of a surface body.",
+        ["Select the (knitted) surface in the tree.",
+         "Click Surface Fillet, set the Radius, click the edges.",
+         "OK."],
+        "Round where a cone meets a dome."),
     # ------------------------------------------------------- sheet metal
     "sm_base": (
         "Base Flange/Tab",

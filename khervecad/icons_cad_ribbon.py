@@ -916,3 +916,70 @@ def _render_photo(d):
                _q(0.80 + 0.14 * math.cos(r), 0.20 + 0.14 * math.sin(r)),
                d.pal.make, 0.035)
     d.disc(_q(0.80, 0.20), 0.055, d.pal.make)
+
+
+# ------------------------------------------------------ surface editing
+
+def _two_sheets(d, nu=8, nv=5):
+    """A dome sheet and a tube sheet crossing it — what Trim and Knit
+    work on."""
+    def dome(u, v):
+        a = math.pi * v
+        return (-1.0 + 2.0 * u, -0.9 * math.cos(a), 0.9 * math.sin(a))
+    _patch(d, dome, nu, nv)
+    return dome
+
+
+@draws("srf_trim")
+def _srf_trim(d):
+    """A surface cut along a crossing curve (red cut line)."""
+    dome = _two_sheets(d)
+    _curve3(d, _line_of(lambda t: (-0.2 + 0.8 * t, -0.7 + 1.4 * t,
+                                   0.6 + 0.2 * math.sin(math.pi * t))),
+            d.pal.cut if hasattr(d.pal, "cut") else d.pal.select, 0.07)
+
+
+@draws("srf_knit")
+def _srf_knit(d):
+    """Two sheets sewn along a shared edge (blue seam)."""
+    _two_sheets(d)
+    _curve3(d, _line_of(lambda t: (-1.0 + 2.0 * t, 0.0, 0.0)),
+            d.pal.select, 0.07)
+
+
+@draws("srf_planar")
+def _srf_planar(d):
+    """A flat surface filling a closed outline."""
+    def f(u, v):
+        return (-0.9 + 1.8 * u, -0.9 + 1.8 * v, 0.0)
+    _patch(d, f, 4, 4)
+    _curve3(d, [(-0.9, -0.9, 0), (0.9, -0.9, 0), (0.9, 0.9, 0),
+                (-0.9, 0.9, 0), (-0.9, -0.9, 0)], d.pal.select, 0.06)
+
+
+@draws("srf_boundary")
+def _srf_boundary(d):
+    """A curved surface through two edges (blue)."""
+    def f(u, v):
+        return (-0.9 + 1.8 * u, -0.9 + 1.8 * v,
+                0.5 * math.sin(math.pi * u) * math.sin(math.pi * v))
+    _patch(d, f)
+    _curve3(d, _line_of(lambda t: f(0, t)), d.pal.select, 0.06)
+    _curve3(d, _line_of(lambda t: f(1, t)), d.pal.select, 0.06)
+
+
+@draws("srf_thicken")
+def _srf_thicken(d):
+    """A sheet given a wall: a slab under it."""
+    d.cx, d.cy, d.k = 0.40, 0.55, 0.16
+    d.box(-1.0, -1.0, 0, 2.0, 2.0, 0.35)
+
+
+@draws("srf_fillet")
+def _srf_fillet(d):
+    """Two sheets meeting at a rounded edge."""
+    def f(u, v):
+        a = 0.5 * math.pi * u
+        return (-0.9 + 1.8 * v, -0.9 + 0.9 * (1 - math.cos(a)),
+                0.9 * math.sin(a))
+    _patch(d, f, 8, 3)

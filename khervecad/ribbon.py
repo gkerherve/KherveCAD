@@ -60,7 +60,8 @@ TABS = [
      ["sheet_create", "sheet_modify", "sheet_export"]),
     ("form", "FORM", "Sculpt", ["form_create", "deform", "edit"]),
     ("character", "CHARACTER", "Character", ["figures", "character"]),
-    ("surface", "SURFACE", "Surfaces", ["curves", "surfaces"]),
+    ("surface", "SURFACE", "Surfaces",
+     ["curves", "surfaces", "surface_edit"]),
     ("inspect", "INSPECT", "Evaluate",
      ["analyse", "checks", "dimension"]),
     # everything that turns the model into something handed on —
@@ -114,7 +115,7 @@ EXTRA_PANELS = {"reference": "Reference Geometry", "pattern": "Pattern",
                 "sheet_export": "Export", "cuts": "Cut", "pub_share": "Share", "pub_media": "Pictures & video",
                 "util_make": "Make", "util_addins": "Add-ins",
                 "util_utility": "Utility", "assemble_more": "Assemble", "mechanical": "Features", "_mechanical_menu": "Features", "_move_tools": "Move", "curves": "Curves",
-                "surfaces": "From curves", "form_create": "Create form",
+                "surfaces": "From curves", "surface_edit": "Edit surfaces", "form_create": "Create form",
                 "figures": "Figures", "solid_insert": "Insert",
                 "sketch_shapes": "Shapes", "shapes3d": "Shapes",
                 "document": "Options", "checks": "Evaluate", "dimension": "Dimension",
@@ -189,6 +190,14 @@ MENU_PANELS = {
         ("revolve — turn the curve about the z axis",
          "!mdi.rotate-3d-variant"),
         ("extrude — push the curve straight up", "!mdi.arrow-expand-up"))],
+    # SolidWorks' Surfaces tab, on surface bodies (surface_edit.py)
+    "surface_edit": [
+        ("tools/surface edit/trim surface", "!mdi.content-cut"),
+        ("tools/surface edit/knit surface", "!mdi.layers-triple"),
+        ("tools/surface edit/planar surface", "!mdi.square-outline"),
+        ("tools/surface edit/boundary surface", "!mdi.vector-polygon"),
+        ("tools/surface edit/thicken", "!mdi.format-line-weight"),
+        ("tools/surface edit/surface fillet", "!mdi.vector-radius")],
     "form_create": [("insert/subd box (smooth, edit its cage)", None),
                     ("tools/convert to subd (smooth cage)", None)],
     "figures": [("tools/add a figure/human figure", None),
@@ -413,6 +422,12 @@ for _t, _k in (("loft — a skin through the curves, in order", "srf_loft"),
                ("revolve — turn the curve about the z axis", "srf_revolve"),
                ("extrude — push the curve straight up", "srf_extrude")):
     PAINT["tools/surface from curves/" + _t] = _k
+for _t, _k in (("trim surface", "srf_trim"), ("knit surface", "srf_knit"),
+               ("planar surface", "srf_planar"),
+               ("boundary surface", "srf_boundary"),
+               ("thicken", "srf_thicken"),
+               ("surface fillet", "srf_fillet")):
+    PAINT["tools/surface edit/" + _t] = _k
 
 
 def _painted(win, acts):
