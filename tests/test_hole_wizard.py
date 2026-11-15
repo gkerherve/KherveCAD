@@ -152,6 +152,42 @@ def test_the_panel_lists_the_standard_sizes():
         win.close()
 
 
+def test_custom_sizing_in_the_panel_beats_the_table():
+    """SolidWorks' Show custom sizing (Exercise 59: an M8 counterbore 15
+    across and 10 deep, not the standard's)."""
+    from PyQt5.QtCore import QPoint, Qt
+    from PyQt5.QtTest import QTest
+    from khervecad.mainwindow import MainWindow
+    win = MainWindow()
+    try:
+        win.show()
+        block = win.model.add_node("cube", dict(width=60, depth=60,
+                                                height=10))
+        panel = hw.open_panel(win)
+        panel.type.setCurrentIndex(hw.TYPES.index("Counterbore"))
+        panel.size.setCurrentText("M8")
+        assert not panel.custom_spins["head_diameter"].isEnabled()
+        QTest.mouseClick(panel.custom, Qt.LeftButton,
+                         pos=QPoint(8, panel.custom.height() // 2))
+        assert panel.custom.isChecked()
+        panel.custom_spins["head_diameter"].setValue(15)
+        panel.custom_spins["head_depth"].setValue(10)
+        spec = panel.spec()
+        assert spec["head_diameter"] == 15 and spec["head_depth"] == 10
+        feature = hw.add_hole(win.model, block, [30, 30, 10], [0, 0, 1],
+                              spec)
+        hole = next(n for n in feature.walk() if n.type == "hole")
+        assert hole.params["head_diameter"] == 15
+        assert hole.params["head_depth"] == 10
+        # unchecked: the table's own
+        assert hw.spec_params(dict(type="Counterbore", size="M8"))[
+            "head_depth"] != 10
+        panel.close()
+    finally:
+        win._dirty = False
+        win.close()
+
+
 def test_a_hole_follows_its_face_when_the_part_changes():
     m = DocumentModel()
     block = m.add_node("cube", dict(width=40, depth=30, height=20))

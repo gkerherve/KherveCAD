@@ -49,6 +49,12 @@ COMMANDS = {
                "Two opposite bends from a sketched line: click two points "
                "for the line, the side that stays fixed, then the offset, "
                "angle and positions in its window."),
+    "sm_hole": ("Hole", "mdi.circle-outline", "create",
+                "Click on the sheet: a hole is cut there (diameter in its "
+                "window); it follows its panel through a jog."),
+    "sm_slot": ("Slot", "mdi.minus-circle-outline", "create",
+                "Click the two ends of a slot's centre line, set the "
+                "width: a slot is cut in the sheet."),
     "sm_hem": ("Hem", "mdi.wrap", "create",
                "Click an edge: it is folded right back over itself, the "
                "rule's hem gap inside."),
@@ -646,7 +652,17 @@ def jog(win):
     return sheet_jog_ui.jog(win)
 
 
-HANDLERS = {"sm_base": base_flange, "sm_convert": convert, "sm_jog": jog,
+def hole(win):
+    from . import sheet_cut_ui
+    return sheet_cut_ui.start(win, "hole")
+
+
+def slot(win):
+    from . import sheet_cut_ui
+    return sheet_cut_ui.start(win, "slot")
+
+
+HANDLERS = {"sm_hole": hole, "sm_slot": slot, "sm_base": base_flange, "sm_convert": convert, "sm_jog": jog,
             "sm_flange": flange, "sm_fold": fold, "sm_hem": hem,
             "sm_path": path, "sm_contour": contour,
             "sm_perforate": perforate, "sm_flat": flat_pattern,

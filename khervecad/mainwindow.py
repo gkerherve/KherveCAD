@@ -1098,6 +1098,12 @@ class MainWindow(QMainWindow):
             from . import mirror_feature
             mirror_feature.start(self)
             return
+        if op == "curve_deform":
+            # SolidWorks' Deform, curve to curve: initial curve, target
+            # curve and bodies clicked in the tree (curve_deform_panel)
+            from . import curve_deform_panel
+            curve_deform_panel.start(self)
+            return
         if op == "shell":
             # a Shell (or something inside one) selected: its window
             # opens again to change it, SolidWorks' Edit Feature

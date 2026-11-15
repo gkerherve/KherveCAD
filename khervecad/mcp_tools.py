@@ -1702,6 +1702,25 @@ class McpToolExecutor:
             raise ToolError(out["error"])
         return out
 
+    def _t_deform_curve(self, params) -> dict:
+        from . import curve_deform, curve_deform_panel
+        ids = {n.id: n for n in self._w.model.root.walk()}
+        try:
+            init = [ids[params["initial_id"]]]
+            targ = [ids[params["target_id"]]]
+            bodies = [ids[i] for i in params["body_ids"]]
+        except KeyError as exc:
+            raise ToolError("no node with id %s" % exc)
+        pi, pt = (curve_deform_panel.curve_of(init),
+                  curve_deform_panel.curve_of(targ))
+        if pi is None or pt is None:
+            raise ToolError("each curve must be ONE chain of lines and "
+                            "arcs joined end to end")
+        node = curve_deform.make(self._w.model, bodies, pi, pt)
+        if node is None:
+            raise ToolError("the bodies must share one parent")
+        return {"deform_id": node.id, "name": node.name}
+
     def _t_pattern_feature(self, params) -> dict:
         from . import feature_mcp
         out = feature_mcp.pattern(self._w, params)

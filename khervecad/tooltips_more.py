@@ -323,6 +323,20 @@ TIPS = {
         "Jog position says where the line falls: bend centre line, "
         "material inside / outside (its virtual sharps) or bend outside "
         "(the bends start on the line)."),
+    "sm_hole": (
+        "Hole",
+        "Cuts round holes in the flat plate; they follow their panel "
+        "through a jog and show in the flat pattern and the DXF.",
+        ["Select the sheet metal body, click Hole.",
+         "Set the Diameter, then click the sheet where each hole goes "
+         "(0.5 mm grid).", "OK."],
+        "Change the Diameter after a click to resize the last hole."),
+    "sm_slot": (
+        "Slot",
+        "Cuts a round-ended slot along a centre line you click.",
+        ["Select the sheet metal body, click Slot.",
+         "Set the Width, click the slot's two ends.", "OK."],
+        "Slots follow their panel through a jog like holes."),
     "sm_hem": (
         "Hem",
         "Folds an edge right back over itself — a safe, stiff, rounded "

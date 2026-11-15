@@ -183,6 +183,9 @@ def make(window, part, point, normal, open_2d=True, on_plane=False):
         on = on[len("Sketch on "):]
     model.rename(group, "Sketch on " + on)
     group._outline_part = part
+    if not on_plane:
+        group._face_click = ([float(v) for v in raw],
+                             [float(v) for v in normal])
     if on_plane:
         group.params[ON_PLANE] = True
     else:

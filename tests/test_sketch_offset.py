@@ -317,6 +317,51 @@ def test_the_button_offsets_a_part_edge_clicked_in_3d(monkeypatch):
         w.close()
 
 
+def test_the_button_offsets_a_line_arc_line_with_square_corners():
+    """Exercise 59's wall: a line, a quarter arc R90 and a line meeting at
+    right angles (not tangent), offset 15 outward. SolidWorks trims the
+    arc copy and the line copies to where they cross; the copies were left
+    apart so the wall's outline stayed open."""
+    from PyQt5.QtWidgets import QApplication
+    QApplication.instance() or QApplication([])
+    from khervecad.mainwindow import MainWindow
+    from khervecad import sketch_modify, sketch_arc
+    w = MainWindow()
+    w.show()
+    sk = w.model.add_node("union", {}, name="Sketch")
+    a = w.model.add_node("line", dict(x1=100, y1=63.5, x2=20, y2=63.5,
+                                      width=0.2), parent=sk)
+    b = w.model.add_node("line", dict(x1=20, y1=63.5, x2=-70, y2=-26.5,
+                                      bulge=-Q, width=0.2), parent=sk)
+    c = w.model.add_node("line", dict(x1=-70, y1=-26.5, x2=-70, y2=-106.5,
+                                      width=0.2), parent=sk)
+    w.model.structure_changed.emit()
+    QApplication.processEvents()
+    w.builder.active_tree().select_nodes([a, b, c])
+    act = next(x for x in sketch_modify.panel_actions(w)
+               if x.data() == "sk_offset")
+    act.trigger()
+    panel = w._offset_panel
+    panel.fields["distance"].setValue(15)
+    panel.ok.click()
+    new = [n for n in sk.children if n.type == "line"][3:]
+    assert len(new) == 3
+    p = [n.params for n in new]
+    for u, v in zip(p, p[1:]):
+        assert (u["x2"], u["y2"]) == pytest.approx((v["x1"], v["y1"]),
+                                                   abs=1e-6)
+    top = math.sqrt(105 ** 2 - 15 ** 2) - 70
+    assert (p[0]["x1"], p[0]["y1"]) == pytest.approx((100, 48.5))
+    assert (p[0]["x2"], p[0]["y2"]) == pytest.approx((top, 48.5), abs=1e-4)
+    arc = next(n for n in new if n.params.get("bulge"))
+    cx, cy, r, _a, _s = sketch_arc.geometry(
+        *(arc.params[k] for k in ("x1", "y1", "x2", "y2", "bulge")))
+    assert (cx, cy, r) == pytest.approx((-70, 63.5, 105), abs=1e-4)
+    assert (p[2]["x1"], p[2]["x2"]) == pytest.approx((-55, -55))
+    w._dirty = False
+    w.close()
+
+
 def test_the_copies_of_a_faceted_chain_meet():
     """A part's fillet comes off its facets a hair off tangent (the arc
     ended at y = 40.243 where the line's copy began at 40.14): the copies

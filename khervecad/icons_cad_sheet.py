@@ -105,6 +105,29 @@ def _jog(d):
     d.arrow(d.P(0.5, 0.0, T), d.P(0.5, 0.0, 0.9), d.pal.make, 0.07, 0.15)
 
 
+def _loop(cx, cy, rx, ry, n=16):
+    return [(cx + rx * math.cos(2 * math.pi * i / n),
+             cy + ry * math.sin(2 * math.pi * i / n)) for i in range(n)]
+
+
+@draws("sm_hole")
+def _hole(d):
+    """Hole: a round cut in the plate, red."""
+    _plate(d)
+    d.ground(_loop(0.0, 0.0, 0.45, 0.45), color=d.pal.cut, z=T, width=0.08)
+
+
+@draws("sm_slot")
+def _slot(d):
+    """Slot: a long round-ended cut in the plate, red."""
+    _plate(d)
+    pts = [(-0.35 + 0.2 * math.cos(math.pi / 2 + math.pi * i / 6),
+            0.2 * math.sin(math.pi / 2 + math.pi * i / 6)) for i in range(7)]
+    pts += [(0.35 + 0.2 * math.cos(-math.pi / 2 + math.pi * i / 6),
+             0.2 * math.sin(-math.pi / 2 + math.pi * i / 6)) for i in range(7)]
+    d.ground(pts, color=d.pal.cut, z=T, width=0.08)
+
+
 @draws("sm_hem")
 def _hem(d):
     """Hem: the edge folded right back over itself."""

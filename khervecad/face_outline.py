@@ -216,6 +216,25 @@ def _face_triangles(group, tris):
     return out
 
 
+def to_local_point(group, p):
+    from . import face_sketch
+    return face_sketch.to_local(group, p)
+
+
+def _contains(polys, at):
+    """Is *at* inside the polygons (even-odd, holes included)?"""
+    x, y = at
+    n = 0
+    for poly in polys:
+        pts = [(float(a), float(b)) for a, b in poly]
+        for i, a in enumerate(pts):
+            b = pts[(i + 1) % len(pts)]
+            if (a[1] > y) != (b[1] > y) and \
+                    a[0] + (y - a[1]) / (b[1] - a[1]) * (b[0] - a[0]) > x:
+                n += 1
+    return n % 2 == 1
+
+
 def whole_face(group, own, others):
     """The face as SolidWorks sees it (2026-10-31, the user: the face of
     one part showed alone, not the part beside it on the same face): the
@@ -237,6 +256,15 @@ def whole_face(group, own, others):
                               m.FillRule.Positive).simplify(1e-4)
         keep = [c for c in cs.decompose()
                 if not (c ^ seed).is_empty()]
+        click = getattr(group, "_face_click", None)
+        if click and len(keep) > 1:
+            # a face is the connected region under the click, not every
+            # coplanar piece of the part (Exercise 59: the floor inside
+            # the curved wall, not the plate's far side of it)
+            at = to_local_point(group, click[0])
+            under = [c for c in keep
+                     if _contains(c.to_polygons(), at)]
+            keep = under or keep
         polys = [p for c in keep for p in c.to_polygons()]
     except Exception:
         return None

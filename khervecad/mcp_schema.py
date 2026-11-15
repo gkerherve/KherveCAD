@@ -1780,6 +1780,14 @@ TOOLS = [
             "fit": {"type": "string"},
             "end": {"type": "string"},
             "depth": {"type": "number", "exclusiveMinimum": 0},
+            "hole_diameter": {"type": "number", "exclusiveMinimum": 0,
+                              "description": "Custom sizing: hole Ø mm."},
+            "head_diameter": {"type": "number", "exclusiveMinimum": 0,
+                              "description": "Custom sizing: counterbore "
+                              "/ countersink Ø mm."},
+            "head_depth": {"type": "number", "exclusiveMinimum": 0,
+                           "description": "Custom sizing: counterbore "
+                           "depth mm."},
         }, ["node_id"]),
     },
     {
@@ -1798,6 +1806,23 @@ TOOLS = [
             "point": {"type": "array", "items": {"type": "number"}},
             "normal": {"type": "array", "items": {"type": "number"}},
         }, ["node_ids"]),
+    },
+    {
+        "name": "deform_curve",
+        "description": (
+            "DEFORM, CURVE TO CURVE (SolidWorks' Deform): bend `body_ids` "
+            "(parts / feature groups, one parent) from `initial_id` — a "
+            "sketch or line holding the initial curve (a sketch with "
+            "construction lines uses only those, e.g. the rod's centre "
+            "line) — onto `target_id`, a sketch of lines and arcs chained "
+            "end to end. The initial curve's ends land on the target's "
+            "ends; the result is a Deform node (curves in Properties)."
+        ),
+        "input_schema": _obj({
+            "initial_id": {"type": "integer"},
+            "target_id": {"type": "integer"},
+            "body_ids": {"type": "array", "items": {"type": "integer"}},
+        }, ["initial_id", "target_id", "body_ids"]),
     },
     {
         "name": "pattern_feature",
