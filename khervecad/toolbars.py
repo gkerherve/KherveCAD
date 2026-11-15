@@ -161,6 +161,7 @@ def remember_glyph(act, glyph, family=None):
 #: Tools ▸ Surface Edit: SolidWorks' Surfaces tab, on surface bodies
 SURFACE_EDIT = [
     ("trim", "mdi.content-cut", "Trim Surface"),
+    ("mirror", "mdi.flip-horizontal", "Mirror Surface"),
     ("knit", "mdi.layers-triple", "Knit Surface"),
     ("planar", "mdi.square-outline", "Planar Surface"),
     ("boundary", "mdi.vector-polygon", "Boundary Surface"),

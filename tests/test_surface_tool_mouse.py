@@ -139,3 +139,16 @@ def test_tools_menu_lists_the_surface_edit_tools(win):
                     labels = [a.text().replace("&", "")
                               for a in sub.menu().actions()]
     assert "Trim Surface" in labels and "Thicken" in labels
+
+
+def test_mirror_window_doubles_the_surface(win):
+    a, _b = win._tubes
+    _select(win, [a])
+    panel = st.start(win, "mirror")
+    node = win._surface_state["node"]
+    panel.fields["plane"].setCurrentIndex(
+        panel.fields["plane"].findData("XZ (Front)"))
+    assert node.params["plane"] == "XZ (Front)"
+    out = se.shape_of(node, {})
+    assert len(se._faces(out)) == 2
+    st.ok(win)

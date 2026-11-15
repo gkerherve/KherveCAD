@@ -220,6 +220,14 @@ TIPS = {
          "OK."],
         "A tube through a dome: remove the parts of each that lie "
         "inside the other."),
+    "surface_mirror": (
+        "Mirror Surface",
+        "Adds the reflection of the selected surfaces in Front, Top or "
+        "Right plane; the original stays.",
+        ["Select the surfaces in the tree.",
+         "Click Mirror Surface and choose the plane (and an offset).",
+         "OK."],
+        "One arm of a part, mirrored to the other side."),
     "surface_knit": (
         "Knit Surface",
         "Sews surfaces that meet along their edges into one body; tick "

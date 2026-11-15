@@ -45,6 +45,7 @@ OPS = {
                  "Boundary surface: click a round open edge — it is "
                  "closed by its chord · OK in the window · Esc cancels"),
     "thicken": ("Thicken", "Thicken", None, ""),
+    "mirror": ("Mirror Surface", "Surface-Mirror", None, ""),
     "fillet": ("Surface Fillet", "Fillet", "fillets",
                "Fillet: click the edges to round · OK in the window · "
                "Esc cancels"),
@@ -142,6 +143,16 @@ def _make_panel(window, st):
         panel.number("thickness", language.tr("Thickness"),
                      node.params.get("thickness", 2.0), setp("thickness"),
                      minimum=-1e4, maximum=1e4)
+    elif op == "mirror":
+        panel.hint(language.tr("The surfaces and their reflection in the "
+                               "plane (the original stays)."))
+        from . import surface_edit
+        panel.choice("plane", language.tr("Mirror plane"),
+                     [(p_, p_) for p_ in surface_edit.PLANES],
+                     node.params.get("plane"), setp("plane"))
+        panel.number("offset", language.tr("Plane offset"),
+                     node.params.get("offset", 0.0), setp("offset"),
+                     minimum=-1e5, maximum=1e5)
     elif op == "fillet":
         panel.hint(language.tr("Set the radius, then click the edges to "
                                "round."))

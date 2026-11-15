@@ -983,3 +983,16 @@ def _srf_fillet(d):
         return (-0.9 + 1.8 * v, -0.9 + 0.9 * (1 - math.cos(a)),
                 0.9 * math.sin(a))
     _patch(d, f, 8, 3)
+
+
+@draws("srf_mirror")
+def _srf_mirror(d):
+    """A surface and its reflection across a dashed plane."""
+    def f(sign):
+        def g(u, v):
+            return (sign * (0.15 + 0.85 * u), -0.8 + 1.6 * v,
+                    0.45 * math.sin(math.pi * v) * (0.4 + 0.6 * u))
+        return g
+    _patch(d, f(1.0), 5, 5)
+    _patch(d, f(-1.0), 5, 5)
+    _curve3(d, [(0, -0.9, 0), (0, 0.9, 0)], d.pal.select, 0.05)

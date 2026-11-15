@@ -193,6 +193,7 @@ MENU_PANELS = {
     # SolidWorks' Surfaces tab, on surface bodies (surface_edit.py)
     "surface_edit": [
         ("tools/surface edit/trim surface", "!mdi.content-cut"),
+        ("tools/surface edit/mirror surface", "!mdi.flip-horizontal"),
         ("tools/surface edit/knit surface", "!mdi.layers-triple"),
         ("tools/surface edit/planar surface", "!mdi.square-outline"),
         ("tools/surface edit/boundary surface", "!mdi.vector-polygon"),
@@ -422,7 +423,8 @@ for _t, _k in (("loft — a skin through the curves, in order", "srf_loft"),
                ("revolve — turn the curve about the z axis", "srf_revolve"),
                ("extrude — push the curve straight up", "srf_extrude")):
     PAINT["tools/surface from curves/" + _t] = _k
-for _t, _k in (("trim surface", "srf_trim"), ("knit surface", "srf_knit"),
+for _t, _k in (("trim surface", "srf_trim"),
+               ("mirror surface", "srf_mirror"), ("knit surface", "srf_knit"),
                ("planar surface", "srf_planar"),
                ("boundary surface", "srf_boundary"),
                ("thicken", "srf_thicken"),
