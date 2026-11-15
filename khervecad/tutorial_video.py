@@ -96,6 +96,40 @@ def pointer_path():
     return p
 
 
+def crop_drawing(img, pad=24):
+    """A KherveCAD sheet cut down to its views: the frame and the title
+    block (the bottom 18 %) left out, so the views fill a narrow column."""
+    img = img.convertToFormat(QImage.Format_RGB32)
+    w, h = img.width(), img.height()
+    limit = int(h * 0.82)
+    step = max(1, w // 600)
+    rows, cols = [], []
+    dark = [[False] * (w // step + 1) for _ in range(limit // step + 1)]
+    for j, y in enumerate(range(0, limit, step)):
+        for i, x in enumerate(range(0, w, step)):
+            c = img.pixel(x, y) & 0xFFFFFF
+            dark[j][i] = ((c >> 16) & 255) + ((c >> 8) & 255) + (c & 255) \
+                < 600
+    nj, ni = len(dark), len(dark[0])
+    long_rows = {j for j in range(nj) if sum(dark[j]) > ni * 0.5}
+    long_cols = {i for i in range(ni)
+                 if sum(dark[j][i] for j in range(nj)) > nj * 0.5}
+    for j in range(nj):
+        if j in long_rows:
+            continue
+        for i in range(ni):
+            if dark[j][i] and i not in long_cols:
+                rows.append(j)
+                cols.append(i)
+    if not rows:
+        return img
+    x0 = max(0, min(cols) * step - pad)
+    x1 = min(w, max(cols) * step + pad)
+    y0 = max(0, min(rows) * step - pad)
+    y1 = min(h, max(rows) * step + pad)
+    return img.copy(x0, y0, x1 - x0, y1 - y0)
+
+
 class Recorder:
     """Films *win* while a script drives it. Use as::
 
@@ -108,8 +142,15 @@ class Recorder:
     """
 
     def __init__(self, win, out_path, fps=FPS, voice=VOICE, rate=RATE,
-                 burn_captions=True):
+                 burn_captions=True, side=None, side_width=None):
         self.win = win
+        # the part's 2D drawing kept beside the window for the whole film
+        # (the user: "the 2D drawing needs to be present")
+        self.side = QImage(side) if isinstance(side, str) else side
+        if self.side is not None and self.side.isNull():
+            self.side = None
+        if self.side is not None:
+            self.side = crop_drawing(self.side)
         self.out = os.path.abspath(out_path)
         self.fps = fps
         self.voice = voice
@@ -128,7 +169,12 @@ class Recorder:
         self.typing = None         # (text, QRect) shown over a field
         self._base = None
         self.tmp = tempfile.mkdtemp(prefix="kcad_video_")
-        size = self._size()
+        self.win_w, self.win_h = self._size()
+        self.side_w = 0
+        if self.side is not None:
+            self.side_w = side_width or int(self.win_h * 0.75)
+            self.side_w -= self.side_w % 2
+        size = (self.win_w + self.side_w, self.win_h)
         self.w, self.h = size
         exe = ffmpeg()
         if exe is None:
@@ -173,9 +219,12 @@ class Recorder:
     def _compose(self):
         if self._base is None:
             self.grab()
-        img = self._base.copy(0, 0, self.w, self.h)
+        img = QImage(self.w, self.h, QImage.Format_ARGB32)
+        img.fill(QColor(236, 238, 242))
         p = QPainter(img)
         p.setRenderHint(QPainter.Antialiasing)
+        p.drawImage(0, 0, self._base, 0, 0, self.win_w, self.win_h)
+        self._paint_side(p)
         if self.highlight is not None:
             p.setPen(QPen(QColor(255, 140, 0), 3))
             p.setBrush(QColor(255, 140, 0, 40))
@@ -212,6 +261,31 @@ class Recorder:
         p.end()
         return img
 
+    def _paint_side(self, p):
+        if self.side is None:
+            return
+        x0 = self.win_w
+        p.fillRect(x0, 0, self.side_w, self.h, QColor(250, 250, 252))
+        p.setPen(QColor(200, 204, 212))
+        p.drawLine(x0, 0, x0, self.h)
+        f = QFont()
+        f.setPointSize(14)
+        f.setBold(True)
+        p.setFont(f)
+        p.setPen(QColor(40, 60, 90))
+        p.drawText(QRectF(x0, 10, self.side_w, 30), int(Qt.AlignCenter),
+                   "The drawing")
+        box = QRectF(x0 + 12, 46, self.side_w - 24, self.h - 60)
+        sc = min(box.width() / self.side.width(),
+                 box.height() / self.side.height())
+        w, h = self.side.width() * sc, self.side.height() * sc
+        target = QRectF(box.x() + (box.width() - w) / 2, box.y(), w, h)
+        p.setRenderHint(QPainter.SmoothPixmapTransform)
+        p.drawImage(target, self.side)
+        p.setPen(QPen(QColor(170, 176, 188), 1))
+        p.setBrush(Qt.NoBrush)
+        p.drawRect(target)
+
     def _paint_pointer(self, p):
         p.save()
         p.translate(self.pos.x(), self.pos.y())
@@ -234,7 +308,7 @@ class Recorder:
         f.setPointSize(CAPTION_FONT)
         p.setFont(f)
         margin = 60
-        box = QRectF(margin, 0, self.w - 2 * margin, 10)
+        box = QRectF(margin, 0, self.win_w - 2 * margin, 10)
         bound = p.boundingRect(box, int(Qt.AlignCenter | Qt.TextWordWrap),
                                text)
         r = QRectF(bound).adjusted(-20, -12, 20, 12)
@@ -252,7 +326,7 @@ class Recorder:
         p.setFont(f)
         r = QRectF(p.boundingRect(QRectF(0, 0, 900, 40), 0, text))
         r = r.adjusted(-14, -8, 14, 8)
-        r.moveTopRight(QPointF(self.w - 16, self.h * 0.28))
+        r.moveTopRight(QPointF(self.win_w - 16, self.h * 0.28))
         p.setPen(Qt.NoPen)
         p.setBrush(QColor(33, 118, 199, 220))
         p.drawRoundedRect(r, 8, 8)
@@ -317,6 +391,51 @@ class Recorder:
                    int(Qt.AlignHCenter | Qt.TextWordWrap), sub)
         p.end()
         for _ in range(int(seconds * self.fps)):
+            self.proc.stdin.write(img.bits().asstring(img.byteCount()))
+            self.frames += 1
+
+    def showcase(self, view, drawing, seconds=8.0, title="",
+                 turns=1.0, pitch=28.0):
+        """The finished part turning on the left, its 2D drawing large
+        on the right — the opening of the film. *view* is a View3D
+        already holding the finished model; *drawing* a QImage / path."""
+        draw = QImage(drawing) if isinstance(drawing, str) else drawing
+        n = max(2, int(seconds * self.fps))
+        half = self.w // 2
+        for i in range(n):
+            yaw = 30 + 360.0 * turns * i / n
+            pic, _cam = view.snapshot(half, self.h - 120, yaw=yaw, pitch=pitch,
+                                frame=True, clean=True)
+            img = QImage(self.w, self.h, QImage.Format_ARGB32)
+            img.fill(QColor(246, 247, 250))
+            p = QPainter(img)
+            p.setRenderHint(QPainter.Antialiasing)
+            p.setRenderHint(QPainter.SmoothPixmapTransform)
+            f = QFont()
+            f.setPointSize(26)
+            f.setBold(True)
+            p.setFont(f)
+            p.setPen(QColor(30, 50, 80))
+            p.drawText(QRectF(0, 18, self.w, 60), int(Qt.AlignCenter),
+                       title)
+            p.drawImage(0, 90, pic)
+            if draw is not None and not draw.isNull():
+                box = QRectF(half + 10, 100, self.w - half - 30,
+                             self.h - 200)
+                sc = min(box.width() / draw.width(),
+                         box.height() / draw.height())
+                w, h = draw.width() * sc, draw.height() * sc
+                r = QRectF(box.x() + (box.width() - w) / 2,
+                           box.y() + (box.height() - h) / 2, w, h)
+                p.drawImage(r, draw)
+                p.setPen(QPen(QColor(170, 176, 188), 1))
+                p.drawRect(r)
+            if self.burn and self.caption and self.t <= self.caption_until:
+                save_w = self.win_w
+                self.win_w = self.w
+                self._paint_caption(p, self.caption)
+                self.win_w = save_w
+            p.end()
             self.proc.stdin.write(img.bits().asstring(img.byteCount()))
             self.frames += 1
 

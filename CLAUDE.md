@@ -4008,7 +4008,16 @@ into a new module and import.
                        real input box on film. The clock is the FRAME count
                        (grabs are slower than a frame). `finish` = MP4
                        (ffmpeg) + .srt + narration .txt. Scripts live in
-                       each exercise's `video/make_video.py`.
+                       each exercise's `video/make_video.py`. Same day
+                       (the user: the finished part turning first, and
+                       "the 2D drawing always present"): `side=` keeps
+                       the part's drawing (export_drawing PNG, cut to its
+                       views by `crop_drawing`) in a column right of the
+                       window on every frame, and `showcase(view,
+                       drawing)` opens the film with the finished part
+                       turning beside its drawing — build it first by
+                       MCP, export the drawing, then new_document and
+                       film the mouse build.
   - `fill_pattern.py` / `fill_pattern_ui.py` — SolidWorks' **Fill Pattern**
                        (2026-11-15, the "Deform feature" video): click a
                        flat face (Features tab, beside Linear Pattern), a

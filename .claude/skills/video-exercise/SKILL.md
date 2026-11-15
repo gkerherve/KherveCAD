@@ -236,7 +236,10 @@ path — `click_tab`, `click_action`, `click_sketch`, `drag_sketch`,
 `click_world`, `type_into(panel.fields[...])`, `choose`, `rec.values`
 for each Smart Dimension (typed on film into a real input box),
 `rec.chapter` per feature. Print sizes / volume at the end and compare
-with steps.md. Run `PYTHONPATH=. .venv/bin/python <script>` from the
+with steps.md. The film OPENS with the finished part turning beside
+its 2D drawing (`rec.showcase`) and keeps the drawing beside the window
+the whole time (`Recorder(side=drawing.png)`): build the part by MCP
+first, `export_drawing` it, then new_document and film. Run `PYTHONPATH=. .venv/bin/python <script>` from the
 repo; it writes `<name>.mp4` (voice = macOS `say`), `<name>.srt` and
 `<name> narration.txt` (the script, for another TTS). Check a contact
 sheet (`ffmpeg -vf "fps=1/5,scale=640:-1,tile=4x6"`). A step that will
