@@ -97,12 +97,26 @@ def choose_extent(window, ext, kind, offset=None):
         elif what == "face":
             apply(face=list(desc["pos"]) + list(desc["dir"]), offset=off)
         else:
-            apply(up_to=node.name, side="contact")
+            apply(up_to=_unique_name(model, node), side="contact")
     banner = {"vertex": "%s: click the vertex (a corner of an edge)",
               "face": "%s: click the surface",
               "body": "%s: click the body"}[what] % extent.LABELS[kind]
     refgeom_ui._pick(window, banner, got,
                      ("face",) if what == "face" else ("face", "edge"))
+
+
+def _unique_name(model, node):
+    """The picked body is found again by NAME: two parts called "Boss
+    sketch" (each feature's group) would send the depth to the first, so
+    the clicked one is renamed "Boss sketch 2"."""
+    base = node.name or node.type
+    names = {n.name for n in model.root.walk() if n is not node}
+    if base in names:
+        k = 2
+        while "%s %d" % (base, k) in names:
+            k += 1
+        model.rename(node, "%s %d" % (base, k))
+    return node.name
 
 
 def _num(v, default=0.0):

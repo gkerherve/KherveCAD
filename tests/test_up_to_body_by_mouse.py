@@ -84,3 +84,32 @@ def test_up_to_body_pick_in_the_extrude_window(win):
     assert ext.params["height"] > 44
     assert extrude_panel._panel(win) is panel
     QTest.mouseClick(panel.ok, Qt.LeftButton)
+
+
+def test_two_bodies_with_one_name_the_clicked_one_counts(win):
+    """Every feature's group is called "Boss sketch": the click must pick
+    the body it hit, not the first of that name."""
+    import math
+    panel, ext = F._rect_extrude(win)
+    far = win.model.add_node("translate", dict(x=0, y=-20, z=90),
+                             parent=ext.parent)
+    win.model.add_node("cube", dict(width=120, depth=60, height=6),
+                       parent=far)
+    near = _slope(win.model, ext.parent)
+    far.name = near.name = "Boss sketch"
+    panel = _reopen(win, ext)
+    v3 = win.view3d
+    v3.fit()
+    QTest.qWait(150)
+    F._choose(panel.fields["extent"], "Up To Body")
+    a = math.radians(10)
+    world = (60 * math.cos(a), 10, 40 + 60 * math.sin(a) + 3)
+    q = v3._project(*v3._camera(), world)
+    p = QPoint(int(q[0]), int(q[1]))
+    QTest.mouseMove(v3, p)
+    QTest.mouseClick(v3, Qt.LeftButton, Qt.NoModifier, p)
+    QTest.qWait(200)
+    assert ext.params["up_to"] == near.name
+    assert near.name != far.name
+    assert 40 < ext.params["height"] < 60
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
