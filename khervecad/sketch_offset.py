@@ -97,9 +97,85 @@ def _offset_seg(s, d):
     return [x1 + nx, y1 + ny, x2 + nx, y2 + ny, 0.0]
 
 
+def _circle(s):
+    """(cx, cy, r) of an arc copy, or None for a straight one."""
+    if abs(s[4]) <= 1e-9:
+        return None
+    from . import sketch_arc
+    g = sketch_arc.geometry(s[0], s[1], s[2], s[3], s[4])
+    return None if g is None else g[:3]
+
+
+def _crossings(a, b):
+    """Where the curves (line or arc, as full line / full circle) of two
+    copies cross: a list of points."""
+    ca, cb = _circle(a), _circle(b)
+    if ca is None and cb is None:
+        return []
+    if ca is None or cb is None:
+        ln, (cx, cy, r) = (a, cb) if ca is None else (b, ca)
+        dx, dy = ln[2] - ln[0], ln[3] - ln[1]
+        L = math.hypot(dx, dy)
+        if L < 1e-12:
+            return []
+        ux, uy = dx / L, dy / L
+        fx, fy = ln[0] - cx, ln[1] - cy
+        t = -(fx * ux + fy * uy)               # foot of the centre
+        px, py = fx + t * ux, fy + t * uy
+        h2 = r * r - (px * px + py * py)
+        if h2 < 0:
+            return []
+        h = math.sqrt(h2)
+        return [(cx + px + s * h * ux, cy + py + s * h * uy)
+                for s in (-1, 1)]
+    (x0, y0, r0), (x1, y1, r1) = ca, cb
+    d = math.hypot(x1 - x0, y1 - y0)
+    if d < 1e-12 or d > r0 + r1 or d < abs(r0 - r1):
+        return []
+    t = (r0 * r0 - r1 * r1 + d * d) / (2 * d)
+    h = math.sqrt(max(r0 * r0 - t * t, 0.0))
+    mx, my = x0 + (x1 - x0) * t / d, y0 + (y1 - y0) * t / d
+    ox, oy = -(y1 - y0) / d * h, (x1 - x0) / d * h
+    return [(mx + ox, my + oy), (mx - ox, my - oy)]
+
+
+def _reach(s, end, p):
+    """Move the *end* (0 start / 1 end) of copy *s* to the point *p*:
+    a line just ends there, an arc keeps its centre and radius and its
+    bulge follows the new sweep."""
+    c = _circle(s)
+    if c is None:
+        s[2 * end], s[2 * end + 1] = p
+        return
+    cx, cy, _r = c
+    other = 1 - end
+    th_o = math.atan2(s[2 * other + 1] - cy, s[2 * other] - cx)
+    th_p = math.atan2(p[1] - cy, p[0] - cx)
+    sign = 1.0 if s[4] > 0 else -1.0
+    # the sweep runs start -> end in the arc's own direction
+    th_s, th_e = (th_p, th_o) if end == 0 else (th_o, th_p)
+    sweep = sign * (((th_e - th_s) * sign) % (2 * math.pi))
+    s[2 * end], s[2 * end + 1] = p
+    s[4] = math.tan(sweep / 4.0)
+
+
+def _meet_curved(a, b):
+    """Join copy *a*'s end to copy *b*'s start where their curves cross
+    (a line and an arc, or two arcs): SolidWorks trims or extends both
+    to the corner. The crossing nearest the gap is taken."""
+    pts = _crossings(a, b)
+    if not pts:
+        return
+    mx, my = (a[2] + b[0]) / 2, (a[3] + b[1]) / 2
+    p = min(pts, key=lambda q: math.hypot(q[0] - mx, q[1] - my))
+    _reach(a, 1, p)
+    _reach(b, 0, p)
+
+
 def _meet(a, b):
     """Run two straight copies to where their lines cross."""
     if abs(a[4]) > 1e-9 or abs(b[4]) > 1e-9:
+        _meet_curved(a, b)
         return
     d1 = (a[2] - a[0], a[3] - a[1])
     d2 = (b[2] - b[0], b[3] - b[1])
