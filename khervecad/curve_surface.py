@@ -57,9 +57,15 @@ NEEDS = {
 DEFLECTION = 0.002
 ANGLE = 12.0
 
+#: extrude directions: the axis the curve is pushed along
+DIRECTIONS = ("+Z", "-Z", "+X", "-X", "+Y", "-Y")
+_DIR_VEC = {"+Z": (0, 0, 1), "-Z": (0, 0, -1), "+X": (1, 0, 0),
+            "-X": (-1, 0, 0), "+Y": (0, 1, 0), "-Y": (0, -1, 0)}
+
 _DEFAULTS = dict(kind="loft", thickness=1.0, ruled=False, capped=True,
                  angle=360.0,
-                 height=20.0, show_curves=False)
+                 height=20.0, show_curves=False,
+                 direction="+Z", draft=0.0, sheet=False)
 
 
 def curves(node, env=None):
@@ -109,11 +115,17 @@ def shape(node, env=None):
         out = _revolve(wires[0], mesh.rv(p.get("angle", 360.0), env, 360.0))
     else:
         out = _extrude(wires[0], mesh.rv(p.get("height", 20.0), env, 20.0),
-                       _closed(cs[0]))
+                       _closed(cs[0]),
+                       _DIR_VEC.get(str(p.get("direction", "+Z")),
+                                    (0, 0, 1)),
+                       mesh.rv(p.get("draft", 0.0), env, 0.0),
+                       not p.get("sheet"))
     if out is None:
         raise ValueError(f"OpenCascade could not make this {kind} — try "
                          "curves that do not cross, all running the same "
                          "way")
+    if p.get("sheet"):
+        return out                    # a surface body stays a sheet
     return _finish(out, thick)
 
 
@@ -182,16 +194,52 @@ def _revolve(wire, angle):
     return BRepPrimAPI_MakeRevol(wire, axis, math.radians(angle)).Shape()
 
 
-def _extrude(wire, height, closed):
+def _extrude(wire, height, closed, direction=(0, 0, 1), draft=0.0,
+             solid=True):
+    """The curve pushed *height* along *direction*. A non-zero *draft*
+    (degrees, positive = widening) lofts it to its own offset instead —
+    a drafted surface, the way SolidWorks' Surface-Extrude does."""
     from OCP.BRepPrimAPI import BRepPrimAPI_MakePrism
-    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeFace
-    from OCP.gp import gp_Vec
+    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeFace,
+                                    BRepBuilderAPI_Transform)
+    from OCP.gp import gp_Vec, gp_Trsf
+    vec = gp_Vec(direction[0] * height, direction[1] * height,
+                 direction[2] * height)
+    if abs(draft) > 1e-9 and closed:
+        out = _drafted(wire, vec, height * math.tan(math.radians(draft)))
+        if out is not None:
+            return out
     base = wire
-    if closed:
+    if closed and solid and abs(draft) <= 1e-9:
         face = BRepBuilderAPI_MakeFace(wire, False)
         if face.IsDone():
-            base = face.Face()           # a closed curve extrudes solid
-    return BRepPrimAPI_MakePrism(base, gp_Vec(0, 0, height)).Shape()
+            base = face.Face()
+    return BRepPrimAPI_MakePrism(base, vec).Shape()
+
+
+def _drafted(wire, vec, grow):
+    """A loft from *wire* to its planar offset by *grow*, moved by *vec*."""
+    from OCP.BRepBuilderAPI import (BRepBuilderAPI_MakeFace,
+                                    BRepBuilderAPI_Transform)
+    from OCP.BRepOffsetAPI import BRepOffsetAPI_MakeOffset
+    from OCP.GeomAbs import GeomAbs_Arc
+    from OCP.TopoDS import TopoDS
+    from OCP.gp import gp_Trsf
+    face = BRepBuilderAPI_MakeFace(wire, True)
+    if not face.IsDone():
+        return None
+    off = BRepOffsetAPI_MakeOffset(face.Face(), GeomAbs_Arc)
+    off.Perform(grow)
+    if not off.IsDone():
+        return None
+    from . import cadexchange
+    moved = gp_Trsf()
+    moved.SetTranslation(vec)
+    far = TopoDS.Wire_s(BRepBuilderAPI_Transform(
+        off.Shape(), moved, True).Shape()) if hasattr(TopoDS, "Wire_s") \
+        else cadexchange._topods("Wire", BRepBuilderAPI_Transform(
+            off.Shape(), moved, True).Shape())
+    return _loft([wire, far], [False, False], True)
 
 
 def is_solid(shape):
@@ -255,8 +303,11 @@ KIT = bakedkit.make(
       None),
      ("angle", "Revolve: angle (°, about Z)", "float", -360.0, 360.0),
      ("height", "Extrude: height (mm)", "float", -1e5, 1e5),
+     ("direction", "Extrude: direction", "choice", list(DIRECTIONS), None),
+     ("draft", "Extrude: draft angle (°, + widens)", "float", -89.0, 89.0),
+     ("sheet", "Keep as a surface (do not thicken)", "bool", None, None),
      ("show_curves", "Show the curves too", "bool", None, None)],
-    _compute, choices={"kind": KINDS},
+    _compute, choices={"kind": KINDS, "direction": DIRECTIONS},
     draws_children=lambda node: bool(node.params.get("show_curves")),
     check=_check, inexact_ok=True)
 
