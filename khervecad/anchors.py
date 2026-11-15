@@ -388,9 +388,32 @@ def pick(tris, projector, x, y):
         depth = w0 * pa[2] + w1 * pb[2] + w2 * pc[2]
         if best_depth is None or depth < best_depth:
             best, best_depth = i, depth
-            best_point = [w0 * a[k] + w1 * b[k] + w2 * c[k]
-                          for k in range(3)]
+            best_point = _hit_point(projector, (a, b, c), (pa, pb, pc),
+                                    (w0, w1, w2), x, y)
     return best, best_point
+
+
+def _hit_point(projector, verts, proj, w, x, y):
+    """The world point of a click inside a projected triangle. Screen
+    space barycentrics are exact for an orthographic view only; in
+    perspective they are weighted by 1 / depth (a click aimed at the
+    plate's (20, 20) landed 9 mm off on a big triangle). Whichever of
+    the two lands nearer the click when projected back is taken."""
+    plain = [sum(w[j] * verts[j][k] for j in range(3)) for k in range(3)]
+    zs = [p[2] for p in proj]
+    if min(zs) <= 1e-9:
+        return plain
+    inv = [w[j] / zs[j] for j in range(3)]
+    total = sum(inv)
+    if abs(total) < 1e-12:
+        return plain
+    fixed = [sum(inv[j] * verts[j][k] for j in range(3)) / total
+             for k in range(3)]
+
+    def miss(pt):
+        q = projector(pt)
+        return (q[0] - x) ** 2 + (q[1] - y) ** 2 if q else float("inf")
+    return fixed if miss(fixed) < miss(plain) else plain
 
 
 def _tri_normal(tri):

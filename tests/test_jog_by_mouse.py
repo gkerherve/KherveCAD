@@ -180,7 +180,7 @@ def test_jog_by_mouse_two_clicks_a_side_and_the_rows(win):
     v3 = win.view3d
     assert _wait(lambda: v3._pick_cb is not None), "Jog asks for no click"
     QTest.mouseClick(v3.nav_bar.buttons["fit"], Qt.LeftButton)
-    QTest.qWait(150)
+    QTest.qWait(700)
     from khervecad import sheet_jog_ui
     tool = sheet_jog_ui._OPEN[id(win)]
     panel = tool.panel
@@ -192,6 +192,8 @@ def test_jog_by_mouse_two_clicks_a_side_and_the_rows(win):
     _click(v3, _px(v3, (30.3, 38.0, 2.0)))
     assert tool.p[1] is not None, "the line needs two clicks"
     assert tool.p[0][0] == tool.p[1][0]             # straightened
+    # (a perspective pick lands where the click was aimed: x = 30 +- 0.5)
+    assert abs(tool.p[0][0] - 30.0) <= 0.5 and abs(tool.p[0][1] - 8.0) <= 0.5
     # the fixed face: a click on the big right part
     assert _wait(lambda: v3._pick_cb is not None)
     _click(v3, _px(v3, (70.0, 22.0, 2.0)))
@@ -227,7 +229,7 @@ def test_jog_cancel_takes_it_back(win):
     v3 = win.view3d
     assert _wait(lambda: v3._pick_cb is not None)
     QTest.mouseClick(v3.nav_bar.buttons["fit"], Qt.LeftButton)
-    QTest.qWait(150)
+    QTest.qWait(700)
     from khervecad import sheet_jog_ui
     tool = sheet_jog_ui._OPEN[id(win)]
     _click(v3, _px(v3, (30.0, 8.0, 2.0)))
@@ -240,3 +242,53 @@ def test_jog_cancel_takes_it_back(win):
     QTest.qWait(60)
     assert not body.params["jogs"]
     assert tool.closed and id(win) not in sheet_jog_ui._OPEN
+
+
+# ================================================== Hole and Slot by mouse
+def _button(win, key):
+    act = next(a for a in win.findChildren(QAction)
+               if a.data() == key and a.isEnabled())
+    return _button_for(win, act)
+
+
+def _open_tool(win, key):
+    QTest.mouseClick(_button(win, key), Qt.LeftButton)
+    v3 = win.view3d
+    assert _wait(lambda: v3._pick_cb is not None), key + " asks no click"
+    QTest.mouseClick(v3.nav_bar.buttons["fit"], Qt.LeftButton)
+    QTest.qWait(700)
+    from khervecad import sheet_cut_ui
+    return v3, sheet_cut_ui._OPEN[id(win)]
+
+
+def test_hole_by_mouse_clicks_and_diameter(win):
+    body = _plate(win)
+    body.params["holes"] = []
+    v3, tool = _open_tool(win, "sm_hole")
+    tool.panel.fields["size"].setValue(6.0)
+    _click(v3, _px(v3, (20.0, 20.0, 2.0)))
+    assert _wait(lambda: v3._pick_cb is not None)
+    _click(v3, _px(v3, (60.0, 30.0, 2.0)))
+    rows = body.params["holes"]
+    assert len(rows) == 2 and all(r[2] == 6.0 for r in rows)
+    assert abs(rows[0][0] - 20) <= 0.5 and abs(rows[1][1] - 30) <= 0.5
+    tool.panel.fields["size"].setValue(9.0)          # resizes the last one
+    QTest.qWait(40)
+    assert body.params["holes"][1][2] == 9.0
+    QTest.mouseClick(tool.panel.ok, Qt.LeftButton)
+    QTest.qWait(60)
+    assert tool.closed and len(body.params["holes"]) == 2
+
+
+def test_slot_by_mouse_two_clicks_and_cancel(win):
+    body = _plate(win)
+    v3, tool = _open_tool(win, "sm_slot")
+    _click(v3, _px(v3, (50.0, 10.0, 2.0)))
+    assert _wait(lambda: v3._pick_cb is not None)
+    _click(v3, _px(v3, (50.0, 35.0, 2.0)))
+    assert len(body.params["slots"]) == 1
+    row = body.params["slots"][0]
+    assert abs(row[0] - 50) <= 0.5 and abs(row[3] - 35) <= 0.5 and row[4] == 6.0
+    QTest.mouseClick(tool.panel.cancel, Qt.LeftButton)
+    QTest.qWait(60)
+    assert tool.closed and not body.params["slots"]
