@@ -203,3 +203,65 @@ nothing running off the page — one image per figure, `[H]`, widths
 `<title>.pdf` beside it. If KherveTeX is not connected, say so and ask
 the user to open it rather than writing LaTeX by hand. End by giving the
 user the PDF path; summarise the fixes in the chat, not in the report.
+
+## 8. Working rules learnt the hard way (read before starting)
+
+- **Git safety.** Other sessions and the user have uncommitted work in
+  this checkout. Stage only your own files (`git add <path>`). NEVER run
+  `git checkout -- <dir>`, `git checkout HEAD -- khervecad`, `git reset
+  --hard` on main, `git stash` or `git clean`: one `git checkout HEAD --
+  khervecad` destroyed the user's unsaved `library_home_more.py` work for
+  good. To drop your own change to one file, edit it back by hand.
+- **Commit subject** `v<N>: fix: ...` with N = `git rev-list --count HEAD`
+  + 1, body ends `Co-Authored-By: Claude <model> <noreply@anthropic.com>`;
+  push each commit at once.
+- **Several videos = parallel agents**, one exercise each (the user asks
+  for this). Agent tool, `isolation: "worktree"`, model "sonnet" when the
+  user asks for cheaper agents. Brief each one with: the video link, its
+  exercise folder (a new name if it would clash with an existing one —
+  e.g. "Exercise 57 - Bearing bracket 2"), this skill, and these rules:
+  - first `git reset --hard main` IN ITS WORKTREE (worktrees start from an
+    old commit);
+  - build OFFSCREEN (`QT_QPA_PLATFORM=offscreen`, a `MainWindow` + 
+    `mcp_tools.McpToolExecutor`), never the user's live KherveCAD window
+    — several agents on one window wreck each other's documents;
+  - commit its fixes in its worktree, do not push; report the commit
+    shas, the tests it added, and the report pictures' folder.
+  - The usage quota is limited: at most ~4 agents at once; if the limit
+    is hit, stop them and resume after the reset (SendMessage to the
+    same agent keeps its context).
+- **Merging an agent's fixes**: on main, `git cherry-pick <sha>` one by
+  one, then `git commit --amend` the subject to the right `v<N>` (the
+  count changes with each pick), run the agent's tests + the related
+  ones, push. Conflicts are usually both sides adding entries to
+  `mcp_schema.py` enums / tables: keep both. Skip a commit whose change
+  main already has.
+- **Known failing tests that are NOT yours** (failing before this work):
+  `tests/test_tool_panels.py` (4), `tests/test_whole_face.py::
+  test_a_corner_a_cut_eats_leaves_the_point_where_it_was`,
+  `tests/test_sketch_tools.py` (3). Don't chase them; do not let new ones
+  join them.
+- **Real-mouse tests** need the window SHOWN (`win.show()`,
+  `QTest.qWaitForWindowExposed`) or clicks never land; drag with the
+  button held (see `_drag` helpers in existing `*_by_mouse` tests). A
+  modal dialog in an offscreen test hangs it silently — answer through
+  the module's `ask_hook` / conftest.
+- **A fix's test must fail without the fix.** If it passes on the old
+  code too, say so to the user instead of claiming it proves the fix.
+- **Helper scripts** in `~/Documents/KherveCAD Exercises/`:
+  `sketchpic.py` (sketch pictures with Smart Dimensions drawn),
+  `toolwins.py windows` (tool-window pictures, offscreen),
+  `add_windows.py "<folder>"` (puts them under their steps),
+  `full_tex.py "<folder>" "<name>" "<title>" <version>` (the whole .tex
+  for KherveTeX). Each exercise keeps its own `report/make_tutorial.py`
+  — copy the latest exercise's as the starting point.
+- **Finish** with: the PDF sent by SendUserFile, the exercise list with
+  page counts, the fix versions, and the cosmetic leftovers still open
+  (e.g. Exercise 49: a sliver beside the ring in the exact render, fake
+  chord edges inside the ring offered to list_edges, the 156 dimension
+  from the origin not placed).
+
+Done so far (all in `~/Documents/KherveCAD Exercises/`, .ktex + .pdf):
+Exercises 6 (Rib), 7, Linear & Circular Pattern, 49, 50, 51, 52, 53, 54,
+55, 57, 58 — fixes v1075–v1109. Copy the closest one when a new video
+uses the same tools.
