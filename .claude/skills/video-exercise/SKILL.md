@@ -59,6 +59,20 @@ take its overall size to check against at the end.
 
 ## 4. Build it in KherveCAD, the way the video does
 
+**Red means broken: understand it and fix it** (the user, 2026-11-15).
+Whenever a node shows red (the tree row painted red, an error tooltip,
+`model.validate()` / `get_document_info` errors, an OpenSCAD compiler
+error mapped to a node), STOP and find out WHY before the next step:
+read the message, `get_node`, `check_code`, reproduce it, and fix the
+cause — in the model if the sketch / feature was set up wrongly, or in
+KherveCAD (test-first, by mouse, section 6) if the tool is at fault.
+Never carry on past a red node, never hide it (suppress, delete,
+"approximated" excuses) and never stop at "this does not preview": a
+cut that does not draw is a problem to solve, listed in problems.md and
+fixed, not a reason to give up on the exercise. Only the big-feature
+rule in section 6 (a whole missing tool of days of work) may stop you,
+and then say exactly which red node it is and why.
+
 Use the live window through the `mcp__khervecad__*` tools (and
 get_document_info first). Follow the video's ORDER and its features —
 sketch on the same plane or face, the same relations and Smart
