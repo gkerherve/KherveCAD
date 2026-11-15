@@ -33,3 +33,10 @@ def test_a_plate_is_drawn_at_a_readable_scale():
     for v in lay.get("views", []):
         x0, y0, x1, y1 = v.get("box", (0, 0, 0, 0))
         assert 0 <= x0 and x1 <= w and 0 <= y0 and y1 <= h
+
+
+def test_radii_measured_off_facets_read_round():
+    from khervecad.blueprint_scene import nice_radius
+    assert nice_radius(12.04) == 12 and nice_radius(11.99) == 12
+    assert nice_radius(42.98) == 43 or nice_radius(42.98) == 43.0
+    assert nice_radius(7.3) == 7.3          # a real odd size stays

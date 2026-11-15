@@ -51,6 +51,21 @@ LETTERS = [c for c in "ABCDEFGHJKLMNPRSTUVWXYZ"]
 
 # ── the model, as the drawing sees it ──────────────────────────────
 
+
+def nice_radius(r, snap=0.5, within=0.1):
+    """*r* on the nearest *snap* mm when within *within* of it."""
+    q = round(float(r) / snap) * snap
+    return q if abs(q - r) <= within else float(r)
+
+
+def _relabel(view):
+    """Redraw a view so its name moves under its lowest note."""
+    try:
+        view._rebuild()
+        view.update()
+    except (AttributeError, RuntimeError):
+        pass
+
 class Geometry:
     """The triangles being drawn, analysed once; each view's lines and
     round edges are projected on first use and kept, so an undo or a
@@ -513,6 +528,8 @@ class BlueprintScene(QGraphicsScene):
             return None
         if view is None:
             self.addItem(item)
+        else:
+            _relabel(view)            # its name drops under the new note
         self.note_items.append(item)
         return item
 
@@ -729,6 +746,10 @@ class BlueprintScene(QGraphicsScene):
         for c in view.circles:
             if c["r"] * view.scale_ < 0.8:
                 continue                           # a speck on paper
+            # a round measured off facets reads R12.04 / R11.99 / R42.98:
+            # the nearest half millimetre when it is that close, so equal
+            # rounds group ("2× R12")
+            c = dict(c, r=nice_radius(c["r"]))
             key = (bool(c["closed"]), round(c["r"], 2))
             groups.setdefault(key, []).append(c)
         if len(view.circles) > BUSY_CIRCLES:

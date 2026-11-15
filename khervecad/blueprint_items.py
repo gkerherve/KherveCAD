@@ -1257,6 +1257,23 @@ class ViewItem(QGraphicsItem):
         return VIEW_LABELS.get(self.data.get("name"), str(
             self.data.get("name", "VIEW")).upper())
 
+    def _label_y(self):
+        """The view's name goes under its lowest dimension or note (it
+        sat a fixed 7 mm under the view and ran over "92" and "52")."""
+        y = 7.0
+        try:
+            for child in self.childItems():
+                if child is getattr(self, "_label_item", None):
+                    continue
+                r = child.mapRectToParent(child.boundingRect())
+                if r.width() <= 0 or r.top() < -0.5:
+                    if r.bottom() <= 0.5:
+                        continue
+                y = max(y, r.bottom() + 3.0)
+        except RuntimeError:
+            pass
+        return y
+
     def _rebuild(self):
         self.prepareGeometryChange()
         self._paths = {}
@@ -1286,7 +1303,7 @@ class ViewItem(QGraphicsItem):
         self._border = border
         self._label = []
         if self.data.get("show_label", True):
-            y = 7.0
+            y = self._label_y()
             big = self.data.get("kind") in ("section", "detail")
             self._label.append(text(self.label_text(), (w / 2.0, y),
                                     5.0 if big else 3.5, "center", "top",
