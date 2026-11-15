@@ -434,8 +434,14 @@ def edge_chain(segs, p, tol, chain=True):
                 if _near((order[0][0], order[0][1]),
                          (order[-1][2], order[-1][3])):
                     break                       # round the whole loop
-    # the part on the left: a point a hair to the left of the first
-    # piece's middle lies inside the outline
+    return _part_left(order, segs, tol)
+
+
+def _part_left(order, segs, tol):
+    """*order* turned round when needed so the PART lies on its left: a
+    point a hair to the left of the first piece's middle must lie inside
+    the outline."""
+    from . import sketch_arc, sketch_convert as cv
     s = order[0]
     mx, my = sketch_arc.middle(*s)
     ux, uy = _dir_in(s) if abs(s[4]) > 1e-9 else \
@@ -454,6 +460,46 @@ def edge_chain(segs, p, tol, chain=True):
     return order
 
 
+def face_loops(segs, tol):
+    """Every loop of a face outline (*segs*) as offset chains, each with
+    the part on its left — Offset Entities with a FACE picked (SolidWorks
+    offsets the whole boundary, corners joined). A whole round hole is
+    [("circle", cx, cy, r, sign)]."""
+    from . import sketch_convert as cv
+    segs = [(tuple(a[:2]), tuple(b[:2])) for a, b in segs]
+    loops, cur, out = [], [], []
+    for kind, q in cv.convert(segs, segs):
+        if kind == "circle":
+            cx, cy, r = float(q["x"]), float(q["y"]), float(q["radius"])
+            eps = max(1e-3, r * 1e-3)
+            sign = 1 if cv.inside(segs, (cx + r - eps, cy)) else -1
+            out.append([("circle", cx, cy, r, sign)])
+            continue
+        s = _seg(q)
+        if cur and not _near((cur[-1][2], cur[-1][3]), (s[0], s[1])):
+            loops.append(cur)
+            cur = []
+        cur.append(s)
+    if cur:
+        loops.append(cur)
+    for lp in loops:
+        out.append(_part_left(_absorb(lp), segs, tol))
+    return out
+
+
+def edge_orders(segs, p, tol, chain=True):
+    """The chains a click at *p* offsets: the edge there (edge_chain) or,
+    clicked inside the face away from any edge, every loop of the face."""
+    from . import sketch_convert as cv
+    sg = [(tuple(a[:2]), tuple(b[:2])) for a, b in segs]
+    if cv.edge_at(sg, p, tol) is None:
+        if sg and cv.inside(sg, p):
+            return face_loops(sg, tol)
+        return []
+    one = edge_chain(segs, p, tol, chain)
+    return [one] if one else []
+
+
 def offset_edges(model, segs, points, distance, side=1, cap=False,
                  chain=True, tol=0.5, parent=None, create=None):
     """Offset Entities of the part's edges at sketch *points*: one chain
@@ -461,13 +507,14 @@ def offset_edges(model, segs, points, distance, side=1, cap=False,
     (side -1 = out of it). Returns the new nodes."""
     made = []
     for p in points:
-        order = edge_chain(segs, p, tol, chain)
-        if order is None:
+        orders = edge_orders(segs, p, tol, chain)
+        if not orders:
             raise ValueError(language.tr(
                 "Offset Entities: no edge of the part near {p}").format(
                     p=[round(v, 3) for v in p]))
-        made += offset_order(model, order, distance, side, cap,
-                             parent=parent, create=create)
+        for order in orders:
+            made += offset_order(model, order, distance, side, cap,
+                                 parent=parent, create=create)
     return made
 
 
@@ -514,13 +561,11 @@ def start(win):
                                state["cap"])
                 n += len(shapes)
             for segs, p, tol, parent, create in state["edges"]:
-                order = edge_chain(segs, p, tol, state["chain"])
-                if order is None:
-                    continue
-                n += len(order)
-                made += offset_order(model, order, state["distance"],
-                                     side, state["cap"], parent=parent,
-                                     create=create)
+                for order in edge_orders(segs, p, tol, state["chain"]):
+                    n += len(order)
+                    made += offset_order(model, order, state["distance"],
+                                         side, state["cap"], parent=parent,
+                                         create=create)
         except ValueError as exc:
             win.statusBar().showMessage(str(exc), 6000)
         state["preview"] = made
@@ -531,7 +576,7 @@ def start(win):
     def add_edge(segs, p, tol, parent=None, create=None):
         """A click on the part's edge at sketch point *p*: the chain is
         offset (and shown) at once. False when no edge is there."""
-        if edge_chain(segs, p, tol, state["chain"]) is None:
+        if not edge_orders(segs, p, tol, state["chain"]):
             return False
         state["edges"].append((segs, p, tol, parent, create))
         preview()
