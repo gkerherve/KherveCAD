@@ -533,8 +533,10 @@ def layout(tris, *, sheet="A4", views=("Front", "Top", "Right",
     cols = [c for c in cols if c > 0] or [max(size(n)[0] for n in drawn)]
     rows_h = [front_h, top_h] if top_h else [front_h or max(
         size(n)[1] for n in drawn)]
-    model_w = sum(cols) * (1 + gap_frac * (len(cols) - 1))
-    model_h = sum(rows_h) * (1 + gap_frac * (len(rows_h) - 1))
+    # one gap per space between views (35 % of the widest), not 35 % of
+    # the whole sum per space: that drew a 92 mm plate at 1:5 on A4
+    model_w = sum(cols) + max(cols) * gap_frac * (len(cols) - 1)
+    model_h = sum(rows_h) + max(cols) * gap_frac * (len(rows_h) - 1)
     dim_room = 1.25 if dimensions else 1.0
     s = scale or nice_scale(model_w * dim_room, model_h * dim_room,
                             inner_w, inner_h)
