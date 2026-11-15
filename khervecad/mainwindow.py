@@ -1508,8 +1508,13 @@ class MainWindow(QMainWindow):
         except Exception:
             import traceback
             traceback.print_exc()
+        top = node
+        while top.parent is not None and top.parent is not self.model.root \
+                and top.parent.type == "rotate" and \
+                top.parent.name.endswith(" sketch"):
+            top = top.parent        # a Front / Side sketch's turn
         if self.builder.isolated_component() is None \
-                and node.parent is self.model.root:
+                and top.parent is self.model.root:
             self._geometry_created_in_main(node)   # drawn in Main
             return
         self.builder.object_tab.tree.select_nodes([node])
