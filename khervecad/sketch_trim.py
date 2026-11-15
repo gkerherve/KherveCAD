@@ -299,6 +299,7 @@ def pick(model, node, click):
 TWO_PI = 2 * math.pi
 #: how near two curves must come to count as touching (relative)
 TANGENT_TOL = 1e-6
+TANGENT_DIST = 1e-4        # of the radius: "touching" for a solved sketch
 
 
 def curve_of(node):
@@ -398,6 +399,16 @@ def meet_points(c1, c2):
         disc = B * B - 4 * A * C
         if A < 1e-18:
             return []
+        # a line the solver left a hair off the exact tangent (outside, or
+        # a hair inside: two crossings 1e-5 apart) touches the circle ONCE,
+        # at the foot of the perpendicular from the centre (2026-11-15,
+        # Exercise 58: the Ø28 circle between its two tangent lines was
+        # deleted whole)
+        t_f = -(f[0] * d[0] + f[1] * d[1]) / A
+        foot = (a[0] + d[0] * t_f, a[1] + d[1] * t_f)
+        if abs(math.hypot(foot[0] - cx, foot[1] - cy) - rad) < \
+                TANGENT_DIST * max(rad, 1.0):
+            return [foot]
         if disc < 0:
             # a line TANGENT to the circle touches it once; rounding made
             # it miss by a hair (2026-11-11, the user's trim ran past)

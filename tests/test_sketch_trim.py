@@ -322,3 +322,28 @@ def test_a_rectangle_side_lights_up_before_its_first_trim():
     pts = tr._hover_piece(side, (-22.0, 30.0))
     xs = sorted(p[0] for p in pts)
     assert pts and abs(xs[0] + 24) < 1e-6 and xs[-1] < -19   # to the ring
+
+
+def test_a_circle_trims_between_two_tangent_lines_by_mouse(view):
+    """Exercise 58's Ø28 circle: two vertical lines tangent to it (the
+    solver leaves them a hair off the exact tangent, one a hair inside),
+    a click on its bottom removes the BOTTOM half and leaves the top arc
+    from tangent point to tangent point."""
+    from khervecad import sketch_modify
+    m = view.scene().model
+    c = m.add_node("circle", dict(x=0, y=40, radius=14), name="Small")
+    _line(m, (14.000001, 40), (14.000001, 16), "Right")
+    _line(m, (-13.999999, 40), (-13.999999, 16), "Left")
+    QApplication.processEvents()
+    view.set_tool(sketch_modify.TRIM)
+    tr.set_mode(tr.CLOSEST)
+    _click(view, 0, 26)                           # the circle's bottom
+    arcs = [n for n in m.root.children if n.type == "line"
+            and n.name not in ("Right", "Left")]
+    assert len(arcs) == 1, [n.name for n in m.root.children]
+    g = tr.curve_of(arcs[0])
+    mid = tr.point_at(g, 0.5)
+    assert mid[1] > 50, "the top arc stays, not the bottom"
+    ends = {(round(abs(tr.point_at(g, t)[0])), round(tr.point_at(g, t)[1]))
+            for t in (0, 1)}
+    assert ends == {(14, 40)}
