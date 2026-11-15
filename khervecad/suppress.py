@@ -159,6 +159,25 @@ def roll_back_to(model, node):
     model.structure_changed.emit()
 
 
+#: wrappers whose children are the part they finish: a feature added
+#: while one is rolled back belongs inside, before it
+_FINISHES = ("fillet",)
+
+
+def insertion_point(target):
+    """Where a new feature goes under *target*: inside the rolled-back
+    Fillet that is its last child (and so on down), else *target*."""
+    while True:
+        kids = target.children
+        last = kids[-1] if kids else None
+        if last is not None and last.type in _FINISHES and \
+                last.params.get(ROLLED) and \
+                last.params.get(ROLLBACK) is None:
+            target = last
+        else:
+            return target
+
+
 def any_rollback(root) -> bool:
     return any(isinstance(n.params.get(ROLLBACK), int) or
                n.params.get(ROLLED) for n in root.walk())

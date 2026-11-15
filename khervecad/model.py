@@ -1616,6 +1616,13 @@ class DocumentModel(QObject):
                  parent: CadNode = None, name: str = "") -> CadNode:
         node = CadNode(type, name or self.unique_name(type), params)
         target = parent or self.root
+        if target.params.get("rollback") is None:
+            # rolled back past a Fillet that wraps the part: a new
+            # feature goes in BEFORE the bar, i.e. under the fillet, so
+            # the fillet rounds it too (Exercise 59: the pad inserted
+            # before Fillet1)
+            from . import suppress
+            target = suppress.insertion_point(target)
         r = target.params.get("rollback")
         if isinstance(r, int) and not isinstance(r, bool) and \
                 0 <= r <= len(target.children):
