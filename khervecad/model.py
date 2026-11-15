@@ -1973,9 +1973,15 @@ class DocumentModel(QObject):
             return node
         parent, index = node.parent, node.index()
         comp = CadNode("component", self.unique_name("component"))
+        # the node's sketch relations go into the Object with it: a
+        # Center Rectangle drawn in Main kept its "centre at the origin"
+        # on the root and slid off centre once dimensioned
+        from . import sketch_constraints
+        carry = sketch_constraints.plan_wrap(parent, [node], index)
         parent.remove(node)
         comp.add(node)
         parent.add(comp, index)
+        sketch_constraints.apply_wrap(parent, comp, carry)
         self.structure_changed.emit()
         return comp
 
