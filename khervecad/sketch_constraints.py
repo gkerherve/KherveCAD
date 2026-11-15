@@ -663,6 +663,13 @@ def add(model, container, kind, refs, value=None, edge=None, extra=None):
                                                 row.get("driven")):
         row["value"] = round(measure(container, kind, refs, row), 4)
     check_row(container, row)
+    if value is None and "value" not in row and any(
+            r["kind"] == kind and list(r["refs"]) == list(refs)
+            for r in rows(container)):
+        # the relation is already there (drawing a line's end onto a
+        # circle already made it Tangent): say so, add nothing
+        return solve(container, rows(container), env=_env(model),
+                     write=False)
     rs = rows(container) + [row]
     env = _env(model)
     # a line tied to a circle (tangent, on it) moves, the circle stays:
@@ -676,6 +683,18 @@ def add(model, container, kind, refs, value=None, edge=None, extra=None):
              if n.id not in moving and n.type in SHAPES
              for path, _v in _vars(n, False)] if moving else [])
     report = solve(container, rs, env=env, write=False, held=keep)
+    if not report["ok"] and keep:
+        # holding every other shape in place can itself be the conflict
+        # (Exercise 8: the base line held, its end the slanted leg's start,
+        # so no 7 degrees was possible): hold the circles only, then
+        # nothing — the solver still moves the drawing as little as it can
+        for held in ([(n.id, path) for n in container.children
+                      if n.id not in moving and n.type == "circle"
+                      for path, _v in _vars(n, False)], []):
+            report = solve(container, rs, env=env, write=False, held=held)
+            if report["ok"]:
+                keep = held
+                break
     if not report["ok"]:
         raise Conflict("%s cannot hold with the sketch's other "
                        "constraints." % KINDS[kind][0])

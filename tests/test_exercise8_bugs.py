@@ -206,3 +206,144 @@ def test_two_sketches_tying_in_depth_the_first_listed_takes_the_click(win):
     assert view._pick_at(x, y)[1] == (1, 0)
     view._pick_groups = [((0, 0), old), ((1, 0), new)]
     assert view._pick_at(x, y)[1] == (0, 0)
+
+
+# --------------------------------- 3, 4, 6. the planes clicked in 3D, in an Object
+def test_right_plane_clicked_in_3d_inside_an_object(win):
+    """The plane is named "Side (YZ)" (Right Plane): clicking it in 3D with
+    the fork in the Object opens the sketch there."""
+    from test_lever_by_mouse import _open_top_sketch
+    _clevis_boss(win)
+    _tab(win, "Sketch")
+    win.builder.active_tree().clearSelection()
+    _open_top_sketch(win, "Side (YZ)")
+    assert win.view2d.scene().plane == "Side (YZ)"
+
+
+@pytest.mark.parametrize("view", ["Top", "Isometric", "Front"])
+def test_top_plane_in_an_object_sketch_and_boss_by_mouse(win, view):
+    """Top Plane clicked in 3D inside the Object holding the fork: two
+    circles, Extruded Boss, the ring region clicked — the region window
+    opens and the boss is made."""
+    from khervecad import extrude_panel
+    from test_lever_by_mouse import _open_top_sketch
+    _clevis_boss(win)
+    _tab(win, "Sketch")
+    win.builder.active_tree().clearSelection()
+    before = _ids(win)
+    _open_top_sketch(win, "Top (XY)")
+    assert win.view2d.scene().plane == "Top (XY)"
+    _frame(win, -30, -20, 60, 40)
+    _circle(win, (0, 0), 13)
+    _circle(win, (0, 0), 9)
+    sk = _sketch_of(win, before)
+    v0 = _volume(win)
+    _extruded_boss(win)
+    win.view3d.set_view(view, animate=False)
+    QTest.qWait(200)
+    _click_areas(win, sk, [(11, 0)])
+    assert extrude_panel._panel(win) is not None, "no Extrude window"
+    _window_ok(win, direction="up", distance=27)
+    v1 = _volume(win)
+    assert v1["volume"] != pytest.approx(v0["volume"], abs=1.0)
+
+
+def _sketch_on(win, row):
+    """A new sketch on a plane row, the Sketch tab's way."""
+    _row_sketch(win, row)
+
+
+# -------------------- 7. the tapered leg and Mirror Entities, by mouse only
+def test_the_clevis_leg_at_7_degrees_and_its_mirror_by_mouse(win):
+    """Sketch 1 of Exercise 8 with no assistant call: the leg is drawn
+    roughly, made Tangent to the R24 circle and given its 7 degree angle
+    to the vertical line by Smart Dimension (so no end point has to sit on
+    the grid), then Mirror Entities about the centerline."""
+    import math
+    from khervecad import sketch_constraints as sc
+    from khervecad import sketch_mirror, sketch_modify
+    from test_clevis_by_mouse import _lines, _snap
+    from test_smart_dimension_by_mouse import _dimension
+    from test_lever_by_mouse import _at, _move
+    v2 = win.view2d
+    before = _ids(win)
+    _sketch_on(win, "Front Plane")
+    _snap(win)
+    win.view2d.scene().grid_size = 0.5
+    _frame(win, -45, -8, 90, 100)
+    # the centerline up the axis, made construction
+    _lines(v2, [(0, 0), (0, 40)])
+    cl = next(n for n in win.model.root.walk()
+              if n.id not in before and n.type == "line")
+    win.model.set_param(cl, "modifier", "%")
+    _circle(win, (0, 40), 24)
+    _circle(win, (0, 40), 11)
+    # the right leg: down from the small circle, along the base, up to
+    # about the big circle (anywhere near: the solver finishes it)
+    _lines(v2, [(11, 40), (11, 0), (19, 0), (24, 37)])
+    mine = [n for n in win.model.root.walk() if n.id not in before
+            and n.type == "line" and n is not cl]
+    vertical, base, slant = mine
+    big = next(n for n in win.model.root.walk() if n.id not in before
+               and n.type == "circle" and n.params["radius"] == 24)
+    # Tangent: the slanted line, then the circle (a point away from it)
+    v2.set_tool("con_tangent")
+    for pt in ((21.5, 18.5), (-24, 40)):
+        p = _at(win, *pt)
+        _move(v2.viewport(), p)
+        QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+        QTest.qWait(30)
+    v2.set_tool("select")
+    assert any(r["kind"] == "tangent" for r in sc.rows(slant.parent)), \
+        win.statusBar().currentMessage()
+    # the angle between the vertical line and the slanted one: 7
+    # (clicked away from the middles: a middle is a point of its own)
+    ax, ay = slant.params["x1"], slant.params["y1"]
+    bx, by = slant.params["x2"], slant.params["y2"]
+    asked = _dimension(win, (11, 10),
+                       (ax + (bx - ax) * 0.25, ay + (by - ay) * 0.25),
+                       value=7)
+    assert asked and asked[0][0] == "angle", asked
+    assert [r["kind"] for r in sc.rows(slant.parent)].count("tangent") == 1
+    assert not any(r.get("driven") for r in sc.rows(slant.parent))
+    x1, y1, x2, y2 = (slant.params[k] for k in ("x1", "y1", "x2", "y2"))
+    ang = abs(math.degrees(math.atan2(x2 - x1, y2 - y1)))
+    assert min(ang, 180 - ang) == pytest.approx(7, abs=0.05), ang
+    # tangent to R24 about (0, 40)
+    dx, dy = x2 - x1, y2 - y1
+    dist = abs(dx * (40 - y1) - dy * (0 - x1)) / math.hypot(dx, dy)
+    assert dist == pytest.approx(24, abs=0.02)
+    # Mirror Entities: the three lines about the centerline
+    act = next(a for a in sketch_modify.panel_actions(win)
+               if a.data() == sketch_mirror.TOOL)
+    win.builder.active_tree().clearSelection()   # a selection pre-fills it
+    v2.scene().clearSelection()
+    act.trigger()
+    QTest.qWait(50)
+    ax, ay = slant.params["x1"], slant.params["y1"]
+    bx, by = slant.params["x2"], slant.params["y2"]
+    def along(n, t):
+        q = n.params
+        return (q["x1"] + (q["x2"] - q["x1"]) * t,
+                q["y1"] + (q["y2"] - q["y1"]) * t)
+    for pt in (along(vertical, 0.75), along(base, 0.3), along(slant, 0.25)):
+        p = _at(win, *pt)
+        _move(v2.viewport(), p)
+        QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+        QTest.qWait(30)
+    p = _at(win, 5, -5)
+    QTest.mouseClick(v2.viewport(), Qt.RightButton, Qt.NoModifier, p)
+    p = _at(win, 0, 10)
+    QTest.mouseClick(v2.viewport(), Qt.LeftButton, Qt.NoModifier, p)
+    QTest.qWait(50)
+    panel = v2._mirror_panel
+    assert panel.isVisible() and panel.ok.isEnabled()
+    QTest.mouseClick(panel.ok, Qt.LeftButton)
+    QTest.qWait(100)
+    lines = [n for n in win.model.root.walk() if n.id not in before
+             and n.type == "line" and n.params.get("modifier") != "%"]
+    assert len(lines) == 6
+    mirrored = [n for n in lines if n not in mine]
+    xs = sorted(round(min(n.params["x1"], n.params["x2"]), 2)
+                for n in mirrored)
+    assert xs[0] == pytest.approx(-x2, abs=0.05)
