@@ -77,3 +77,28 @@ def test_no_construction_line_still_revolves_about_y(win):
     tool = revolve_feature.revolve(win, [r])
     (x0, x1), _y, _z = _span(obj, _top(obj, tool))
     assert abs(x0 + 40) < 0.5 and abs(x1 - 40) < 0.5
+
+
+def test_a_front_plane_sketch_with_lines_revolves_about_its_centre_line(win):
+    """The video's way: lines close an area, the construction line is the
+    axis (a Regions takes that line in with it) — through the same tool
+    the Revolved Boss button runs when the sketch is left."""
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    win._interface_style = "SolidWorks"
+    sk = ex.execute("reference_geometry", dict(
+        action="sketch", origin=[0, 0, 0], normal=[0, -1, 0]))["sketch_id"]
+
+    def line(x1, y1, x2, y2):
+        return ex.execute("add_node", dict(
+            type="line", parent_id=sk,
+            params=dict(x1=x1, y1=y1, x2=x2, y2=y2, width=0.2)))["created"]
+    for seg in ((0, 0, 0, 5), (0, 5, 93, 2.7), (93, 2.7, 93, 0),
+                (0, 0, 93, 0)):
+        line(*seg)
+    axis = line(0, 0, 93, 0)
+    ex.execute("sketch_modify", dict(action="construction", node_id=axis))
+    ex.execute("sketch_feature", dict(node_id=sk, kind="revolved_boss"))
+    m = ex.execute("mass_properties", {})
+    sx, sy, sz = m["size"]
+    assert abs(sx - 93) < 0.5 and abs(sy - 10) < 0.5 and abs(sz - 10) < 0.5

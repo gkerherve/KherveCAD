@@ -776,6 +776,19 @@ TIPS = {
          "(after the part): x runs round the cylinder, y up it."],
         "The radius is the part's own; give Radius in Properties for a "
         "cylinder that is only part of the model."),
+    "curve_deform": (
+        "Deform (curve to curve)",
+        "Bends bodies from one curve onto another — a straight rod onto "
+        "an S-shaped path (SolidWorks' Deform, Curve to curve). The "
+        "initial curve's ends land on the target curve's ends.",
+        ["Draw the target curve as a sketch (lines and fillet arcs) and "
+         "keep the rod's centre line as a construction line.",
+         "Click Deform: its window opens beside the view.",
+         "In the tree click the sketch that holds the INITIAL curve, "
+         "then the TARGET sketch, then the bodies to bend.",
+         "OK makes the Deform; Cancel leaves everything as it was."],
+        "A body beyond the end of the curves carries on along the end "
+        "tangent; where the two curves coincide the body does not move."),
     "shell": (
         "Shell (hollow)",
         "Turns a solid into a hollow shell of even wall thickness — a "

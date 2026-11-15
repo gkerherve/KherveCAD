@@ -54,7 +54,8 @@ def axis_of(container, tool):
     left; None when the sketch has no such line (the sketch's Y axis)."""
     import math
     from . import slot2d, mesh
-    line = next((c for c in container.children if c.type == "line"
+    # (a Regions takes the sketch's construction shapes in with it)
+    line = next((c for c in container.walk() if c.type == "line"
                  and c.params.get("modifier") == "%"
                  and not slot2d.is_slot(c)
                  and not c.params.get("reference")), None)

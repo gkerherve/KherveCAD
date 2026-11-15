@@ -250,6 +250,32 @@ def _wrap(d):
         d.poly(pts, shade(made, 0.9 + 0.12 * k), width=0.025)
 
 
+@draws("curve_deform")
+def _curve_deform(d):
+    """A straight rod (dashed, grey) and the S-bent rod it becomes (the
+    made colour), as a tube drawn in short shaded sections."""
+    made = QColor(70, 175, 60) if d.style == "SolidWorks" else d.pal.make
+    d.line(d.P(-0.9, -0.55, 0), d.P(0.9, -0.55, 0), d.pal.edge, 0.03, [3, 2])
+    pts = []
+    n = 24
+    for i in range(n + 1):
+        t = i / n
+        x = -0.9 + 1.8 * t
+        z = 0.95 / (1 + math.exp(-9 * (t - 0.5))) - 0.2
+        pts.append((x, z))
+    for i in range(n):
+        (x0, z0), (x1, z1) = pts[i], pts[i + 1]
+        r = 0.16
+        d.poly([d.P(x0, 0, z0 - r), d.P(x1, 0, z1 - r),
+                d.P(x1, 0, z1 + r), d.P(x0, 0, z0 + r)],
+               shade(made, 0.8 + 0.3 * math.sin(math.pi * i / n)),
+               edge=False)
+    d.poly([d.P(pts[0][0], 0, pts[0][1] - 0.16),
+            d.P(pts[0][0], 0, pts[0][1] + 0.16),
+            d.P(pts[0][0] - 0.0, 0.0, pts[0][1])], shade(made, 0.6),
+           width=0.02)
+
+
 def _surface(d, bumps):
     path = QPainterPath(QPointF(0.08, 0.86))
     for i in range(41):

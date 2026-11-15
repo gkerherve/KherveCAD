@@ -1800,6 +1800,23 @@ TOOLS = [
         }, ["node_ids"]),
     },
     {
+        "name": "deform_curve",
+        "description": (
+            "DEFORM, CURVE TO CURVE (SolidWorks' Deform): bend `body_ids` "
+            "(parts / feature groups, one parent) from `initial_id` — a "
+            "sketch or line holding the initial curve (a sketch with "
+            "construction lines uses only those, e.g. the rod's centre "
+            "line) — onto `target_id`, a sketch of lines and arcs chained "
+            "end to end. The initial curve's ends land on the target's "
+            "ends; the result is a Deform node (curves in Properties)."
+        ),
+        "input_schema": _obj({
+            "initial_id": {"type": "integer"},
+            "target_id": {"type": "integer"},
+            "body_ids": {"type": "array", "items": {"type": "integer"}},
+        }, ["initial_id", "target_id", "body_ids"]),
+    },
+    {
         "name": "pattern_feature",
         "description": (
             "CIRCULAR / LINEAR PATTERN of features or bodies (SolidWorks' "
