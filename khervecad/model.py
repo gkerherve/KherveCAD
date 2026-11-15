@@ -2179,7 +2179,11 @@ def _check_node(node, env, errors):
     if t in ("linear_extrude", "rotate_extrude"):
         if _contains_3d(node):
             return "extrusions need 2D shapes, but this contains 3D"
-        if not node.has_2d_content():
+        # a second extrude of an extruded sketch holds a Regions with no
+        # shapes of its own: it reads them from its source (sketch_of)
+        if not node.has_2d_content() and not any(
+                c.type == "regions" and c.params.get("sketch_of")
+                for c in node.children):
             return "empty extrusion — put 2D shapes inside"
         if t == "rotate_extrude":
             from . import mesh
@@ -2195,7 +2199,8 @@ def _check_node(node, env, errors):
         # showed red in the tree until its first shape was drawn)
         if not any(c.type != "assign" for c in node.children) \
                 and not (t == "component" and node.params.get("keep_empty")) \
-                and not node.params.get("face_sketch"):
+                and not node.params.get("face_sketch") \
+                and not (t == "regions" and node.params.get("sketch_of")):
             return "empty — add child objects"
     elif t == "if_else":
         else_node = next((c for c in node.children
