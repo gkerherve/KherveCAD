@@ -66,9 +66,10 @@ def test_ribbon_has_the_wizard():
     win = MainWindow()
     try:
         toolbar_style.apply(win, "SolidWorks", remember=False)
-        _t, acts = ribbon.panel_actions(win, "mechanical")
-        assert acts[0].data() == "hole_wizard"
-        acts[0].trigger()
+        # the wizard sits in the Cut panel, after Extruded Cut (the user)
+        _t, acts = ribbon.panel_actions(win, "cuts")
+        assert acts[1].data() == "hole_wizard"
+        acts[1].trigger()
         assert win._hole_panel.isVisible()
         win._hole_panel.close()
     finally:
