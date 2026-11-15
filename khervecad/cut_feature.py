@@ -118,6 +118,7 @@ def apply(model, group, part, kind):
             if outer is not None:
                 outer.params.update(x=-90.0, y=0.0, z=0.0)
                 outer.name = revolve_feature.AXIS_NAME
+                revolve_feature.use_axis(model, tool, outer, group)
         elif op == "section_loft":
             tool.params["heights"] = [[float(i * DEPTH)]
                                       for i in range(len(shapes))]
@@ -138,6 +139,8 @@ def apply(model, group, part, kind):
         outer = model.wrap_nodes([tool], "rotate")     # about sketch Y
         outer.params.update(x=-90.0, y=0.0, z=0.0)
         outer.name = label + " (about the sketch's Y axis)"
+        from . import revolve_feature
+        revolve_feature.use_axis(model, tool, outer, group)
     elif op == "section_loft":
         # one row [z] per section (a flat list was refused: "height 0
         # needs one value")
