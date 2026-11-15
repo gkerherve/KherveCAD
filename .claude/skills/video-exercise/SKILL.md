@@ -153,6 +153,12 @@ Contents:
 
 - **The part**: what it is, overall size, the video link, the drawing /
   final frame from the video and a picture of the finished KherveCAD part.
+- **2D drawings FIRST** (the user, 2026-11-15): right after the title,
+  the part's engineering drawing — Front / Top / Right / Isometric with
+  overall dimensions and hole callouts. Make it offscreen from the
+  finished .kcad with the `blueprint` / `drawing_set` / `export_drawing`
+  MCP tools (export PNG + PDF to `report/drawing.*`), check it is legible,
+  and put it before "The part".
 - **Step by step**, one subsection per feature in the video's order, each
   split into numbered actions, exactly as the user does them in KherveCAD:
   which tab and button ("Features ▸ Extruded Boss/Base"), which plane or
@@ -217,6 +223,24 @@ nothing running off the page — one image per figure, `[H]`, widths
 `<title>.pdf` beside it. If KherveTeX is not connected, say so and ask
 the user to open it rather than writing LaTeX by hand. End by giving the
 user the PDF path; summarise the fixes in the chat, not in the report.
+
+## 7b. The tutorial VIDEO (our own, no YouTube needed)
+
+After the report, film the build with `khervecad.tutorial_video.Recorder`
+(the user, 2026-11-15: "show the mouse moving and everything", text an
+AI voice says). Write `<exercise folder>/video/make_video.py`, copying
+`SolidWorks Exercise 7 - Base block (KwnAr5AAgCI)/video/make_video.py`:
+offscreen MainWindow in the SolidWorks style, `rec.say(...)` before each
+action (one short sentence, numbers spelt as said), then the REAL mouse
+path — `click_tab`, `click_action`, `click_sketch`, `drag_sketch`,
+`click_world`, `type_into(panel.fields[...])`, `choose`, `rec.values`
+for each Smart Dimension (typed on film into a real input box),
+`rec.chapter` per feature. Print sizes / volume at the end and compare
+with steps.md. Run `PYTHONPATH=. .venv/bin/python <script>` from the
+repo; it writes `<name>.mp4` (voice = macOS `say`), `<name>.srt` and
+`<name> narration.txt` (the script, for another TTS). Check a contact
+sheet (`ffmpeg -vf "fps=1/5,scale=640:-1,tile=4x6"`). A step that will
+not work by mouse is a KherveCAD bug: fix it test-first (section 6).
 
 ## 8. Working rules learnt the hard way (read before starting)
 

@@ -3996,6 +3996,19 @@ into a new module and import.
                        when centred), a curved arrow at the sweep's end
                        sets `angle`; readout, Ctrl snaps to the grid / 15°,
                        Esc puts a drag back or ends the tool.
+  - `tutorial_video.py` — **tutorial videos made by KherveCAD itself**
+                       (2026-11-15, the user: no YouTube needed, show the
+                       mouse). `Recorder(win, "x.mp4")` drives the window
+                       with real mouse / key events and films it: grabbed
+                       frames (dialogs composited), a drawn pointer that
+                       glides, click ripples, button outlines, chapter tag,
+                       caption bar; `say` speaks a line with macOS `say`
+                       laid at that time while the mouse keeps working;
+                       `answer_values` types Smart Dimension values into a
+                       real input box on film. The clock is the FRAME count
+                       (grabs are slower than a frame). `finish` = MP4
+                       (ffmpeg) + .srt + narration .txt. Scripts live in
+                       each exercise's `video/make_video.py`.
   - `fill_pattern.py` / `fill_pattern_ui.py` — SolidWorks' **Fill Pattern**
                        (2026-11-15, the "Deform feature" video): click a
                        flat face (Features tab, beside Linear Pattern), a
