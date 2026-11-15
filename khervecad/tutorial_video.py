@@ -42,8 +42,8 @@ from PyQt5.QtWidgets import (QAction, QApplication, QInputDialog, QTabBar,
                              QToolButton, QWidget)
 
 FPS = 20
-VOICE = "Samantha"
-RATE = 175                 # words a minute
+VOICE = "Jamie (Premium)"
+RATE = 165                 # words a minute
 SAMPLE_RATE = 22050
 CAPTION_FONT = 22
 GAP_AFTER_LINE = 0.35      # seconds of quiet after each spoken line
