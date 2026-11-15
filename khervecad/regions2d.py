@@ -39,7 +39,8 @@ WRAPPERS = frozenset(NODE_TYPES)
 LEAVES = frozenset()
 
 HELPER = """\
-module kcad_regions(seeds = [], inside = [], points = [], paths = []) {
+module kcad_regions(seeds = [], inside = [], points = [], paths = [],
+                    flip = false) {
     // the picked regions of the sketch inside, worked out by KherveCAD
     polygon(points = points, paths = paths);
 }"""
@@ -105,7 +106,25 @@ def _cs(node):
     cs = sr.union_of(face_list, picked)
     if cs is not None and node.params.get("fuse"):
         cs = _fused(node, cs)
+    if cs is not None and node.params.get("flip"):
+        cs = _flipped(cs)
     return cs, face_list, picked
+
+
+#: how far (mm) the flipped side reaches past the picked regions at least
+FLIP_REACH = 10000.0
+
+
+def _flipped(cs):
+    """Everything AROUND the picked regions: a big square with them cut
+    out (SolidWorks' "Flip side to cut" — the cut keeps the inside)."""
+    import manifold3d as m
+    x0, y0, x1, y1 = cs.bounds()
+    reach = max(FLIP_REACH, 20.0 * max(x1 - x0, y1 - y0))
+    cx, cy = (x0 + x1) / 2.0, (y0 + y1) / 2.0
+    big = m.CrossSection([[(cx - reach, cy - reach), (cx + reach, cy - reach),
+                           (cx + reach, cy + reach), (cx - reach, cy + reach)]])
+    return big - cs
 
 
 def _fused(node, cs):
@@ -286,11 +305,12 @@ def statement(node, fmt, fn) -> str:
         points.extend(loop)
     p = node.params
     return ("kcad_regions(seeds = %s, inside = %s,\n    points = %s,\n"
-            "    paths = %s)" % (
+            "    paths = %s%s)" % (
                 _rows(p.get("seeds") or [], fmt),
                 _rows(p.get("inside") or [], fmt),
                 _rows([[round(x, 4), round(y, 4)] for x, y in points], fmt),
-                _rows(paths, fmt)))
+                _rows(paths, fmt),
+                ", flip = true" if p.get("flip") else ""))
 
 
 def _b_regions(parser, positional, named):
@@ -305,8 +325,10 @@ def _b_regions(parser, positional, named):
         return out
     seeds = [r[:2] for r in rows(named.get("seeds")) if len(r) >= 2]
     inside = [[int(v) for v in r] for r in rows(named.get("inside"))]
-    return CadNode("regions", "Regions", {"seeds": seeds,
-                                          "inside": inside})
+    params = {"seeds": seeds, "inside": inside}
+    if named.get("flip") is True:
+        params["flip"] = True
+    return CadNode("regions", "Regions", params)
 
 
 BUILDERS = {"kcad_regions": _b_regions}

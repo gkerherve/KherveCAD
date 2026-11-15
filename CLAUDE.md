@@ -3839,6 +3839,34 @@ into a new module and import.
                        extruded 0.01 mm thick (tests/
                        test_circle_extrude_by_mouse.py pass) and the
                        History tree differing after a save / reopen.
+  - Exercise 8 fixes (2026-11-15, the clevis; tests/test_exercise8_bugs.py):
+                       a Front / Side plane sketch drawn in Main is wrapped
+                       into an Object like a Top one (`_node_created` climbs
+                       the "<plane> sketch" turn), so Extruded Boss finds its
+                       regions; a region click ignores flat slabs the view
+                       sees edge-on (`View3D._edge_on_slab`: the Front
+                       sketch's regions swallowed a click on the symmetrical
+                       hole's centre, y = 0) and, where two numbered sketches'
+                       slabs tie in depth, the one listed first wins
+                       (`_first_slab`; `start_any` lists the free, newest
+                       sketch first); adding a dimension that conflicts with
+                       every other shape held retries holding the circles
+                       only, then nothing (a 7 degree leg starting on the
+                       held base line came out driven), and a relation the
+                       sketch already has is not added twice;
+                       **Flip side to cut**: the Extrude window's check for
+                       a cut sets `flip` on its Regions (`regions2d._flipped`:
+                       a big square minus the picked regions, written
+                       `kcad_regions(..., flip = true)`), so Through All -
+                       Both keeps the inside of the profile (MCP
+                       sketch_feature `flip`). Not reproduced: Right plane
+                       click in 3D (the plane is named "Side (YZ)", not
+                       "Right (YZ)"), a Top-plane sketch inside an Object
+                       (its shapes sit in the Object itself; Extruded Boss
+                       and the region click work, guard tests). Open: the R2
+                       face fillet on the clevis leaves small wedge steps at
+                       every R24 facet joint and degenerate triangles where
+                       the boss wall meets the arm face (the concave add strip).
   - Undo / redo during a pick (2026-11-13, the user: numbered regions
                        stayed on an empty 3D view): `DocumentModel.restored`
                        (emitted by `restore_state`) -> `stop_tool.restored`

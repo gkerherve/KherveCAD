@@ -1955,11 +1955,14 @@ TOOLS = [
             "From: Offset — the extrude starts that many mm along its own "
             "direction (after reverse) instead of on the sketch plane; "
             "the end condition (reference_geometry end_condition, e.g. "
-            "up_to_face) then measures from there."
+            "up_to_face) then measures from there. flip = SolidWorks' "
+            "\"Flip side to cut\" (cuts): the cut removes everything "
+            "AROUND the picked regions, the part keeps their inside."
         ),
         "input_schema": _obj({
             "node_id": {"type": "integer"},
             "kind": {"type": "string"},
+            "flip": {"type": "boolean"},
             "depth": {"type": "number", "exclusiveMinimum": 0},
             "from_offset": {"type": "number"},
             "mid_plane": {"type": "boolean"},

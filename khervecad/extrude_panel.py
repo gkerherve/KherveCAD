@@ -225,6 +225,30 @@ def set_reversed(model, ext, on):
     extrude_from.follow(model, ext)
 
 
+def _regions_of(ext):
+    return next((c for c in ext.children if c.type == "regions"), None)
+
+
+def is_flipped(ext):
+    reg = _regions_of(ext)
+    return bool(reg is not None and reg.params.get("flip"))
+
+
+def set_flip(model, ext, on):
+    """SolidWorks' "Flip side to cut": the cut removes everything AROUND
+    the picked regions (the part keeps their inside). False when the
+    extrude has no picked regions (a plain shape sketch)."""
+    reg = _regions_of(ext)
+    if reg is None:
+        return False
+    if on:
+        reg.params["flip"] = True
+    else:
+        reg.params.pop("flip", None)
+    model.node_changed.emit(reg)
+    return True
+
+
 def set_from(model, ext, mode, distance=None):
     """From: "sketch" (the sketch plane) or "offset" (*distance* mm along
     the extrude, its last value or extrude_from.DEFAULT)."""
@@ -513,6 +537,9 @@ def show(window, tool):
                  suffix="", minimum=0.0, maximum=10000.0, step=0.1,
                  decimals=3)
     panel.section("Options")
+    panel.check("flip", "Flip side to cut (keep the inside)",
+                is_flipped(ext),
+                changed(lambda v: set_flip(model, ext, bool(v))))
     panel.check("reverse", "Reverse direction", is_reversed(ext),
                 changed(lambda v: set_reversed(model, ext, bool(v))))
     panel.finish()
@@ -555,6 +582,8 @@ def refresh(window):
     panel.set_value("height", _num(ext.params.get("height"), 10))
     panel.set_value("height2", _num(ext.params.get("height2"), 0))
     panel.set_value("reverse", is_reversed(ext))
+    panel.set_value("flip", is_flipped(ext))
+    panel.show_row("flip", is_cut(ext) and _regions_of(ext) is not None)
     panel.set_value("twist", _num(ext.params.get("twist"), 0))
     panel.set_value("scale", _num(ext.params.get("scale"), 1))
     kind = ext.params.get("extent") or ""

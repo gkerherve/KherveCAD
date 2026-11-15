@@ -110,6 +110,8 @@ def _regions(window, group, kind, args) -> dict:
         if not args.get("through_all"):
             model.set_param(ext, "extent", "")
             model.set_param(ext, "reverse", True)
+        if args.get("flip"):
+            extrude_panel.set_flip(model, ext, True)
     _size(model, ext, args)
     top = ext
     while top.parent is not None and top.parent.type not in (

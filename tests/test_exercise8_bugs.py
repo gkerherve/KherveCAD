@@ -347,3 +347,85 @@ def test_the_clevis_leg_at_7_degrees_and_its_mirror_by_mouse(win):
     xs = sorted(round(min(n.params["x1"], n.params["x2"]), 2)
                 for n in mirrored)
     assert xs[0] == pytest.approx(-x2, abs=0.05)
+
+
+# ---------------- 8. Through All - Both with "Flip side to cut", by mouse
+def _block_with_circle(win, radius=10):
+    """An Object holding a 40 mm cube (x, y 0..40, z 0..40) and a Top-plane
+    circle drawn by mouse at its middle, Extruded Cut started."""
+    from khervecad.mcp_tools import McpToolExecutor
+    _new_object(win)
+    McpToolExecutor(win).execute("add_node", dict(
+        type="cube", params=dict(width=40, depth=40, height=40,
+                                 center=False),
+        parent_id=win.builder.isolated_component().id))
+    QTest.qWait(200)
+    before = _ids(win)
+    _row_sketch(win, "Top Plane")
+    _frame(win, -10, -10, 60, 60)
+    _circle(win, (20, 20), radius)
+    sk = _sketch_of(win, before)
+    _cut_on(win, "Top")
+    return sk
+
+
+def _flip_cut(win, flip):
+    from khervecad import region_panel, extrude_panel
+    sk = _block_with_circle(win)
+    _click_world(win, (20.0, 20.0, 0.05))
+    ok = region_panel.ok_button(win)
+    assert ok is not None, "no region panel"
+    QTest.mouseClick(ok, Qt.LeftButton)
+    QTest.qWait(200)
+    panel = extrude_panel._panel(win)
+    assert "flip" in panel.fields and panel.fields["flip"].isVisible()
+    assert not panel.fields["flip"].isChecked()
+    if flip:
+        QTest.mouseClick(panel.fields["flip"], Qt.LeftButton)
+        QTest.qWait(150)
+    _window_ok(win, direction="symmetric", extent="through_all")
+    return sk
+
+
+def test_flip_side_to_cut_keeps_the_inside_of_the_profile(win):
+    import math
+    _flip_cut(win, flip=True)
+    v = _volume(win)["volume"]
+    assert v == pytest.approx(math.pi * 100 * 40, rel=0.03)    # the disc
+
+
+def test_without_flip_the_profile_is_removed_as_before(win):
+    import math
+    _flip_cut(win, flip=False)
+    v = _volume(win)["volume"]
+    assert v == pytest.approx(64000 - math.pi * 100 * 40, rel=0.03)
+
+
+def test_flip_survives_scad_export_and_import(win):
+    from khervecad import scadparse
+    _flip_cut(win, flip=True)
+    code = win.model.to_scad()
+    assert "flip = true" in code
+    back, _warn = scadparse.parse_scad(code)
+    reg = next(n for n in back.walk() if n.type == "regions")
+    assert reg.params.get("flip") is True
+
+
+def test_mcp_sketch_feature_flip(win):
+    import math
+    from khervecad.mcp_tools import McpToolExecutor
+    ex = McpToolExecutor(win)
+    _new_object(win)
+    scope = win.builder.isolated_component()
+    cube = ex.execute("add_node", dict(type="cube", params=dict(
+        width=40, depth=40, height=40, center=False), parent_id=scope.id))
+    sk = ex.execute("reference_geometry", dict(
+        action="sketch", origin=[0, 0, 0], normal=[0, 0, 1]))["sketch_id"]
+    ex.execute("add_node", dict(type="circle", parent_id=sk, params=dict(
+        x=20, y=20, radius=10)))
+    out = ex.execute("sketch_feature", dict(
+        node_id=sk, kind="extruded_cut", through_all=True, flip=True,
+        part_id=cube["created"], regions=[[20, 20]]))
+    assert "error" not in out, out
+    v = _volume(win)["volume"]
+    assert v == pytest.approx(math.pi * 100 * 40, rel=0.03)
