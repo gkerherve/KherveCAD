@@ -1097,6 +1097,26 @@ def overlapping_shapes(shapes):
     return bool(lines) and got > len(shapes) - len(lines)
 
 
+def own_picks(own_shapes, face_list, picked):
+    """(faces of *own_shapes*, keys) standing for the *picked* areas of
+    *face_list* (cut with the part's outline too) when every one lies in
+    an area the sketch's own lines close — else None."""
+    try:
+        own = faces(own_shapes)
+    except Exception:
+        return None
+    if not own:
+        return None
+    keys = set()
+    for i in picked:
+        at = seed(face_list[i][0])
+        k = face_at(own, tuple(at)) if at else None
+        if k is None:
+            return None
+        keys.add(k)
+    return own, keys
+
+
 def overlap_container(window, nodes):
     """The sketch an Extruded Boss on *nodes* (or nothing selected)
     should split into regions, or None."""
@@ -1223,7 +1243,7 @@ def start_3d(window, container=None, make_only=False, cut=False,
                 "makes it" % len(picked))
 
     def on_pick(desc, key):
-        nonlocal shapes
+        nonlocal shapes, face_list, picked, ghost
         if desc is None:                       # done
             region_panel.close(window)
             region_show.stop(window)
@@ -1231,6 +1251,16 @@ def start_3d(window, container=None, make_only=False, cut=False,
             if not picked and on_nothing is not None:
                 on_nothing()
                 return
+            if picked and ghost is not None:
+                # areas the sketch's OWN lines close are taken whole, the
+                # part's outline left out: split by its grown outline, a
+                # leg drawn under a plate came out 0.05 mm below it where
+                # the push back could not follow an arc (Exercise 53)
+                own = own_picks(shapes_of(container), face_list, picked)
+                if own is not None:
+                    face_list, picked = own[0], set(own[1])
+                    shapes = [s for s in shapes if s is not ghost]
+                    ghost = None
             if picked and ghost is not None:
                 # the section the picked areas rely on: kept in the sketch
                 real = sketch_section.keep(window.model, container, ghost)

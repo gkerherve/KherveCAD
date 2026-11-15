@@ -28,6 +28,10 @@ def run(window, args) -> dict:
     if kind not in cut_feature.ALL or kind == "rib":
         return {"error": "kind must be one of %s (rib: use the rib tool)"
                 % ", ".join(k for k in cut_feature.ALL if k != "rib")}
+    if not args.get("regions") and args.get("region") is not None and \
+            _closes_own(group):
+        # one region of a sketch that closes its own areas (Exercise 53)
+        args = dict(args, regions=[args["region"]])
     if args.get("regions") and cut_feature.ALL[kind][1] == "linear_extrude":
         return _regions(window, group, kind, args)
     part = _find(window, args["part_id"]) if "part_id" in args else None
@@ -51,6 +55,17 @@ def run(window, args) -> dict:
     _size(model, ext, args)
     return {"feature_id": made.id, "name": made.name, "kind": kind,
             "extrude_id": ext.id if ext is not None else None}
+
+
+def _closes_own(group):
+    """True when *group*'s own shapes close at least one area."""
+    from . import sketch_regions
+    try:
+        shapes = sketch_regions.shapes_of(group)
+        return bool(shapes and sketch_regions.solid_faces(
+            shapes, sketch_regions.faces(shapes)))
+    except Exception:
+        return False
 
 
 def _regions(window, group, kind, args) -> dict:
