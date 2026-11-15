@@ -440,8 +440,8 @@ class Recorder:
             self.proc.stdin.write(img.bits().asstring(img.byteCount()))
             self.frames += 1
 
-    def explain_drawing(self, drawing, stops, zoom_to=None, glide=1.6,
-                        hold=2.2, settle=1.5):
+    def explain_drawing(self, drawing, stops, zoom_to=None, glide=0.9,
+                        hold=1.3, settle=0.9):
         """The drawing on its own, before a feature (the user: "show the
         drawing and hover around the parts you are going to do ...
         slower"). The whole sheet first, then a slow zoom on the area of
