@@ -64,9 +64,10 @@ def test_edit_sketch_turns_to_the_shape_then_sketches_at_its_scale(win,
     for _ in range(4):
         _APP.processEvents()
     assert (view.yaw, view.pitch) == pytest.approx((30.0, 25.0))
-    # and back at the sketch's own size: no zoom on the way out
-    assert view.distance == pytest.approx(view._focal()
-                                          / win.view2d.px_per_mm())
+    # and back at the camera the sketch started from (the part still
+    # in view there), not at the sketch's own zoom (2026-11-15)
+    assert view.distance == pytest.approx(300.0)
+    assert view.target[:2] == pytest.approx([50, 15])
     assert view.projection != "Orthographic" or True
 
 

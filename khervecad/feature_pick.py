@@ -241,6 +241,12 @@ def start(window, kind):
     from . import choice_preview, cut_feature, meshedit_ui
     st = state(window)
     st["where"] = "2d"            # every Boss / Cut starts on 2D (the user)
+    # Faces and Sketch regions start ON every time: a switch the user
+    # turned off for one pick must not stay off for the next one (a
+    # face click then fell through to plane sketching) — only Planes'
+    # default is decided below
+    st["faces"] = True
+    st["regions"] = True
     label = "Sketch Mode" if kind == SKETCH else cut_feature.ALL[kind][0]
     parts = meshedit_ui._parts(window)
     regions_ok = True

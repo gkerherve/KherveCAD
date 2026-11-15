@@ -3818,6 +3818,27 @@ into a new module and import.
                        a feature sketch is open the button reads "Finish
                        <feature>" (`sketch_mode._feature_of`).
                        tests/test_feature_pick.py.
+  - Filming fixes (2026-11-15, Exercise 7; tests/test_filming_bugs.py):
+                       `feature_pick.start` switches Faces and Sketch
+                       regions back ON each time (a switch turned off for
+                       one pick made the next face click fall to plane
+                       sketching); `normal_to.sketch_node` no longer looks
+                       for a sketch inside a node that holds solid
+                       geometry (a Fillet round the part + its old sketch
+                       reopened that sketch); `View3D._pick_at` lets a
+                       region within `REGION_BIAS` (0.5 mm) of depth beat
+                       the face it lies on (a tie / interpolation noise);
+                       `normal_to.back` returns to the camera the sketch
+                       STARTED from (`_normal_to_saved` keeps target and
+                       distance) and fits the model when it is no longer
+                       all in view; `View3D.fit` stops a running glide;
+                       `user_library.folder()` is a scratch folder in an
+                       offscreen run (no KHERVECAD_USER_LIBRARY); the
+                       Properties editors do nothing once the model is
+                       gone (`_live`). Not reproduced: a clicked circle
+                       extruded 0.01 mm thick (tests/
+                       test_circle_extrude_by_mouse.py pass) and the
+                       History tree differing after a save / reopen.
   - Undo / redo during a pick (2026-11-13, the user: numbered regions
                        stayed on an empty 3D view): `DocumentModel.restored`
                        (emitted by `restore_state`) -> `stop_tool.restored`

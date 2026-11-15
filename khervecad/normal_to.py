@@ -86,10 +86,22 @@ def sketch_node(window):
     for n in nodes:
         if n.category == SHAPE_2D:
             return n
+        if _holds_a_part(n):
+            continue       # a fillet / cut round a part is no sketch
         for c in n.walk():
             if c.category == SHAPE_2D:
                 return c
     return None
+
+
+def _holds_a_part(node):
+    """Does *node* hold solid geometry? A selected Fillet 1 wraps the
+    part AND its old face sketch: Sketch Mode then reopened that sketch
+    instead of starting one on the clicked face (2026-11-15)."""
+    from .model import SHAPE_3D
+    return any(c.category == SHAPE_3D or
+               c.type in ("polyhedron", "stl_import")
+               for c in node.walk())
 
 
 # =================================================================== Qt
@@ -176,7 +188,8 @@ def turn_to(window, plane, node=None, camera=None, face=None):
     one_canvas = sketch_mode.active(window)
     view = window.view3d
     window._normal_to_saved = dict(
-        yaw=view.yaw, pitch=view.pitch, projection=view.projection)
+        yaw=view.yaw, pitch=view.pitch, projection=view.projection,
+        target=list(view.target), distance=view.distance)
     yaw, pitch = camera if camera is not None else CAMERA[plane]
     # Edit Sketch on a shape of a main plane: THAT sketch is what the 2D
     # view shows (sketch_focus)
@@ -317,6 +330,45 @@ def action(window):
 DEFAULT_ANGLES = (-65.0, 35.0)
 
 
+def _framed(view, verts):
+    """Are all *verts* inside the 3D view as it stands?"""
+    if not verts:
+        return True
+    eye, r, u, f = view._camera()
+    w, h = view.width(), view.height()
+    for v in verts:
+        q = view._project(eye, r, u, f, v)
+        if q is None or not (0 <= q[0] <= w and 0 <= q[1] <= h):
+            return False
+    return True
+
+
+def _return_goal(view, saved):
+    """Where the camera goes when the sketch ends: the camera the sketch
+    STARTED from (angle, centre, distance), unless the part has since
+    left the picture (it grew, or the sketch's own zoom was kept) — then
+    the whole model, framed at that angle (2026-11-15, the filmed
+    Exercise 7: a tall part came back cropped at the sketch's px/mm)."""
+    start = dict(yaw=view.yaw, pitch=view.pitch, target=list(view.target),
+                 distance=view.distance, projection=view.projection)
+    goal = dict(yaw=saved["yaw"], pitch=saved["pitch"])
+    verts = [v for tri in view.mesh for v in tri]
+    if len(verts) > 3000:
+        verts = verts[::len(verts) // 3000]
+    view.yaw, view.pitch = goal["yaw"], goal["pitch"]
+    view.projection = saved["projection"]
+    if saved.get("target") is not None and saved.get("distance"):
+        view.target, view.distance = list(saved["target"]), \
+            saved["distance"]
+    if not saved.get("target") or not _framed(view, verts):
+        view.fit()
+    goal["target"], goal["distance"] = list(view.target), view.distance
+    view.yaw, view.pitch = start["yaw"], start["pitch"]
+    view.target, view.distance = start["target"], start["distance"]
+    view.projection = start["projection"]
+    return goal
+
+
 def back(window):
     """Leaving the sketch: the 3D view starts square on, at the sketch's
     scale and centre, and only TURNS back to the angle it had — no zoom,
@@ -354,8 +406,7 @@ def back(window):
         view.yaw, view.pitch = yaw, pitch
         view.target = target
         view.distance = view._focal() / scale
-    goal = dict(yaw=saved["yaw"], pitch=saved["pitch"],
-                target=list(view.target), distance=view.distance)
+    goal = _return_goal(view, saved)
 
     # a standard-view click may cut the turn short: it restores this
     view._kc_restore_projection = saved["projection"]

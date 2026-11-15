@@ -1017,6 +1017,19 @@ class View3D(QWidget):
     #: shows just the hit facet, keeping the feedback fluid.
     HOVER_DESCRIBE_LIMIT = 24000
 
+    #: how much farther (mm of depth) a sketch region may lie than the
+    #: face under it and still be the pick
+    REGION_BIAS = 0.5
+
+    @staticmethod
+    def _group_start(groups, key):
+        start = 0
+        for k, ts in groups:
+            if k is key or k == key:
+                return start
+            start += len(ts)
+        return 0
+
     def _pick_at(self, x, y, quick=False):
         """``(desc, key)`` for the face/edge under screen (x, y), or
         ``(None, None)`` — key is the owning group key (two-click
@@ -1043,6 +1056,26 @@ class View3D(QWidget):
                         owner, key = ts, k
                         break
                     start += len(ts)
+                # a sketch REGION lying on a part face wins that face:
+                # their depths tie (or differ by interpolation noise),
+                # and the region is what the user aims at
+                if not (isinstance(key, tuple) and key and
+                        key[0] == "region"):
+                    depth0 = projector(point)[2]
+                    best = None
+                    start2 = 0
+                    for k, ts in groups:
+                        if isinstance(k, tuple) and k and k[0] == "region":
+                            i2, p2 = anchors.pick(ts, projector, x, y)
+                            if i2 is not None:
+                                d2 = projector(p2)[2]
+                                if d2 <= depth0 + self.REGION_BIAS and \
+                                        (best is None or d2 < best[0]):
+                                    best = (d2, ts, k, start2 + i2, p2)
+                        start2 += len(ts)
+                    if best is not None:
+                        _d, owner, key, index, point = best
+                        start = self._group_start(groups, key)
         if index is None or owner is None:
             return None, None
         # snap tolerance: ~8 px as world units at the hit depth
@@ -1119,6 +1152,12 @@ class View3D(QWidget):
         orientation, then adjusts distance and recentres the target so
         the model sits squarely in the middle (not low)."""
         whole = verts is None
+        # a camera glide still running (the turn back from a sketch)
+        # would overwrite this framing a few frames later
+        glide = getattr(self, "_kc_anim", None)
+        if glide is not None:
+            glide.stop()
+            self._kc_anim = None
         if whole:
             verts = [v for tri in self.mesh for v in tri]
         if not verts:
