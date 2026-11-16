@@ -2211,6 +2211,12 @@ class View3D(QWidget):
                 and self.edit_tool.wants_key(event):
             event.accept()            # Edit Mode's G / E / M beat the menus
             return True
+        if kind == QEvent.ShortcutOverride and event.key() in (
+                Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down) and \
+                not event.modifiers() & Qt.AltModifier and \
+                self.edit_tool is None:
+            event.accept()            # Ctrl/Cmd+arrows beat the tree's
+            return True
         if kind == QEvent.KeyPress and event.key() == Qt.Key_Tab and \
                 not event.modifiers() & (Qt.ControlModifier
                                          | Qt.AltModifier):
@@ -2397,4 +2403,30 @@ class View3D(QWidget):
             return
         if self.edit_tool is not None and self.edit_tool.key_press(event):
             return
+        if self._arrow_turn(event):
+            return
         super().keyPressEvent(event)
+
+    ARROW_STEP = 5.0
+
+    def _arrow_turn(self, event):
+        """Arrows, with or without Ctrl / Cmd, turn the view (Left/Right
+        about Z, Up/Down tilt); Shift+arrows pan (the Welcome tip)."""
+        key = event.key()
+        if key not in (Qt.Key_Left, Qt.Key_Right, Qt.Key_Up, Qt.Key_Down):
+            return False
+        if event.modifiers() & Qt.AltModifier:
+            return False
+        sx = {Qt.Key_Left: -1, Qt.Key_Right: 1}.get(key, 0)
+        sy = {Qt.Key_Down: -1, Qt.Key_Up: 1}.get(key, 0)
+        if event.modifiers() & Qt.ShiftModifier:
+            from . import viewnav
+            viewnav.pan_3d(self, sx, sy)
+        else:
+            self.yaw = (self.yaw - sx * self.ARROW_STEP) % 360.0
+            self.pitch = max(-89.0, min(89.0, self.pitch
+                                        - sy * self.ARROW_STEP))
+            self.user_moved = True
+            self.update()
+        event.accept()
+        return True

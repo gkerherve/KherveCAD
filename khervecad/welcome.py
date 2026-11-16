@@ -42,7 +42,7 @@ TABS = ("Home", "Recent", "Learn", "Alerts")
 
 #: the tip bar's lines, one at a time (left / right arrows)
 TIPS = (
-    "Arrow keys in the 3D view turn the model; Ctrl + arrows pan it.",
+    "Arrow keys (or Ctrl/Cmd + arrows) in the 3D view turn the model; Shift + arrows pan it.",
     "Press Ctrl+N at any time to come back to this window.",
     "Everything you draw becomes a node: the Code tab shows the OpenSCAD "
     "program it writes, and editing the code edits the model.",
