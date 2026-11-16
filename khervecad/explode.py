@@ -19,7 +19,7 @@ Which parts come apart (`plan`):
   apart;
 - with nothing selected, the parts of the scope (the document, or the
   Object being edited) — and a lone Group, Object or colour at the top
-  is looked into, since a library part or Make Object wraps a whole
+  is looked into, since a library part or Make Part wraps a whole
   assembly in one. Before, such a document had "one part" and the
   view silently did nothing.
 

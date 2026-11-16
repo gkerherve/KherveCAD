@@ -66,7 +66,7 @@ FUSION = [
         "edit/paste", "edit/delete", "edit/duplicate", "-", "edit/group",
         "edit/ungroup", "edit/move up", "edit/move down"]),
     ("&Create", [
-        "insert/new object", ("Create &Sketch", ["insert/2d shapes"]),
+        "insert/new part", ("Create &Sketch", ["insert/2d shapes"]),
         ("Sketch C&onstraints", ["tools/sketch constraints"]),
         ("Sketch &Modify", ["tools/sketch modify"]),
         "-", "tools/extrude/linear extrude", "tools/extrude/rotate extrude",
@@ -100,7 +100,7 @@ FUSION = [
         "edit/document units",
         "edit/document scale (1 : n)", "edit/common segments ($fn)"]),
     ("&Assemble", [
-        "insert/new object", "tools/snap objects",
+        "insert/new part", "tools/snap objects",
         "view/gumball (move / turn handles)", "-", "view/exploded view",
         "view/animate ($t)"]),
     ("I&nspect", [
@@ -218,7 +218,7 @@ SOLIDWORKS = [
                       "tools/convert to subd (smooth cage)"]),
         ("Cur&ve", ["insert/draw 3d curve (click points)",
                     "insert/shapes & patterns/3d curve"]),
-        "-", "insert/new object", "insert/part library", "library", "-",
+        "-", "insert/new part", "insert/part library", "library", "-",
         ("S&ketch", ["insert/2d shapes"]), "insert/3d solids",
         "insert/shapes & patterns", "insert/repeat & logic",
         "insert/code & files", "tools/character", "-",

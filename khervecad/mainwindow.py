@@ -447,7 +447,7 @@ class MainWindow(QMainWindow):
 
         insert_menu = m.addMenu(self.tr("&Insert"))
         insert_menu.addAction(icons.icon("mdi.package-variant-closed"),
-                              self.tr("New &Object"), self._new_object,
+                              self.tr("New &Part"), self._new_object,
                               "Ctrl+Alt+N")
         insert_menu.addSeparator()
         insert_menu.addAction(icons.icon("mdi.toy-brick-outline"),
@@ -2190,7 +2190,7 @@ class MainWindow(QMainWindow):
         exact, total = self._queue_part_renders(root)
         label = language.tr("built-in preview")
         if iso is not None:
-            label += language.tr(" — Object: {name}").format(
+            label += language.tr(" — Part: {name}").format(
                 name=root.name)
         if total:
             label += language.tr(" — {exact}/{total} parts exact").format(

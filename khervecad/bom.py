@@ -899,7 +899,7 @@ def anchors_env(model):
 def sheet_lines(model, detail="parts", most=40):
     """The lines a drawing's parts list shows: the parts of the drawn
     assembly — looking inside a lone wrapping Object, as a library part
-    or Make Object leaves one — at most *most*."""
+    or Make Part leaves one — at most *most*."""
     b = build(model, detail)
     lines = [ln for ln in b.lines if ln.kind in ("part", "assembly")]
     while len(lines) == 1 and \

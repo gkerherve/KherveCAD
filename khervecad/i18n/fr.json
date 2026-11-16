@@ -2404,5 +2404,11 @@
   "Tick Show the cage too to see it while you work outside Edit Mode.": "Cochez Afficher aussi la cage pour la voir hors du mode Édition.",
   "Paths": "Chemins",
   "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contour par ligne, en numéros de points (comptés à partir de 0). Un contour à l'intérieur d'un autre est un trou. Vide : tous les points, dans l'ordre.",
-  "Surface and shadow": "Surface et ombre"
+  "Surface and shadow": "Surface et ombre",
+  "New &Part": "Nouvel &objet",
+  "Make Part": "Créer un objet",
+  "Insert Part": "Insérer un objet",
+  "Edit in Part tab": "Modifier dans l'onglet Objet",
+  " — Part: {name}": " — Objet : {name}",
+  "Part": "Objet"
 }

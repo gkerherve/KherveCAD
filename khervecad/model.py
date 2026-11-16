@@ -266,7 +266,7 @@ NODE_TYPES = {
         # OpenSCAD module (one definition + one placed call), so the
         # program reads as an assembly of named parts. Carries the
         # same placement/colour params as a Group.
-        label="Object", category=BOOLEAN,
+        label="Part", category=BOOLEAN,
         icon="mdi.package-variant-closed",
         params=dict(x=0.0, y=0.0, z=0.0, rx=0.0, ry=0.0, rz=0.0,
                     color="", alpha=1.0),

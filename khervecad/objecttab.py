@@ -126,7 +126,7 @@ class ObjectTab(QWidget):
         layout.setSpacing(4)
         row = QHBoxLayout()
         row.setSpacing(2)
-        row.addWidget(QLabel("Object:"))
+        row.addWidget(QLabel("Part:"))
         self.combo = QComboBox()
         self.combo.setToolTip("The Object being edited — every Object "
                               "in the document is listed here, nested "

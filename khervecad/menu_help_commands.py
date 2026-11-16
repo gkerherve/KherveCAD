@@ -316,7 +316,7 @@ COMMANDS = {
         "true.", ["Type 1:250000000 or 25:1."], None),
     "locate openscad": ("Locate OpenSCAD", "Points KherveCAD at your "
                         "OpenSCAD program for exact renders.", [], None),
-    "new object": ("New object", "Creates an empty Object (a reusable "
+    "new part": ("New part", "Creates an empty Object (a reusable "
                    "part definition) and opens it in the Object tab.",
                    [], None),
     "english": ("English", "Switches the interface to English.", [], None),

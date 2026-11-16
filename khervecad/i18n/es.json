@@ -2404,5 +2404,11 @@
   "Tick Show the cage too to see it while you work outside Edit Mode.": "Marca Mostrar también la jaula para verla fuera del modo Edición.",
   "Paths": "Rutas",
   "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "Un contorno por fila, como números de punto (contados desde 0). Un contorno dentro de otro es un agujero. Vacío: todos los puntos, en orden.",
-  "Surface and shadow": "Superficie y sombra"
+  "Surface and shadow": "Superficie y sombra",
+  "New &Part": "Nuevo &objeto",
+  "Make Part": "Crear objeto",
+  "Insert Part": "Insertar objeto",
+  "Edit in Part tab": "Editar en la pestaña Objeto",
+  " — Part: {name}": " — Objeto: {name}",
+  "Part": "Objeto"
 }

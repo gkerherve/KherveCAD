@@ -296,7 +296,7 @@ class WorkTreeTab(QWidget):
         menu.addAction(language.tr("Sort Z to A")).triggered.connect(
             lambda: self.sort_list(item, reverse=True))
         menu.addSeparator()
-        menu.addAction(language.tr("Open in Object tab")).triggered.connect(
+        menu.addAction(language.tr("Open in Part tab")).triggered.connect(
             lambda: self._picked(item, 0))
         self.tree.setCurrentItem(item)
         menu.exec_(self.tree.viewport().mapToGlobal(pos))

@@ -28,7 +28,7 @@ DEFAULT_HIDDEN = ("variables", "code")
 def _pages(panel):
     """[(key, widget, label)] in tab order."""
     return [("main", panel._main_page, "Main"),
-            ("object", panel.object_tab, "Object"),
+            ("object", panel.object_tab, "Part"),
             ("collections", panel.collections, "Collections"),
             ("variables", panel.variables, "Variables"),
             ("code", panel._code_page, "Code")]

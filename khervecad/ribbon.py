@@ -382,7 +382,7 @@ PAINT = {
     "git/connect to github / gitlab": "git_remote",
     "edit/locate openscad": "locate_openscad",
     "edit/language": "language",
-    "insert/new object": "new_object",
+    "insert/new part": "new_object",
     "view/gumball (move / turn handles)": "gumball",
     "view/exploded view": "explode",
     "view/animate ($t)": "animate",

@@ -2404,5 +2404,11 @@
   "Tick Show the cage too to see it while you work outside Edit Mode.": "「ケージも表示」にチェックすると、編集モード外でも見えます。",
   "Paths": "パス",
   "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "1 行に 1 つの輪郭を点番号（0 から数える）で指定します。別の輪郭の内側にある輪郭は穴になります。空：すべての点を順に使います。",
-  "Surface and shadow": "表面と影"
+  "Surface and shadow": "表面と影",
+  "New &Part": "新しいオブジェクト(&O)",
+  "Make Part": "オブジェクト化",
+  "Insert Part": "オブジェクトを挿入",
+  "Edit in Part tab": "オブジェクトタブで編集",
+  " — Part: {name}": " — オブジェクト: {name}",
+  "Part": "オブジェクト"
 }

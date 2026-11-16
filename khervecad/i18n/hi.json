@@ -2404,5 +2404,11 @@
   "Tick Show the cage too to see it while you work outside Edit Mode.": "एडिट मोड से बाहर भी देखने के लिए पिंजरा भी दिखाएँ चुनें।",
   "Paths": "पथ",
   "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "हर पंक्ति में एक रूपरेखा, बिंदु संख्याओं में (0 से गिनती)। किसी दूसरी रूपरेखा के भीतर की रूपरेखा एक छेद है। खाली: सभी बिंदु, क्रम में।",
-  "Surface and shadow": "सतह और छाया"
+  "Surface and shadow": "सतह और छाया",
+  "New &Part": "नया ऑब्जेक्ट(&O)",
+  "Make Part": "ऑब्जेक्ट बनाएं",
+  "Insert Part": "ऑब्जेक्ट सम्मिलित करें",
+  "Edit in Part tab": "ऑब्जेक्ट टैब में संपादित करें",
+  " — Part: {name}": " — ऑब्जेक्ट: {name}",
+  "Part": "ऑब्जेक्ट"
 }

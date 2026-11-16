@@ -2,7 +2,7 @@
 more compact way ... menus, submenus, shorter sentences").
 
 `compact(menu)` runs on the finished menu: the everyday commands stay on
-top (Edit in Object tab, Hide, Colour, Rename, Duplicate, Group), the
+top (Edit in Part tab, Hide, Colour, Rename, Duplicate, Group), the
 rest go into a few submenus by what they do, long labels are shortened,
 and Suppress / Delete stay last. Items are matched by their English
 text through `language.tr`, so a translated menu regroups too; anything
@@ -30,12 +30,12 @@ GROUPS = [
       "Imported mesh", "Make Sizes Equal", "Pick edges",
       "Unfold", "Export flat pattern", "Convert"]),
     ("Organise", "mdi.file-tree",
-     ["Ungroup", "Make Object", "Insert Object", "Move to Collection",
+     ["Ungroup", "Make Part", "Insert Part", "Move to Collection",
       "Roll back to here", "Roll forward"]),
 ]
 
 #: kept on top, in this order, before the submenus
-TOP = ["Edit Sketch", "End Sketch", "Edit in Object tab", "Hide", "Show", "Color", "Colour", "Rename",
+TOP = ["Edit Sketch", "End Sketch", "Edit in Part tab", "Hide", "Show", "Color", "Colour", "Rename",
        "Duplicate", "Group", "OpenSCAD modifier"]
 #: kept last, in this order
 LAST = ["Suppress", "Unsuppress", "Delete, keep contents", "Delete all",
@@ -51,7 +51,7 @@ SHORT = {
     "Debug modifier (OpenSCAD)": "OpenSCAD modifier",
     "Split for printing…": "Split for print…",
     "Split for printing...": "Split for print…",
-    "Edit in Object tab": "Edit in Object tab",
+    "Edit in Part tab": "Edit in Part tab",
 }
 
 

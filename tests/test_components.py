@@ -253,3 +253,12 @@ def test_object_names_the_identifier_cannot_carry_round_trip(model):
     again = DocumentModel()
     again.root = root
     assert again.to_scad() == code
+
+
+def test_new_parts_are_named_part_n():
+    """The user, 2026-11-16: an Object is called a Part, like the Part
+    Library — new ones are "Part 1", "Part 2", not "Object 1"."""
+    from khervecad.model import DocumentModel, NODE_TYPES
+    m = DocumentModel()
+    assert NODE_TYPES["component"]["label"] == "Part"
+    assert m.unique_name("component") == "Part 1"

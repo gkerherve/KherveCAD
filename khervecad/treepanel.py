@@ -909,7 +909,7 @@ class ObjectTree(QTreeWidget):
             else:
                 self.model.move_node(node, fallback)
 
-    #: the Main tree offers "Insert Object" (assembly instances);
+    #: the Main tree offers "Insert Part" (assembly instances);
     #: the Object tab's tree does not.
     SHOWS_INSERT_OBJECT = True
     #: the Object tab's tree lets the groups building a part be snapped
@@ -939,7 +939,7 @@ class ObjectTree(QTreeWidget):
             menu.exec_(self.viewport().mapToGlobal(pos))
 
     def _insert_object_menu(self, menu):
-        """"Insert Object" — place an instance of a defined Object into
+        """"Insert Part" — place an instance of a defined Object into
         the Main assembly (the part/assembly model: definitions live in
         the Object tab, the assembly calls the ones it wants)."""
         if not self.SHOWS_INSERT_OBJECT:
@@ -948,7 +948,7 @@ class ObjectTree(QTreeWidget):
         if not comps:
             return
         sub = menu.addMenu(icons.icon("mdi.package-down"),
-                           language.tr("Insert Object"))
+                           language.tr("Insert Part"))
         for comp in comps:
             sub.addAction(
                 icons.icon("mdi.package-variant-closed"), comp.name,
@@ -962,7 +962,7 @@ class ObjectTree(QTreeWidget):
         definition = definition_of(self.model, part) or part
         menu.addAction(
             icons.icon("mdi.pencil-box-outline"),
-            language.tr("Edit in Object tab"),
+            language.tr("Edit in Part tab"),
             lambda: self.open_component.emit(definition))
         if part.type == "component":
             self._anchor_menu(menu, part)
@@ -1473,7 +1473,7 @@ class ObjectTree(QTreeWidget):
         if objectable:
             menu.addAction(
                 icons.icon("mdi.package-variant-closed"),
-                language.tr("Make Object"),
+                language.tr("Make Part"),
                 lambda: [self.model.make_component(n)
                          for n in objectable])
         # Save to My Library left this menu (the user): Library ▸ My
@@ -2168,7 +2168,7 @@ class BuilderPanel(QTabWidget):
                     "double-click one to edit it")),
                 (objects, language.tr("Main"), language.tr(
                     "The assembly: every part in the document")),
-                (self.object_tab, language.tr("Object"), language.tr(
+                (self.object_tab, language.tr("Part"), language.tr(
                     "Define and edit one Object (part) at its own "
                     "origin")),
                 (self.collections, language.tr("Collections"),

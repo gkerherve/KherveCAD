@@ -2404,5 +2404,11 @@
   "Tick Show the cage too to see it while you work outside Edit Mode.": "勾选“同时显示控制笼”，可在编辑模式之外也看到它。",
   "Paths": "路径",
   "One outline per row, as point numbers (counted from 0). An outline inside another is a hole. Empty: every point, in order.": "每行一个轮廓，用点编号表示（从 0 开始）。位于另一个轮廓内的轮廓是孔。为空：按顺序使用全部点。",
-  "Surface and shadow": "表面和阴影"
+  "Surface and shadow": "表面和阴影",
+  "New &Part": "新建对象(&O)",
+  "Make Part": "创建为对象",
+  "Insert Part": "插入对象",
+  "Edit in Part tab": "在“对象”标签页中编辑",
+  " — Part: {name}": " ——对象：{name}",
+  "Part": "对象"
 }
