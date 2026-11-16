@@ -343,7 +343,17 @@ def show(window, group, part):
             others.extend(t)
     scene = window.view2d.scene()
     if not tris:
+        # a plane through the part, no face under it: still the other
+        # sketches' points and edges lying in it (Plane1 through A, B, C)
         scene.face_outline = None
+        try:
+            gp, gs = plane_features(window, group)
+            if gp or gs:
+                scene.face_outline = {"segments": [], "points": gp,
+                                      "guides": gs}
+        except Exception:
+            import traceback
+            traceback.print_exc()
         return []
     segs = None
     try:
@@ -600,6 +610,24 @@ def plane_features(window, group):
                              tuple(round(c, 6) + 0.0 for c in
                                    face_sketch.to_local(group, wb))))
     return pts, segs
+
+
+def add_guides(window, group):
+    """Merge the other sketches' in-plane points and edges into whatever
+    outline the 2D view holds for *group* (a reference plane's section)."""
+    scene = window.view2d.scene()
+    gp, gs = plane_features(window, group)
+    if not (gp or gs):
+        return
+    info = getattr(scene, "face_outline", None)
+    if info is None:
+        scene.face_outline = {"segments": [], "points": list(gp),
+                              "guides": list(gs)}
+        return
+    have = {(round(x, 3), round(y, 3)) for x, y, _k in info["points"]}
+    info["points"] = list(info["points"]) + [
+        q for q in gp if (round(q[0], 3), round(q[1], 3)) not in have]
+    info["guides"] = list(info.get("guides") or []) + list(gs)
 
 
 def pin(scene, model, node):

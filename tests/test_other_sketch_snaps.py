@@ -47,3 +47,12 @@ def test_the_other_sketchs_points_and_edge_are_offered(setup):
     guides = info.get("guides") or []
     assert any(abs(a[1] - 56) < 1e-6 and abs(b[1] - 56) < 1e-6
                for a, b in guides)
+
+
+def test_a_plane_with_no_face_still_offers_them(setup):
+    w, grp = setup
+    face_outline.show(w, grp, None)
+    info = w.view2d.scene().face_outline
+    assert info is not None
+    pts = [(round(x, 3), round(y, 3)) for x, y, _k in info["points"]]
+    assert (30.0, 56.0) in pts

@@ -146,6 +146,10 @@ def for_group(window, group):
         window.view2d.scene().face_outline = {
             "segments": segs, "points": face_outline.snap_points(segs),
             "section": True}
+    try:
+        face_outline.add_guides(window, group)   # other sketches' points
+    except Exception:
+        pass
     return segs
 
 
