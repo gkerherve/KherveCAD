@@ -376,6 +376,14 @@ def show(window, group, part):
         traceback.print_exc()
     info = {"segments": segs, "points": points}
     try:
+        gp, gs = plane_features(window, group)
+        have = {(round(x, 3), round(y, 3)) for x, y, _k in points}
+        points += [q for q in gp if (round(q[0], 3), round(q[1], 3)) not in have]
+        info["guides"] = gs
+    except Exception:                        # never stop the sketch
+        import traceback
+        traceback.print_exc()
+    try:
         # the whole part cut just behind the face (the user: "a cut of
         # the whole part through that face"), hatched under the contour
         cut = cut_behind(window, group)
@@ -541,6 +549,59 @@ def sketch_points(group, part):
     return out
 
 
+def plane_features(window, group):
+    """([(x, y, kind)], [(a, b)]): the points and EDGES of the other
+    sketches' shapes (a rectangle's corners and sides, a line) that lie IN
+    *group*'s plane — SolidWorks' Point2@Sketch4 on Sketch3's edge, A B C
+    on a sloping plane. Exact, so a line drawn to them lands on them."""
+    from . import face_sketch, mesh
+    from .model import SHAPE_2D
+    normal = _unit(face_sketch._normal_of(group))
+    o = [float(group.params.get(k, 0.0)) for k in ("x", "y", "z")]
+    pts, segs = [], []
+    for node in window.model.root.walk():
+        if node.category != SHAPE_2D or _inside(node, group):
+            continue
+        p = node.params
+        try:
+            if node.type == "rect":
+                x, y = float(p["x"]), float(p["y"])
+                w, h = float(p["width"]), float(p["height"])
+                loc = [(x, y), (x + w, y), (x + w, y + h), (x, y + h)]
+                edges = [(loc[i], loc[(i + 1) % 4]) for i in range(4)]
+            elif node.type == "line":
+                loc = [(float(p["x1"]), float(p["y1"])),
+                       (float(p["x2"]), float(p["y2"]))]
+                edges = [(loc[0], loc[1])]
+            else:
+                continue
+            m = mesh.mat_mul(mesh.ancestor_matrix(node, {}),
+                             mesh.node_matrix(node, {}))
+        except (TypeError, ValueError, KeyError):
+            continue
+
+        def world(q):
+            return [m[r][0] * q[0] + m[r][1] * q[1] + m[r][3]
+                    for r in range(3)]
+
+        def on_plane(w_):
+            return abs(sum((w_[i] - o[i]) * normal[i]
+                           for i in range(3))) < 1e-3
+        for q in loc:
+            w_ = world(q)
+            if on_plane(w_):
+                lx, ly = face_sketch.to_local(group, w_)
+                pts.append((round(lx, 6) + 0.0, round(ly, 6) + 0.0, "corner"))
+        for a, b in edges:
+            wa, wb = world(a), world(b)
+            if on_plane(wa) and on_plane(wb):
+                segs.append((tuple(round(c, 6) + 0.0 for c in
+                                   face_sketch.to_local(group, wa)),
+                             tuple(round(c, 6) + 0.0 for c in
+                                   face_sketch.to_local(group, wb))))
+    return pts, segs
+
+
 def pin(scene, model, node):
     """A shape just drawn on the face: each of its points sitting on a
     snap point of the face is fixed there (SolidWorks makes it
@@ -620,7 +681,8 @@ def pin(scene, model, node):
                 continue
             # ON an edge of the part (not at a corner): it stays on that
             # edge, free to slide along it (SolidWorks' On Edge)
-            for a, b in (info or {}).get("segments", ()):
+            for a, b in list((info or {}).get("segments", ())) + \
+                    list((info or {}).get("guides") or []):
                 ex_, ey_ = _on_segment(pt[0], pt[1], a, b)
                 if abs(ex_ - pt[0]) < 1e-6 and abs(ey_ - pt[1]) < 1e-6:
                     try:
@@ -720,7 +782,7 @@ def snap(scene, pos):
     from PyQt5.QtCore import QPointF
     if best is not None:
         return QPointF(best[1], best[2]), best[3]
-    for a, b in info["segments"]:
+    for a, b in list(info["segments"]) + list(info.get("guides") or []):
         x, y = _on_segment(pos.x(), pos.y(), a, b)
         d = math.hypot(pos.x() - x, pos.y() - y) * k
         if d <= SNAP_PX / 2 and (best is None or d < best[0]):
