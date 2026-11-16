@@ -274,7 +274,7 @@ class MainWindow(QMainWindow):
         m = self.menuBar()
 
         file_menu = m.addMenu(self.tr("&File"))
-        file_menu.addAction(self.tr("&New"), self.new_document, "Ctrl+N")
+        file_menu.addAction(self.tr("&New"), self.new_dialog, "Ctrl+N")
         file_menu.addAction(self.tr("New &Window"), self.new_window,
                             "Ctrl+Shift+N")
         file_menu.addAction(self.tr("&Open..."), self.open_file, "Ctrl+O")
@@ -2635,6 +2635,13 @@ class MainWindow(QMainWindow):
         self._dirty = False
         self._update_title()
 
+    def new_dialog(self):
+        """File ▸ New: the Welcome window — New Part / Assembly /
+        Drawing, Open, Recent Documents (SolidWorks'). new_document()
+        stays the plain "clear everything" the window's code calls."""
+        from . import welcome
+        return welcome.show_welcome(self)
+
     def new_window(self):
         """Open a second, independent KherveCAD window (empty document)."""
         win = MainWindow()
@@ -2786,6 +2793,8 @@ class MainWindow(QMainWindow):
             return
         self._dirty = False
         self._add_recent(self._path)
+        from . import welcome_thumb
+        welcome_thumb.save_from_window(self, self._path)  # Recent card
         self._update_title()
         from .user_library_dialog import design_saved
         kept = design_saved(self, self._path)

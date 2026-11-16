@@ -264,7 +264,7 @@ def make_bar_actions(win):
     parts = {}
     # -- file
     parts["file"] = [
-        _action(win, "mdi.file-outline", "New", "new", win.new_document),
+        _action(win, "mdi.file-outline", "New", "new", win.new_dialog),
         _action(win, "mdi.folder-open-outline", "Open", "open",
                 win.open_file),
         _action(win, "mdi.content-save-outline", "Save", "save",

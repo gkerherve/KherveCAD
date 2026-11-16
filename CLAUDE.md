@@ -60,6 +60,26 @@ into a new module and import.
                        The log now APPENDS per session (it was truncated
                        at every launch, so a crash was gone by the time
                        it was reported), rotating past `CRASH_LOG_LIMIT`.
+  - `welcome.py`     — the **Welcome window**, a replica of SolidWorks'
+                       (2026-11-16, the user): tabs Home / Recent / Learn /
+                       Alerts; Home = New (Part = an empty Object open in
+                       the Object tab, Assembly = the Main tab, Drawing =
+                       the Blueprint window, Advanced... = kind + unit)
+                       and Open, Recent Documents as cards (`Card`: name,
+                       framed 3D picture, Part / Assembly badge; the
+                       picture is `welcome_thumb`'s PNG in the cache
+                       folder — kept at every save from the 3D view, else
+                       drawn one card per event-loop turn from the .kcad
+                       in a scratch model + offscreen View3D, a heavy or
+                       empty file refused once with a marker), Recent
+                       Folders and Resources; icons are painted
+                       SolidWorks-style in `icons_welcome.py`; a tip bar with "Show at start-up"
+                       (QSettings `welcome/show_at_start`). Non-modal, one
+                       per window: shown by `app.main` after the window
+                       and by File > New / the toolbar's New
+                       (`MainWindow.new_dialog`; `new_document` stays the
+                       plain clear). Tests must clear `_dirty` before a
+                       New click: a dirty one asks modally and hangs.
   - `splash.py`      — the **start-up picture** (a painted
                        `QSplashScreen`: icon, name, version, a status
                        line and progress bar). `app.main` shows it

@@ -118,4 +118,6 @@ def main():
     win.start_mcp_if_enabled()
     splash.step("Ready")
     splash.finish(win)
+    from . import welcome
+    welcome.show_at_startup(win)          # New Part / Assembly / Drawing
     sys.exit(app.exec_())
