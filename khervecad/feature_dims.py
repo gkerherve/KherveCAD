@@ -167,6 +167,22 @@ def depth_at(window, desc):
     return found
 
 
+def on_sketch_plane(window, node, desc):
+    """True when the picked face is the extrude's START cap, where its
+    sketch lies (a click there may mean the sketch's own shapes)."""
+    import numpy as np
+    if not desc or desc.get("kind") != "face":
+        return False
+    try:
+        inv = np.linalg.inv(np.array(_frame(window, node, own=True), float))
+    except Exception:
+        return False
+    q = inv[:3, :3] @ np.asarray(desc["pos"], float) + inv[:3, 3]
+    box = _box(node, _env(window)) or (0, 0, 1, 1)
+    size = max(box[2] - box[0], box[3] - box[1], 1e-3)
+    return abs(q[2]) <= max(0.02, 0.003 * size)
+
+
 def double_click(window, pos):
     """A double-click on an extrusion's end face or height edge in 3D
     selects the feature and opens its depth box (SolidWorks shows a

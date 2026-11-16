@@ -493,9 +493,15 @@ class Constrain3D:
         if x is None or self.picks or \
                 getattr(self, "_placing", None) is not None or \
                 getattr(self, "face_first", None) is not None or \
-                getattr(self, "model_first", None) is not None or \
-                self._working_on() is not None:
+                getattr(self, "model_first", None) is not None:
             return False
+        if getattr(self.window, "_sketch3d_tool", None) is not None:
+            return False                 # drawing a sketch: its sizes
+        # the Extrude window open (its sketch is worked on): a click on
+        # the end face or an upright edge with no sketch shape under it
+        # is still the DEPTH (the user: "the value cannot hold with the
+        # constraints" — it became a sketch dimension to the cap)
+        extruding = self._working_on() is not None
         from . import feature_dims
         try:
             desc, _key = self.view._pick_at(x, y)
@@ -510,6 +516,9 @@ class Constrain3D:
                 node = node.parent
             if node is None:
                 return False         # another sketch's shape: dimension it
+            if extruding and feature_dims.on_sketch_plane(
+                    self.window, ext, desc):
+                return False         # its own sketch's shape, on its plane
         feature_dims.edit_depth(self.window, ext, x, y)
         return True
 

@@ -84,3 +84,16 @@ def test_a_side_face_is_not_the_depth(win):
     desc, _ = win.view3d._pick_at(x, y)
     assert feature_dims.depth_at(win, desc) is None
 
+
+
+def test_with_the_extrude_window_open_the_end_face_is_the_depth(win):
+    from test_dimension_while_extruding import _extruding, _screen as scr
+    from khervecad import drag_feature
+    part, ext = _extruding(win)
+    h0 = float(ext.params["height"])
+    assert drag_feature.pause_for(win, ui.PREFIX + "dimension")
+    t = win.view3d.edit_tool
+    # the middle of the boss's end face, away from its sketch's lines
+    t.click(*scr(t, (45, 30, 20 + h0)))
+    _type(win, "17")
+    assert float(ext.params["height"]) == pytest.approx(17)
