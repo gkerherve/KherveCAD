@@ -306,6 +306,33 @@ def _main_plane(plane):
     return None
 
 
+def sketch_points(window):
+    """World points of the sketches' own shapes — a rectangle's corners,
+    a line's ends — what SolidWorks calls Point4@Sketch3: references for
+    a plane through three points (2026-11-16)."""
+    import numpy as np
+    from . import mesh
+    out = []
+    for n in window.model.root.walk():
+        if n.type not in ("rect", "line"):
+            continue
+        q = n.params
+        try:
+            if n.type == "rect":
+                x, y = float(q["x"]), float(q["y"])
+                w_, h_ = float(q["width"]), float(q["height"])
+                loc = [(x, y), (x + w_, y), (x + w_, y + h_), (x, y + h_)]
+            else:
+                loc = [(float(q["x1"]), float(q["y1"])),
+                       (float(q["x2"]), float(q["y2"]))]
+            m = np.array(mesh.ancestor_matrix(n, {}), dtype=float)
+        except (TypeError, ValueError, KeyError):
+            continue
+        for a, b in loc:
+            out.append([float(c) for c in (m @ np.array([a, b, 0.0, 1.0]))[:3]])
+    return out
+
+
 def _ref_of_node(window, node):
     """A reference plane / axis / point of the tree as a reference."""
     import numpy as np
@@ -342,6 +369,9 @@ def _ref_of_pick(window, desc, tris):
     one its axis, an edge a line — or its corner, clicked near it."""
     from . import refgeom, refgeom_ui
     kind = desc.get("kind")
+    if kind == "point":
+        return dict(kind="point", point=list(desc["point"]),
+                    text="Sketch point")
     if kind == "edge" and desc.get("seg"):
         a, b = [list(p) for p in desc["seg"]]
         hit = list(desc.get("point") or desc.get("pos"))
@@ -424,6 +454,7 @@ def _arm(window):
                                        "edge or a corner · OK in its "
                                        "window adds it"),
                     labeler=lambda desc, n: getattr(n, "name", ""))
+    view.pick_points = sketch_points(window)
 
 
 def plane_row(window, plane):

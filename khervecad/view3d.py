@@ -981,6 +981,7 @@ class View3D(QWidget):
 
     def _end_pick_mode(self):
         self.pick_lines = []
+        self.pick_points = []
         self._show_pick_done(False)
         self._pick_groups = None
         self._pick_banner = ""
@@ -1109,6 +1110,16 @@ class View3D(QWidget):
         def projector(v):
             return self._project(eye, right, up, forward, v)
 
+        # sketch points (a plane through Point@Sketch ...) beat faces
+        best = None
+        for p in getattr(self, "pick_points", None) or []:
+            q = projector(p)
+            d = ((q[0] - x) ** 2 + (q[1] - y) ** 2) ** 0.5
+            if d <= 9 and (best is None or d < best[0]):
+                best = (d, p)
+        if best is not None:
+            p = list(best[1])
+            return dict(kind="point", pos=p, point=p), None
         groups = self._pick_groups
         if groups is None:
             owner, key, start = self.mesh, None, 0

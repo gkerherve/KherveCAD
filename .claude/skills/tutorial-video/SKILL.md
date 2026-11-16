@@ -81,6 +81,15 @@ and report it.
   Open single frames where a drawing stop or a dimension must be checked.
 - Send the MP4 with SendUserFile.
 
+## Naming (the user, 2026-11-16)
+
+Never call or name the video from the exercise number: not the file
+(`Exercise 1.mp4`), not the on-screen title, chapter tags, captions or the
+narration ("Exercise 1"). Name it after WHAT THE PART IS ("Base plate with
+two holes.mp4", title card "Let's build a base plate"). Say "this part" or
+its name, never "exercise N". The exercise folder may keep its number for
+filing, but nothing filmed or exported shows it.
+
 ## Settings the user chose (2026-11-15)
 
 - Voice **Jamie (Premium)**, 165 words a minute (`tutorial_video.VOICE`,
