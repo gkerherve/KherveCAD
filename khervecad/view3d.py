@@ -2378,6 +2378,15 @@ class View3D(QWidget):
             if not self.edit_tool.mouse_press(event):
                 self.mousePressEvent(event)
             return
+        hook = getattr(self, "double_click_hook", None)
+        if hook is not None and event.button() == Qt.LeftButton:
+            try:
+                if hook(event.pos()):       # a feature's depth
+                    event.accept()
+                    return
+            except Exception:
+                import traceback
+                traceback.print_exc()
         # glide to the fitted view, and back on the next double-click
         from . import view_anim
         view_anim.toggle_3d(self)

@@ -484,6 +484,35 @@ class Constrain3D:
         return dict(pos=list(desc["pos"]), dir=list(desc["dir"]),
                     tris=list(desc.get("tris") or []))
 
+    def _depth_click(self, hit, x, y):
+        """No sketch open and nothing picked yet: a click on an
+        extrusion's end face or height edge opens its DEPTH box (the
+        user, 2026-11-16: "smart dimension on extrusion"). The
+        extrusion's own profile under the cursor does not take the
+        click; another sketch's shape does. True when used."""
+        if x is None or self.picks or \
+                getattr(self, "_placing", None) is not None or \
+                getattr(self, "face_first", None) is not None or \
+                getattr(self, "model_first", None) is not None or \
+                self._working_on() is not None:
+            return False
+        from . import feature_dims
+        try:
+            desc, _key = self.view._pick_at(x, y)
+            ext = feature_dims.depth_at(self.window, desc)
+        except Exception:
+            return False
+        if ext is None:
+            return False
+        if hit is not None:
+            node = hit[0]
+            while node is not None and node is not ext:
+                node = node.parent
+            if node is None:
+                return False         # another sketch's shape: dimension it
+        feature_dims.edit_depth(self.window, ext, x, y)
+        return True
+
     def _face_pick(self, x, y, parent):
         """A click on a face for Smart Dimension: the sketch line that
         made it, else a reference line in *parent*'s sketch. Returns
@@ -822,6 +851,8 @@ class Constrain3D:
 
     def _dimension_click(self, hit, x=None, y=None):
         from . import dim_more, sketch_constrain_ui as ui
+        if self._depth_click(hit, x, y):
+            return None
         placing = getattr(self, "_placing", None)
         if placing is not None:
             # the click that places the number: horizontal / vertical /

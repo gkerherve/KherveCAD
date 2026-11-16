@@ -104,6 +104,89 @@ def edit_depth(window, node, x, y):
     return edit(window, QRectF(x - 30, y - 10, 60, 20), node, "height")
 
 
+def _depth_span(node, env):
+    """(z0, z1) the extrude reaches along its own axis."""
+    h = _num(node, "height", env, 10.0)
+    if node.params.get("center"):
+        return -h / 2.0, h / 2.0
+    return -max(0.0, _num(node, "height2", env, 0.0)), h
+
+
+def depth_at(window, desc):
+    """The Linear extrude whose depth a 3D pick shows (2026-11-16, the
+    user: Smart Dimension on a finished extrusion did nothing): a face
+    that is one of its END caps, or an edge running along its axis
+    within its profile. *desc* is View3D._pick_at's. None when none."""
+    import numpy as np
+    if not desc:
+        return None
+    env = _env(window)
+    scope = window._render_scope()[0]
+    found = None
+    for node in scope.walk():
+        if node.type != "linear_extrude" or not node.visible or \
+                node.params.get("suppressed"):
+            continue
+        box = _box(node, env)
+        if box is None:
+            continue
+        try:
+            m = np.array(_frame(window, node, own=True), float)
+            inv = np.linalg.inv(m)
+        except Exception:
+            continue
+        x0, y0, x1, y1 = box
+        z0, z1 = _depth_span(node, env)
+        size = max(x1 - x0, y1 - y0, abs(z1 - z0), 1e-3)
+        tol = max(0.02, 0.003 * size)
+
+        def local(p):
+            return inv[:3, :3] @ np.asarray(p, float) + inv[:3, 3]
+
+        def inside(q):
+            return (x0 - tol <= q[0] <= x1 + tol and
+                    y0 - tol <= q[1] <= y1 + tol)
+        if desc.get("kind") == "face" and desc.get("dir") is not None:
+            q = local(desc["pos"])
+            n = inv[:3, :3] @ np.asarray(desc["dir"], float)
+            ln = np.linalg.norm(n)
+            if ln < 1e-12 or abs(n[2]) / ln < 0.99 or not inside(q):
+                continue
+            if min(abs(q[2] - z0), abs(q[2] - z1)) <= tol:
+                found = node                 # a later feature wins
+        elif desc.get("kind") == "edge" and desc.get("seg"):
+            a, b = (local(p) for p in desc["seg"])
+            d = b - a
+            L = np.linalg.norm(d)
+            if L < 1e-9 or abs(d[2]) / L < 0.99:
+                continue
+            if inside(a) and inside(b) and \
+                    min(a[2], b[2]) >= z0 - tol and \
+                    max(a[2], b[2]) <= z1 + tol:
+                found = node
+    return found
+
+
+def double_click(window, pos):
+    """A double-click on an extrusion's end face or height edge in 3D
+    selects the feature and opens its depth box (SolidWorks shows a
+    feature's dimensions on a double-click). True when used."""
+    view = window.view3d
+    try:
+        desc, _key = view._pick_at(pos.x(), pos.y())
+    except Exception:
+        return False
+    node = depth_at(window, desc)
+    if node is None:
+        return False
+    try:
+        window.builder.active_tree().select_nodes([node])
+    except Exception:
+        pass
+    edit_depth(window, node, pos.x(), pos.y())
+    return True
+
+
 def _frame(window, node, own):
     """Matrix from *node*'s frame (with its own transform when *own*) to
     the world the view draws."""

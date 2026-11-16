@@ -3188,6 +3188,18 @@ into a new module and import.
                        to the sketch opens that extrude's depth box
                        (`feature_dims.edit_depth`), and while the tool runs
                        from the Extrude window the depth chip is clickable.
+  - Depth of a FINISHED extrusion (2026-11-16, the user: "smart
+                       dimension on extrusion ... why it does not work?"
+                       — the depth box only opened with a sketch or the
+                       Extrude window open): `feature_dims.depth_at` finds
+                       the Linear extrude whose END cap or upright edge a
+                       3D pick is; Smart Dimension with no sketch open and
+                       nothing picked (`Constrain3D._depth_click`, the
+                       extrude's own profile under the cursor does not take
+                       the click) and a double-click on the part
+                       (`View3D.double_click_hook` -> `feature_dims.
+                       double_click`, SolidWorks) open its depth box.
+                       tests/test_extrude_depth_by_click.py.
   - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
                        (2026-11-10, the user: "a dimension that comes from a
                        linear extrude ... a rotation extrude"). A selected
