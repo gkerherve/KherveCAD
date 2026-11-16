@@ -72,9 +72,10 @@ QPushButton#TabBtn { border: none; background: transparent; color: #666;
   font-size: 19px; padding: 8px 6px; margin: 0 14px; }
 QPushButton#TabBtn:checked { color: #2a73b7; font-weight: bold;
   border-bottom: 3px solid #2a73b7; }
-QToolButton#NewBtn { border: 1px solid transparent; background: transparent;
-  font-size: 17px; color: #333; padding: 6px 10px; }
-QToolButton#NewBtn:hover { background: #eaf2fa; border-color: #b9d2ea; }
+QToolButton#NewBtn { border: 1px solid #c4c4c4; background: #f7f7f7;
+  font-size: 17px; color: #222; padding: 8px 16px; border-radius: 3px; }
+QToolButton#NewBtn:hover { background: #e4f0fb; border-color: #2a73b7; }
+QToolButton#NewBtn:pressed { background: #cfe3f6; }
 QPushButton#Advanced { font-size: 17px; padding: 8px 28px;
   background: #ececec; border: 1px solid #8f8f8f; color: #222; }
 QPushButton#Advanced:hover { background: #e2eefa; border-color: #2a73b7; }
@@ -345,8 +346,13 @@ class WelcomeDialog(QDialog):
         from . import SHORT_NAME, __version__
         self.setWindowTitle(
             f"{language.tr('Welcome')} - {SHORT_NAME} v{__version__}")
-        self.resize(1000, 830)
-        self.setMinimumSize(780, 780)
+        # never taller than the screen: the New buttons are at the top
+        from PyQt5.QtWidgets import QApplication
+        screen = QApplication.primaryScreen()
+        avail = screen.availableGeometry() if screen else None
+        h = min(830, avail.height() - 60) if avail else 830
+        self.resize(1000, h)
+        self.setMinimumSize(780, min(780, h))
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
@@ -368,7 +374,7 @@ class WelcomeDialog(QDialog):
         outer.addWidget(_line())
 
         self.pages = QStackedWidget()
-        self.pages.addWidget(self._home_page())
+        self.pages.addWidget(self._scrolled(self._home_page()))
         self.pages.addWidget(self._recent_page())
         self.pages.addWidget(self._learn_page())
         self.pages.addWidget(self._alerts_page())
@@ -376,6 +382,18 @@ class WelcomeDialog(QDialog):
 
         outer.addWidget(self._tip_bar())
         self.show_tab(0)
+
+    @staticmethod
+    def _scrolled(page, height=690):
+        """The Home page keeps its full height and scrolls on a short
+        screen, so the New buttons at the top are never squeezed."""
+        page.setMinimumHeight(height)
+        page.setMinimumWidth(900)
+        area = QScrollArea()
+        area.setWidget(page)
+        area.setWidgetResizable(True)
+        area.setFrameShape(QFrame.NoFrame)
+        return area
 
     # ------------------------------------------------------------ tabs
     def show_tab(self, index):
