@@ -184,6 +184,23 @@ class Sketch3DTool:
             import traceback
             traceback.print_exc()
 
+    def quads(self):
+        """Rectangles in this sketch's frame: the face (when its outline
+        is one) and every rectangle drawn — their diagonals snap."""
+        from . import diagonals
+        out = []
+        q = diagonals.quad_of_segments(self.info.get("segments") or [])
+        if q:
+            out.append(q)
+        holder = self.holder or self.group
+        for shape in (list(holder.children) if holder is not None else []):
+            if shape is getattr(self, "_snap_skip", None):
+                continue
+            c = diagonals.rect_corners(shape)
+            if c:
+                out.append(c)
+        return out
+
     def _own(self):
         """(segments, points) of the shapes drawn in this sketch."""
         from . import anchors, face_outline, mesh, sketch_arc, slot2d
@@ -601,6 +618,14 @@ class Sketch3DTool:
         segs = list(self.info.get("segments") or []) + own_segs
         pts = list(self.info.get("points") or []) + own_pts + \
             self._crossings(getattr(self, "_own_groups", []))
+        # both diagonals of the face and of every rectangle, and where
+        # they cross (diagonals.py, SolidWorks)
+        from . import diagonals
+        for quad in self.quads():
+            if not self.points:          # drawing out: tangents first
+                segs += diagonals.diagonals(quad)
+            c = diagonals.centre(quad)
+            pts.append((c[0], c[1], "centre"))
         best = None
         for x, y, kind in pts:
             d = math.hypot(x - lx, y - ly)

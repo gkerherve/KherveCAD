@@ -119,6 +119,7 @@ def paint(window, painter, project):
     painter.save()
     painter.setRenderHint(painter.Antialiasing, True)
     _paint_edges(window, painter, project)
+    _paint_diagonals(window, painter, project, shapes)
     for node, m in shapes:
         construction = node.params.get("modifier") == "%"
         pen = QPen(QColor(CONSTRUCTION_INK if construction
@@ -196,3 +197,47 @@ def _paint_edges(window, painter, project):
         if a is None or b is None:
             continue
         painter.drawLine(QPointF(a[0], a[1]), QPointF(b[0], b[1]))
+
+
+def _quads(view):
+    """The part's four-cornered faces, cached per mesh."""
+    tris = getattr(view, "model_mesh", None) or getattr(view, "mesh", None)
+    if not tris:
+        return []
+    key = (id(tris), len(tris))
+    cache = getattr(view, "_wire_quads", None)
+    if cache is not None and cache[0] == key:
+        return cache[1]
+    from . import diagonals
+    try:
+        quads = diagonals.face_quads(tris)
+    except Exception:
+        quads = []
+    view._wire_quads = (key, quads)
+    return quads
+
+
+def _paint_diagonals(window, painter, project, shapes):
+    """BOTH diagonals of every rectangular face and sketch rectangle,
+    dashed, with a small cross where they meet (diagonals.py)."""
+    from PyQt5.QtCore import QPointF, Qt
+    from PyQt5.QtGui import QColor, QPen
+    from . import diagonals
+    worlds = list(_quads(window.view3d))
+    for node, m in shapes:
+        c = diagonals.rect_corners(node)
+        if c:
+            worlds.append([_apply(m, (x, y, 0.0)) for x, y in c])
+    pen = QPen(QColor(CONSTRUCTION_INK), 1.0, Qt.DashLine)
+    pen.setCosmetic(True)
+    painter.setPen(pen)
+    for quad in worlds:
+        for a, b in diagonals.diagonals(quad):
+            qa, qb = project(a), project(b)
+            if qa is None or qb is None:
+                continue
+            painter.drawLine(QPointF(qa[0], qa[1]), QPointF(qb[0], qb[1]))
+        q = project(diagonals.centre(quad))
+        if q is not None:
+            painter.drawLine(QPointF(q[0] - 4, q[1]), QPointF(q[0] + 4, q[1]))
+            painter.drawLine(QPointF(q[0], q[1] - 4), QPointF(q[0], q[1] + 4))

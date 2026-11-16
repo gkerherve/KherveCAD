@@ -1224,6 +1224,12 @@ class SketchScene(QGraphicsScene):
             if got is not None:
                 hint = got
                 return got[0]
+            # a rectangle's diagonals and their crossing (diagonals.py)
+            from . import diagonals2d
+            got = diagonals2d.snap(self, pos)
+            if got is not None:
+                hint = got
+                return got[0]
             # then ON a line, arc or circle — a centre placed there slides
             # along it (Point on curve; 2026-11-11, the user: "the centre
             # on the line, not fixed to a point")
@@ -2904,6 +2910,11 @@ class SketchView(QGraphicsView):
         from . import face_outline
         try:
             face_outline.paint(scene, painter)
+        except Exception:               # never raise out of a paint
+            pass
+        try:
+            from . import diagonals2d
+            diagonals2d.paint(scene, painter)
         except Exception:               # never raise out of a paint
             pass
 

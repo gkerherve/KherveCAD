@@ -3443,6 +3443,20 @@ into a new module and import.
                        click inside the face -> its whole outline. "sk_convert"
                        is a Modify3D tool in 3D (`_convert`). Tests:
                        test_sketch_trim.py, test_sketch_convert.py.
+  - `diagonals.py` / `diagonals2d.py` — BOTH diagonals of a rectangle
+                       (2026-11-16, the user: the wireframe showed one —
+                       only the seam of a face's two triangles —
+                       SolidWorks shows two and snaps on them and their
+                       crossing). `face_quads` (part faces of exactly two
+                       coplanar triangles forming a rectangle) and
+                       `rect_corners` (a rect / rectangular 4-point
+                       polygon); dashed with a cross at the centre in the
+                       3D Wireframe (`wireframe._paint_diagonals`) and the
+                       2D sketch (`diagonals2d.paint`); snapped in 2D
+                       (`SketchScene.snap`, after shape snaps) and the 3D
+                       sketch (`Sketch3DTool.quads`: the centre always, the
+                       diagonal lines only for a FIRST point, so a line's
+                       tangent snap still wins). tests/test_diagonals.py.
   - `hide_show.py` — SolidWorks' **Hide/Show Items** (the glasses,
                        2026-11-11, the user): ONE button on the 3D view's bar
                        (replacing its eye menu) and the 2D sketch's bar, a

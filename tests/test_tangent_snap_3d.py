@@ -46,7 +46,7 @@ def test_a_3d_line_snaps_tangent_to_a_circle_by_mouse(win):
     circle = win.model.add_node("circle", dict(x=lx0, y=ly0, radius=12),
                                 parent=tool.holder or tool.group)
     tool.set_mode("line")
-    start = (lx0 - 30, ly0 - 30)
+    start = (lx0 - 30, ly0 - 26)          # off the face diagonal
     want = tangent_snap.tangent_points(start, (lx0, ly0), 12)[0]
     # the start, then a click a little off the tangent point
     QTest.mouseClick(v, Qt.LeftButton, Qt.NoModifier,
