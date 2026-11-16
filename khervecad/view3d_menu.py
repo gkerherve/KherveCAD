@@ -105,6 +105,12 @@ def context_menu(window, pos):
         view.cancel_pick()
     tr = language.tr
     menu = QMenu(view)
+    # SolidWorks puts Select first: back to the plain pointer, leaving
+    # any tool, pick or sketch command
+    from . import stop_tool
+    menu.addAction(icons.icon("mdi.cursor-default-outline"), tr("Select"),
+                   lambda: stop_tool.stop(window))
+    menu.addSeparator()
     dim = dimension_at(window, pos)
     if dim is not None:
         rect, cont, index = dim

@@ -136,3 +136,13 @@ def test_a_flat_face_under_smart_dimension_opens_the_depth(win):
     box._done()
     assert ext.params["height"] == pytest.approx(22)
 
+
+
+def test_the_right_click_menu_starts_with_select(win, monkeypatch):
+    from PyQt5.QtWidgets import QMenu
+    from khervecad import view3d_menu
+    seen = []
+    monkeypatch.setattr(QMenu, "exec_", lambda self, *a, **k: seen.append(
+        [a.text() for a in self.actions() if a.text()]))
+    view3d_menu.context_menu(win, QPoint(5, 5))
+    assert seen[0][0] == "Select"
