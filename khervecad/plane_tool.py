@@ -427,7 +427,8 @@ def _arm(window):
             close(window)
             return
         plane = plane_pick.hit(window, pos) if pos is not None else None
-        if desc is not None and plane is not None:
+        if desc is not None and plane is not None and \
+                desc.get("kind") != "point":     # a sketch point wins
             depth = plane_pick._depths(window, pos).get(plane)
             at = desc.get("point") or desc.get("pos")
             eye, _r, _u, fwd = view._camera()
@@ -436,6 +437,8 @@ def _arm(window):
                 desc = None
             else:
                 plane = None
+        elif desc is not None:
+            plane = None
         ref = None
         if desc is not None:
             ref = _ref_of_pick(window, desc, by_node.get(id(node), []))

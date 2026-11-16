@@ -49,3 +49,19 @@ def test_clicking_a_sketch_corner_in_3d_is_a_point_reference(win):
     st = win._plane_tool
     assert st["refs"] and st["refs"][0]["kind"] == "point"
     assert st["refs"][0]["point"] == pytest.approx([50, 40, 50], abs=1e-6)
+
+
+def test_sketch_button_with_a_reference_plane_selected_sketches_on_it(win):
+    from khervecad import normal_to
+    ex = McpToolExecutor(win)
+    pl = ex.execute("reference_geometry", {"action": "plane",
+                    "points": [[0, 0, 0], [10, 0, 0], [0, 10, 5]]})
+    node = next(n for n in win.model.root.walk() if n.id == pl["id"])
+    before = {n.id for n in win.model.root.walk()}
+    win.builder.active_tree().select_nodes([node])
+    app.processEvents()
+    normal_to.create(win)
+    app.processEvents()
+    made = [n for n in win.model.root.walk()
+            if n.id not in before and n.params.get("face_sketch")]
+    assert made, "no sketch was opened on the selected reference plane"

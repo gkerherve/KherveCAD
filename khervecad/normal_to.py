@@ -155,6 +155,9 @@ def create(window):
     if chosen is not None:            # Front / Top / Right Plane row
         return turn_to(window, chosen)
     picked = tree.selected_nodes()
+    if len(picked) == 1 and picked[0].type == "ref_plane":
+        from . import refgeom_ui        # a reference plane row: sketch on it
+        return refgeom_ui.sketch_on(window, node=picked[0])
     if picked:
         from . import face_sketch
         return face_sketch.start(window, only=picked)
