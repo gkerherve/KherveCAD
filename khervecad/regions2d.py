@@ -151,7 +151,7 @@ def _fused(node, cs):
     # 60 mm boss 60.3 wide (2026-11-10)
     outside = cs - section
     if outside.is_empty():
-        return cs
+        return flush_to_outline(cs, section, m)
     pushed = _push_into(outside, loops, 3 * sketch_section.GROW, m)
     if pushed is None:                   # as before: grown and clipped
         return cs + (outside.offset(3 * sketch_section.GROW,
@@ -160,6 +160,19 @@ def _fused(node, cs):
     # ending ON a convex corner was run on past it (2026-11-14, Exercise
     # 57: the rib stood 0.2 mm proud of the base's end face)
     return cs + (pushed ^ section)
+
+
+def flush_to_outline(cs, section, m):
+    """An area wholly inside the part's GROWN outline stands on the grown
+    edge where it fills to the face (a cross whose arms reach the base's
+    sides came out 88.1 x 50.1, 2026-11-16): the band between the grown and
+    the true outline is cut off it, so a boss flush with the face is flush
+    — it sits on the face, there is nothing to fuse sideways."""
+    from . import sketch_section
+    true = section.offset(-sketch_section.GROW, m.JoinType.Miter)
+    if true.is_empty():
+        return cs
+    return cs - (section - true)
 
 
 def _push_into(outside, loops, depth, m):

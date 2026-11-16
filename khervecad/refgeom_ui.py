@@ -458,6 +458,8 @@ def sketch_on(window, node=None, origin=None, normal=None, label=None,
         z=round(float(origin[2]), 4), rx=rx, ry=ry, rz=rz),
         parent=scope(window))
     group.params[face_sketch.KEY] = True
+    if node is not None:
+        group.params["ref_plane_sketch"] = True      # a cut here starts Blind
     model.rename(group, "Sketch on " + (label or "plane"))
     if open_2d:
         face_sketch.open_sketch(window, group)

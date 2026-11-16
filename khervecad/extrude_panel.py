@@ -387,7 +387,13 @@ def set_operation(model, ext, op):
             return False
         diff.params[CUT_KEY] = True
         model.rename(diff, "Extruded Cut")
-        model.set_param(ext, "extent", "through_all")
+        if holder.params.get("ref_plane_sketch"):
+            # a sketch on a reference plane through the part: SolidWorks'
+            # Blind, one side — not through all both ways (2026-11-16)
+            model.set_param(ext, "extent", "")
+            set_direction(model, ext, ONE)
+        else:
+            model.set_param(ext, "extent", "through_all")
         return True
     diff = holder.parent
     if diff is not None and diff.params.get(CUT_KEY):
