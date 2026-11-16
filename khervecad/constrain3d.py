@@ -516,10 +516,24 @@ class Constrain3D:
                 node = node.parent
             if node is None:
                 return False         # another sketch's shape: dimension it
-            if extruding and feature_dims.on_sketch_plane(
-                    self.window, ext, desc):
-                return False         # its own sketch's shape, on its plane
+            if extruding and (feature_dims.on_sketch_plane(
+                    self.window, ext, desc) or self._visible(hit)):
+                return False         # its own sketch's shape, aimed at
         feature_dims.edit_depth(self.window, ext, x, y)
+        return True
+
+    def _visible(self, hit):
+        """Is the picked sketch entity in sight (not under the boss)?"""
+        solid = self._occluder()
+        for node, name, kind, g in self.entities():
+            if node is hit[0] and name == hit[1]:
+                at = g if kind == "point" else (
+                    tuple((g[0][i] + g[1][i]) / 2 for i in range(3))
+                    if kind == "line" else g[0])
+                try:
+                    return bool(solid(at))
+                except Exception:
+                    return True
         return True
 
     def _face_pick(self, x, y, parent):
