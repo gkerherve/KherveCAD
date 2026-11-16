@@ -957,6 +957,10 @@ class Constrain3D:
         if pending is not None and x is not None:
             self._depth_pending = None
             from . import feature_dims
+            if not pending.params.get(feature_dims.PLACED):
+                # placed: a dimension of the part from now on
+                self.window.model.set_param(pending, feature_dims.PLACED,
+                                            True)
             feature_dims.edit_depth(self.window, pending, x, y)
             return None
         if self._depth_click(hit, x, y):

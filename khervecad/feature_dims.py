@@ -24,6 +24,8 @@ FEATURES = ("linear_extrude", "rotate_extrude")
 INK = "#6a1b9a"                 # set apart from the sketch's blue
 #: the dimension line stands this far out from the profile, of its size
 GAP = 0.18
+#: params key: the depth was placed as a Smart Dimension and stays shown
+PLACED = "depth_dim"
 
 
 def _env(window):
@@ -74,6 +76,19 @@ def shown_features(window):
         for f in _features_of(node):
             if f not in out:
                 out.append(f)
+    # depths PLACED with Smart Dimension stay on the model like a
+    # sketch's dimensions (the user: "I never can make it a smart
+    # dimension"), until the Smart Dimensions switch hides them
+    try:
+        from . import sketch_dims3d
+        main = sketch_dims3d.assembly_mode(window)
+    except Exception:
+        main = False
+    if not main and getattr(window.scene, "show_sketch_dims", True):
+        for n in scope.walk():
+            if n.type == "linear_extrude" and n.params.get(PLACED) and \
+                    n.visible and n not in out:
+                out.append(n)
     # a Smart Dimension started from the Extrude window: that extrude's
     # depth is clickable beside the sketch's sizes
     drag = getattr(window, "_drag_paused", None)

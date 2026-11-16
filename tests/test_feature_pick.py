@@ -258,3 +258,54 @@ def test_sketch_mode_on_a_plane_turns_to_it(win, monkeypatch):
     cb(None, None)
     assert turned == ["Top (XY)"]
     feature_pick.toggled(win, "planes", False)
+
+
+def test_boss_on_a_face_keeps_arrow_window_and_smart_dimension(win):
+    """The user, 2026-11-16: the extrude arrow, the Extrude window and a
+    Smart Dimension of the depth, end to end — face, 2D sketch, leave,
+    arrow + window, Smart Dimension on the new boss's top, type a value,
+    the boss's depth changes."""
+    from PyQt5.QtTest import QTest
+    from khervecad import drag_feature, extrude_panel
+    from khervecad import sketch_constrain_ui as ui
+    cut_feature.start(win, "extruded_boss")
+    top = next(f for f in win._choice_preview["faces"]
+               if f["dir"][2] > 0.99)
+    _click_face(win, top)
+    group = feature_pick.sketch_group(win)
+    win.model.add_node("rect", {"x": 15.0, "y": 10.0, "width": 10.0,
+                                "height": 10.0}, parent=group)
+    ext = cut_feature.finish(win, group)
+    QApplication.processEvents()
+    assert ext is not None and ext.type == "linear_extrude"
+    assert isinstance(win.view3d.edit_tool, drag_feature.DragFeature)
+    assert extrude_panel._panel(win) is not None
+    win.model.set_param(ext, "height", 10)
+    QApplication.processEvents()
+    # Smart Dimension while the arrow shows, on the boss's end face
+    assert drag_feature.pause_for(win, ui.PREFIX + "dimension")
+    t = win.view3d.edit_tool
+    view = win.view3d
+    view.set_view("Isometric", animate=False)
+    view.fit()
+    QTest.qWait(200)
+    eye, r, u, f = view._camera()
+    pt = [20.0, 15.0, 30.0]
+    x, y, _z = view._project(eye, r, u, f, pt)
+    t.click(x, y)
+    assert t._depth_pending is ext
+    t.click(x + 50, y)
+    box = view._dim3d_editor
+    box.setText("14")
+    QTest.keyClick(box, 0x01000004)              # Return
+    QApplication.processEvents()
+    assert float(ext.params["height"]) == pytest.approx(14)
+    # it STAYS a dimension of the part, shown with nothing selected,
+    # and still in the code the same
+    from khervecad import feature_dims
+    win.builder.active_tree().clearSelection()
+    QApplication.processEvents()
+    assert ext.params.get(feature_dims.PLACED)
+    assert any(d[0] is ext and d[1] == "height" and d[2] == "14"
+               for d in feature_dims.dimensions(win))
+    assert "depth_dim" not in win.model.to_scad()

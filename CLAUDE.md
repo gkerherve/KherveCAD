@@ -3213,6 +3213,12 @@ into a new module and import.
                        (`depth_dim2d`) a face_outline edge running along an
                        extrude's axis is its depth, not a fixed Reference
                        edge whose length could never be driven.
+                       A PLACED depth stays: the placing click sets
+                       `params["depth_dim"]` (`feature_dims.PLACED`, not
+                       in the mesh key, not in codegen) and
+                       `shown_features` draws it with nothing selected,
+                       like a sketch's Smart Dimension (the user: "I
+                       never can make it a smart dimension").
   - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
                        (2026-11-10, the user: "a dimension that comes from a
                        linear extrude ... a rotation extrude"). A selected

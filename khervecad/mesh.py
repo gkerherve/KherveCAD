@@ -1269,7 +1269,7 @@ def _component_key(node, env):
         for key in sorted(n.params):
             if n is node and key in _PLACEMENT_KEYS:
                 continue
-            if key in ("bom", "welds", "feature_order"):
+            if key in ("bom", "welds", "feature_order", "depth_dim"):
                 continue        # a supplier typed in the BOM is no shape
             parts.append(f"{key}={n.params[key]!r}")
             _expr_strings(n.params[key], exprs)
