@@ -517,10 +517,87 @@ class Constrain3D:
             if node is None:
                 return False         # another sketch's shape: dimension it
             if extruding and (feature_dims.on_sketch_plane(
-                    self.window, ext, desc) or self._visible(hit)):
+                    self.window, ext, desc) or self._visible(hit) or
+                    self._aimed(hit, x, y, ext)):
                 return False         # its own sketch's shape, aimed at
-        feature_dims.edit_depth(self.window, ext, x, y)
+        # SolidWorks: the dimension comes with the cursor, a second
+        # click places it and asks the value (the user: "we should see
+        # that smart dimension coming")
+        self._depth_pending = ext
+        self.view.update()
+        self._say("Smart Dimension: the depth of %s — move to where the "
+                  "number goes and click to place it." % ext.name)
         return True
+
+    def _paint_depth(self, painter, project):
+        """The extrude's depth as it would be placed: extension lines
+        from its two ends, the dimension line through the cursor."""
+        from PyQt5.QtCore import QPointF, QRectF, Qt
+        from PyQt5.QtGui import QColor, QPen
+        from . import feature_dims, units
+        ext = self._depth_pending
+        cursor = getattr(self, "_cursor", None)
+        ends = feature_dims.depth_ends(self.window, ext)
+        if ends is None:
+            return
+        qa, qb = project(ends[0]), project(ends[1])
+        if qa is None or qb is None:
+            return
+        ax, ay, bx, by = qa[0], qa[1], qb[0], qb[1]
+        dx, dy = bx - ax, by - ay
+        length = (dx * dx + dy * dy) ** 0.5 or 1.0
+        nx, ny = -dy / length, dx / length
+        if cursor is not None:
+            off = (cursor[0] - ax) * nx + (cursor[1] - ay) * ny
+        else:
+            off = 30.0
+        da = QPointF(ax + nx * off, ay + ny * off)
+        db = QPointF(bx + nx * off, by + ny * off)
+        ink = QColor(feature_dims.INK)
+        painter.save()
+        painter.setRenderHint(painter.Antialiasing, True)
+        painter.setPen(QPen(ink, 1.0, Qt.DashLine))
+        painter.drawLine(QPointF(ax, ay), da)
+        painter.drawLine(QPointF(bx, by), db)
+        painter.setPen(QPen(ink, 1.8, Qt.DashLine))
+        painter.drawLine(da, db)
+        h = feature_dims._num(ext, "height", feature_dims._env(self.window),
+                              10.0)
+        label = "%s  ·  depth of %s — click to place" % (
+            units.number(h), ext.name)
+        fm = painter.fontMetrics()
+        mid = QPointF((da.x() + db.x()) / 2, (da.y() + db.y()) / 2)
+        box = QRectF(mid.x() + 10, mid.y() - fm.height() - 6,
+                     fm.horizontalAdvance(label) + 14, fm.height() + 8)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(ink)
+        painter.drawRoundedRect(box, 6, 6)
+        painter.setPen(QColor("white"))
+        painter.drawText(box, int(Qt.AlignCenter), label)
+        painter.restore()
+
+    def _aimed(self, hit, x, y, ext, px=4.0):
+        """Was the click right on the sketch entity (a few pixels) where
+        the sketch itself lies — not its copy drawn at the far end?"""
+        import math
+        from . import feature_dims
+        project = self._project()
+        for node, name, kind, g in self.entities():
+            if node is hit[0] and name == hit[1]:
+                pts = [g] if kind == "point" else list(g)[:2]
+                if not feature_dims.on_sketch_plane(
+                        self.window, ext, dict(kind="face", pos=pts[0])):
+                    continue
+                for p in pts:
+                    q = project(p)
+                    if q is not None and math.hypot(q[0] - x,
+                                                    q[1] - y) <= px:
+                        return True
+                if kind == "line" and len(pts) == 2:
+                    qa, qb = project(pts[0]), project(pts[1])
+                    if qa and qb and _seg_px((x, y), qa, qb)[0] <= px:
+                        return True
+        return False
 
     def _visible(self, hit):
         """Is the picked sketch entity in sight (not under the boss)?"""
@@ -674,7 +751,8 @@ class Constrain3D:
     def mouse_move(self, event):
         x, y = event.pos().x(), event.pos().y()
         self._cursor = (x, y)
-        if getattr(self, "_placing", None) is not None:
+        if getattr(self, "_placing", None) is not None or \
+                getattr(self, "_depth_pending", None) is not None:
             self.view.update()           # the number follows the cursor
             return False
         hit = self.pick_at(x, y)
@@ -733,6 +811,7 @@ class Constrain3D:
         self.model_first = None
         self.face_first = None
         self._placing = None
+        self._depth_pending = None
         self._rim_clicks = {}
         self.view.update()
         self._say(self._prompt())
@@ -874,6 +953,12 @@ class Constrain3D:
 
     def _dimension_click(self, hit, x=None, y=None):
         from . import dim_more, sketch_constrain_ui as ui
+        pending = getattr(self, "_depth_pending", None)
+        if pending is not None and x is not None:
+            self._depth_pending = None
+            from . import feature_dims
+            feature_dims.edit_depth(self.window, pending, x, y)
+            return None
         if self._depth_click(hit, x, y):
             return None
         placing = getattr(self, "_placing", None)
@@ -1142,6 +1227,12 @@ class Constrain3D:
     def paint(self, painter, project):
         from PyQt5.QtCore import QPointF
         from PyQt5.QtGui import QColor, QPen
+        if getattr(self, "_depth_pending", None) is not None:
+            try:
+                self._paint_depth(painter, project)
+            except Exception:            # never break the paint
+                import traceback
+                traceback.print_exc()
         if getattr(self, "_placing", None) is not None:
             try:
                 self._paint_placing(painter, project)

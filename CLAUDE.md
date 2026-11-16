@@ -3200,6 +3200,19 @@ into a new module and import.
                        (`View3D.double_click_hook` -> `feature_dims.
                        double_click`, SolidWorks) open its depth box.
                        tests/test_extrude_depth_by_click.py.
+                       Second pass (same day, the user: "we should see
+                       that smart dimension coming", "explain where that
+                       constraint comes from", and the 2D view): the first
+                       click arms `Constrain3D._depth_pending` — the depth
+                       drawn dashed through the cursor (`_paint_depth`,
+                       `feature_dims.depth_ends`) — the second places it
+                       and opens the box; a cut's pocket floor works the
+                       same. A refused dimension names the rows it fights
+                       (`conflict_why.explain`: each row whose removal lets
+                       the sketch solve, a FIXED reference said so). In 2D
+                       (`depth_dim2d`) a face_outline edge running along an
+                       extrude's axis is its depth, not a fixed Reference
+                       edge whose length could never be driven.
   - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
                        (2026-11-10, the user: "a dimension that comes from a
                        linear extrude ... a rotation extrude"). A selected

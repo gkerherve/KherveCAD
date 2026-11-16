@@ -696,8 +696,10 @@ def add(model, container, kind, refs, value=None, edge=None, extra=None):
                 keep = held
                 break
     if not report["ok"]:
+        from .conflict_why import explain
         raise Conflict("%s cannot hold with the sketch's other "
-                       "constraints." % KINDS[kind][0])
+                       "constraints." % KINDS[kind][0] +
+                       explain(container, rs, len(rs) - 1, env))
     report = solve(container, rs, env=env, held=keep)
     container.params[KEY] = rs
     _remember(_nodes_of(container, rs))
@@ -805,9 +807,11 @@ def set_value(model, container, index, value):
     rs[index]["value"] = value
     report = solve(container, rs, env=_env(model), write=False)
     if not report["ok"]:
+        from .conflict_why import explain
+        why = explain(container, rs, index, _env(model))
         rs[index]["value"] = old
         raise Conflict("That value cannot hold with the other "
-                       "constraints.")
+                       "constraints." + why)
     container.params[KEY] = rs
     report = solve(container, rs, env=_env(model))
     _remember(_nodes_of(container, rs))

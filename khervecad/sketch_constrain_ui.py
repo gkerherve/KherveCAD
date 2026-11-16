@@ -1239,6 +1239,12 @@ def dimension_press(scene, event):
             scene._con_rim = {}
         at = _frame_xy(scene, hit[0], event.scenePos())
         scene._con_rim[id(hit[0])] = (at[0], at[1])
+    if hit is None and not picks:
+        # an extrusion's depth edge seen in the sketch: its depth
+        from . import depth_dim2d
+        if depth_dim2d.press(scene, event.scenePos()):
+            drop(scene)
+            return
     if hit is None:
         # on the face's own edge or corner: dimension to it (SolidWorks)
         from . import face_outline

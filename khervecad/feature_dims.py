@@ -167,6 +167,22 @@ def depth_at(window, desc):
     return found
 
 
+def depth_ends(window, node):
+    """World points (start, end) of *node*'s depth at its profile's side
+    — what a Smart Dimension of it measures; None without a profile."""
+    from . import mesh
+    env = _env(window)
+    box = _box(node, env)
+    if box is None:
+        return None
+    m = _frame(window, node, own=True)
+    z0, z1 = _depth_span(node, env)
+    if not node.params.get("center"):
+        z0 = 0.0                         # Distance, not Distance 2
+    x1, y0 = box[2], box[1]
+    return (mesh.mat_apply(m, (x1, y0, z0)), mesh.mat_apply(m, (x1, y0, z1)))
+
+
 def on_sketch_plane(window, node, desc):
     """True when the picked face is the extrude's START cap, where its
     sketch lies (a click there may mean the sketch's own shapes)."""
