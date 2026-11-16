@@ -3169,6 +3169,25 @@ into a new module and import.
                        (Profiles count, OK); `selection_sketch` outlines a
                        selected sketch's shapes in 3D (a boss buried in the
                        part has no surface for the depth-tested tint).
+  - Dimension boxes, leaving and driving (2026-11-16, the user: "I try to
+                       click somewhere else to come out of there but it is
+                       not possible and I have to press enter"). A NEW Smart
+                       Dimension asked its value in a modal QInputDialog;
+                       it is now `value_popup.ask`, a Qt.Popup that closes
+                       (= Cancel) on a click elsewhere (also fillet size and
+                       sketch text). The in-place box on an existing
+                       dimension / feature depth (`dim_link.open_editor`):
+                       `View3D.outside_hook` -> `dim_link.outside` runs
+                       FIRST on every left press (whatever tool), so a click
+                       anywhere but another dimension leaves the box —
+                       unchanged = closes, typed = keeps — and is swallowed.
+                       A driven (bracketed) dimension: right-click ▸ Make
+                       driving / Make driven, and typing a value into one
+                       makes it driving (`sketch_dims3d.edit`). An extrude's
+                       depth under Smart Dimension: a click on a face flat
+                       to the sketch opens that extrude's depth box
+                       (`feature_dims.edit_depth`), and while the tool runs
+                       from the Extrude window the depth chip is clickable.
   - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
                        (2026-11-10, the user: "a dimension that comes from a
                        linear extrude ... a rotation extrude"). A selected

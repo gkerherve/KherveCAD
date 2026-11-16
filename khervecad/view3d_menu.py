@@ -116,11 +116,18 @@ def context_menu(window, pos):
             row = sc.rows(cont)[index]
         except IndexError:
             row = {}
-        driven = menu.addAction(tr("Driven (only measures)"))
-        driven.setCheckable(True)
-        driven.setChecked(bool(row.get("driven")))
-        driven.triggered.connect(
-            lambda on: set_driven(window, cont, index, on))
+        if row.get("driven"):
+            # a driven dimension (value in brackets) only measures; this
+            # turns it back into one the sketch must obey
+            menu.addAction(
+                icons.icon("mdi.lock-outline"),
+                tr("Make driving (the sketch follows this value)"),
+                lambda: set_driven(window, cont, index, False))
+        else:
+            menu.addAction(
+                icons.icon("mdi.ruler"),
+                tr("Make driven (only measures)"),
+                lambda: set_driven(window, cont, index, True))
         menu.addAction(icons.icon("mdi.delete"), tr("Delete dimension"),
                        lambda: delete_dimension(window, cont, index))
     elif relation_at(window, pos) is not None:

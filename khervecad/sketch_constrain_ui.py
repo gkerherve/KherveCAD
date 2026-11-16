@@ -519,15 +519,13 @@ def _ask_value(scene, kind, measured):
     hook = getattr(scene, "ask_value", None)
     if hook is not None:
         return hook(kind, measured)
-    from PyQt5.QtWidgets import QInputDialog
-    from . import language
+    from . import language, value_popup
     views = scene.views()
     unit = "°" if kind == "angle" else "mm"
-    text, ok = QInputDialog.getText(
+    return value_popup.ask(
         views[0] if views else None, language.tr(sc.KINDS[kind][0]),
         language.tr("Value (%s) — a number or an expression:") % unit,
-        text="%g" % round(measured, 4))
-    return text.strip() if ok and text.strip() else None
+        "%g" % round(measured, 4))
 
 
 def _value(text):

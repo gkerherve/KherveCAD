@@ -872,9 +872,16 @@ def edit(window, rect, cont, index):
 
     def commit(text):
         try:
+            if sc.rows(cont)[index].get("driven"):
+                # typing a size into a driven (bracketed) dimension makes
+                # it DRIVING again, at the new value
+                sc.set_driven(window.model, cont, index, False)
             sc.set_value(window.model, cont, index, _value(text))
         except sc.Conflict as exc:
             raise ValueError(str(exc))
         view.update()
+    if row.get("driven"):
+        view.flash("Driven dimension: it only measures. Type a value to "
+                   "make it driving, or Esc.", 6000)
     return dim_link.open_editor(window, rect, str(row.get("value", "")),
                                 commit, ("sketch", cont, index))

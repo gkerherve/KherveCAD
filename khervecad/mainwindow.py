@@ -110,6 +110,7 @@ class MainWindow(QMainWindow):
             lambda pos: dim_link.press(self, pos),     # link while typing
             lambda pos: sketch_dims3d.press(self, pos),
             lambda pos: feature_dims.press(self, pos)]
+        self.view3d.outside_hook = lambda pos: dim_link.outside(self, pos)
         self.view3d.move_hooks = [
             lambda pos: plane_pick.move(self, pos),
             lambda pos: sketch_dims3d.move(self, pos)]

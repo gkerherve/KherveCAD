@@ -529,12 +529,12 @@ def _ask(scene, tool):
     if hook is not None:
         text = hook(tool, 2.0)
     else:
-        from PyQt5.QtWidgets import QInputDialog
+        from . import value_popup
         views = scene.views()
-        text, ok = QInputDialog.getText(
-            views[0] if views else None, "Sketch " + label,
-            "Corner %s (mm):" % label, text="2")
-        if not ok:
+        text = value_popup.ask(views[0] if views else None,
+                               "Sketch " + label,
+                               "Corner %s (mm):" % label, "2")
+        if text is None:
             return None
     from .sketch_constrain_ui import _value
     v = _value(text)                  # "36 / 2" works too

@@ -2219,6 +2219,16 @@ class View3D(QWidget):
         return super().event(event)
 
     def mousePressEvent(self, event):
+        outside = getattr(self, "outside_hook", None)
+        if outside is not None and event.button() == Qt.LeftButton \
+                and getattr(self, "_dim3d_editor", None) is not None:
+            try:
+                if outside(event.pos()):    # a typed value: click away
+                    event.accept()
+                    return
+            except Exception:
+                import traceback
+                traceback.print_exc()
         if self.edit_tool is not None and self._pick_cb is None \
                 and self.edit_tool.mouse_press(event):
             return

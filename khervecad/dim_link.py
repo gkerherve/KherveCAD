@@ -39,7 +39,9 @@ def open_editor(window, rect, text, commit, target):
     box.setFixedWidth(max(90, int(rect.width()) + 30))
     box.move(int(rect.x()) - 8, int(rect.y()) - 3)
     box.setToolTip("Type a value, a calculation or a variable — or click "
-                   "another dimension to link to it. Enter keeps it.")
+                   "another dimension to link to it. Enter keeps it; "
+                   "Esc cancels; a click elsewhere keeps what you typed "
+                   "(or just closes the box if you typed nothing).")
     box.selectAll()
     box.show()
     box.setFocus()
@@ -72,6 +74,14 @@ def open_editor(window, rect, text, commit, target):
             box.deleteLater()
             view.update()
 
+    def leave():
+        """Out of the box without Enter: unchanged = just close it,
+        changed = keep what was typed."""
+        if box.text().strip() == str(text).strip():
+            drop()
+        else:
+            done()
+
     def focus_left():
         # the focus went to the view for a click ON another dimension: a
         # link (press() fills the box) — anything else keeps the value
@@ -83,11 +93,11 @@ def open_editor(window, rect, text, commit, target):
             state["linking"] = True
             QTimer.singleShot(0, lambda: state.update(linking=False))
             return
-        done()
+        leave()
 
     box.returnPressed.connect(done)
     box.editingFinished.connect(focus_left)
-    box._done, box._drop = done, drop
+    box._done, box._drop, box._leave = done, drop, leave
 
     from PyQt5.QtCore import QObject
 
@@ -203,6 +213,26 @@ def press(window, pos):
     window.statusBar().showMessage(
         "Linked to %s — Enter keeps it (you may write %s / 2, %s + 5…)."
         % (name, name, name), 8000)
+    window._dim_link_swallow = True
+    return True
+
+
+def outside(window, pos):
+    """A press anywhere on the view while a value is typed (called first
+    by View3D, whatever tool is running): a click on ANOTHER dimension
+    links (press() fills the box), any other click leaves the box — the
+    user: "I try to click somewhere else to come out of there but it is
+    not possible and I have to press enter". The click is swallowed, so
+    it does not also start something."""
+    view = window.view3d
+    box = getattr(view, "_dim3d_editor", None)
+    if box is None:
+        return False
+    target = _target_at(window, pos)
+    if target is not None and not _same(
+            target, getattr(view, "_dim3d_target", None)):
+        return False
+    box._leave()
     window._dim_link_swallow = True
     return True
 

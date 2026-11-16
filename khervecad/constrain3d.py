@@ -509,6 +509,14 @@ class Constrain3D:
             return None, True
         hit = face_dim.reference(self, parent, face)
         if hit is None:
+            from . import feature_dims
+            ext = feature_dims.extrude_of(parent)
+            if ext is not None:
+                # a face lying flat to the sketch is the extrude's end:
+                # its distance IS the feature's depth (the user: "we
+                # cannot add a smart dimension to the extrusion")
+                feature_dims.edit_depth(self.window, ext, x, y)
+                return None, True
             self._refuse("That face lies flat to the sketch: its distance "
                          "is the extrude's depth, not a sketch dimension.")
             return None, True
@@ -599,6 +607,14 @@ class Constrain3D:
                     view3d_menu.dimension_at(self.window, pos):
                 # (before the value's own click, which would edit it)
                 self.delete_at(pos.x(), pos.y())
+                return True
+        if event.button() == Qt.LeftButton:
+            from . import feature_dims
+            got = feature_dims.hit(self.window, event.pos())
+            if got is not None:
+                # the extrude's depth / the revolve's angle shown beside
+                # the sketch: a click types it (feature_dims.release)
+                self.window._feature_dim_press = got
                 return True
         self._down = event.pos()
         return False                # the view may still orbit on a drag

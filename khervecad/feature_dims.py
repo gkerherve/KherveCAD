@@ -74,7 +74,34 @@ def shown_features(window):
         for f in _features_of(node):
             if f not in out:
                 out.append(f)
+    # a Smart Dimension started from the Extrude window: that extrude's
+    # depth is clickable beside the sketch's sizes
+    drag = getattr(window, "_drag_paused", None)
+    ext = drag.target() if drag is not None else None
+    if ext is not None and ext.type in FEATURES and ext not in out:
+        out.append(ext)
     return out[:12]
+
+
+def extrude_of(cont):
+    """The Linear extrude a sketch container belongs to: itself, or the
+    nearest one above it (a Regions / a sketch Group sits inside it)."""
+    node = cont
+    while node is not None:
+        if node.type == "linear_extrude":
+            return node
+        node = node.parent
+    return None
+
+
+def edit_depth(window, node, x, y):
+    """Open the depth editor of *node* at screen point (x, y) — what a
+    Smart Dimension click on a face lying flat to the sketch means."""
+    from PyQt5.QtCore import QRectF
+    window.view3d.flash(
+        "That face is the extrude's end: its distance is the feature's "
+        "depth. Type it here (Enter keeps it).", 6000)
+    return edit(window, QRectF(x - 30, y - 10, 60, 20), node, "height")
 
 
 def _frame(window, node, own):

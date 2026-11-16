@@ -207,10 +207,9 @@ def _place_text(sketch, pt):
     if hook is not None:
         text = hook("text", "Text")
     else:
-        from PyQt5.QtWidgets import QInputDialog
-        text, ok = QInputDialog.getText(sketch.view, "Text", "Text:",
-                                        text="Text")
-        if not ok:
+        from . import value_popup
+        text = value_popup.ask(sketch.view, "Text", "Text:", "Text")
+        if text is None:
             return None
     if not text:
         return None
