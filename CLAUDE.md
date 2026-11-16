@@ -3219,6 +3219,13 @@ into a new module and import.
                        `shown_features` draws it with nothing selected,
                        like a sketch's Smart Dimension (the user: "I
                        never can make it a smart dimension").
+                       And it MOVES like one (same day): press on the
+                       violet number and drag — `feature_dims.move` (a
+                       view3d move hook) maps the screen move through the
+                       extrude frame's x / y (`_jacobian`, sketch_dims3d.
+                       `_to_local`) into `params["depth_dim_at"]` [dx, dy]
+                       from the profile's corner; release = one undo step;
+                       a still click still types the value.
   - `feature_dims.py` / `dim_link.py` — **feature dimensions and links**
                        (2026-11-10, the user: "a dimension that comes from a
                        linear extrude ... a rotation extrude"). A selected

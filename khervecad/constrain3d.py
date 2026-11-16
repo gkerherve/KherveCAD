@@ -743,7 +743,7 @@ class Constrain3D:
             if got is not None:
                 # the extrude's depth / the revolve's angle shown beside
                 # the sketch: a click types it (feature_dims.release)
-                self.window._feature_dim_press = got
+                feature_dims.press(self.window, event.pos())
                 return True
         self._down = event.pos()
         return False                # the view may still orbit on a drag

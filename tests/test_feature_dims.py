@@ -158,3 +158,34 @@ def test_a_selected_feature_shows_its_sketch_dimensions_alone(win):
     tree.select_nodes([rev])
     QTest.qWait(50)
     assert texts() == [rev.id]
+
+
+def test_a_depth_dimension_is_dragged_and_stays(win):
+    """The user, 2026-11-16: the violet depth moves like a Smart
+    Dimension — press on its number, drag, release; a click without
+    moving still types a value."""
+    ext, rect, rev = _plate(win)
+    win.builder.active_tree().select_nodes([ext])
+    QTest.qWait(50)
+    _paint(win)
+    rect_, node, key = next(h for h in win._feature_dim_hits
+                            if h[2] == "height")
+    v = win.view3d
+    start = QPoint(int(rect_.center().x()), int(rect_.center().y()))
+    before = feature_dims.dimensions(win)[0][4][2]
+    QTest.mousePress(v, Qt.LeftButton, Qt.NoModifier, start)
+    from PyQt5.QtCore import QEvent
+    from PyQt5.QtGui import QMouseEvent
+    from PyQt5.QtWidgets import QApplication
+    for i in range(1, 6):
+        p = start + QPoint(i * 10, i * 6)
+        QApplication.sendEvent(v, QMouseEvent(
+            QEvent.MouseMove, p, Qt.NoButton, Qt.LeftButton, Qt.NoModifier))
+    QTest.mouseRelease(v, Qt.LeftButton, Qt.NoModifier,
+                       start + QPoint(50, 30))
+    QTest.qWait(30)
+    assert feature_dims.AT in ext.params
+    after = feature_dims.dimensions(win)[0][4][2]
+    assert after != before                     # the line moved
+    assert getattr(v, "_dim3d_editor", None) is None   # no box on a drag
+    assert "depth_dim_at" not in win.model.to_scad()

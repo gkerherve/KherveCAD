@@ -26,6 +26,11 @@ INK = "#6a1b9a"                 # set apart from the sketch's blue
 GAP = 0.18
 #: params key: the depth was placed as a Smart Dimension and stays shown
 PLACED = "depth_dim"
+#: params key: where the depth's dimension line stands, [dx, dy] mm in
+#: the extrude's own frame from the profile's corner (dragged there)
+AT = "depth_dim_at"
+#: pixels a press must move to be a drag, not a click
+DRAG_PX = 4
 
 
 def _env(window):
@@ -293,12 +298,16 @@ def dimensions(window):
             h = _num(node, "height", env, 10.0)
             h2 = _num(node, "height2", env, 0.0)
             centre = bool(node.params.get("center"))
-            gap = GAP * size
-            px = x1 + gap
+            at = node.params.get(AT)
+            try:
+                dx, dy = float(at[0]), float(at[1])
+            except (TypeError, ValueError, IndexError):
+                dx, dy = GAP * size, 0.0      # beside the profile
 
             def run(za, zb):
                 return [mesh.mat_apply(m, p) for p in (
-                    (x1, y0, za), (x1, y0, zb), (px, y0, za), (px, y0, zb))]
+                    (x1, y0, za), (x1, y0, zb), (x1 + dx, y0 + dy, za),
+                    (x1 + dx, y0 + dy, zb))]
             if centre:
                 out.append((node, "height", text(node, "height", h),
                             "linear", run(-h / 2.0, h / 2.0)))
@@ -327,6 +336,7 @@ def paint(window, painter, project):
     from PyQt5.QtCore import QPointF, QRectF, Qt
     from PyQt5.QtGui import QBrush, QColor, QFont, QPen, QPolygonF
     window._feature_dim_hits = []
+    window._feature_dim_jac = {}
     if not getattr(window.scene, "show_sketch_dims", True):
         return
     try:
@@ -401,6 +411,12 @@ def paint(window, painter, project):
         painter.drawRoundedRect(rect, 4, 4)
         painter.drawText(rect, int(Qt.AlignCenter), label)
         window._feature_dim_hits.append((QRectF(rect), node, key))
+        if kind == "linear" and node.type == "linear_extrude":
+            try:
+                window._feature_dim_jac[(id(node), key)] = _jacobian(
+                    window, node, project)
+            except Exception:
+                pass
     painter.restore()
 
 
@@ -411,11 +427,64 @@ def hit(window, pos):
     return None
 
 
+def _jacobian(window, node, project):
+    """Screen pixels per mm of the extrude's own +x and +y, at its
+    profile — how a drag on screen moves the dimension line."""
+    from . import mesh
+    m = _frame(window, node, own=True)
+    o = project(mesh.mat_apply(m, (0.0, 0.0, 0.0)))
+    ex = project(mesh.mat_apply(m, (1.0, 0.0, 0.0)))
+    ey = project(mesh.mat_apply(m, (0.0, 1.0, 0.0)))
+    if o is None or ex is None or ey is None:
+        return None
+    return ((ex[0] - o[0], ex[1] - o[1]), (ey[0] - o[0], ey[1] - o[1]))
+
+
 def press(window, pos):
     got = hit(window, pos)
     if got is None:
         return False
     window._feature_dim_press = got
+    window._feature_dim_drag = dict(start=pos, moved=False)
+    return True
+
+
+def _current_at(node, window):
+    at = node.params.get(AT)
+    try:
+        return float(at[0]), float(at[1])
+    except (TypeError, ValueError, IndexError):
+        box = _box(node, _env(window)) or (0, 0, 1, 1)
+        return GAP * max(box[2] - box[0], box[3] - box[1], 1e-3), 0.0
+
+
+def move(window, pos):
+    """A press on a depth's number that MOVES: the dimension line follows
+    the cursor (the user: "move them just like a smart dimension")."""
+    got = getattr(window, "_feature_dim_press", None)
+    d = getattr(window, "_feature_dim_drag", None)
+    if got is None or d is None:
+        return False
+    _rect, node, key = got
+    if node.type != "linear_extrude":
+        return True
+    dx, dy = pos.x() - d["start"].x(), pos.y() - d["start"].y()
+    if not d["moved"] and (dx * dx + dy * dy) ** 0.5 < DRAG_PX:
+        return True
+    jac = getattr(window, "_feature_dim_jac", {}).get((id(node), key))
+    if not jac:
+        return True
+    from .sketch_dims3d import _to_local
+    local = _to_local(jac, dx, dy)
+    if local is None:
+        return True
+    if not d["moved"]:
+        d["moved"] = True
+        d["at"] = _current_at(node, window)
+        d["orig"] = node.params.get(AT)
+    node.params[AT] = [round(d["at"][0] + local[0], 3),
+                       round(d["at"][1] + local[1], 3)]
+    window.view3d.update()
     return True
 
 
@@ -424,6 +493,17 @@ def release(window, pos):
     if got is None:
         return False
     window._feature_dim_press = None
+    d = getattr(window, "_feature_dim_drag", None)
+    window._feature_dim_drag = None
+    if d is not None and d.get("moved"):
+        node = got[1]
+        new = list(node.params[AT])
+        if d.get("orig") is None:            # set_param sees the change
+            node.params.pop(AT, None)
+        else:
+            node.params[AT] = d["orig"]
+        window.model.set_param(node, AT, new)           # one undo step
+        return True
     edit(window, *got)
     return True
 

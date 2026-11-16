@@ -115,7 +115,8 @@ class MainWindow(QMainWindow):
             lambda pos: feature_dims.double_click(self, pos)
         self.view3d.move_hooks = [
             lambda pos: plane_pick.move(self, pos),
-            lambda pos: sketch_dims3d.move(self, pos)]
+            lambda pos: sketch_dims3d.move(self, pos),
+            lambda pos: feature_dims.move(self, pos)]
         self.view3d.release_hooks = [
             lambda pos: plane_pick.release(self, pos),
             lambda pos: dim_link.release(self, pos),
