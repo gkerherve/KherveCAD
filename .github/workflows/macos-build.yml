@@ -1,3 +1,8 @@
+# MANUAL ONLY, ARM64 ONLY (Nov 2026): Mac DMGs are built on the user's own Mac
+# (Apple Silicon); no Intel DMG is made any more. This workflow no longer runs on a
+# tag push; start it from the Actions tab only as a fallback. Comments below that
+# mention x86_64/Intel or tag pushes describe the old setup.
+
 name: macOS build
 
 # PyInstaller cannot cross-compile, so the .app has to be produced on a
@@ -31,10 +36,6 @@ on:
         description: "Name tag and files 0.1.N (the bridge release, so copies from before v1025 find it)"
         type: boolean
         default: true
-  push:
-    tags:
-      - "macos-v*"
-
 permissions:
   contents: write          # needed to create the release
 
@@ -46,8 +47,6 @@ jobs:
         include:
           - runner: macos-14
             arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
     runs-on: ${{ matrix.runner }}
 
     steps:
