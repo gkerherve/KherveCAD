@@ -3459,8 +3459,10 @@ class McpToolExecutor:
             nodes = self._nodes(ids)
         else:
             nodes = [n for n in self._scope().children
-                     if n.visible and n.type not in ("variables",
-                                                     "masters", "assign")]
+                     if n.visible and n.type not in (
+                         "variables", "masters", "assign",
+                         # construction, not solid
+                         "ref_plane", "ref_axis", "ref_point")]
             if not nodes:
                 raise ToolError("Nothing to check — the scope is empty.")
         tris, approx = analysis_dialog.part_tris(self._w, nodes)
