@@ -161,3 +161,29 @@ def test_a_rib_on_the_front_plane_stays_in_the_middle(win):
     ys = [mesh.mat_apply(m, p)[1] for t in mesh.tessellate(rib) for p in t]
     assert min(ys) == pytest.approx(-5, abs=0.01)
     assert max(ys) == pytest.approx(5, abs=0.01)
+
+
+def test_a_rib_on_an_arc_fills_under_the_arc(win):
+    """A three point arc is a rib's line too (2026-11-20, Exercise 009's
+    R55 web): the side probes followed the chord, both landed in the open
+    and no rib was made."""
+    import math
+    from khervecad import face_sketch, refgeom_ui, rib_feature, sketch_arc
+    from khervecad.mcp_tools import McpToolExecutor
+    McpToolExecutor(win).execute("apply_code", {"code": CODE})
+    QTest.qWait(50)
+    before = _volume(win)
+    group = refgeom_ui.sketch_on(win, origin=(0, 30, 0), normal=(0, 1, 0),
+                                 label="Rib plane", open_2d=False)
+    a = face_sketch.to_local(group, (40, 30, 40))
+    b = face_sketch.to_local(group, (0, 30, 10))
+    # bulging towards the inside corner (40, 10): concave, like a web
+    mid = face_sketch.to_local(group, (28, 30, 22))
+    bulge = sketch_arc.bulge_through(a, b, mid)
+    win.model.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                    width=0.2, bulge=bulge), parent=group)
+    rib = rib_feature.make(win, group, thickness=10)
+    QTest.qWait(50)
+    assert rib is not None
+    gained = _volume(win) - before
+    assert 0 < gained < 600 * 10        # less than under the straight line

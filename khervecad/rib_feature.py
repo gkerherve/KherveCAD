@@ -48,12 +48,29 @@ def _probes(line):
         x1, y1, x2, y2 = (float(p[k]) for k in ("x1", "y1", "x2", "y2"))
     except (KeyError, TypeError, ValueError):
         return []
+    off = PROBE + float(p.get("width", 0) or 0) / 2
+    from . import sketch_arc
+    bulge = sketch_arc.bulge_of(p)
+    if bulge:
+        # an arc: probe either side OF THE ARC — the chord's probes both
+        # landed in the open (2026-11-20, Exercise 009's R55 web)
+        pts = sketch_arc.points(x1, y1, x2, y2, bulge, steps=4)
+        out = []
+        for i in (1, 2, 3):
+            (ax, ay), (bx, by) = pts[i - 1], pts[i + 1]
+            n = math.hypot(bx - ax, by - ay)
+            if n < 1e-9:
+                continue
+            nx, ny = -(by - ay) / n, (bx - ax) / n
+            mx, my = pts[i]
+            out.append((mx + nx * off, my + ny * off))
+            out.append((mx - nx * off, my - ny * off))
+        return out
     dx, dy = x2 - x1, y2 - y1
     n = math.hypot(dx, dy)
     if n < 1e-9:
         return []
     nx, ny = -dy / n, dx / n
-    off = PROBE + float(p.get("width", 0) or 0) / 2
     out = []
     for t in (0.25, 0.5, 0.75):
         mx, my = x1 + dx * t, y1 + dy * t
@@ -274,6 +291,14 @@ def start(window):
                 window.statusBar().showMessage(
                     "%s made from %s." % (rib.name, group.name), 6000)
                 return rib
+            msg = ("%s: its line closes no area against the part — make "
+                   "it start and end on the part's edges." % group.name)
+            window.statusBar().showMessage(msg, 8000)
+            try:
+                window.view3d.flash(msg, 5000)
+            except Exception:
+                pass
+            return None
     from . import feature_pick
     feature_pick.start(window, "rib")
     return None
