@@ -460,6 +460,10 @@ def sketch_on(window, node=None, origin=None, normal=None, label=None,
     group.params[face_sketch.KEY] = True
     if node is not None:
         group.params["ref_plane_sketch"] = True      # a cut here starts Blind
+    # it stands on the PLANE, never on a face: without this it adopted the
+    # face it lay on and, once a cut took that face away, followed it onto
+    # a facet of the part below (2026-11-20, the bearing bracket's Plane1)
+    group.params[face_sketch.ON_PLANE] = True
     model.rename(group, "Sketch on " + (label or "plane"))
     if open_2d:
         face_sketch.open_sketch(window, group)
