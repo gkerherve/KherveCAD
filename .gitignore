@@ -16,3 +16,4 @@ packaging/vendor/
 # reference drawings the car builder is measured from: copyrighted,
 # private reference only - the measurements live in khervecad/car_sheets.py
 Blue Prints/
+.venv-build/
