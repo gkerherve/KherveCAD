@@ -68,9 +68,14 @@ steps.md. Iterate; show the user the drawing before filming if it is new.
 5. A closing line and `rec.finish()`.
 
 A step that will not go by mouse after 3 honest tries is a KherveCAD bug:
-fix it test-first (video-exercise skill section 6) when you own the code;
-otherwise do only that action with an MCP `call(...)`, narrate it plainly,
-and report it.
+fix it test-first (video-exercise skill section 6), then film. NEVER do a
+step through MCP and never change the construction to dodge a broken click
+(the user, 2026-11-20: "everything must be doable manually with the mouse;
+if something cannot be done by mouse, the app must be updated"). Build the
+film on `~/Documents/KherveCAD Exercises/mousefilm.py` (DRY=1 rehearses
+with real-time waits; STOP=<tag> dumps the tree), and make the tutorial
+PDF FROM the film with `film_pdf.py "<mp4>" "<Title>" "<url>"` so the PDF
+shows the same mouse steps.
 
 ## 3. Check before handing over
 

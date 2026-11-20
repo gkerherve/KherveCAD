@@ -36,6 +36,16 @@ Every step in the film is done with the mouse in kCAD (no MCP shortcuts; the use
 that used them). When `web/` is complete, hand it to the khervetools-web session: its
 `publish-kcad-exercise` skill puts it on YouTube and the site.
 
+## Order when the user says "reproduce this part" (the user, 2026-11-20)
+
+A link + "reproduce it, then the PDF, then the video" means the whole chain,
+without asking: frames -> steps.md -> build by MOUSE (mousefilm.py, DRY=1
+rehearsal) -> find EVERY KherveCAD error on the way and fix it test-first
+(section 6) BEFORE making anything to publish -> drawing -> the film
+(tutorial-video skill) -> the PDF from the film (film_pdf.py) -> `web/`.
+Mouse only, start to finish: a step the mouse cannot do is an app bug to
+fix, never an MCP call and never a changed construction.
+
 ## 2. Extract frames and captions
 
 KherveFrames lives in `~/Documents/PycharmProjects/KherveFrames`
