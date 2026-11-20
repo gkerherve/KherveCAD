@@ -1,0 +1,100 @@
+name: Linux build
+
+# Freezes KherveCAD with PyInstaller on Linux (x86_64), bundles the pinned
+# OpenSCAD snapshot (its AppImage, extracted, under openscad/ where
+# engine.bundled_openscad looks), and makes a portable .tar.gz and an
+# AppImage. Uploads a workflow artifact only — publishing is separate.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # version = commit count
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: System libraries (Qt xcb, FUSE for AppImages)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 \
+            libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 libxcb-shape0 \
+            libxcb-xinerama0 libegl1 libgl1 xvfb file
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Version and freeze
+        run: |
+          set -euo pipefail
+          VERSION=$(python -c "import sys; sys.path.insert(0,'packaging'); import build_installer as b; print(b.write_version())" | tail -1 | cut -d+ -f1)
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          python -m PyInstaller packaging/KherveCAD.spec --noconfirm
+          test -x dist/KherveCAD/KherveCAD
+
+      - name: Bundle OpenSCAD
+        run: |
+          set -euo pipefail
+          OV=$(python -c "import sys; sys.path.insert(0,'packaging'); import build_installer as b; print(b.OPENSCAD_VERSION)" | tail -1)
+          NAME=$(curl -fsSL https://files.openscad.org/snapshots/ | grep -o "OpenSCAD-${OV}[^\"<]*x86_64\.AppImage" | head -1)
+          if [ -z "$NAME" ]; then
+            echo "::warning::no ${OV} Linux snapshot; taking the newest"
+            NAME=$(curl -fsSL https://files.openscad.org/snapshots/ | grep -o 'OpenSCAD-[^"<]*x86_64\.AppImage' | sort -V | tail -1)
+          fi
+          echo "OpenSCAD: $NAME"; echo "OPENSCAD_NAME=$NAME" >> "$GITHUB_ENV"
+          curl -fsSL -o osc.AppImage "https://files.openscad.org/snapshots/$NAME"
+          chmod +x osc.AppImage && ./osc.AppImage --appimage-extract > /dev/null
+          mv squashfs-root dist/KherveCAD/openscad-app
+          mkdir -p dist/KherveCAD/openscad
+          printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/../openscad-app/AppRun" "$@"\n' > dist/KherveCAD/openscad/openscad
+          chmod +x dist/KherveCAD/openscad/openscad
+          cp packaging/openscad-COPYING.txt dist/KherveCAD/openscad/COPYING
+          echo "OpenSCAD snapshot $NAME — https://files.openscad.org/snapshots/$NAME (GPL-2.0-or-later). Source: https://github.com/openscad/openscad" > dist/KherveCAD/openscad/SOURCE.txt
+          dist/KherveCAD/openscad/openscad --version
+
+      - name: Render a test cube with the bundled engine
+        run: |
+          echo 'cube(10);' > t.scad
+          dist/KherveCAD/openscad/openscad -o t.stl t.scad
+          test -s t.stl
+
+      - name: Launch check (headless, 15 s)
+        run: |
+          set +e
+          QT_QPA_PLATFORM=offscreen timeout 15 dist/KherveCAD/KherveCAD; rc=$?
+          echo "exit $rc"; test $rc -eq 124 -o $rc -eq 0
+
+      - name: Portable tar.gz
+        run: tar -C dist -czf dist/KherveCAD-$VERSION-linux-x86_64.tar.gz KherveCAD
+
+      - name: AppImage
+        run: |
+          set -euo pipefail
+          A=AppDir; mkdir -p $A/usr/lib
+          cp -a dist/KherveCAD $A/usr/lib/KherveCAD
+          printf '#!/bin/sh\nexec "$(dirname "$(readlink -f "$0")")/usr/lib/KherveCAD/KherveCAD" "$@"\n' > $A/AppRun; chmod +x $A/AppRun
+          cp packaging/khervecad.png $A/khervecad.png
+          printf '[Desktop Entry]\nType=Application\nName=kCAD\nExec=KherveCAD %%F\nIcon=khervecad\nCategories=Graphics;Engineering;\nMimeType=application/x-openscad;\n' > $A/khervecad.desktop
+          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ARCH=x86_64 ./appimagetool $A dist/KherveCAD-$VERSION-x86_64.AppImage
+          cp dist/KherveCAD-$VERSION-x86_64.AppImage dist/KherveCAD-x86_64.AppImage
+          ls -lh dist/*.AppImage dist/*.tar.gz
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KherveCAD-${{ env.VERSION }}-linux
+          path: |
+            dist/*.AppImage
+            dist/*-linux-x86_64.tar.gz
+          if-no-files-found: error
