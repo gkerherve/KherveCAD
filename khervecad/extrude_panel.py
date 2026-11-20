@@ -394,6 +394,13 @@ def set_operation(model, ext, op):
             set_direction(model, ext, ONE)
         else:
             model.set_param(ext, "extent", "through_all")
+            # into the face, as the face Cut tool and MCP already make it:
+            # chosen Blind later, the cut went OUT of the face and removed
+            # nothing (2026-11-20, Exercise 009's counterbore)
+            from . import face_sketch
+            if holder.params.get(face_sketch.KEY) and \
+                    not holder.params.get(face_sketch.ON_PLANE):
+                model.set_param(ext, "reverse", True)
         return True
     diff = holder.parent
     if diff is not None and diff.params.get(CUT_KEY):
