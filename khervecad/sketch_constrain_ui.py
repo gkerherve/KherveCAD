@@ -1040,8 +1040,13 @@ def _smart(first, second):
         # empty click or the same circle again gives its size
         return None
     if k1 == "circle" and second[:2] == first[:2]:
-        # a slot's end gives its radius, a circle its diameter
-        return ("radius" if str(first[1]).startswith("a") else
+        # a slot's end and an ARC give their radius (SolidWorks' R55 —
+        # an arc gave a driven diameter across its whole circle,
+        # 2026-11-20), a circle its diameter
+        from . import sketch_arc
+        arc = getattr(first[0], "type", None) == "line" and \
+            sketch_arc.is_arc(first[0])
+        return ("radius" if arc or str(first[1]).startswith("a") else
                 "diameter"), [first]
     if k1 == "circle":
         first = _centre(first)
