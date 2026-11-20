@@ -1305,7 +1305,11 @@ def _parts(window):
         for child in root.children:
             if not child.visible or child.type in ("assign", "variables"):
                 continue
-            tris = mesh.selected_world_tris(root, {child.id}, fn=fn)
+            # the part AND everything inside it: a Mirror selected alone
+            # lights only its copy, so the original's faces could not be
+            # clicked (2026-11-20, the bearing support's mirrored lug)
+            tris = mesh.selected_world_tris(
+                root, {n.id for n in child.walk()}, fn=fn)
             if tris:
                 out.append((child, tris))
     return out
