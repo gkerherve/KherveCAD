@@ -19,8 +19,22 @@ The user may give:
   first if the order is not obvious.
 
 Use the folder as the exercise's home: frames, notes and the `.kcad` go
-there. With a bare link, make `~/Documents/KherveCAD Exercises/<video
-title>/`.
+there. With a bare link, make `~/Documents/KherveCAD Exercises/Exercise NNN - <Part
+name>/` (naming rule below).
+
+## Exercise folders: one per exercise, uniform names (the user, 2026-11-20)
+
+`~/Documents/KherveCAD Exercises/Exercise NNN - <Part name>/` (three digits, the part's name, no
+"SolidWorks", no video id; the source link lives in `steps.md`). Examples:
+`Exercise 002 - Bearing bracket`, `Exercise 135 - Sheet metal bracket`. Keep the video's own number;
+a video with no number, or one that clashes with an existing number, takes the next free number
+after the highest (155, 156...). Everything for the exercise lives in that folder; the files to
+publish go in its `web/` subfolder:
+`Exercise-NNN-video.mp4`, `Exercise-NNN-video.srt`, `Exercise-NNN-drawing.png`,
+`Exercise-NNN-tutorial.pdf` and `Exercise-NNN-<part-name>.kcad`.
+Every step in the film is done with the mouse in kCAD (no MCP shortcuts; the user rejected films
+that used them). When `web/` is complete, hand it to the khervetools-web session: its
+`publish-kcad-exercise` skill puts it on YouTube and the site.
 
 ## 2. Extract frames and captions
 

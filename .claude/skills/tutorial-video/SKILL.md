@@ -87,8 +87,22 @@ Never call or name the video from the exercise number: not the file
 (`Exercise 1.mp4`), not the on-screen title, chapter tags, captions or the
 narration ("Exercise 1"). Name it after WHAT THE PART IS ("Base plate with
 two holes.mp4", title card "Let's build a base plate"). Say "this part" or
-its name, never "exercise N". The exercise folder may keep its number for
-filing, but nothing filmed or exported shows it.
+its name, never "exercise N". The exercise folders and the publish copies keep
+the number (three digits, below), but nothing filmed shows it.
+
+## Exercise folders: one per exercise, uniform names (the user, 2026-11-20)
+
+`~/Documents/KherveCAD Exercises/Exercise NNN - <Part name>/` (three digits, the part's name, no
+"SolidWorks", no video id; the source link lives in `steps.md`). Examples:
+`Exercise 002 - Bearing bracket`, `Exercise 135 - Sheet metal bracket`. Keep the video's own number;
+a video with no number, or one that clashes with an existing number, takes the next free number
+after the highest (155, 156...). Everything for the exercise lives in that folder; the files to
+publish go in its `web/` subfolder:
+`Exercise-NNN-video.mp4`, `Exercise-NNN-video.srt`, `Exercise-NNN-drawing.png`,
+`Exercise-NNN-tutorial.pdf` and `Exercise-NNN-<part-name>.kcad`.
+Every step in the film is done with the mouse in kCAD (no MCP shortcuts; the user rejected films
+that used them). When `web/` is complete, hand it to the khervetools-web session: its
+`publish-kcad-exercise` skill puts it on YouTube and the site.
 
 ## Settings the user chose (2026-11-15)
 
