@@ -21,6 +21,10 @@ on:
         description: "Name tag and files 0.1.N (the bridge release, so copies from before v1025 find it)"
         type: boolean
         default: true
+      run_tests:
+        description: "Run the full test suite first (slow on the runner: it outgrew the 120 min job)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write          # needed only when release=true
@@ -60,6 +64,10 @@ jobs:
           }
 
       - name: Run the test suite
+        # Off by default since 2026-11-20: the suite reached 25 % in 70 min
+        # on windows-latest, so every build since 2026-10-17 timed out
+        # before the installer was made. The suite runs on the dev Mac.
+        if: inputs.run_tests
         env:
           QT_QPA_PLATFORM: offscreen
           KHERVECAD_DISABLE_ENGINE: "1"
