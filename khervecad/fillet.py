@@ -347,6 +347,81 @@ FACE_TURN = 20.0
 SMOOTH_TURN = 20.0
 
 
+#: a crease whose dihedral differs this much (degrees) from what the
+#: creases round it agree on is a sliver face's, not the part's
+SLIVER_TURN = 25.0
+
+
+def _despike(run: dict, radius: float) -> list:
+    """The run's edges with SLIVER creases mended. Where a revolved
+    dome meets a pipe the preview mesh has hair-thin faces, and along a
+    run of 0.01-0.02 long creases an edge or two has face normals
+    folded 130-165 degrees from its neighbours: its rolling-ball
+    profile reaches r / tan(beta / 2) along the faces (seven radii at
+    164 degrees) and stands up as a spike (Exercise 159's R0.1 on the
+    pipe / dome junctions). An edge is a sliver when its dihedral
+    differs by more than `SLIVER_TURN` from the median of those within
+    *radius* of it along the run, and the good creases either side of
+    the stretch agree; it takes the normals of the two nearest good
+    ones."""
+    edges = run["edges"]
+    n = len(edges)
+    if n < 4:
+        return edges
+    closed = run["closed"]
+    lens = [e.length for e in edges]
+    s = [0.0]
+    for x in lens[:-1]:
+        s.append(s[-1] + x)
+    mids = [s[i] + lens[i] / 2 for i in range(n)]
+    total = s[-1] + lens[-1]
+
+    def dist(i, j):
+        d = abs(mids[i] - mids[j])
+        return min(d, total - d) if closed else d
+
+    bad = []
+    for i in range(n):
+        near = sorted(edges[j].angle for j in range(n)
+                      if j != i and dist(i, j) <= radius)
+        if len(near) < 3:
+            bad.append(False)
+            continue
+        median = near[len(near) // 2]
+        bad.append(abs(edges[i].angle - median) > SLIVER_TURN)
+    if not any(bad):
+        return edges
+
+    def good_from(i, step):
+        j = i
+        for _k in range(n):
+            j += step
+            if closed:
+                j %= n
+            elif not 0 <= j < n:
+                return None
+            if not bad[j]:
+                return j
+        return None
+
+    out = list(edges)
+    for i in range(n):
+        if not bad[i]:
+            continue
+        before, after = good_from(i, -1), good_from(i, 1)
+        if before is None or after is None:
+            continue                  # a run's end: nothing to compare
+        b, a = edges[before], edges[after]
+        if abs(b.angle - a.angle) > SLIVER_TURN or \
+                dist(i, before) > radius or dist(i, after) > radius:
+            continue                  # a real change, or a long stretch
+        e = edges[i]
+        out[i] = Edge(e.a, e.b, _unit(_add(b.nl, a.nl)),
+                      _unit(_add(b.nr, a.nr)), (b.angle + a.angle) / 2,
+                      e.convex, e.il, e.ir)
+    return out
+
+
 def smoothed(run: dict, radius: float) -> list:
     """The run's edges with each face normal averaged over the edges
     within *radius* along the run, as long as the faces turn less than
@@ -355,7 +430,7 @@ def smoothed(run: dict, radius: float) -> list:
     facets ZIG-ZAG (Exercise 8's clevis rim: normals alternating 1-8°
     back and forth): a profile per facet put a notch in the fillet at
     every joint. A real corner (a box's rim) turns too far to blend."""
-    edges = run["edges"]
+    edges = _despike(run, radius)
     n = len(edges)
     if n < 2:
         return edges

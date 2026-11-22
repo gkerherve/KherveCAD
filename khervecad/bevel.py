@@ -170,6 +170,10 @@ def _solve3(rows, rhs):
              + r0 * (d * h - e * g)) / det)
 
 
+#: a corner piece may reach this many widths from its vertex
+CORNER_REACH = 8.0
+
+
 def corners(edges, runs, width: float, segments: int, e: float):
     """Corner pieces, as (manifold, convex) pairs, where exactly three
     creases of one kind — all of them bevelled — meet at a vertex with
@@ -216,6 +220,12 @@ def corners(edges, runs, width: float, segments: int, e: float):
                 break
             corners8.append(p)
         if len(corners8) != 8:
+            continue
+        if max(math.dist(p, vtx) for p in corners8) > CORNER_REACH * width:
+            # nearly parallel planes (a sliver face at the vertex) meet
+            # far away: the piece would reach there (Exercise 159: 125
+            # inches from a 0.1 inch fillet) — leave the corner to the
+            # strips
             continue
         # grown about the ball centre: the faces on the offset planes
         # stay put (grown past them it cut slivers off what stays), the
