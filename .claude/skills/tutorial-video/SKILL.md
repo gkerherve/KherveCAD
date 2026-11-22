@@ -86,6 +86,23 @@ shows the same mouse steps.
   Open single frames where a drawing stop or a dimension must be checked.
 - Send the MP4 with SendUserFile.
 
+## Delegating a film to an agent (minimal context)
+
+When filming several exercises, the controller spawns one **fresh** agent per
+exercise (never a fork: a fork inherits the whole conversation). Give it only:
+
+- the exercise folder and the ONE section of `steps.md` it needs;
+- the finished file and its reference numbers (size, volume);
+- the output name, and that the exercise number must not appear in the film;
+- this skill's path, to read the rules itself;
+- the rules: mouse-only film, no commits, no edits in `khervecad/` unless
+  the fix is small, listed, and test-first;
+- a report limit (under 200 words: MP4 path, duration, deviations, bugs).
+
+Concurrency: at most two agents at a time, sequential by default (four parallel
+agents exhausted the quota twice). Only one agent may change `khervecad/`.
+Agents report KherveCAD bugs to the controller instead of working around them.
+
 ## Naming (the user, 2026-11-16)
 
 Never call or name the video from the exercise number: not the file
