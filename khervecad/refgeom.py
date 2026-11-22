@@ -203,6 +203,27 @@ def axis_of_cylinder(tris):
     d = v[:, 0]
     if w[1] < 1e-6 * max(w[2], 1e-12):
         raise ValueError("That face is flat — pick a round one.")
+    # a dome grown into the cylinder tilts the fit: take the axis most
+    # facet normals are square to (consensus of normal pairs), then refit
+    # on those facets only
+    rng = np.random.RandomState(7)
+    best = (int((np.abs(n @ d) < 0.02).sum()), d)
+    for _ in range(300):
+        i, j = rng.randint(0, len(n), 2)
+        c = np.cross(n[i], n[j])
+        lc = np.linalg.norm(c)
+        if lc < 0.2:
+            continue
+        c /= lc
+        cnt = int((np.abs(n @ c) < 0.02).sum())
+        if cnt > best[0]:
+            best = (cnt, c)
+    inl = np.abs(n @ best[1]) < 0.02
+    if inl.sum() >= 8 and not inl.all():
+        t = t[ln > 1e-12][inl]
+        n = n[inl]
+        w2, v2 = np.linalg.eigh(n.T @ n)
+        d = v2[:, 0]
     pts = t.reshape(-1, 3)
     # cross-plane coordinates
     e1 = np.cross(d, [1.0, 0.0, 0.0])
