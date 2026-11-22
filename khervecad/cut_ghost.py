@@ -88,7 +88,7 @@ def paint(window, painter, project):
     painter.setRenderHint(painter.Antialiasing, True)
     painter.setPen(Qt.NoPen)
     painter.setBrush(QBrush(QColor(*RED, 45)))
-    painter.drawPath(path.simplified())
+    painter.drawPath(path)             # winding fill: no simplified() - minutes on 4000 triangles
     # its real edges (where faces fold), so it reads as a pocket
     pen = QPen(QColor(*RED, 230), 1.5)
     pen.setCosmetic(True)
