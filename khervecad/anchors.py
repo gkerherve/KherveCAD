@@ -450,14 +450,18 @@ def describe_pick(tris, index, point, tol):
     Returns ``{"kind", "pos", "dir", "name"}`` in the same (world)
     coordinates as *tris*."""
     normal = _tri_normal(tris[index])
-    # edge map over the whole mesh: (vkey, vkey) -> [tri indices]
+    normals = [_tri_normal(t) for t in tris]
+    # edge map over the whole mesh: (vkey, vkey) -> [tri indices]; a
+    # zero-area facet is no face of its own (2026-11-22, Exercise 010:
+    # slivers along a revolved disk's spokes made every spoke an edge)
     edges = {}
     for i, tri in enumerate(tris):
+        if i != index and not any(normals[i]):
+            continue
         keys = [_vkey(v) for v in tri]
         for k in range(3):
             e = tuple(sorted((keys[k], keys[(k + 1) % 3])))
             edges.setdefault(e, []).append(i)
-    normals = [_tri_normal(t) for t in tris]
 
     def coplanar(i):
         n = normals[i]
