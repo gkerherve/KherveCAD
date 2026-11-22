@@ -273,6 +273,12 @@ Jamie (Premium) narration.
   SKILL.md and CLAUDE.md first; write steps.md before building; test-first
   for every fix; stop and report after 3 failed tries at one problem
   instead of guessing; never claim a fix works without its test run.
+  **Low tokens** (the user, 2026-11-22): the coordinator does NOT read
+  this skill or the videos itself — its brief is just the link, the
+  folder and "follow the 'Several videos' rules of video-exercise/SKILL.md";
+  the agent reads frames at low resolution, only the frames where a step
+  changes (captions first, pictures only to settle a doubt), and its final
+  report is at most 15 lines (shas, tests, PDF path, open problems).
   The coordinating session reviews each agent's diff before merging. Brief each one with: the video link, its
   exercise folder (a new name if it would clash with an existing one —
   e.g. "Exercise 57 - Bearing bracket 2"), this skill, and these rules:
