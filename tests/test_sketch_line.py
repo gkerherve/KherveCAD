@@ -58,7 +58,7 @@ def test_lines_chain_and_snap_horizontal_vertical(view):
         b.params["y1"] == a.params["y2"]          # the chain
     assert b.params["x2"] == pytest.approx(30)
     kinds = sorted(r["kind"] for r in sc.rows(view.scene().model.root))
-    assert kinds == ["coincident", "horizontal", "vertical"]
+    assert kinds == ["coincident", "fix", "horizontal", "vertical"]   # fix: the point on the origin stays
 
 
 def test_snap_to_a_point_and_line_up_with_one(view):

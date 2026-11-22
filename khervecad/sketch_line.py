@@ -278,7 +278,8 @@ def snap(scene, raw, start=None, skip=None):
     if getattr(scene, "snap_enabled", False):
         # the grid still rules every coordinate nothing else fixed: a
         # horizontal line's x, a vertical one's y, a 45° line's length
-        g = scene.grid_size
+        g = scene.snap_step() if hasattr(scene, "snap_step") \
+            else scene.grid_size
         lined = {(round(b.x(), 9), round(b.y(), 9))
                  for _a, b in info["guides"]}
         fixed_x = info["angle"] == "v" or any(
@@ -521,6 +522,16 @@ def _relations(scene, node, info, st):
             sc.add(scene.model, parent, kind, refs)
         except ValueError:
             pass                                # already held / conflict
+    # a point drawn ON the sketch's origin stays there (SolidWorks makes
+    # it Coincident with the origin; a Smart Dimension used to slide the
+    # whole outline off it - Exercise 010)
+    for name in ("p1", "p2"):
+        x, y = sc._point(node, name, {})
+        if abs(x) < 1e-9 and abs(y) < 1e-9:
+            try:
+                sc.add(scene.model, parent, "fix", [ref(node, name)])
+            except (ValueError, KeyError):
+                pass
 
 
 def _qp(node, name):
