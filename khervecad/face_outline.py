@@ -918,6 +918,11 @@ def reference(scene, pos, want=None, parent=None):
         return None
     if best[1] == "point":
         x, y = best[2]
+        for old in group.children:       # copied before at this spot: reuse
+            if old.type == "circle" and old.name == "Reference point" and \
+                    abs(old.params.get("x", 1e9) - x) < 1e-4 and \
+                    abs(old.params.get("y", 1e9) - y) < 1e-4:
+                return old, "c", "point"
         node = model.add_node("circle", dict(x=round(x, 6), y=round(y, 6),
                                              radius=0.25), parent=group,
                               name="Reference point")

@@ -1162,10 +1162,15 @@ def _reference_copy(scene, pick, container):
     probe = next((items[c.id] for c in container.children
                   if c.id in items), None)
     q = in_frame_coords(probe, world) if probe is not None else world
+    rx, ry = round(q.x(), 4), round(q.y(), 4)
+    for old in container.children:       # the same spot copied before: reuse
+        if old.type == "circle" and old.name == "Reference point" and \
+                abs(old.params.get("x", 1e9) - rx) < 1e-4 and \
+                abs(old.params.get("y", 1e9) - ry) < 1e-4:
+            return (old, "c", "point")
     ref = scene.model.add_node(
-        "circle", dict(x=round(q.x(), 4), y=round(q.y(), 4), radius=0.25,
-                       modifier="%"), parent=container,
-        name="Reference point")
+        "circle", dict(x=rx, y=ry, radius=0.25, modifier="%"),
+        parent=container, name="Reference point")
     try:
         sc.add(scene.model, container, "fix",
                [sc.ref_of(container, ref, "c")])
