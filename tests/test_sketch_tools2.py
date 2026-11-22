@@ -139,3 +139,34 @@ def test_construction_toggle(app):
     assert r.params["modifier"] == "%"
     s2.toggle_construction(m, [r])
     assert not r.params.get("modifier")
+
+
+def test_a_3_point_rectangle_stays_a_rectangle_when_dimensioned(view):
+    """SolidWorks' 3 Point Corner Rectangle comes with its Parallel /
+    Perpendicular relations (2026-11-22, Exercise 010's tube: a Smart
+    Dimension moved one corner of kCAD's and the half tube revolved into
+    a cone)."""
+    m = view.scene().model
+    t = math.radians(6)
+    a, b = (0.0, 0.0), (-24.0, 24.0 * math.tan(t))
+    c = (b[0] + 6 * math.sin(t), b[1] + 6 * math.cos(t))
+    _draw(view, s2.RECT_3PT, [a, b, c])
+    (rect,) = [n for n in _shapes(view) if n.type == "polygon"]
+    parent = rect.parent
+    # a corner pulled up 0.5 (what a vertical dimension did there)
+    i = min(range(4), key=lambda k: abs(rect.params["x"]
+                                        + rect.params["points"][k][0] - b[0]))
+    bx = rect.params["x"] + rect.params["points"][i][0]
+    by = rect.params["y"] + rect.params["points"][i][1]
+    sc.add(m, parent, "fix", ["%s.v%d" % (sc.ref_of(parent, rect, "")
+                                         .rstrip("."), i)])
+    rows = sc.rows(parent)
+    rows[-1]["at"] = [bx, by - 0.5]
+    sc.solve(parent, rows)
+    pts = [(rect.params["x"] + p[0], rect.params["y"] + p[1])
+           for p in rect.params["points"]]
+    for k in range(4):
+        p0, p1, p2 = pts[k - 1], pts[k], pts[(k + 1) % 4]
+        u = (p0[0] - p1[0], p0[1] - p1[1])
+        v = (p2[0] - p1[0], p2[1] - p1[1])
+        assert abs(u[0] * v[0] + u[1] * v[1]) < 1e-4, (k, pts)

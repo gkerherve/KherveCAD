@@ -408,6 +408,22 @@ def finish(scene):
         # drawn level / upright: it stays so (Horizontal / Vertical, as
         # the Line tool does) — a dimension to one end tilted it
         _slot_relations(scene, node, snaps)
+    if tool == sketch_tools2.RECT_3PT and node is not None \
+            and node.type == "polygon" and node.parent is not None:
+        # SolidWorks' 3 Point Corner Rectangle carries its Parallel /
+        # Perpendicular relations: a Smart Dimension on one corner moved
+        # it alone and the tilted half tube of Exercise 010 revolved
+        # into a cone (2026-11-22)
+        from . import sketch_constraints as sc
+        parent = node.parent
+        ref = sc.ref_of(parent, node, "").rstrip(".")
+        for kind, e1, e2 in (("perpendicular", 0, 1), ("parallel", 0, 2),
+                             ("parallel", 1, 3)):
+            try:
+                sc.add(scene.model, parent, kind,
+                       ["%s.e%d" % (ref, e1), "%s.e%d" % (ref, e2)])
+            except (ValueError, KeyError):
+                pass
     if tool == RECT_CENTER and node is not None and node.parent is not None \
             and abs(pts[0][0]) < 1e-6 and abs(pts[0][1]) < 1e-6:
         # drawn from the origin: its centre stays there, as SolidWorks
