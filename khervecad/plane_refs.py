@@ -187,11 +187,19 @@ def adopt(window, container):
                 continue
             if r["kind"] == "on_edge":
                 e = r["edge"]
+                ang = _dir((e[0], e[1]), (e[2], e[3]))
+                # a section edge ALONG it: both ends on its line, and
+                # running its way (a sliver across a line has both ends
+                # on it too — Exercise 010, the dome's axis)
                 hit = next((s for s in segs
                             if abs(_off(((e[0], e[1]), (e[2], e[3])),
                                         s[0])[0]) < ON
                             and abs(_off(((e[0], e[1]), (e[2], e[3])),
-                                         s[1])[0]) < ON), None)
+                                         s[1])[0]) < ON
+                            and math.dist(*s) > ON
+                            and min(_turn(_dir(*s), ang),
+                                    _turn(_dir(*s), ang + math.pi))
+                            < ANGLE_TOL), None)
                 if hit is None:
                     continue
                 r["edge"] = _flat(hit)
