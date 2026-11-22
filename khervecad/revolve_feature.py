@@ -195,6 +195,28 @@ def _main_plane_reuse(window, root):
     return frame, scope, body
 
 
+def _all_bodies(window, scope, body):
+    """The Object's bodies as ONE node a cut can go round: SolidWorks'
+    cut takes every body it meets (Exercise 010: the tilted tube, a body
+    of its own, stood inside the dome's hollow). *body* alone when it is
+    the only one."""
+    from . import meshedit_ui
+    try:
+        nodes = [p[0] for p in meshedit_ui._parts(window)
+                 if p[0].parent is scope]
+    except Exception:
+        return None
+    if body not in nodes:
+        nodes.append(body)
+    if len(nodes) < 2:
+        return body
+    nodes.sort(key=lambda n: scope.children.index(n))
+    group = window.model.wrap_nodes(nodes, "union")
+    if group is not None:
+        group.name = "Bodies"
+    return group
+
+
 def reuse(window, source, face_list, picked, kind, part=None):
     """A Revolved Boss / Cut made from picked REGIONS of a sketch another
     feature already used (2026-11-22, "Model Mania" pipe body: Revolve1
@@ -226,9 +248,11 @@ def reuse(window, source, face_list, picked, kind, part=None):
                 "inside": [face_list[i][2] for i in picked],
                 regions2d.SOURCE: root.name},
                 parent=holder, name=model.unique_name("regions"))
+            if kind not in cut_feature.BOSS and part is None:
+                part = _all_bodies(window, scope, body) or body
             return cut_feature.apply(
                 model, holder,
-                None if kind in cut_feature.BOSS else (part or body), kind)
+                None if kind in cut_feature.BOSS else part, kind)
     if kind not in cut_feature.BOSS and part is None:
         # (no earlier part: the sketch's own group IS the part, it holds
         # the first revolve)

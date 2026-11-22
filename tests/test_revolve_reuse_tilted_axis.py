@@ -214,3 +214,45 @@ def test_a_revolved_cut_reuses_a_sketch_drawn_on_a_main_plane(ex):
     QApplication.processEvents()
     hollow = math.pi * 1.5 ** 2 * 3.5
     assert _volume(win) == pytest.approx(whole - hollow, rel=0.03)
+
+
+def test_a_reused_revolved_cut_cuts_every_body_of_the_object(ex):
+    """SolidWorks' Cut-Revolve cuts all the part's bodies: Exercise 010's
+    tilted tube (Revolve2, a body of its own in kCAD) reaches into the
+    dome, and the hollow left the tube's inside standing in the cavity."""
+    from khervecad import revolve_feature, sketch_regions
+    win = ex.win
+    win._interface_style = "SolidWorks"
+    m = win.model
+    comp = m.add_node("component", {}, name="Body")
+    win.builder.open_component(comp)
+    QApplication.processEvents()
+    front = m.add_node("rotate", dict(x=90.0, y=0.0, z=0.0), parent=comp,
+                       name="Front sketch")
+    for a, b in (((0, 0), (2, 0)), ((2, 0), (2, 4)), ((2, 4), (0, 4)),
+                 ((0, 4), (0, 0)),
+                 ((1.5, 0), (1.5, 3.5)), ((1.5, 3.5), (0, 3.5))):
+        m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                width=0.01), parent=front)
+    ax = m.add_node("line", dict(x1=0, y1=0, x2=0, y2=4, width=0.01),
+                    parent=front)
+    ax.params["modifier"] = "%"
+    shapes = [c for c in front.children if c.params.get("modifier") != "%"]
+    assert revolve_feature.revolve(win, shapes) is not None
+    # a second body: a bar through the middle, inside the cavity too
+    bar = m.add_node("translate", dict(x=-0.25, y=-0.25, z=1.0),
+                     parent=comp, name="Bar")
+    m.add_node("cube", dict(width=3.0, depth=0.5, height=0.5),
+               parent=bar)
+    source = next(n for n in m.root.walk() if n.type == "regions")
+    faces = sketch_regions.faces(sketch_regions.shapes_of(source))
+    inner = sketch_regions.face_at(faces, (0.5, 1.0))
+    before = _volume(win)
+    made = revolve_feature.reuse(win, source, faces, [inner],
+                                 "revolved_cut")
+    assert made is not None
+    QApplication.processEvents()
+    body_hollow = math.pi * 1.5 ** 2 * 3.5
+    # the body was solid round the bar: cut right, the bar's part in the
+    # cavity goes with it (left standing, it was 0.44 more)
+    assert _volume(win) == pytest.approx(before - body_hollow, abs=0.15)
