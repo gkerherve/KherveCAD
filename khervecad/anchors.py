@@ -438,6 +438,10 @@ def _seg_dist(p, a, b):
     return math.sqrt(sum((p[i] - closest[i]) ** 2 for i in range(3)))
 
 
+#: neighbouring facets whose normals agree this well are ONE curved face
+SMOOTH_DOT = 0.95
+
+
 def describe_pick(tris, index, point, tol):
     """Classify a picked triangle as a planar **face** or one of its
     **edges**: the coplanar connected face is grown around the hit,
@@ -499,6 +503,9 @@ def describe_pick(tris, index, point, tol):
         others = [i for i in owners if i not in face]
         if others or len(owners) == 1:
             other_n = normals[others[0]] if others else normal
+            if others and all(sum(a * b for a, b in zip(normals[j], normal))
+                              > SMOOTH_DOT for j in others):
+                continue               # a facet seam of a round face
             boundary.append((e, other_n))
 
     hit_edge, hit_dist, hit_other = None, None, None
