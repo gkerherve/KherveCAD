@@ -278,7 +278,10 @@ def snap(scene, raw, start=None, skip=None):
     if getattr(scene, "snap_enabled", False):
         # the grid still rules every coordinate nothing else fixed: a
         # horizontal line's x, a vertical one's y, a 45° line's length
-        g = scene.snap_step() if hasattr(scene, "snap_step") \
+        # the grid is in millimetres: a document in inches (or nm) needs
+        # the zoom-fine step, or a 1.35 in wall lands on 2.5 (Exercise 010)
+        g = scene.snap_step() if hasattr(scene, "snap_step") and \
+            getattr(getattr(scene, "model", None), "unit", "mm") != "mm" \
             else scene.grid_size
         lined = {(round(b.x(), 9), round(b.y(), 9))
                  for _a, b in info["guides"]}
