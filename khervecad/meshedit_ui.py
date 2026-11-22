@@ -1293,6 +1293,21 @@ def _uncheck(window):
         act.blockSignals(False)
 
 
+def _solid_ids(node):
+    """The ids of *node* and everything inside it that is SOLID: what a
+    Difference cuts away (every operand after the first) is left out —
+    selected on its own the tool's raw volume would be drawn as part of
+    the body, and a face sketch's outline took in the whole cutter
+    (2026-11-22: the upright's top came out 322 mm long)."""
+    ids = {node.id}
+    kids = node.children
+    if node.type == "difference":
+        kids = kids[:1]
+    for c in kids:
+        ids |= _solid_ids(c)
+    return ids
+
+
 def _parts(window):
     """``[(node, world triangles)]`` of the parts in view a click could
     choose — the scope's visible children that draw something."""
@@ -1309,7 +1324,7 @@ def _parts(window):
             # lights only its copy, so the original's faces could not be
             # clicked (2026-11-20, the bearing support's mirrored lug)
             tris = mesh.selected_world_tris(
-                root, {n.id for n in child.walk()}, fn=fn)
+                root, _solid_ids(child), fn=fn)
             if tris:
                 out.append((child, tris))
     return out

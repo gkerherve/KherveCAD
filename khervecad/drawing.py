@@ -708,6 +708,55 @@ def _arc(points, closed):
     return (cx, cy), r, start % 360.0, min(sweep, 360.0)
 
 
+def _arcs_in(points, segs, closed):
+    """[(arc, segment indices)]: the arcs hiding in one chain that is not
+    a circle as a whole — an outline whose vertices all meet two edges,
+    so no junction cut it (a section of an upright with a round top: the
+    line runs on into the arc without a break). Runs of consecutive
+    vertices turning the same way by a modest, steady angle."""
+    n = len(points)
+    if n < 8:
+        return []
+    m = n if closed else n - 2          # vertices with both neighbours
+    idx = range(n) if closed else range(1, n - 1)
+    turn = {}
+    for i in idx:
+        a, b, c = points[i - 1], points[i], points[(i + 1) % n]
+        u = (b[0] - a[0], b[1] - a[1])
+        v = (c[0] - b[0], c[1] - b[1])
+        cross = u[0] * v[1] - u[1] * v[0]
+        dot = u[0] * v[0] + u[1] * v[1]
+        t = math.degrees(math.atan2(cross, dot))
+        if 0.5 < abs(t) <= MAX_TURN:
+            turn[i] = t
+    out, seen, i = [], 0, 0
+    order = list(idx)
+    runs, run = [], []
+    for k in order:
+        if k in turn and (not run or (turn[k] > 0) == (turn[run[-1]] > 0)):
+            run.append(k)
+        else:
+            if len(run) >= 3:
+                runs.append(run)
+            run = [k] if k in turn else []
+    if len(run) >= 3:
+        runs.append(run)
+    for run in runs:
+        lo, hi = run[0] - 1, run[-1] + 1            # point indices
+        while hi - lo + 1 >= 4:
+            ids = [j % n for j in range(lo, hi + 1)]
+            pts = [points[j] for j in ids]
+            arc = _arc(pts, False)
+            if arc is not None:
+                edge = [segs[j % len(segs)] for j in range(lo, hi)]
+                out.append((arc, edge))
+                break
+            lo, hi = lo + 1, hi - 1 if (hi - lo) % 2 else hi
+            if (hi - lo) % 2 == 0:
+                hi -= 1
+    return out
+
+
 def find_circles(segments):
     """Round edges among 2D *segments* [((u, v), (u, v))]: a hole or a
     boss seen end-on is a closed ring of short equal chords, a fillet an
@@ -715,10 +764,15 @@ def find_circles(segments):
     Returns [{"centre": (u, v), "r", "closed", "start", "sweep",
     "segments": [indices]}], largest first."""
     found = []
+    pieces = []
     for points, segs, closed in _chains(segments):
         arc = _arc(points, closed)
-        if arc is None:
-            continue
+        if arc is not None:
+            pieces.append((arc, segs, closed))
+        else:                    # an arc inside a longer outline (a round
+            pieces += [(a, sg, False)                    # top on an upright)
+                       for a, sg in _arcs_in(points, segs, closed)]
+    for arc, segs, closed in pieces:
         centre, r, start, sweep = arc
         for other in found:
             if math.hypot(other["centre"][0] - centre[0],

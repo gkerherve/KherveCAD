@@ -187,6 +187,19 @@ def snap(scene, raw, start=None, skip=None):
         d = math.hypot(q.x() - raw.x(), q.y() - raw.y())
         if d <= tol and (best is None or d < best[0]):
             best = (d, q, node, name)
+    if best is not None and start is not None and best[2] is None \
+            and best[3] == "corner":
+        # a corner of the part's outline that is only a facet of a round
+        # edge (an arc's vertex) must not hide the tangent point beside it
+        # (SolidWorks' tangent symbol, 2026-11-22: Exercise 6's rib)
+        tan = _tangent(scene, start, raw, skip, outline, tol)
+        if tan is not None:
+            c = tan[1]
+            if abs(math.hypot(best[1].x() - c["centre"][0],
+                              best[1].y() - c["centre"][1]) - c["r"]) < 1e-3:
+                info["tangent"] = c
+                info["angle"] = None
+                return tan[0], info
     if best is not None:
         _d, q, node, name = best
         info["point"] = (node, name) if node is not None else None

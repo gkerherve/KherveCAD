@@ -279,6 +279,9 @@ def whole_face(group, own, others):
     return segs or None
 
 
+NEAR_COPY = 0.1                    # mm: a point this close is the same one
+
+
 def feature_points(window, group):
     """[(x, y, kind)] the centre, corners and edge middles of every
     earlier FEATURE's own face lying in *group*'s plane (2026-11-10, the
@@ -371,10 +374,12 @@ def show(window, group, part):
         # ... and of each FEATURE's own face in this plane (the user: a
         # boss flush with the base — only the middle of the two together
         # was offered, never the boss's own)
-        have = {(round(x, 3), round(y, 3), k) for x, y, k in points}
+        # a feature's face is meshed a hair off (Manifold's weld, 0.03 mm):
+        # such a near copy of a point already offered would win a click
+        # on the exact corner, so only genuinely new points are added
         for q in feature_points(window, group):
-            if (round(q[0], 3), round(q[1], 3), q[2]) not in have:
-                have.add((round(q[0], 3), round(q[1], 3), q[2]))
+            if not any(k == q[2] and abs(x - q[0]) < NEAR_COPY
+                       and abs(y - q[1]) < NEAR_COPY for x, y, k in points):
                 points.append(q)
     except Exception:                        # never stop the sketch
         import traceback
@@ -399,10 +404,8 @@ def show(window, group, part):
         cut = cut_behind(window, group)
         if cut:
             info["cut"] = cut
-            have = {(round(x, 3), round(y, 3)) for x, y, _k in points}
             info["points"] = points + [
-                q for q in snap_points(cut)
-                if (round(q[0], 3), round(q[1], 3)) not in have]
+                q for q in snap_points(cut) if not _near_any(points, q)]
     except Exception:                        # never stop the sketch
         import traceback
         traceback.print_exc()
@@ -412,6 +415,14 @@ def show(window, group, part):
 
 #: how far behind the face the part is cut for its section (mm)
 CUT_DEPTH = 0.05
+
+
+def _near_any(points, q):
+    """Is a point of *points* within NEAR_COPY of *q* (any kind)? The
+    section a hair behind the face is meshed 0.03 mm off its corners,
+    and such a copy would win a click on the exact corner."""
+    return any(abs(x - q[0]) < NEAR_COPY and abs(y - q[1]) < NEAR_COPY
+               for x, y, _k in points)
 
 
 def cut_behind(window, group):
