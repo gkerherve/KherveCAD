@@ -170,3 +170,12 @@ def test_the_round_face_of_a_cylinder_is_its_axis(win):
     assert ref["kind"] == "line" and abs(ref["dir"][2]) == \
         pytest.approx(1, abs=1e-3)
     assert math.hypot(ref["point"][0] - 30, ref["point"][1] - 5) < 0.05
+
+
+def test_flip_gives_the_other_bisector_of_two_faces():
+    refs = [P((5, 0, 5), (0, 0, 1)), P((10, 0, 2), (1, 0, 0))]
+    _o, n1, _t = pt.compute(refs)
+    o, n2, t = pt.compute(refs, flip=True)
+    assert _on(o, n2, (10, 0, 5)) and _on(o, n2, (10, 7, 5))
+    assert abs(n1[0] * n2[0] + n1[1] * n2[1] + n1[2] * n2[2]) < 1e-9
+    assert t.startswith("Bisects")

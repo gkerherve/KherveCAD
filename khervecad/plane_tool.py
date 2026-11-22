@@ -121,6 +121,9 @@ def compute(refs, distance=10.0, flip=False, angle=90.0):
             # from each other, so it is the difference that lies between
             diff, summ = _sub(n1, n2), _add(n1, n2)
             n = _unit(diff if _len(diff) >= _len(summ) else summ)
+            if flip:                      # the OTHER bisector of the pair
+                n = _unit(summ if n is not None and
+                          _len(diff) >= _len(summ) else diff)
             return _tidy(p), _tidy(n), "Bisects %s and %s" % (
                 a["text"], b["text"])
         if planes and lines:
@@ -271,7 +274,8 @@ def _refresh(window):
     angled = "plane" in kinds and "line" in kinds and \
         "Through" in text and "°" in text
     panel.show_row("distance", offset)
-    panel.show_row("flip", offset)
+    bisect = kinds == ["plane", "plane"] and "Bisects" in text
+    panel.show_row("flip", offset or bisect)
     panel.show_row("angle", angled)
     panel.set_ok_enabled(st["result"] is not None)
     panel.adjustSize()
