@@ -1048,6 +1048,14 @@ def _smart(first, second):
             sketch_arc.is_arc(first[0])
         return ("radius" if arc or str(first[1]).startswith("a") else
                 "diameter"), [first]
+    for a, b in ((first, second), (second, first)):
+        if a[2] == "point" and a[1] == "c" and b[2] == "circle" and \
+                b[0] is a[0] and b[1] == "o":
+            # a circle's / arc's own centre and its rim: the radius
+            # (SolidWorks). It was the distance from a point to itself,
+            # nothing was made, and the value typed for it went to the
+            # next dimension of the session (Exercise 170's R20 lug)
+            return "radius", [b]
     if k1 == "circle":
         first = _centre(first)
         k1 = "point"

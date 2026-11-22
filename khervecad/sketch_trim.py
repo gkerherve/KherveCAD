@@ -689,6 +689,22 @@ def trim_piece(model, node, click):
         node.params = params
         model.structure_changed.emit()
         model.node_changed.emit(node)
+        # the arc's new ends sit on the ends of the lines that trimmed it:
+        # tie them there (Coincident only — an end ON another circle is a
+        # fact of the moment a fillet would then have to undo), or a later
+        # dimension (a new radius, a distance to its centre) pulls the arc
+        # off its lines (Exercise 170's lug)
+        try:
+            from . import sketch_constraints as sc
+            from . import sketch_touch
+            for kind, refs in sketch_touch.found(node.parent, node):
+                if kind == "coincident":
+                    try:
+                        sc.add(model, node.parent, kind, refs)
+                    except (ValueError, KeyError):
+                        pass
+        except Exception:                   # pragma: no cover
+            pass
         return "opened"
     if lo <= 1e-9 and hi >= 1 - 1e-9:
         model.remove_node(node)
