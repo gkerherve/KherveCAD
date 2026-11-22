@@ -1174,6 +1174,33 @@ def overlap_container(window, nodes):
     return None
 
 
+def self_closed(shapes, tol=2e-3):
+    """True when the sketch has lines and every line end lies on another
+    shape (an end, a circle's rim or a line): nothing is left loose for
+    the part's outline to close."""
+    lines = [s for s in shapes if s.type == "line"]
+    if not lines:
+        return False
+    circles = [s for s in shapes if s.type == "circle"]
+    ends = []
+    for s in lines:
+        p = s.params
+        ends.append((s, (p["x1"], p["y1"])))
+        ends.append((s, (p["x2"], p["y2"])))
+
+    def on_shape(owner, pt):
+        for o, q in ends:
+            if o is not owner and math.dist(pt, q) < tol:
+                return True
+        for c in circles:
+            cp = c.params
+            d = math.hypot(pt[0] - cp["x"], pt[1] - cp["y"])
+            if abs(d - cp["radius"]) < tol:
+                return True
+        return False
+    return all(on_shape(s, pt) for s, pt in ends)
+
+
 def start_3d(window, container=None, make_only=False, cut=False,
              window_at_once=False, on_nothing=None, preselect=None):
     """Pick regions on the 3D view: the region under the mouse lights
@@ -1196,8 +1223,16 @@ def start_3d(window, container=None, make_only=False, cut=False,
     # the parts' outline at the sketch's plane closes areas with its
     # lines (the user's line across the lever, "select the top")
     from . import sketch_section
-    shapes, ghost = sketch_section.with_section(
-        window, container, shapes_of(container))
+    own = shapes_of(container)
+    if not cut and self_closed(own):
+        # every line already ends on another shape: the sketch closes its
+        # own areas, and the part's outline only swallows the thin ones
+        # (the slivers between a tangent line and two circles - the
+        # flange of Exercise 010)
+        shapes, ghost = list(own), None
+    else:
+        shapes, ghost = sketch_section.with_section(
+            window, container, own)
     face_list = faces(shapes)
     if not face_list:
         return False
