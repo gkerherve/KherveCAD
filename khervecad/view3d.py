@@ -1114,6 +1114,8 @@ class View3D(QWidget):
         best = None
         for p in getattr(self, "pick_points", None) or []:
             q = projector(p)
+            if q is None:                  # behind the camera
+                continue
             d = ((q[0] - x) ** 2 + (q[1] - y) ** 2) ** 0.5
             if d <= 9 and (best is None or d < best[0]):
                 best = (d, p)
