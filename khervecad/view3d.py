@@ -1066,9 +1066,13 @@ class View3D(QWidget):
         start)``, else None (also when *key*'s group is no slab)."""
         from . import anchors
 
-        def numbered(k):                  # start_any's (sketch, region)
-            return isinstance(k, tuple) and bool(k) and \
-                isinstance(k[0], int)
+        def numbered(k):
+            # start_any's (sketch, region), feature pick's ("region",
+            # sketch, region) — the Boss / Cut bar's regions tie too
+            # (Exercise 010: Sketch1's inner region under the bore
+            # sketch's part section, one Front plane)
+            return isinstance(k, tuple) and bool(k) and (
+                isinstance(k[0], int) or k[0] == "region")
         if not numbered(key):
             return None
         start = 0

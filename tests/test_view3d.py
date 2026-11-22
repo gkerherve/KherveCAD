@@ -713,3 +713,29 @@ def test_projection_persists(app):
         assert View3D().projection == "Orthographic"
     finally:
         settings.setValue("render_projection", saved)
+
+
+def _slab(y, x0, x1, z0, z1):
+    a, b, c, d = (x0, y, z0), (x1, y, z0), (x1, y, z1), (x0, y, z1)
+    # facing -Y (the camera), both windings drawn by the region overlay
+    return [(a, c, b), (a, d, c)]
+
+
+def test_a_boss_or_cut_pick_gives_coplanar_regions_to_the_sketch_listed_first(app):
+    """Feature pick's ("region", sketch, region) keys tie on one plane as
+    start_any's numbered ones do: the sketch listed FIRST takes the click
+    (2026-11-22, Exercise 010's Cut-Revolve: Sketch1's inner region lay
+    under the bore sketch's part-section region on the same Front plane,
+    0.02 nearer — the click went to the bore sketch)."""
+    view = View3D()
+    view.resize(400, 400)
+    view.set_mesh(_cube(40.0), "test")
+    view.yaw, view.pitch = -90.0, 0.0
+    view.fit()
+    first = ("region", 0, 2)
+    other = ("region", 2, 0)
+    view._pick_groups = [(first, _slab(0.0, 0.0, 11.0, 0.0, 30.0)),
+                         (other, _slab(-0.2, -14.0, 14.0, -1.0, 34.0))]
+    q = view._project(*view._camera(), (8.5, 0.0, 4.5))
+    _desc, key = view._pick_at(q[0], q[1])
+    assert key == first
