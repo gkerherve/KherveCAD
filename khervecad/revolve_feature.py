@@ -167,6 +167,34 @@ def revolve(window, nodes):
     return tool
 
 
+def _main_plane_reuse(window, root):
+    """For a used sketch drawn on a MAIN plane (no face-sketch group: a
+    plain rotate frame round it, 2026-11-22, Exercise 010's Sketch1):
+    ``(the sketch frame as a 4x4 in the Object, the Object, the body
+    there that holds the sketch's revolve)``, or None. The frame is the
+    one above the revolve's own turns."""
+    from . import mesh
+    scope = window._render_scope()[0]
+    rev = root.parent
+    while rev is not None and rev.type != "rotate_extrude":
+        rev = rev.parent
+    if rev is None or scope is None:
+        return None
+    top = rev
+    while top.parent is not None and top.parent is not scope and \
+            top.parent.type in ("rotate", "translate") and \
+            "Revolve" in top.parent.name:
+        top = top.parent
+    body = top
+    while body.parent is not None and body.parent is not scope:
+        body = body.parent
+    if body.parent is not scope:
+        return None
+    m = mesh.ancestor_matrix(top, {}, stop=scope)
+    frame = [[round(float(v), 9) for v in row] for row in m]
+    return frame, scope, body
+
+
 def reuse(window, source, face_list, picked, kind, part=None):
     """A Revolved Boss / Cut made from picked REGIONS of a sketch another
     feature already used (2026-11-22, "Model Mania" pipe body: Revolve1
@@ -186,6 +214,21 @@ def reuse(window, source, face_list, picked, kind, part=None):
            for n in model.root.walk()):
         root.name = model.unique_name("regions")
     group = face_sketch.group_of(root)
+    if group is None:
+        main = _main_plane_reuse(window, root)
+        if main is not None:
+            frame, scope, body = main
+            holder = model.add_node("multmatrix", {"matrix": frame},
+                                    parent=scope, name="Revolve sketch")
+            model.add_node("regions", {
+                "seeds": [sketch_regions.seed(face_list[i][0])
+                          for i in picked],
+                "inside": [face_list[i][2] for i in picked],
+                regions2d.SOURCE: root.name},
+                parent=holder, name=model.unique_name("regions"))
+            return cut_feature.apply(
+                model, holder,
+                None if kind in cut_feature.BOSS else (part or body), kind)
     if kind not in cut_feature.BOSS and part is None:
         # (no earlier part: the sketch's own group IS the part, it holds
         # the first revolve)

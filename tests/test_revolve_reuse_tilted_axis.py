@@ -134,3 +134,83 @@ def test_revolve_about_a_tilted_construction_line_renders_in_openscad(ex):
                          text=True).stderr
     assert "across the Y axis" not in out, out[-400:]
     assert os.path.getsize(stl) > 500
+
+
+def test_the_used_sketch_regions_show_on_their_plane_not_turned(ex):
+    """The Revolved Cut's clickable regions of the sketch Revolve1 used lie
+    on that sketch's plane (2026-11-22, Exercise 010 by mouse): they were
+    drawn through the revolve's own turns — lying flat by the base — so
+    the inner region could not be clicked."""
+    from khervecad import choice_preview, feature_pick, sketch_regions
+    win = ex.win
+    comp = win.model.add_node("component", {}, name="Pipe body")
+    win.builder.open_component(comp)
+    QApplication.processEvents()
+    t = math.tan(math.radians(22.5))
+    sk = ex.execute("reference_geometry", dict(
+        action="sketch", origin=[0, 0, 0], normal=[0, -1, 0]))["sketch_id"]
+    for a, b in (((0, 0), (2, 0)), ((2, 0), (2, 2)), ((0, 4), (0, 0)),
+                 ((0, 0), (1.5, 0)), ((1.5, 0), (1.5, 2))):
+        _seg(ex, sk, a, b)
+    _seg(ex, sk, (2, 2), (0, 4), t)
+    _seg(ex, sk, (1.5, 2), (0, 3.5), t)
+    # its centreline up the axis, as Sketch1 has (the revolve turns
+    # about it: the regions sat inside those turns)
+    axis = _seg(ex, sk, (0, 0), (0, 4.5))
+    ex.execute("sketch_modify", dict(action="construction", node_id=axis))
+    ex.execute("sketch_feature", dict(
+        node_id=sk, kind="revolved_boss",
+        regions=[[1.75, 1.0], [0.5, 1.0]]))
+    win._feature_pick = None
+    feature_pick.start(win, "revolved_cut")
+    sketches, items = choice_preview.region_items(win)
+    source = next(n for n in win.model.root.walk() if n.type == "regions")
+    ci = sketches.index(source)
+    faces = sketch_regions.faces(sketch_regions.shapes_of(source))
+    inner = sketch_regions.face_at(faces, (0.5, 1.0))
+    (label,) = [at for c, k, _w, at, _n, _t in items
+                if c == ci and k == inner]
+    # on the Front plane (y = 0), where the sketch was drawn: x right, z up
+    assert abs(label[1]) < 0.1, label
+    assert 0.0 < label[0] < 1.5 and 0.0 < label[2] < 3.5, label
+
+
+def test_a_revolved_cut_reuses_a_sketch_drawn_on_a_main_plane(ex):
+    """Sketch1 of Exercise 010 is drawn on the FRONT PLANE (no face-sketch
+    group, a plain rotate frame): the Cut-Revolve on its inner region
+    made nothing ("nothing made from that region") — reuse looked for a
+    face-sketch group to place the cut in."""
+    from khervecad import revolve_feature, sketch_regions
+    win = ex.win
+    win._interface_style = "SolidWorks"
+    m = win.model
+    comp = m.add_node("component", {}, name="Body")
+    win.builder.open_component(comp)
+    QApplication.processEvents()
+    front = m.add_node("rotate", dict(x=90.0, y=0.0, z=0.0), parent=comp,
+                       name="Front sketch")
+
+    def seg(a, b, cons=False):
+        n = m.add_node("line", dict(x1=a[0], y1=a[1], x2=b[0], y2=b[1],
+                                    width=0.01), parent=front)
+        if cons:
+            n.params["modifier"] = "%"
+        return n
+    seg((0, 0), (0, 4), cons=True)
+    for a, b in (((0, 0), (2, 0)), ((2, 0), (2, 4)), ((2, 4), (0, 4)),
+                 ((0, 4), (0, 0)),
+                 ((1.5, 0), (1.5, 3.5)), ((1.5, 3.5), (0, 3.5))):
+        seg(a, b)
+    shapes = [c for c in front.children if c.params.get("modifier") != "%"]
+    tool = revolve_feature.revolve(win, shapes)
+    assert tool is not None
+    whole = _volume(win)
+    source = next(n for n in m.root.walk() if n.type == "regions")
+    faces = sketch_regions.faces(sketch_regions.shapes_of(source))
+    inner = sketch_regions.face_at(faces, (0.5, 1.0))
+    made = revolve_feature.reuse(win, source, faces, [inner],
+                                 "revolved_cut")
+    assert made is not None
+    QApplication.processEvents()
+    hollow = math.pi * 1.5 ** 2 * 3.5
+    assert _volume(win) == pytest.approx(whole - hollow, rel=0.03)
