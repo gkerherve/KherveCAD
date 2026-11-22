@@ -131,7 +131,7 @@ def compute(refs, distance=10.0, flip=False, angle=90.0):
             n = _unit(pl["dir"])
             d = _unit(ln["dir"])
             a = ln["point"]
-            if abs(_dot(d, n)) < 1e-3:
+            if abs(_dot(d, n)) < 1e-2:
                 b = _add(a, d)
                 o, nn = refgeom.plane_at_angle(a, b, n, angle)
                 return _tidy(o), _tidy(nn), "Through %s at %g° to %s" % (

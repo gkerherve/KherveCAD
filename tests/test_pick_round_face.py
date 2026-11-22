@@ -33,3 +33,18 @@ def test_the_axis_of_a_cylinder_with_a_dome_grown_into_it_is_still_straight():
     p, d = refgeom.axis_of_cylinder(side + dome)
     assert abs(d[0]) < 1e-3 and abs(d[1]) < 1e-3 and abs(d[2]) > 0.9999
     assert abs(p[0]) < 0.05 and abs(p[1]) < 0.05
+
+
+def test_an_axis_a_hair_off_the_z_axis_snaps_to_it():
+    import math
+    from khervecad import refgeom
+    cyl = mesh.tessellate(scadparse.parse_scad(
+        "cylinder(r = 30, h = 40, $fn = 48);")[0])
+    side = [t for t in cyl if abs(t[0][2] - t[1][2]) > 1e-6 or
+            abs(t[1][2] - t[2][2]) > 1e-6]
+    a = 0.0004
+    tilt = [[(v[0], v[1] * math.cos(a) - v[2] * math.sin(a),
+              v[1] * math.sin(a) + v[2] * math.cos(a)) for v in t]
+            for t in side]
+    _p, d = refgeom.axis_of_cylinder(tilt)
+    assert d == (0.0, 0.0, 1.0) or tuple(abs(x) for x in d) == (0.0, 0.0, 1.0)

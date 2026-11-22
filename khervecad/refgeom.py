@@ -241,6 +241,10 @@ def axis_of_cylinder(tris):
     p = cu * e1 + cv * e2 + along * d
     if d[int(np.argmax(np.abs(d)))] < 0:
         d = -d
+    k = int(np.argmax(np.abs(d)))
+    if abs(d[k]) > math.cos(math.radians(0.3)):   # a hair off a main axis
+        d = np.zeros(3)
+        d[k] = 1.0
     return _tidy(p), _tidy(d)
 
 
