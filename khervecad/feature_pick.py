@@ -230,6 +230,7 @@ def toggled(window, key, on):
 # ------------------------------------------------------------ the pick
 #: the kinds whose region click picks REGIONS (the others take a sketch)
 EXTRUDED = ("extruded_boss", "extruded_cut")
+REVOLVED = ("revolved_boss", "revolved_cut")
 #: Sketch Mode's own kind: a face, a sketch or a plane opens a sketch
 #: and nothing more is made (2026-11-13, the user)
 SKETCH = "sketch"
@@ -263,8 +264,11 @@ def start(window, kind):
         # a Revolved / Swept / Lofted Boss or Cut takes a WHOLE sketch no
         # feature uses yet (an extruded one's regions are Extrude's)
         from . import sketch_regions
+        # (a Revolved Boss / Cut may also take ONE REGION of a sketch a
+        # feature used already: Revolve1 turns the outer contour, the
+        # Cut-Revolve the inner region)
         free = {ci for ci, sk in enumerate(sketches)
-                if not sketch_regions.used(sk)}
+                if kind in REVOLVED or not sketch_regions.used(sk)}
         items = [it for it in items if it[0] in free]
     # planes off for a Boss / Cut (the user); on for Sketch Mode, where
     # they were the whole choice — and whenever there is nothing else
@@ -489,12 +493,38 @@ def _use_region(window, pick, ci, k):
     if kind == SKETCH:
         _edit_sketch(window, sketch)
         return
+    if kind in REVOLVED and sketch_regions.used(sketch):
+        _use_used_region(window, pick, sketch, k)
+        return
     if kind not in EXTRUDED:
         _use_sketch(window, pick, sketch)
         return
     stop(window)
     QTimer.singleShot(0, lambda: sketch_regions.start_3d(
         window, sketch, cut=kind == "extruded_cut", preselect=k))
+
+
+def _use_used_region(window, pick, sketch, k):
+    """Revolved Boss / Cut on region *k* of a sketch another feature
+    already used (one sketch, several features)."""
+    from . import revolve_feature, sketch_regions
+    stop(window)
+    made = None
+    try:
+        face_list = sketch_regions.faces(sketch_regions.shapes_of(sketch))
+        made = revolve_feature.reuse(window, sketch, face_list, [k],
+                                     pick["kind"])
+    except Exception:
+        made = None
+    if made is None:
+        window.view3d.flash("%s: nothing made from that region." %
+                            pick["label"], 5000)
+        return None
+    window.builder.active_tree().select_nodes([made])
+    window.statusBar().showMessage(
+        "%s made from a region of %s — set its numbers in Properties." % (
+            pick["label"], sketch.name), 6000)
+    return made
 
 
 def _use_sketch(window, pick, sketch):

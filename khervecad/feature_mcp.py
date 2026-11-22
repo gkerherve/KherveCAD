@@ -34,7 +34,11 @@ def run(window, args) -> dict:
         args = dict(args, regions=[args["region"]])
     if args.get("regions") and cut_feature.ALL[kind][1] == "linear_extrude":
         return _regions(window, group, kind, args)
-    part = _find(window, args["part_id"]) if "part_id" in args else None
+    if args.get("regions") and cut_feature.ALL[kind][1] == "rotate_extrude":
+        done = _revolve_regions(window, group, kind, args)
+        if done is not None:
+            return done
+    part =_find(window, args["part_id"]) if "part_id" in args else None
     if part is None and kind not in cut_feature.BOSS:
         from . import face_sketch
         part = face_sketch.part_of(group)
@@ -55,6 +59,41 @@ def run(window, args) -> dict:
     _size(model, ext, args)
     return {"feature_id": made.id, "name": made.name, "kind": kind,
             "extrude_id": ext.id if ext is not None else None}
+
+
+def _revolve_regions(window, group, kind, args):
+    """A Revolved Boss / Cut from the `regions` of a sketch a feature
+    already used (one sketch, several features: Revolve1 turns the outer
+    contour, Cut-Revolve1 the inner region). None when the sketch is not
+    used yet (the ordinary revolve takes the whole sketch)."""
+    from . import revolve_feature, sketch_regions
+    source = None
+    for n in group.walk():
+        if n is not group and n.type == "regions" and \
+                not n.params.get("sketch_of"):
+            source = sketch_regions._regions_of(n)
+            if source is not None:
+                break
+    if source is None:
+        return None
+    shapes = sketch_regions.shapes_of(source)
+    face_list = sketch_regions.faces(shapes) if shapes else []
+    picked = []
+    for p in args["regions"]:
+        i = sketch_regions.face_at(face_list, (float(p[0]), float(p[1])))
+        if i is None:
+            return {"error": "regions: no area of the sketch holds %r "
+                             "(sketch x, y)" % (list(p),)}
+        if i not in picked:
+            picked.append(i)
+    part = _find(window, args["part_id"]) if "part_id" in args else None
+    made = revolve_feature.reuse(window, source, face_list, picked, kind,
+                                 part)
+    if made is None:
+        return {"error": "nothing made from those regions (a cut needs "
+                         "the part: give part_id)"}
+    return {"feature_id": made.id, "name": made.name, "kind": kind,
+            "extrude_id": None, "regions": len(picked)}
 
 
 def _closes_own(group):

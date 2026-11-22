@@ -105,7 +105,16 @@ def use_axis(model, tool, outer, container):
     spin = model.wrap_nodes(inner, "rotate")
     spin.params.update(x=0.0, y=0.0, z=phi)
     spin.name = "To the axis frame"
-    back = model.wrap_nodes([outer], "rotate")
+    # The baked profile points are rounded, the axis is not: a profile
+    # edge lying ON the construction line lands 1e-5 left of x = 0 and
+    # OpenSCAD refuses it ("may not lie across the Y axis"), so the pipe
+    # vanished from the exact render. Clip to the right half-plane.
+    clip = model.wrap_nodes([spin], "difference")
+    if clip is not None:
+        clip.name = "Clip to the axis"
+        model.add_node("rect", dict(x=-1e4, y=-1e4, width=1e4, height=2e4),
+                       parent=clip, name="Left of the axis")
+    back =model.wrap_nodes([outer], "rotate")
     back.params.update(x=0.0, y=0.0, z=-phi)
     back.name = "Revolve about the construction line"
     top = back
@@ -156,3 +165,47 @@ def revolve(window, nodes):
         model.node_changed.emit(outer)
         use_axis(model, tool, outer, container)
     return tool
+
+
+def reuse(window, source, face_list, picked, kind, part=None):
+    """A Revolved Boss / Cut made from picked REGIONS of a sketch another
+    feature already used (2026-11-22, "Model Mania" pipe body: Revolve1
+    turns the outer contour of Sketch1, Cut-Revolve1 turns its inner
+    region — one sketch, several features). *source* is the used sketch's
+    container (a Regions), *face_list* its faces, *picked* indices. A
+    new Regions that names the first one (its seeds, no shapes of its
+    own) goes into a group placed like the sketch's own, which the
+    ordinary revolve / revolved-cut path then turns about the sketch's Y
+    axis (or its construction line). Returns the feature node or None."""
+    from . import cut_feature, face_sketch, regions2d, sketch_regions
+    model = window.model
+    if not picked:
+        return None
+    root = regions2d.sketch_source(source) or source
+    if any(n is not root and n.name == root.name
+           for n in model.root.walk()):
+        root.name = model.unique_name("regions")
+    group = face_sketch.group_of(root)
+    if kind not in cut_feature.BOSS and part is None:
+        # (no earlier part: the sketch's own group IS the part, it holds
+        # the first revolve)
+        part = (face_sketch.part_of(group) or group) \
+            if group is not None else None
+        if part is None:
+            return None
+    host = part.parent if kind not in cut_feature.BOSS else (
+        group.parent if group is not None else root.parent)
+    if host is None:
+        return None
+    holder = model.add_node("union", {}, parent=host, name="Revolve sketch")
+    if group is not None:
+        for key in ("x", "y", "z", "rx", "ry", "rz"):
+            if key in group.params:
+                holder.params[key] = group.params[key]
+        holder.params[face_sketch.KEY] = group.params.get(face_sketch.KEY)
+    model.add_node("regions", {
+        "seeds": [sketch_regions.seed(face_list[i][0]) for i in picked],
+        "inside": [face_list[i][2] for i in picked],
+        regions2d.SOURCE: root.name},
+        parent=holder, name=model.unique_name("regions"))
+    return cut_feature.apply(model, holder, part, kind)
