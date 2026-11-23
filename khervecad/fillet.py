@@ -709,6 +709,22 @@ FACE_TURN_COS = 0.9
 
 
 def face_edges(tris, edges, row, tol=1e-3, box=None, found=None):
+    """The crease edges round the face a row names — flat, or, when the
+    flat one has none (one facet of a dome: every edge round it is
+    smooth), the CURVED face there (2026-11-22, Exercise 010)."""
+    got = _face_edges(tris, edges, row, tol, box, found)
+    if got:
+        return got
+    p, n = row[:3], _unit(row[3:6])
+    normals = [_normal(t) for t in tris]
+    curved = _curved_region(tris, normals, p, n)
+    if not curved:
+        return got
+    return _face_edges(tris, edges, row, tol, box, found, curved=curved)
+
+
+def _face_edges(tris, edges, row, tol=1e-3, box=None, found=None,
+                curved=None):
     """The crease edges round the flat face a [x, y, z, nx, ny, nz] row
     names, holes included: the coplanar triangles joined to the one
     nearest the point, and every crease with that region on one side
@@ -722,6 +738,8 @@ def face_edges(tris, edges, row, tol=1e-3, box=None, found=None):
 
     def centre(t):
         return _mul(_add(_add(t[0], t[1]), t[2]), 1.0 / 3.0)
+    if curved is not None:
+        on = list(curved)
     if on:
         start = min(on, key=lambda i: _len(_sub(centre(tris[i]), p)))
     elif len(row) >= 9 and box is not None:
@@ -780,6 +798,90 @@ def face_edges(tris, edges, row, tol=1e-3, box=None, found=None):
         if sum(1 for x in sides if x in region) == 1:
             out.append(e)
     return out
+
+
+def _sphere_fit(pts):
+    """(centre, radius) of the sphere through *pts* (least squares), or
+    None when they are (nearly) flat or too few."""
+    try:
+        import numpy as np
+    except ImportError:
+        return None
+    if len(pts) < 4:
+        return None
+    a = np.array([[2 * x, 2 * y, 2 * z, 1.0] for x, y, z in pts])
+    b = np.array([x * x + y * y + z * z for x, y, z in pts])
+    try:
+        sol, *_ = np.linalg.lstsq(a, b, rcond=None)
+    except Exception:
+        return None
+    c = sol[:3]
+    r2 = sol[3] + float(c @ c)
+    if r2 <= 0:
+        return None
+    r = math.sqrt(r2)
+    span = max(_len(_sub(q, pts[0])) for q in pts)
+    if r > 50.0 * max(span, 1e-9):
+        return None                       # flat, not a sphere
+    return tuple(float(v) for v in c), r
+
+
+def _curved_region(tris, normals, p, n, cos_min=None):
+    """The triangles of the CURVED face at *p* (facing *n*): grown over
+    smooth edges from the nearest triangle, keeping to the sphere its
+    first neighbours lie on — a dome stops where the tangent cylinder
+    under it begins (SolidWorks' Face<1>). Empty when the face is no
+    sphere."""
+    if cos_min is None:
+        cos_min = math.cos(math.radians(MIN_ANGLE))
+
+    def centre(t):
+        return _mul(_add(_add(t[0], t[1]), t[2]), 1.0 / 3.0)
+    facing = [i for i, m in enumerate(normals) if _dot(m, n) > 0.5]
+    if not facing:
+        return set()
+    start = min(facing, key=lambda i: _len(_sub(centre(tris[i]), p)))
+    by_edge = {}
+    for i, t in enumerate(tris):
+        keys = [_vkey(v) for v in t]
+        for k in range(3):
+            by_edge.setdefault(frozenset((keys[k], keys[(k + 1) % 3])),
+                               []).append(i)
+
+    def smooth_nbrs(i):
+        keys = [_vkey(v) for v in tris[i]]
+        for k in range(3):
+            for j in by_edge.get(frozenset((keys[k], keys[(k + 1) % 3])),
+                                 ()):
+                if j != i and _dot(normals[i], normals[j]) > cos_min:
+                    yield j
+    # the sphere: from the smooth patch round the click
+    patch, todo = {start}, [start]
+    while todo and len(patch) < 40:
+        i = todo.pop(0)
+        for j in smooth_nbrs(i):
+            if j not in patch:
+                patch.add(j)
+                todo.append(j)
+    pts = list({_vkey(v): v for i in patch for v in tris[i]}.values())
+    fit = _sphere_fit(pts)
+    if fit is None:
+        return set()
+    c, r = fit
+    tol = max(1e-4, r * 2e-3)
+
+    def on_sphere(i):
+        return all(abs(_len(_sub(v, c)) - r) < tol for v in tris[i])
+    if not on_sphere(start):
+        return set()
+    region, todo = {start}, [start]
+    while todo:
+        i = todo.pop()
+        for j in smooth_nbrs(i):
+            if j not in region and on_sphere(j):
+                region.add(j)
+                todo.append(j)
+    return region
 
 
 def _place_key(values):
