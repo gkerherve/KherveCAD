@@ -43,6 +43,10 @@ import math
 #: two faces meeting at less than this (degrees) are one smooth surface
 #: — a cylinder's facets, a sphere's — not an edge to fillet
 MIN_ANGLE = 20.0
+#: a triangle whose area / longest side² is under this is a needle
+NEEDLE = 1e-3
+#: a fold sharper than this beside a needle is the needle's stray normal
+NEEDLE_FOLD = 150.0
 
 #: a chain follows the next crease while the turn between consecutive
 #: edges stays under this (degrees): round a rim, stop at a corner
@@ -179,6 +183,15 @@ def crease_edges(tris, min_angle: float = MIN_ANGLE) -> list:
         for k in range(3):
             directed[(keys[k], keys[(k + 1) % 3])] = (i, tri[k],
                                                       tri[(k + 1) % 3])
+    # a NEEDLE (all length, no width: a boolean's leftover) has a normal
+    # pointing anywhere: the folds of 150-180 degrees read off it shredded
+    # Exercise 10's dome fillet with shards — they are no creases
+    needles = set()
+    for i, tri in enumerate(tris):
+        longest = max(_len(_sub(tri[(k + 1) % 3], tri[k])) for k in range(3))
+        area = _len(_cross(_sub(tri[1], tri[0]), _sub(tri[2], tri[0]))) / 2
+        if longest > 0.0 and area / (longest * longest) < NEEDLE:
+            needles.add(i)
     cos_min = math.cos(math.radians(min_angle))
     out = []
     for (ka, kb), (i, a, b) in directed.items():
@@ -193,6 +206,8 @@ def crease_edges(tris, min_angle: float = MIN_ANGLE) -> list:
         if cos > cos_min:
             continue
         angle = math.degrees(math.acos(cos))
+        if angle > NEEDLE_FOLD and (i in needles or j in needles):
+            continue
         convex = _dot(_cross(nl, nr), _sub(b, a)) > 0.0
         out.append(Edge(a, b, nl, nr, angle, convex, i, j))
     return out
@@ -1023,6 +1038,8 @@ def compute(tris, seeds, radius: float, kind: str = "round",
             continue
         seen.add(key)
         runs.append(run)
+        if _too_short(run, float(radius)):
+            continue
         body = strip(run, float(radius), kind, int(detail),
                      section=_chamfer_section(kind, float(radius),
                                               int(detail)))
@@ -1051,6 +1068,17 @@ def compute(tris, seeds, radius: float, kind: str = "round",
     cuts.extend(_corner_pieces(edges, runs, float(radius), kind,
                                int(detail), adds))
     return dict(cuts=cuts, adds=adds, missing=missing, chains=len(seen))
+
+
+def _too_short(run, radius):
+    """An open run shorter than the round itself: a strip there is a nub
+    or a pit, not a fillet — the tessellation's nicks where two faces
+    touch tangentially (Exercise 10's dome tip under the arm tops)."""
+    if run["closed"]:
+        return False
+    pts = run["points"]
+    return sum(_len(_sub(pts[k + 1], pts[k]))
+               for k in range(len(pts) - 1)) < radius
 
 
 #: a strip may reach this many radii past its edge's own box
