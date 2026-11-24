@@ -70,6 +70,9 @@ KINDS = ("round", "chamfer")
 #: it is coplanar with the part (see profile)
 GROW = 0.003
 
+#: how deep (radii) a filler's corner is sunk into the part it fills
+SINK = 0.25
+
 OPERATION = "op"
 
 NODE_TYPES = {
@@ -318,6 +321,15 @@ def profile(edge, radius: float, kind: str, detail: int) -> tuple:
             a = a0 + sweep * k / n
             pts.append((cx + radius * math.cos(a), cy + radius * math.sin(a)))
         pts.append(tr)
+        if not edge.convex:
+            # a FILLER is unioned with the part: sink its corner into
+            # the part, so its flat sides run under the faces. On a
+            # faceted curve the averaged normals tilt a side a few
+            # degrees off the true face, and a hair-thin slot stayed
+            # open between the round and the crease (Exercise 10's
+            # valleys between the arms)
+            bx, by = _unit_2d((1.0 + x_r, y_r))
+            pts[0] = (-bx * SINK * radius, -by * SINK * radius)
     if _area2d(pts) < 0:
         pts = [pts[0]] + pts[1:][::-1]
     # Grow the section a hair about its centroid: its two straight
@@ -1133,7 +1145,16 @@ def _trim_ends(body, run, around):
             if abs(side) < 1e-6:
                 continue                  # the edge runs along it
             n = m if side > 0 else _mul(m, -1.0)
-            planes.append((n, _dot(n, p)))
+            off = _dot(n, p)
+            # only a face the WHOLE edge stands in front of: on a curved
+            # edge (Exercise 10's valley from the dome's top down two
+            # arms) a facet at one end leans back across the crease
+            # further along, and its plane sliced the filler off the
+            # valley, leaving an open slot under the round
+            tol = 1e-6 + 1e-3 * _len(_sub(inner, p))
+            if any(_dot(n, x) - off < -tol for x in run["points"]):
+                continue
+            planes.append((n, off))
     if not planes:
         return body
     try:
