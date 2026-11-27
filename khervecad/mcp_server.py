@@ -140,6 +140,21 @@ A stadium, arena or sports ground is ONE insert_part of a 'Sport: \
 stadiums' part (size = the sport, colour = the seats; rows, upper_rows, \
 roof 0/1/2 and changing as dims) — never hand-build the bowl.
 
+MASS / VOLUME FROM A DRAWING (CAD-competition puzzles, ±0.1 g): \
+mass_properties measures the PREVIEW mesh, and these constructs can come \
+out wrong there WITHOUT an error: a 2D difference inside linear_extrude \
+or a module (the cut is dropped), intersection (ignored, both shapes \
+kept), and modules using children() or list variables such as \
+translate(p) (geometry misplaced). For a mass answer, write FLAT \
+top-level code: no modules, no list variables; every hole, bore, \
+pocket and countersink as a 3D difference of cylinders/cubes; build an \
+arc-bounded region as an explicit polygon, not an intersection. Before \
+modelling, estimate the volume by hand (area x thickness minus holes); \
+if mass_properties differs by more than ~2%, a cut was dropped, so fix \
+it before answering. Never take the material mass from the built-in \
+table (its ABS is 1040 kg/m3): report volume x the drawing's density. \
+Aim for one apply_code, one mass_properties and one render_view.
+
 The tree is the single source of truth:
 - Every node is one OpenSCAD statement. 2D shapes (rect, circle, \
 polygon, text, line), 3D primitives (cube, sphere, cylinder), \
