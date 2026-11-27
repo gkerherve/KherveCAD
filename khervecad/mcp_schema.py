@@ -4148,9 +4148,12 @@ TOOLS = [
             "for a mm, cm or inch document only — material cost and a "
             "print-time estimate (rough). Without node_ids: the whole "
             "scope. When the preview only approximates the booleans, the "
-            "whole scope or a single node is rendered EXACTLY by OpenSCAD "
-            "first (`exact: true`); `approximate` true means it could not "
-            "be, so do not trust that mass."
+            "whole scope or the named nodes (one or several, as a union) "
+            "are rendered EXACTLY by OpenSCAD first (`exact: true`); "
+            "`approximate` true means they could not be, so do not trust "
+            "that mass. A drawing's own density goes in density_kg_m3 "
+            "(it wins over the material's); set_document_material puts "
+            "the material in the status bar's mass readout."
         ),
         "input_schema": _obj({
             "node_ids": _IDS,
@@ -4163,6 +4166,17 @@ TOOLS = [
                                         "is answered with the full list."},
             "price_per_kg": {"type": "number",
                              "description": "Default 20."},
+            "density_kg_m3": {"type": "number",
+                              "description": "Density to use for mass_g "
+                                             "instead of the material's "
+                                             "(e.g. 1020 for a drawing's "
+                                             "ABS)."},
+            "set_document_material": {"type": "boolean",
+                                      "description": "Also make `material` "
+                                                     "the document's "
+                                                     "material, shown with "
+                                                     "the mass in the "
+                                                     "status bar."},
         }),
     },
     {

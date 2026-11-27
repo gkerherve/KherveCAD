@@ -3482,10 +3482,14 @@ class McpToolExecutor:
         if not eng.available:
             return None
         ids = params.get("node_ids")
-        if ids and len(nodes) != 1:
-            return None
         if ids:
-            code = self._model.subtree_scad(nodes[0])
+            # several nodes render as one union, so a part checked piece
+            # by piece is as exact as the whole (2026-11-27)
+            # (each in place: subtree_scad would move it to its origin)
+            code = self._model.subtree_scad(nodes[0]) if len(nodes) == 1 \
+                else "union() {\n" + "\n".join(
+                    self._model.to_scad_map(only=n)[0] for n in nodes) \
+                + "\n}\n"
         else:
             iso = self._w._render_scope()[0]
             code = (self._model.to_scad() if iso is self._model.root
@@ -3511,6 +3515,16 @@ class McpToolExecutor:
         if material not in analysis.choices():
             raise ToolError("Unknown material. Choose one of: "
                             + ", ".join(analysis.choices()))
+        density = params.get("density_kg_m3")
+        if density is not None:
+            density = float(density)
+            if density <= 0:
+                raise ToolError("density_kg_m3 must be above 0.")
+        if params.get("set_document_material"):
+            if material == analysis.UNDEFINED:
+                raise ToolError("set_document_material needs a material.")
+            from . import massbar     # the status bar's mass readout
+            massbar.set_material(self._w, material)
         price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
         exact = self._exact_tris(params, nodes) if approx else None
         if exact:
@@ -3518,7 +3532,8 @@ class McpToolExecutor:
         p = analysis.mass_properties(analysis.united(tris))
         unit = self._unit()
         volume_mm3 = units.mm(p["volume"], unit, 3)
-        grams = analysis.mass(volume_mm3, material)
+        grams = (volume_mm3 * density / 1e6 if density is not None
+                 else analysis.mass(volume_mm3, material))
         out = {"nodes": [n.id for n in nodes], "unit": unit,
                "volume": round(p["volume"], 3),
                "area": round(p["area"], 3),
@@ -3530,8 +3545,13 @@ class McpToolExecutor:
                "size": [round(v, 3) for v in p["size"]],
                "material": material,
                "mass_g": (None if material == analysis.UNDEFINED
+                          and density is None
                           else round(grams, 2) if abs(grams) >= 0.01
                           else units.significant(grams)),
+               "density_kg_m3": (density if density is not None
+                                 else None if material == analysis.UNDEFINED
+                                 else analysis.MATERIALS.get(material, 0.0)
+                                 * 1000),
                "price_per_kg": price,
                "approximate": approx,
                "exact": bool(exact)}

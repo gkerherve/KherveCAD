@@ -13,6 +13,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import (QComboBox, QDialog, QDialogButtonBox,
@@ -497,6 +499,14 @@ def design_saved(window, path):
     spoil the save itself."""
     if not autosave_enabled():
         return None
+    # a document saved INTO the library already is a library design:
+    # copying it again put a duplicate in whichever area the copy guessed
+    # (top level, Vacuum & UHV...), one per save (2026-11-27)
+    try:
+        Path(path).resolve().relative_to(user_library.folder().resolve())
+        return None
+    except (ValueError, OSError):
+        pass
     from . import library
     try:
         saved = user_library.save_design(window.model, path)
