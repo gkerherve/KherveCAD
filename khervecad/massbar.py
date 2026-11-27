@@ -1,11 +1,12 @@
 """Mass in the status bar (2026-10-27) — SolidWorks shows the part's mass
-properties as you work; here a status-bar button reads
+properties as you work; here a status-bar label reads
 
     Mass 52.4 g · 42.3 cm³ · PLA
 
 for the selection (else everything in view), updated half a second
-after the model or the selection changes. A click opens the material
-list (analysis.MATERIALS); the choice is the document's, kept on the
+after the model or the selection changes. It is an indication only
+(2026-11-27, the user: no buttons in the status bar); the material is
+picked in the tree or in Options from analysis.MATERIALS; the choice is the document's, kept on the
 root as ``params["mass_material"]`` (so it saves and undoes with the
 document) and used by this readout. `readout` is the arithmetic.
 
@@ -59,14 +60,12 @@ def readout(tris, unit="mm", material=None):
 
 def install(window):
     from PyQt5.QtCore import QTimer
-    from PyQt5.QtWidgets import QToolButton
-    btn = QToolButton(window)
-    btn.setObjectName("mass_readout")
-    btn.setAutoRaise(True)
-    btn.setToolTip(language.tr(
+    from PyQt5.QtWidgets import QLabel
+    btn = QLabel(window)                 # an indication only, not a button:
+    btn.setObjectName("mass_readout")    # the material is chosen in the
+    btn.setToolTip(language.tr(          # tree or in Options
         "Mass of the selection (or everything in view), solid, in the "
-        "document's material — click to choose the material."))
-    btn.clicked.connect(lambda: choose(window))
+        "document's material."))
     window.statusBar().addPermanentWidget(btn)
     timer = QTimer(window)
     timer.setSingleShot(True)
