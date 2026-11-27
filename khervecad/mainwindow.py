@@ -894,7 +894,7 @@ class MainWindow(QMainWindow):
         # as long as a message is up
         def cursor_shows(text, label=self._cursor_label):
             try:
-                label.setVisible(not text)
+                label.setVisible(False)  # x / y not shown (the user)
             except RuntimeError:         # the window is going: no label
                 pass
         self.statusBar().messageChanged.connect(cursor_shows)
@@ -912,6 +912,7 @@ class MainWindow(QMainWindow):
         # the status bar is for the model (size, volume, material, mass)
         self._zoom_label.hide()
         self._engine_label.hide()
+        self._cursor_label.hide()        # x / y: mostly zero, not needed
         self._update_title()                   # fills the file label
 
     def _cursor_moved(self, p):
@@ -3349,8 +3350,10 @@ class MainWindow(QMainWindow):
         label = getattr(self, "_file_label", None)
         if label is not None:
             if self._path:
+                # the name only, to keep the bar narrow; the full path is
+                # in the tooltip
                 label.setText(language.tr("File: {star}{path}").format(
-                    star=star, path=self._path))
+                    star=star, path=Path(self._path).name))
                 label.setToolTip(str(self._path))
             else:
                 label.setText(language.tr(
