@@ -239,6 +239,7 @@ class MainWindow(QMainWindow):
         from . import massbar, refgeom_ui
         refgeom_ui.install(self)          # planes / axes / points in 3D
         massbar.install(self)             # mass of the selection, live
+        self._status_bar_one_font()
         # help you can see while using the menus (macOS menus never show
         # tooltips) and a clear word when an operation needs a selection
         from . import toolguide
@@ -955,6 +956,18 @@ class MainWindow(QMainWindow):
         if button is not None:
             button.setChecked(True)
         self.view2d.viewport().update()
+
+    def _status_bar_one_font(self):
+        """Every readout in the status bar (file, size, mass...) takes the
+        x / y label's font: a QToolButton (the mass readout) is otherwise
+        drawn in macOS's smaller control font."""
+        from PyQt5.QtWidgets import QAbstractButton, QLabel
+        font = self._cursor_label.font()
+        bar = self.statusBar()
+        for w in bar.findChildren(QLabel) + bar.findChildren(QAbstractButton):
+            w.setAttribute(Qt.WA_MacSmallSize, False)
+            w.setAttribute(Qt.WA_MacMiniSize, False)
+            w.setFont(font)
 
     def _refresh_engine_label(self, busy=False):
         if self.engine.available:
