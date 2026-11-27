@@ -52,13 +52,14 @@ FUSION = [
         "-", "file/save", "file/save as",
         "-", ("&Export", [
             "file/export openscad", "file/export stl",
-            "file/export for other cad (step/iges/rhino)", "-",
+            "file/export for other cad (step/iges/rhino)",
+            "file/export for solidworks (step ap242)", "-",
             "file/export png", "file/export turntable movie",
             "file/render photo (blender)", "-",
             "file/export animated character (glb)",
             "file/pose character"]),
         ("&3D Print", ["file/publish to printables", "file/export stl"]),
-        ("&Share", ["file/publish to printables", "file/send to planetcraft"]),
+        ("&Share", ["file/publish to printables"]),
         "-", "file/show in file explorer",
         "-", "edit/options", "file/settings", "-", "file/exit"]),
     ("&Edit", [
@@ -164,13 +165,13 @@ SOLIDWORKS = [
         ("&Export", [
             "file/export openscad", "file/export stl",
             "file/export for other cad (step/iges/rhino)",
+            "file/export for solidworks (step ap242)",
             "file/export animated character (glb)",
             "file/pose character"]),
         "-", "file/blueprint (2d drawing)",
         "file/make 2d drawing of this view", "-",
         ("Print&3D", ["file/publish to printables", "file/export stl"]),
-        ("Pu&blish", ["file/publish to printables",
-                      "file/send to planetcraft"]),
+        ("Pu&blish", ["file/publish to printables"]),
         "-", "file/show in file explorer", "-", "edit/options", "file/settings", "-", "file/exit"]),
     ("&Edit", [
         "edit/undo", "edit/redo", "-", "edit/cut", "edit/copy",

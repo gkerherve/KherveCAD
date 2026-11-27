@@ -1114,7 +1114,7 @@ def solid_from_tris(tris):
 
 # -------------------------------------------------------- writers
 
-def export_model(root, path, fn=None, unit_mm=1.0):
+def export_model(root, path, fn=None, unit_mm=1.0, schema="AP214IS"):
     """Write the document to *path* — STEP, IGES, BREP or 3DM by the
     extension. Returns the Report; raises ValueError for a missing
     engine or a write that failed."""
@@ -1147,12 +1147,13 @@ def export_model(root, path, fn=None, unit_mm=1.0):
                 [s for _n, _c, s in parts]), path):
             raise ValueError(f"Could not write {path}.")
     else:
-        _write_xcaf(parts, path, ext)
+        _write_xcaf(parts, path, ext, schema)
     return comp.report
 
 
-def _write_xcaf(parts, path, ext):
-    """Named, coloured parts into a STEP (AP214) or IGES file."""
+def _write_xcaf(parts, path, ext, schema="AP214IS"):
+    """Named, coloured parts into a STEP (AP214, or AP242 for SolidWorks)
+    or IGES file."""
     from OCP.TCollection import (TCollection_ExtendedString,
                                  TCollection_AsciiString)
     from OCP.TDocStd import TDocStd_Document
@@ -1175,9 +1176,10 @@ def _write_xcaf(parts, path, ext):
         from OCP.STEPCAFControl import STEPCAFControl_Writer
         from OCP.STEPControl import STEPControl_AsIs
         from OCP.Interface import Interface_Static
-        Interface_Static.SetCVal_s("write.step.schema", "AP214IS")
-        Interface_Static.SetCVal_s("write.step.unit", "MM")
         writer = STEPCAFControl_Writer()
+        # after the writer: making one resets the schema to its default
+        Interface_Static.SetCVal_s("write.step.schema", schema)
+        Interface_Static.SetCVal_s("write.step.unit", "MM")
         writer.SetColorMode(True)
         writer.SetNameMode(True)
         if not writer.Transfer(doc, STEPControl_AsIs):

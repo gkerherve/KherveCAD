@@ -331,6 +331,10 @@ class MainWindow(QMainWindow):
                                     "Rhino)..."),
                             lambda: cadexchange_ui.export_cad_dialog(self),
                             "Ctrl+Alt+S")
+        file_menu.addAction(icons.icon("mdi.cube-send"),
+                            self.tr("Export for &SolidWorks (STEP AP242)..."),
+                            lambda: cadexchange_ui.export_solidworks_dialog(
+                                self))
         file_menu.addAction(icons.icon("mdi.human-handsup"),
                             self.tr("Export Animated Character (GLB)..."),
                             lambda: character_ui.export_character_dialog(
@@ -370,11 +374,6 @@ class MainWindow(QMainWindow):
                             self.publish_to_printables,
                             "Ctrl+Shift+P")
 
-        def _planetcraft():
-            from . import planetcraft_dialog
-            planetcraft_dialog.open_dialog(self)
-        file_menu.addAction(icons.icon("mdi.earth"),
-                            self.tr("Send to Planet&Craft..."), _planetcraft)
         file_menu.addSeparator()
         # Qt moves an action called "Exit" into the macOS application
         # menu unless told otherwise, so File had no way out on a Mac.

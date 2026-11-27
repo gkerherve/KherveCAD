@@ -268,7 +268,70 @@ def export_cad_dialog(window):
     return export_cad(window, path)
 
 
-def export_cad(window, path, interactive=True):
+_SW_SCRIPT = r'''' Made by kCAD. On a Windows PC with SolidWorks, double-click this file:
+' it opens the STEP file next to it in SolidWorks and saves it as a
+' native SolidWorks file (.SLDPRT, or .SLDASM for several parts) in the
+' same folder.
+Option Explicit
+Dim fso, folder, stepPath, outBase, swApp, importData, doc, errs, warns, ext
+Set fso = CreateObject("Scripting.FileSystemObject")
+folder = fso.GetParentFolderName(WScript.ScriptFullName)
+stepPath = fso.BuildPath(folder, "{step}")
+outBase = fso.BuildPath(folder, "{base}")
+Set swApp = CreateObject("SldWorks.Application")
+swApp.Visible = True
+Set importData = swApp.GetImportFileData(stepPath)
+errs = 0
+Set doc = swApp.LoadFile4(stepPath, "r", importData, errs)
+If doc Is Nothing Then
+  MsgBox "SolidWorks could not open " & stepPath & " (error " & errs & ")."
+  WScript.Quit 1
+End If
+If doc.GetType = 2 Then ext = ".SLDASM" Else ext = ".SLDPRT"
+warns = 0
+If doc.Extension.SaveAs(outBase & ext, 0, 1, Nothing, errs, warns) Then
+  MsgBox "Saved " & outBase & ext
+Else
+  MsgBox "SolidWorks could not save " & outBase & ext & " (error " & errs & ")."
+End If
+'''
+
+
+def export_solidworks_dialog(window):
+    """File ▸ Export for SolidWorks… — the best this app can give
+    SolidWorks: an exact B-rep STEP in AP242 (SolidWorks' preferred
+    neutral format) in mm, one named, coloured body per part, plus a
+    small script that, run on a PC with SolidWorks, re-saves it as a
+    native .SLDPRT / .SLDASM. A native file cannot be written here:
+    the format is closed and only SolidWorks itself writes it."""
+    base = Path(window._path).with_suffix(".step") if getattr(
+        window, "_path", None) else Path(
+        str(_settings().value("cad/last_dir", ""))) / "model.step"
+    path, _picked = QFileDialog.getSaveFileName(
+        window, language.tr("Export for SolidWorks"), str(base),
+        language.tr("STEP AP242 for SolidWorks (*.step *.stp)"))
+    if not path:
+        return None
+    if Path(path).suffix.lower() not in (".step", ".stp"):
+        path += ".step"
+    _settings().setValue("cad/last_dir", str(Path(path).parent))
+    return export_solidworks(window, path)
+
+
+def export_solidworks(window, path, interactive=True):
+    """STEP AP242 at *path* plus '<name> - Save as SolidWorks.vbs'."""
+    report = export_cad(window, path, interactive=interactive,
+                        schema="AP242DIS")
+    if report is None:
+        return None
+    step = Path(path)
+    script = step.with_name(step.stem + " - Save as SolidWorks.vbs")
+    script.write_text(_SW_SCRIPT.format(step=step.name, base=step.stem),
+                      encoding="utf-8", newline="\r\n")
+    return report
+
+
+def export_cad(window, path, interactive=True, schema="AP214IS"):
     """Write the document to *path*. Returns the Report (or raises
     ValueError when not interactive)."""
     from . import units
@@ -276,7 +339,8 @@ def export_cad(window, path, interactive=True):
     QApplication.setOverrideCursor(Qt.WaitCursor)
     try:
         report = cx.export_model(window.model.root, path, fn=fn,
-                                 unit_mm=units.to_mm(window.model.unit))
+                                 unit_mm=units.to_mm(window.model.unit),
+                                 schema=schema)
     except (ValueError, OSError, RuntimeError) as exc:
         QApplication.restoreOverrideCursor()
         if not interactive:
