@@ -4147,8 +4147,10 @@ TOOLS = [
             "true mm), plus mass at true size for a material, and — "
             "for a mm, cm or inch document only — material cost and a "
             "print-time estimate (rough). Without node_ids: the whole "
-            "scope. `approximate` flags a preview mesh with uncut "
-            "booleans."
+            "scope. When the preview only approximates the booleans, the "
+            "whole scope or a single node is rendered EXACTLY by OpenSCAD "
+            "first (`exact: true`); `approximate` true means it could not "
+            "be, so do not trust that mass."
         ),
         "input_schema": _obj({
             "node_ids": _IDS,

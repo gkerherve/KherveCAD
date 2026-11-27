@@ -3470,6 +3470,40 @@ class McpToolExecutor:
             raise ToolError("Those nodes have no geometry to check.")
         return nodes, tris, approx
 
+    def _exact_tris(self, params, nodes):
+        """Triangles of the EXACT OpenSCAD render of the whole scope or of
+        one node, or None. The preview can drop a 2D difference, ignore
+        an intersection or skip a fillet, so a mass taken from it can be
+        far out with nothing but the `approximate` flag to say so."""
+        import os
+        import tempfile
+        from . import engine as engine_mod
+        eng = self._w.engine
+        if not eng.available:
+            return None
+        ids = params.get("node_ids")
+        if ids and len(nodes) != 1:
+            return None
+        if ids:
+            code = self._model.subtree_scad(nodes[0])
+        else:
+            iso = self._w._render_scope()[0]
+            code = (self._model.to_scad() if iso is self._model.root
+                    else self._model.subtree_scad(iso))
+        fd, path = tempfile.mkstemp(suffix=".stl")
+        os.close(fd)
+        try:
+            if eng.export_stl(code, path):
+                return None
+            return engine_mod.parse_stl(path) or None
+        except Exception:
+            return None
+        finally:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
     def _t_mass_properties(self, params) -> dict:
         from . import analysis
         nodes, tris, approx = self._check_nodes(params)
@@ -3478,6 +3512,9 @@ class McpToolExecutor:
             raise ToolError("Unknown material. Choose one of: "
                             + ", ".join(analysis.choices()))
         price = float(params.get("price_per_kg") or analysis.DEFAULT_PRICE)
+        exact = self._exact_tris(params, nodes) if approx else None
+        if exact:
+            tris, approx = exact, False
         p = analysis.mass_properties(analysis.united(tris))
         unit = self._unit()
         volume_mm3 = units.mm(p["volume"], unit, 3)
@@ -3496,7 +3533,8 @@ class McpToolExecutor:
                           else round(grams, 2) if abs(grams) >= 0.01
                           else units.significant(grams)),
                "price_per_kg": price,
-               "approximate": approx}
+               "approximate": approx,
+               "exact": bool(exact)}
         if units.printable(unit):
             out["cost"] = round(analysis.cost(grams, price), 2)
             out["print_time_h_rough"] = round(
