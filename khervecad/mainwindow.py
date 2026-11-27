@@ -907,6 +907,10 @@ class MainWindow(QMainWindow):
         self._engine_label = QLabel()
         self.statusBar().addPermanentWidget(self._engine_label)
         self._refresh_engine_label()
+        # the scale and engine readouts are kept up to date but not shown:
+        # the status bar is for the model (size, volume, material, mass)
+        self._zoom_label.hide()
+        self._engine_label.hide()
         self._update_title()                   # fills the file label
 
     def _cursor_moved(self, p):
